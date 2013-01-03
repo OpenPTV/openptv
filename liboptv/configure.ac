@@ -2,7 +2,7 @@
 
 # Prelude.
 AC_PREREQ([2.59])
-AC_INIT([PTV], [0.3], [check-devel AT lists.sourceforge.net])
+AC_INIT([optv], [0.1-dev], [openptv AT googlegroups.com])
 
 # unique source file --- primitive safety check 
 AC_CONFIG_SRCDIR([.])
@@ -21,16 +21,12 @@ AC_PROG_LIBTOOL
 
 # Checks for libraries.
 
-# This macro is defined in check.m4 and tests if check.h and
-# libcheck.a are installed in your system. It sets CHECK_CFLAGS and
-# CHECK_LIBS accordingly.  
-#  AM_PATH_CHECK([MINIMUM-VERSION,
-#                [ACTION-IF-FOUND [, ACTION-IF-NOT-FOUND]]])
-AM_PATH_CHECK()
+# The testing framework Check.
+PKG_CHECK_MODULES([CHECK], [check >= 0.9.4])
 
 # Checks for header files.
 AC_HEADER_STDC
-AC_CHECK_HEADERS([stdlib.h])
+AC_CHECK_HEADERS([stdlib.h string.h])
 
 # Checks for typedefs, structures, and compiler characteristics.
 
