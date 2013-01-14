@@ -80,7 +80,7 @@ int read_targets(target buffer[], char* file_base, int frame_num) {
 	return num_targets;
 
 handle_error:
-    fclose (FILEIN);
+    if (FILEIN != NULL) fclose (FILEIN);
     return 0;
 }
 
@@ -133,7 +133,7 @@ int write_targets(target buffer[], int num_targets, char* file_base, \
     success = 1;
 
 finalize:
-    fclose (FILEOUT);
+    if (FILEOUT != NULL) fclose (FILEOUT);
     return success;
 }
 
