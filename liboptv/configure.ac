@@ -6,7 +6,6 @@ AC_INIT([optv], [0.1-dev], [openptv AT googlegroups.com])
 
 # unique source file --- primitive safety check 
 AC_CONFIG_SRCDIR([.])
-AC_CONFIG_MACRO_DIR([m4])
 
 # place to put some extra build scripts installed
 AC_CONFIG_AUX_DIR([build-aux])
