@@ -32,3 +32,342 @@ Instalation
 Since there is currently no code, no instalation is necessary. This section
 will get updated as submissions are accepted.
 
+
+Installation log on Mac OS X
+------------------------
+
+AlexMacBookPro:openptv alex$ ls -l
+total 8
+-rw-r--r--  1 alex  staff  1210 Apr  3 01:07 README
+drwxr-xr-x  3 alex  staff   102 Apr  3 01:07 docs
+drwxr-xr-x  9 alex  staff   306 Apr  3 01:08 liboptv
+AlexMacBookPro:openptv alex$ cd liboptv/
+AlexMacBookPro:liboptv alex$ ls
+Makefile.am	configure.ac	include		src		tests
+AlexMacBookPro:liboptv alex$ autoreconf
+aclocal: error: couldn't open directory 'm4': No such file or directory
+autoreconf: aclocal failed with exit status: 1
+AlexMacBookPro:liboptv alex$ mkdir m4
+AlexMacBookPro:liboptv alex$ autoreconf
+configure.ac:20: error: required file 'build-aux/config.guess' not found
+configure.ac:20:   'automake --add-missing' can install 'config.guess'
+configure.ac:20: error: required file 'build-aux/config.sub' not found
+configure.ac:20:   'automake --add-missing' can install 'config.sub'
+configure.ac:16: error: required file 'build-aux/install-sh' not found
+configure.ac:16:   'automake --add-missing' can install 'install-sh'
+configure.ac:20: error: required file 'build-aux/ltmain.sh' not found
+configure.ac:16: error: required file 'build-aux/missing' not found
+configure.ac:16:   'automake --add-missing' can install 'missing'
+automake: warnings are treated as errors
+/usr/local/share/automake-1.13/am/ltlibrary.am: warning: 'liboptv.la': linking libtool libraries using a non-POSIX
+/usr/local/share/automake-1.13/am/ltlibrary.am: archiver requires 'AM_PROG_AR' in 'configure.ac'
+src/Makefile.am:2:   while processing Libtool library 'liboptv.la'
+src/Makefile.am: error: required file 'build-aux/depcomp' not found
+src/Makefile.am:   'automake --add-missing' can install 'depcomp'
+tests/Makefile.am:5: warning: compiling 'check_fb.c' with per-target flags requires 'AM_PROG_CC_C_O' in 'configure.ac'
+parallel-tests: error: required file 'build-aux/test-driver' not found
+parallel-tests:   'automake --add-missing' can install 'test-driver'
+autoreconf: automake failed with exit status: 1
+AlexMacBookPro:liboptv alex$ automake --add-missing
+configure.ac:20: installing 'build-aux/config.guess'
+configure.ac:20: installing 'build-aux/config.sub'
+configure.ac:16: installing 'build-aux/install-sh'
+configure.ac:20: error: required file 'build-aux/ltmain.sh' not found
+configure.ac:16: installing 'build-aux/missing'
+automake: warnings are treated as errors
+/usr/local/share/automake-1.13/am/ltlibrary.am: warning: 'liboptv.la': linking libtool libraries using a non-POSIX
+/usr/local/share/automake-1.13/am/ltlibrary.am: archiver requires 'AM_PROG_AR' in 'configure.ac'
+src/Makefile.am:2:   while processing Libtool library 'liboptv.la'
+src/Makefile.am: installing 'build-aux/depcomp'
+tests/Makefile.am:5: warning: compiling 'check_fb.c' with per-target flags requires 'AM_PROG_CC_C_O' in 'configure.ac'
+parallel-tests: installing 'build-aux/test-driver'
+AlexMacBookPro:liboptv alex$ edit configure.ac
+AlexMacBookPro:liboptv alex$ automake --add-missing
+configure.ac:21: error: required file 'build-aux/ltmain.sh' not found
+automake: warnings are treated as errors
+/usr/local/share/automake-1.13/am/ltlibrary.am: warning: 'liboptv.la': linking libtool libraries using a non-POSIX
+/usr/local/share/automake-1.13/am/ltlibrary.am: archiver requires 'AM_PROG_AR' in 'configure.ac'
+src/Makefile.am:2:   while processing Libtool library 'liboptv.la'
+tests/Makefile.am:5: warning: compiling 'check_fb.c' with per-target flags requires 'AM_PROG_CC_C_O' in 'configure.ac'
+AlexMacBookPro:liboptv alex$ edit configure.ac
+AlexMacBookPro:liboptv alex$ edit configure.ac
+AlexMacBookPro:liboptv alex$ automake --add-missing
+configure.ac:20: error: required file 'build-aux/ltmain.sh' not found
+automake: warnings are treated as errors
+/usr/local/share/automake-1.13/am/ltlibrary.am: warning: 'liboptv.la': linking libtool libraries using a non-POSIX
+/usr/local/share/automake-1.13/am/ltlibrary.am: archiver requires 'AM_PROG_AR' in 'configure.ac'
+src/Makefile.am:2:   while processing Libtool library 'liboptv.la'
+tests/Makefile.am:5: warning: compiling 'check_fb.c' with per-target flags requires 'AM_PROG_CC_C_O' in 'configure.ac'
+AlexMacBookPro:liboptv alex$ libtoolize 
+libtoolize: putting auxiliary files in AC_CONFIG_AUX_DIR, `build-aux'.
+libtoolize: linking file `build-aux/ltmain.sh'
+libtoolize: putting macros in AC_CONFIG_MACRO_DIR, `m4'.
+libtoolize: linking file `m4/libtool.m4'
+libtoolize: linking file `m4/ltoptions.m4'
+libtoolize: linking file `m4/ltsugar.m4'
+libtoolize: linking file `m4/ltversion.m4'
+libtoolize: linking file `m4/lt~obsolete.m4'
+libtoolize: Consider adding `-I m4' to ACLOCAL_AMFLAGS in Makefile.am.
+AlexMacBookPro:liboptv alex$ automake --add-missing
+automake: warnings are treated as errors
+/usr/local/share/automake-1.13/am/ltlibrary.am: warning: 'liboptv.la': linking libtool libraries using a non-POSIX
+/usr/local/share/automake-1.13/am/ltlibrary.am: archiver requires 'AM_PROG_AR' in 'configure.ac'
+src/Makefile.am:2:   while processing Libtool library 'liboptv.la'
+tests/Makefile.am:5: warning: compiling 'check_fb.c' with per-target flags requires 'AM_PROG_CC_C_O' in 'configure.ac'
+AlexMacBookPro:liboptv alex$ autoreconf
+configure.ac:21: error: required file 'build-aux/compile' not found
+configure.ac:21:   'automake --add-missing' can install 'compile'
+automake: warnings are treated as errors
+/usr/local/share/automake-1.13/am/ltlibrary.am: warning: 'liboptv.la': linking libtool libraries using a non-POSIX
+/usr/local/share/automake-1.13/am/ltlibrary.am: archiver requires 'AM_PROG_AR' in 'configure.ac'
+src/Makefile.am:2:   while processing Libtool library 'liboptv.la'
+autoreconf: automake failed with exit status: 1
+AlexMacBookPro:liboptv alex$ edit configure.ac
+AlexMacBookPro:liboptv alex$ autoreconf
+configure.ac:22: warning: LT_INIT was called before AM_PROG_AR
+/usr/local/share/aclocal-1.13/ar-lib.m4:59: AM_PROG_AR is expanded from...
+configure.ac:22: the top level
+configure.ac:22: warning: AC_PROG_LIBTOOL was called before AM_PROG_AR
+/usr/local/share/aclocal-1.13/ar-lib.m4:59: AM_PROG_AR is expanded from...
+configure.ac:22: the top level
+configure.ac:22: warning: LT_INIT was called before AM_PROG_AR
+/usr/local/share/aclocal-1.13/ar-lib.m4:59: AM_PROG_AR is expanded from...
+configure.ac:22: the top level
+configure.ac:22: warning: AC_PROG_LIBTOOL was called before AM_PROG_AR
+/usr/local/share/aclocal-1.13/ar-lib.m4:59: AM_PROG_AR is expanded from...
+configure.ac:22: the top level
+configure.ac:22: warning: LT_INIT was called before AM_PROG_AR
+aclocal.m4:331: AM_PROG_AR is expanded from...
+configure.ac:22: the top level
+configure.ac:22: warning: AC_PROG_LIBTOOL was called before AM_PROG_AR
+aclocal.m4:331: AM_PROG_AR is expanded from...
+configure.ac:22: the top level
+configure.ac:22: warning: LT_INIT was called before AM_PROG_AR
+aclocal.m4:331: AM_PROG_AR is expanded from...
+configure.ac:22: the top level
+configure.ac:22: warning: AC_PROG_LIBTOOL was called before AM_PROG_AR
+aclocal.m4:331: AM_PROG_AR is expanded from...
+configure.ac:22: the top level
+configure.ac:22: warning: LT_INIT was called before AM_PROG_AR
+aclocal.m4:331: AM_PROG_AR is expanded from...
+configure.ac:22: the top level
+configure.ac:22: warning: AC_PROG_LIBTOOL was called before AM_PROG_AR
+aclocal.m4:331: AM_PROG_AR is expanded from...
+configure.ac:22: the top level
+configure.ac:22: warning: LT_INIT was called before AM_PROG_AR
+aclocal.m4:331: AM_PROG_AR is expanded from...
+configure.ac:22: the top level
+configure.ac:22: warning: AC_PROG_LIBTOOL was called before AM_PROG_AR
+aclocal.m4:331: AM_PROG_AR is expanded from...
+configure.ac:22: the top level
+configure.ac:22: error: required file 'build-aux/ar-lib' not found
+configure.ac:22:   'automake --add-missing' can install 'ar-lib'
+configure.ac:21: error: required file 'build-aux/compile' not found
+configure.ac:21:   'automake --add-missing' can install 'compile'
+autoreconf: automake failed with exit status: 1
+AlexMacBookPro:liboptv alex$ automake --add-missing
+configure.ac:22: warning: LT_INIT was called before AM_PROG_AR
+aclocal.m4:331: AM_PROG_AR is expanded from...
+configure.ac:22: the top level
+configure.ac:22: warning: AC_PROG_LIBTOOL was called before AM_PROG_AR
+aclocal.m4:331: AM_PROG_AR is expanded from...
+configure.ac:22: the top level
+configure.ac:22: installing 'build-aux/ar-lib'
+configure.ac:21: installing 'build-aux/compile'
+AlexMacBookPro:liboptv alex$ ./configure CC="gcc -arch i386"
+checking for a BSD-compatible install... /usr/bin/install -c
+checking whether build environment is sane... yes
+checking for a thread-safe mkdir -p... build-aux/install-sh -c -d
+checking for gawk... no
+checking for mawk... no
+checking for nawk... no
+checking for awk... awk
+checking whether make sets $(MAKE)... yes
+checking whether make supports nested variables... yes
+checking for gcc... gcc -arch i386
+checking whether the C compiler works... yes
+checking for C compiler default output file name... a.out
+checking for suffix of executables... 
+checking whether we are cross compiling... no
+checking for suffix of object files... o
+checking whether we are using the GNU C compiler... yes
+checking whether gcc -arch i386 accepts -g... yes
+checking for gcc -arch i386 option to accept ISO C89... none needed
+checking for style of include used by make... GNU
+checking dependency style of gcc -arch i386... gcc3
+checking build system type... i386-apple-darwin11.4.2
+checking host system type... i386-apple-darwin11.4.2
+checking how to print strings... printf
+checking for a sed that does not truncate output... /usr/bin/sed
+checking for grep that handles long lines and -e... /usr/bin/grep
+checking for egrep... /usr/bin/grep -E
+checking for fgrep... /usr/bin/grep -F
+checking for ld used by gcc -arch i386... /usr/llvm-gcc-4.2/libexec/gcc/i686-apple-darwin11/4.2.1/ld
+checking if the linker (/usr/llvm-gcc-4.2/libexec/gcc/i686-apple-darwin11/4.2.1/ld) is GNU ld... no
+checking for BSD- or MS-compatible name lister (nm)... /usr/bin/nm
+checking the name lister (/usr/bin/nm) interface... BSD nm
+checking whether ln -s works... yes
+checking the maximum length of command line arguments... 196608
+checking whether the shell understands some XSI constructs... yes
+checking whether the shell understands "+="... yes
+checking how to convert i386-apple-darwin11.4.2 file names to i386-apple-darwin11.4.2 format... func_convert_file_noop
+checking how to convert i386-apple-darwin11.4.2 file names to toolchain format... func_convert_file_noop
+checking for /usr/llvm-gcc-4.2/libexec/gcc/i686-apple-darwin11/4.2.1/ld option to reload object files... -r
+checking for objdump... no
+checking how to recognize dependent libraries... pass_all
+checking for dlltool... no
+checking how to associate runtime and link libraries... printf %s\n
+checking for ar... ar
+checking for archiver @FILE support... no
+checking for strip... strip
+checking for ranlib... ranlib
+checking command to parse /usr/bin/nm output from gcc -arch i386 object... ok
+checking for sysroot... no
+checking for mt... no
+checking if : is a manifest tool... no
+checking for dsymutil... dsymutil
+checking for nmedit... nmedit
+checking for lipo... lipo
+checking for otool... otool
+checking for otool64... no
+checking for -single_module linker flag... yes
+checking for -exported_symbols_list linker flag... yes
+checking for -force_load linker flag... yes
+checking how to run the C preprocessor... gcc -arch i386 -E
+checking for ANSI C header files... yes
+checking for sys/types.h... yes
+checking for sys/stat.h... yes
+checking for stdlib.h... yes
+checking for string.h... yes
+checking for memory.h... yes
+checking for strings.h... yes
+checking for inttypes.h... yes
+checking for stdint.h... yes
+checking for unistd.h... yes
+checking for dlfcn.h... yes
+checking for objdir... .libs
+checking if gcc -arch i386 supports -fno-rtti -fno-exceptions... no
+checking for gcc -arch i386 option to produce PIC... -fno-common -DPIC
+checking if gcc -arch i386 PIC flag -fno-common -DPIC works... yes
+checking if gcc -arch i386 static flag -static works... no
+checking if gcc -arch i386 supports -c -o file.o... yes
+checking if gcc -arch i386 supports -c -o file.o... (cached) yes
+checking whether the gcc -arch i386 linker (/usr/llvm-gcc-4.2/libexec/gcc/i686-apple-darwin11/4.2.1/ld) supports shared libraries... yes
+checking dynamic linker characteristics... darwin11.4.2 dyld
+checking how to hardcode library paths into programs... immediate
+checking whether stripping libraries is possible... yes
+checking if libtool supports shared libraries... yes
+checking whether to build shared libraries... yes
+checking whether to build static libraries... yes
+checking whether gcc -arch i386 and cc understand -c and -o together... yes
+checking the archiver (ar) interface... ar
+checking for pkg-config... /usr/local/bin/pkg-config
+checking pkg-config is at least version 0.9.0... yes
+checking for CHECK... yes
+checking for ANSI C header files... (cached) yes
+checking for stdlib.h... (cached) yes
+checking for string.h... (cached) yes
+checking for stdlib.h... (cached) yes
+checking for GNU libc compatible malloc... yes
+checking that generated files are newer than configure... done
+configure: creating ./config.status
+config.status: creating Makefile
+config.status: creating src/Makefile
+config.status: creating tests/Makefile
+config.status: creating config.h
+config.status: executing depfiles commands
+config.status: executing libtool commands
+AlexMacBookPro:liboptv alex$ make
+(CDPATH="${ZSH_VERSION+.}:" && cd . && /bin/sh /Users/alex/Downloads/openptv/liboptv/build-aux/missing autoheader)
+configure.ac:22: warning: LT_INIT was called before AM_PROG_AR
+aclocal.m4:331: AM_PROG_AR is expanded from...
+configure.ac:22: the top level
+configure.ac:22: warning: AC_PROG_LIBTOOL was called before AM_PROG_AR
+aclocal.m4:331: AM_PROG_AR is expanded from...
+configure.ac:22: the top level
+rm -f stamp-h1
+touch config.h.in
+cd . && /bin/sh ./config.status config.h
+config.status: creating config.h
+config.status: config.h is unchanged
+make  all-recursive
+Making all in src
+/bin/sh ../libtool  --tag=CC   --mode=compile gcc -arch i386 -DHAVE_CONFIG_H -I. -I..    -I../include/ -g -O2 -MT liboptv_la-tracking_frame_buf.lo -MD -MP -MF .deps/liboptv_la-tracking_frame_buf.Tpo -c -o liboptv_la-tracking_frame_buf.lo `test -f 'tracking_frame_buf.c' || echo './'`tracking_frame_buf.c
+libtool: compile:  gcc -arch i386 -DHAVE_CONFIG_H -I. -I.. -I../include/ -g -O2 -MT liboptv_la-tracking_frame_buf.lo -MD -MP -MF .deps/liboptv_la-tracking_frame_buf.Tpo -c tracking_frame_buf.c  -fno-common -DPIC -o .libs/liboptv_la-tracking_frame_buf.o
+libtool: compile:  gcc -arch i386 -DHAVE_CONFIG_H -I. -I.. -I../include/ -g -O2 -MT liboptv_la-tracking_frame_buf.lo -MD -MP -MF .deps/liboptv_la-tracking_frame_buf.Tpo -c tracking_frame_buf.c -o liboptv_la-tracking_frame_buf.o >/dev/null 2>&1
+mv -f .deps/liboptv_la-tracking_frame_buf.Tpo .deps/liboptv_la-tracking_frame_buf.Plo
+/bin/sh ../libtool  --tag=CC   --mode=link gcc -arch i386 -I../include/ -g -O2   -o liboptv.la -rpath /usr/local/lib liboptv_la-tracking_frame_buf.lo  
+libtool: link: gcc -arch i386 -dynamiclib -Wl,-undefined -Wl,dynamic_lookup -o .libs/liboptv.0.dylib  .libs/liboptv_la-tracking_frame_buf.o    -arch i386 -O2   -install_name  /usr/local/lib/liboptv.0.dylib -compatibility_version 1 -current_version 1.0 -Wl,-single_module
+libtool: link: (cd ".libs" && rm -f "liboptv.dylib" && ln -s "liboptv.0.dylib" "liboptv.dylib")
+libtool: link: ar cru .libs/liboptv.a  liboptv_la-tracking_frame_buf.o
+libtool: link: ranlib .libs/liboptv.a
+libtool: link: ( cd ".libs" && rm -f "liboptv.la" && ln -s "../liboptv.la" "liboptv.la" )
+Making all in .
+Making all in tests
+make[2]: Nothing to be done for `all'.
+AlexMacBookPro:liboptv alex$ make check
+Making check in src
+make[1]: Nothing to be done for `check'.
+Making check in .
+Making check in tests
+make  check_fb
+gcc -arch i386 -DHAVE_CONFIG_H -I. -I..    -I/usr/local/include  -I../include/ -g -O2 -MT check_fb-check_fb.o -MD -MP -MF .deps/check_fb-check_fb.Tpo -c -o check_fb-check_fb.o `test -f 'check_fb.c' || echo './'`check_fb.c
+mv -f .deps/check_fb-check_fb.Tpo .deps/check_fb-check_fb.Po
+/bin/sh ../libtool  --tag=CC   --mode=link gcc -arch i386 -I/usr/local/include  -I../include/ -g -O2   -o check_fb check_fb-check_fb.o ../src/liboptv.la -L/usr/local/lib -lcheck  
+libtool: link: gcc -arch i386 -I/usr/local/include -I../include/ -g -O2 -o .libs/check_fb check_fb-check_fb.o  ../src/.libs/liboptv.dylib -L/usr/local/lib /usr/local/lib/libcheck.dylib
+ld: warning: ignoring file /usr/local/lib/libcheck.dylib, file was built for unsupported file format which is not the architecture being linked (i386)
+Undefined symbols for architecture i386:
+  "_suite_create", referenced from:
+      _fb_suite in check_fb-check_fb.o
+  "_tcase_create", referenced from:
+      _fb_suite in check_fb-check_fb.o
+  "__tcase_add_test", referenced from:
+      _fb_suite in check_fb-check_fb.o
+  "_suite_add_tcase", referenced from:
+      _fb_suite in check_fb-check_fb.o
+  "_tcase_fn_start", referenced from:
+      _test_read_targets in check_fb-check_fb.o
+      _test_write_targets in check_fb-check_fb.o
+      _test_read_path_frame in check_fb-check_fb.o
+      _test_write_path_frame in check_fb-check_fb.o
+      _test_init_frame in check_fb-check_fb.o
+      _test_read_write_frame in check_fb-check_fb.o
+  "__fail_unless", referenced from:
+      _test_read_targets in check_fb-check_fb.o
+      _test_write_targets in check_fb-check_fb.o
+      _test_read_path_frame in check_fb-check_fb.o
+      _test_write_path_frame in check_fb-check_fb.o
+      _test_init_frame in check_fb-check_fb.o
+      _test_read_write_frame in check_fb-check_fb.o
+  "_srunner_create", referenced from:
+      _main in check_fb-check_fb.o
+  "_srunner_run_all", referenced from:
+      _main in check_fb-check_fb.o
+  "_srunner_ntests_failed", referenced from:
+      _main in check_fb-check_fb.o
+  "_srunner_free", referenced from:
+      _main in check_fb-check_fb.o
+ld: symbol(s) not found for architecture i386
+collect2: ld returned 1 exit status
+make[2]: *** [check_fb] Error 1
+make[1]: *** [check-am] Error 2
+make: *** [check-recursive] Error 1
+AlexMacBookPro:liboptv alex$ make install
+Making install in src
+ ../build-aux/install-sh -c -d '/usr/local/lib'
+ /bin/sh ../libtool   --mode=install /usr/bin/install -c   liboptv.la '/usr/local/lib'
+libtool: install: /usr/bin/install -c .libs/liboptv.0.dylib /usr/local/lib/liboptv.0.dylib
+libtool: install: (cd /usr/local/lib && { ln -s -f liboptv.0.dylib liboptv.dylib || { rm -f liboptv.dylib && ln -s liboptv.0.dylib liboptv.dylib; }; })
+libtool: install: /usr/bin/install -c .libs/liboptv.lai /usr/local/lib/liboptv.la
+libtool: install: /usr/bin/install -c .libs/liboptv.a /usr/local/lib/liboptv.a
+libtool: install: chmod 644 /usr/local/lib/liboptv.a
+libtool: install: ranlib /usr/local/lib/liboptv.a
+make[2]: Nothing to be done for `install-data-am'.
+Making install in .
+make[2]: Nothing to be done for `install-exec-am'.
+ build-aux/install-sh -c -d '/usr/local/include/optv'
+ /usr/bin/install -c -m 644 include/tracking_frame_buf.h '/usr/local/include/optv'
+Making install in tests
+make[2]: Nothing to be done for `install-exec-am'.
+make[2]: Nothing to be done for `install-data-am'.
+
