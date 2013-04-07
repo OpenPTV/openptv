@@ -33,25 +33,29 @@ On Mac OS X:
 
 1. Download check unit testing framework from http://check.sourceforge.net. Note: use ver. 0.9.8 (latest 0.9.9 has some bug)
 
-./configure
+./configure CC="gcc -arch i386"
 make
 make check
-sudo make install
+make install
 
-2. Download the liboptv tarball
+2. Download the liboptv or clone it using Git. Install using autoconf, automake tools:
 
-inside /liboptv
 
-make m4
+cd liboptv
+mkdir m4
+autoreconf --install
+./configure CC="gcc -arch i386"
+make
+make check
+make install
+
+
+If you experience some error messages, try the following:
 autoreconf
 automake --add-missing
 libtoolize 
 autoreconf
 automake --add-missing
-autoreconf
-./configure
-make
-make check
-sudo make install
+autoreconf --install
 
 
