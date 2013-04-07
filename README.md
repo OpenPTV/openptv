@@ -9,7 +9,7 @@ all code here is therefore peer reviewed.
 The quality standards are decided upon open discussion on the community 
 mailing-list, 
 
-  openptv@googlegroups.com
+    openptv@googlegroups.com
 
 The peer-review process happens in the open on the same mailing list.
 
@@ -31,31 +31,33 @@ Instalation
 
 On Mac OS X:
 
-1. Download check unit testing framework from http://check.sourceforge.net. Note: use ver. 0.9.8 (latest 0.9.9 has some bug)
+1. Download check unit testing framework from <http://check.sourceforge.net>. Note: use ver. 0.9.8 (latest 0.9.9 has some bug)
 
-./configure CC="gcc -arch i386"
-make
-make check
-make install
+    ./configure CC="gcc -arch i386"  
+    make  
+    make check  
+    make install  
 
 2. Download the liboptv or clone it using Git. Install using autoconf, automake tools:
 
 
-cd liboptv
-mkdir m4
-autoreconf --install
-./configure CC="gcc -arch i386"
-make
-make check
-make install
+      cd liboptv  
+      mkdir m4  
+      autoreconf --install  
+      ./configure CC="gcc -arch i386"  
+      make  
+      make check  
+      make install  
 
 
 If you experience some error messages, try the following:
-autoreconf
-automake --add-missing
-libtoolize 
-autoreconf
-automake --add-missing
-autoreconf --install
+
+
+    autoreconf
+    automake --add-missing
+    libtoolize 
+    autoreconf
+    automake --add-missing
+    autoreconf --install
 
 
