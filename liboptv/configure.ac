@@ -15,9 +15,13 @@ AC_CONFIG_AUX_DIR([build-aux])
 # change foreign to gnu or gnits to comply with gnu standards
 AM_INIT_AUTOMAKE([-Wall -Werror foreign 1.9.6])
 
+AM_PROG_AR
+
+
 # Checks for programs.
 AC_PROG_CC
 AC_PROG_LIBTOOL
+AM_PROG_CC_C_O
 
 # Checks for libraries.
 
