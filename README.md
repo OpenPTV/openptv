@@ -1,5 +1,5 @@
 OpenPTV - framework for particle tracking velocimetry
-=====================================================
+========================================
 
 This is the code collection of the OpenPTV project - an effort to create
 common code for different aspects of the Particle Tracking Velocimetry
@@ -26,38 +26,41 @@ To follow and participate in the technical discussion: join the mailing list
 through Google Groups.
 
 
-Instalation
+Installation
 -----------
 
-On Mac OS X:
+On Mac OS X and Linux (without `CC="gcc -arch 386"`):
 
-1. Download check unit testing framework from <http://check.sourceforge.net>. Note: use ver. 0.9.8 (latest 0.9.9 has some bug)
+1. Download the **Check** unit testing framework from <http://check.sourceforge.net>. Note: use version 0.9.8 (latest 0.9.9 apparently has some bug). Run:
 
-    ./configure CC="gcc -arch i386"  
-    make  
-    make check  
-    make install  
+		./configure CC="gcc -arch i386"  
+		make  
+		make check  
+		make install  
 
-2. Download the liboptv or clone it using Git. Install using autoconf, automake tools:
-
-
-      cd liboptv  
-      mkdir m4  
-      autoreconf --install  
-      ./configure CC="gcc -arch i386"  
-      make  
-      make check  
-      make install  
+2. Download the `liboptv` tarball or clone it using Git <http://github.com/OpenPTV/openptv>. Install using `autoreconf`, `automake` tools:
 
 
-If you experience some error messages, try the following:
+		 cd liboptv  
+		 mkdir m4  
+		 autoreconf --install  
+		 ./configure CC="gcc -arch i386"  
+		 make  
+		 make check  
+		 make install  
 
 
-    autoreconf
-    automake --add-missing
-    libtoolize 
-    autoreconf
-    automake --add-missing
-    autoreconf --install
+	- If you experience some error messages, try the following:
+
+
+		    autoreconf
+		    automake --add-missing
+		    libtoolize 
+		    autoreconf
+		    automake --add-missing
+		    autoreconf --install
+		  
+
+Ask for help on the community mailing-list: `openptv@googlegroups.com`
 
 
