@@ -6,7 +6,6 @@ AC_INIT([optv], [0.1-dev], [openptv AT googlegroups.com])
 
 # unique source file --- primitive safety check 
 AC_CONFIG_SRCDIR([.])
-AC_CONFIG_MACRO_DIR([m4])
 
 # place to put some extra build scripts installed
 AC_CONFIG_AUX_DIR([build-aux])
@@ -15,9 +14,13 @@ AC_CONFIG_AUX_DIR([build-aux])
 # change foreign to gnu or gnits to comply with gnu standards
 AM_INIT_AUTOMAKE([-Wall -Werror foreign 1.9.6])
 
+AM_PROG_AR
+
+
 # Checks for programs.
 AC_PROG_CC
 AC_PROG_LIBTOOL
+AM_PROG_CC_C_O
 
 # Checks for libraries.
 
