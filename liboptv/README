@@ -1,0 +1,55 @@
+
+liboptv - a library of openptv support code, for use in user-facing code.
+-------------------------------------------------------------------------
+
+This is a library - you need to build it and link to it in your own project.
+
+Below are instructions for building it and making it ready for use, either from
+a source distribution (a tarball with all necessary files) or directly from a 
+Git repository.
+
+When the package is installed correctly, you can reference it in your code by 
+including files from the optv directory under the standard include path. For
+example,
+
+  #include <optv/tracking_frame_buf.h>
+
+To build your program you also link it with liboptv. On gcc, one adds the flag
+-loptv to the command line.
+
+
+From a source distribution
+--------------------------
+If you received this library as a source tarball, it contains the necessary build 
+instructions. Make sure you have the tools to build software on your computer 
+(make and a compiler toolchain). Then run the following in the directory liboptv/
+
+  $ ./configure
+  $ make
+  $ make check
+
+The later is optional, but seeing it run correctly informs you that no problems
+were encountered during install.
+
+From a Git repository
+---------------------
+From git, there's a preliminary step of generating the configure scripts. To 
+do this you need to have the GNU autotools.
+
+On linux, get them from the packages autoconf and automake:
+
+  $ sudo apt-get autoconf # automake is a dependency
+
+On mac, Alex recommended this:
+
+  $ port install autoconf
+  $ port install automake
+  $ port install libtool
+  $ port install pkgconfig
+
+Once you have those, run:
+
+  $ autoreconf --install
+
+and then proceed with the instructions for running from a source distribution.
+
