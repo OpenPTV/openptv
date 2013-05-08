@@ -137,5 +137,10 @@ looks for this path by default so no further adjustment is necessary for using
 liboptv in your program, other than adding the include and link directives
 specified above.
 
-
+However, on run time it appears that the pyd file we just installed looks for
+the accompanying DLL that was installed alongside it. Windows wants this DLL
+to be in the PATH it searches for executables. So the last step of installing
+on Windows is to modify the PATH environment variable so that it lists the 
+place where the liboptv DLL is installed (in our example, this would be 
+C:\MinGW\msys\1.0\lib).
 
