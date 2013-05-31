@@ -21,13 +21,8 @@
 *   char *add_file - path of file to contain added (distortions) parameters.
 */
 
-int write_ori (Ex, I, G, ap, filename, add_file)
-Exterior Ex;
-Interior I;
-Glass    G;
-ap_52 ap;
-char *filename, *add_file;
-{
+int write_ori (Exterior Ex, Interior I, Glass G, ap_52 ap, \
+        char *filename, char *add_file){
   FILE	*fp;
   int  	i, success = 0;
 
@@ -83,12 +78,7 @@ finalize:
 
 int read_ori (Exterior Ex[], Interior I[], Glass G[], char *ori_file, \
     ap_52 addp[], char *add_file, char *add_fallback){
-// Exterior *Ex;
-// Interior *I;
-// Glass    *G;
-// ap_52    *addp;
-// char	 *ori_file, *add_file, *add_fallback;
-// {
+    
   FILE	*fp;
   int  	i, scan_res;
 
