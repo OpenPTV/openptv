@@ -26,7 +26,7 @@ Calibration test_cal(void) {
     ap_52 correct_addp = {0., 0., 0., 0., 0., 1., 0.};
     Calibration correct_cal = {correct_ext, correct_int, correct_glass, 
         correct_addp};
-    rotation_matrix(correct_cal.ext_par, correct_cal.ext_par.dm);
+    rotation_matrix(&correct_cal.ext_par);
     
     return correct_cal;
 }

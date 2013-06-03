@@ -61,7 +61,7 @@ int compare_calib(Calibration *c1, Calibration *c2);
 Calibration *read_calibration(char *ori_file, char *add_file,
     char *fallback_file);
 
-void rotation_matrix();
+void rotation_matrix(Exterior *Ex);
 
 #endif
 

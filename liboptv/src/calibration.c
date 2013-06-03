@@ -5,6 +5,7 @@
 #include <stdio.h>
 #include "tracking_frame_buf.h"
 #include "calibration.h"
+#include "math.h"
 
 
 /* Write exterior and interior orientation, and - if available, parameters for
@@ -246,7 +247,7 @@ Calibration *read_calibration(char *ori_file, char *add_file,
     if (read_ori(&(ret->ext_par), &(ret->int_par), &(ret->glass_par), ori_file,
         &(ret->added_par), add_file, fallback_file))
     {
-        rotation_matrix(ret->ext_par, ret->ext_par.dm);
+        rotation_matrix(&(ret->ext_par));
         return ret;
     } else {
         free(ret);
@@ -254,5 +255,38 @@ Calibration *read_calibration(char *ori_file, char *add_file,
     }
 }
 
+
+/* rotation_matrix() rotates the Dmatrix of Exterior Ex using
+*  three angles of the camera
+*
+*  Arguments:
+*   Exterior Ex
+*
+*  Returns:
+*   modified Exterior Ex
+*
+*/
+ void rotation_matrix (Exterior *Ex) {
+ 
+ double cp,sp,co,so,ck,sk;
+ 
+ 
+    cp = cos(Ex->phi);
+    sp = sin(Ex->phi);
+    co = cos(Ex->omega);
+    so = sin(Ex->omega);
+    ck = cos(Ex->kappa);
+    sk = sin(Ex->kappa);
+
+    Ex->dm[0][0] = cp * cp;
+    Ex->dm[0][1] = -cp * sk;
+    Ex->dm[0][2] = sp;
+    Ex->dm[1][0] = co * sk + so * sp * ck;
+    Ex->dm[1][1] = co * ck - so * sp * sk;
+    Ex->dm[1][2] = -so * cp;
+    Ex->dm[2][0] = so * sk - co * sp * ck;
+    Ex->dm[2][1] = so * ck + co* sp * sk;
+    Ex->dm[2][2] = co * cp;
+}
 
 
