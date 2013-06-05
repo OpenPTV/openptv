@@ -3,9 +3,9 @@
 #include <stdlib.h>
 #include <string.h>
 #include <stdio.h>
+#include <math.h>
 #include "tracking_frame_buf.h"
 #include "calibration.h"
-#include "math.h"
 
 
 /* Write exterior and interior orientation, and - if available, parameters for
@@ -51,6 +51,7 @@ int write_ori (Exterior Ex, Interior I, Glass G, ap_52 ap, \
     ap.scx, ap.she);
   fclose (fp);
   success = 1;
+  return success;
   
 finalize:
     if (fp != NULL) fclose (fp);
