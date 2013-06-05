@@ -7,7 +7,7 @@ from PySide import QtCore
 from PySide.QtGui import QApplication
 from PySide.QtDeclarative import QDeclarativeView
 
-from tracking_framebuf import read_targets
+from optv.tracking_framebuf import read_targets
 
 class TargetListModel(QtCore.QAbstractListModel):
     def __init__(self, parent, targets):
