@@ -21,15 +21,19 @@ Routines contained:		-
 
 
 #include "ray_tracing.h"
+#include "lsqadj.h"
 
 
 
-
-void ray_tracing (double x,double y,Calibraton *c, double *Xb2,double *Yb2,
+void ray_tracing (double x, double y, Calibraton *c, double *Xb2,double *Yb2,
 double *Zb2, double *a3, double *b3, double *c3) {
 
 	double  a1, b1, c1, a2, b2, c2, Xb1, Yb1, Zb1, d1, d2, cosi1, cosi2,
 			vect1[3], vect2[3], factor, s2;
+
+	Exterior Ex = c->ext_par;
+	Interior I = c->int_par;
+	
 
 	s2 = sqrt (x*x + y*y + I.cc*I.cc);
 	
