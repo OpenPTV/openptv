@@ -51,6 +51,7 @@ int write_ori (Exterior Ex, Interior I, Glass G, ap_52 ap, \
     ap.scx, ap.she);
   fclose (fp);
   success = 1;
+  return success;
   
 finalize:
     if (fp != NULL) fclose (fp);
