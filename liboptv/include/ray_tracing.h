@@ -13,18 +13,18 @@
 #include "calibration.h"
 #include "tracking_frame_buf.h"
 
-void modu(double a[3], double *m);
+/* TODO: replace local functions by vec_utils */
 
+void modu(double a[3], double *m);
 void norm_cross(double a[3], double b[3], double *n1, double *n2, double *n3);
 
-void point_line_line(Calibration *c0, double gX0, double gY0, double gZ0, \
-double a0, double b0, double c0,\
-Calibration *c1, double gX1, double gY1, double gZ1, double a1, \
-double b1, double c1, double *x, double *y,double *z);
+/* ray_tracing is not used anymore */ 
 
 void ray_tracing (double x,double y,Calibraton *c, double *Xb2,double *Yb2,
 double *Zb2, double *a3, double *b3, double *c3);
 
+void ray_tracing_v2 (double x, double y,Exterior Ex, Interior I, Glass G, mm_np mm,\
+double *Xb2, double *Yb2, double *Zb2, double *a3, double *b3, double *c3) 
 
 
 
