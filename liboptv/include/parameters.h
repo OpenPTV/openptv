@@ -38,6 +38,18 @@ typedef struct {
 volume_par* read_volume_par(char *filename);
 int compare_volume_par(volume_par *v1, volume_par *v2);
 
+
+
+typedef struct {
+    int  	nlay; 
+    double  n1;
+    double  n2[3];
+    double  d[3];
+    double  n3;
+    int     lut;
+} mm_np;
+
+
 /* Parameters that control general aspects in the setup and behaviour of 
    various parts of the program, like image basenames etc. */
 typedef struct {
@@ -49,13 +61,10 @@ typedef struct {
     int tiff_flag;
     int imx;
     int imy;
-    int pix_x;
-    int pix_y;
+    double pix_x;
+    double pix_y;
     int chfield; 
-    double  n1;
-    double  n2[3];
-    double  n3;
-    double  d[3];
+    mm_np *mm; 
 } control_par;
 
 
@@ -64,19 +73,6 @@ typedef struct {
 control_par* read_control_par(char *filename);
 void free_control_par(control_par *cp);
 int compare_control_par(control_par *c1, control_par *c2);
-
-
-typedef struct {
-    int  	nlay; 
-    double  n1;
-    double  n2[3];
-    double  d[3];
-    double  n3;
-    int     lut;
-} mm_np;
-    
-mm_np* control_par_to_mm_np(control_par *cp);
-int compare_mm_np(mm_np *mm1, mm_np *mm2);
 
 #endif
 

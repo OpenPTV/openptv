@@ -21,7 +21,6 @@ Routines contained:		-
 
 
 #include "ray_tracing.h"
-#include "lsqadj.h"
 
 
 /* removed point_line_line from ray_tracing - it is never used here */
@@ -41,7 +40,7 @@ void norm_cross(double a[3], double b[3], double *n1, double *n2, double *n3) {
 
 //Beat Lüthi Nov 2008
 
-	double  res[3],dummy;
+	double  res[3], norm;
 
 	res[0]=a[1]*b[2]-a[2]*b[1];
 	res[1]=a[2]*b[0]-a[0]*b[2];
@@ -60,7 +59,7 @@ void norm_cross(double a[3], double b[3], double *n1, double *n2, double *n3) {
 *
 */
 
-void dot(double a, double b, *d) {
+void dot(double a[3], double b[3], double *d) {
 
 	*d = a[0]*b[0] + a[1]*b[1] + a[2]*b[2];
 }
@@ -78,11 +77,25 @@ void modu(double a[3], double *m) {
 /* ray_tracing_v2 
 *
 *
-
+*
+* Minimal example of calling the ray_tracing_v2 is:
+*   double x,y;
+*   Exterior Ex;
+*   Interior I;
+*   Glass G;
+*   mm_np mmp;
+*   double* X1, Y1, Z1, a, b, c;
+*   
+*   ray_tracing_v2 (x,y, Ex, I, G, mmp, &X1, &Y1, &Z1, &a, &b, &c);
+*
+*   OR:
+*   control_par *cp;
+*   ray_tracing_v2 (x,y, cp->Ex, cp->I, cp->G, cp->mm, &X1, &Y1, &Z1, &a, &b, &c);
+*
 */
 
 
-void ray_tracing_v2 (double x, double y,Exterior Ex, Interior I, Glass G, mm_np mm,\
+void ray_tracing_v2 (double x, double y, Exterior Ex, Interior I, Glass G, mm_np mm,\
 double *Xb2, double *Yb2, double *Zb2, double *a3, double *b3, double *c3) {
 /* ray-tracing, see HOEHLE and Manual of Photogrammetry */
 
