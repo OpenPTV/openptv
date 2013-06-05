@@ -3,9 +3,9 @@
 #include <stdlib.h>
 #include <string.h>
 #include <stdio.h>
+#include <math.h>
 #include "tracking_frame_buf.h"
 #include "calibration.h"
-#include "math.h"
 
 
 /* Write exterior and interior orientation, and - if available, parameters for
