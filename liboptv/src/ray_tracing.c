@@ -76,76 +76,18 @@ double *Zb2, double *a3, double *b3, double *c3) {
 	*c3 = c2 * mm.n2[0]/mm.n3 - factor;
 }
 
-void point_line_line(Calibration *c0, double gX0, double gY0, double gZ0, \
-double a0, double b0, double c0,\
-Calibration *c1, double gX1, double gY1, double gZ1, double a1, \
-double b1, double c1, double *x, double *y,double *z) {
+/* removed point_line_line from ray_tracing - it is never used here */
+
+void norm_cross(double a[3], double b[3], double *n1, double *n2, double *n3) {
 
 //Beat Lüthi Nov 2008
 
-	double  a[3],b[3],A[3],B[3],n[3],AB[3],dist,Bp[3],c,ABp[3],mABp,d,Ae1[3];
-	e1[3],mb,nb[3],cosb,f,Ap[3],App[3],BpAe1[3],mBpAe1;
-    double dummy;
-
-	A[0]=gX0;A[1]=gY0;A[2]=gZ0;
-	B[0]=gX1;B[1]=gY1;B[2]=gZ1;
-    a[0]=a0;a[1]=b0;a[2]=c0;
-	b[0]=a1;b[1]=b1;b[2]=c1;
-	norm_cross(b,a,&n[0],&n[1],&n[2]);
-	AB[0]=B[0]-A[0];
-	AB[1]=B[1]-A[1];
-	AB[2]=B[2]-A[2];
-	dot(AB,n,&dist);
-	Bp[0]=B[0]-dist*n[0];
-	Bp[1]=B[1]-dist*n[1];
-	Bp[2]=B[2]-dist*n[2];
-	ABp[0]=Bp[0]-A[0];
-	ABp[1]=Bp[1]-A[1];
-	ABp[2]=Bp[2]-A[2];
-	dot(ABp,a,&c);
-	modu(ABp,&mABp);
-	d=sqrt(mABp*mABp-c*c);
-	Ae1[0]=A[0]+c*a[0];
-	Ae1[1]=A[1]+c*a[1];
-	Ae1[2]=A[2]+c*a[2];
-	BpAe1[0]=Ae1[0]-Bp[0];
-	BpAe1[1]=Ae1[1]-Bp[1];
-	BpAe1[2]=Ae1[2]-Bp[2];
-	modu(BpAe1,&mBpAe1);
-	e1[0]=BpAe1[0]/mBpAe1;
-	e1[1]=BpAe1[1]/mBpAe1;
-	e1[2]=BpAe1[2]/mBpAe1;
-	modu(b,&mb);
-	nb[0]=b[0]/mb;
-	nb[1]=b[1]/mb;
-	nb[2]=b[2]/mb;
-	dot(e1,nb,&cosb);
-    f=d/cosb;
-    Ap[0]=Bp[0]+f*nb[0];
-	Ap[1]=Bp[1]+f*nb[1];
-	Ap[2]=Bp[2]+f*nb[2];
-	App[0]=B[0]+f*nb[0];
-	App[1]=B[1]+f*nb[1];
-	App[2]=B[2]+f*nb[2];
-
-	dummy=sqrt(pow(App[0]-Ap[0],2)+pow(App[1]-Ap[1],2)+pow(App[2]-Ap[2],2));
-
-	*x=0.5*(Ap[0]+App[0]);
-	*y=0.5*(Ap[1]+App[1]);
-	*z=0.5*(Ap[2]+App[2]);
-}
-
-void norm_cross(a,b,n1,n2,n3)
-
-double  a[3],b[3],*n1,*n2,*n3;
-//Beat Lüthi Nov 2008
-
-{
 	double  res[3],dummy;
 
 	res[0]=a[1]*b[2]-a[2]*b[1];
 	res[1]=a[2]*b[0]-a[0]*b[2];
 	res[2]=a[0]*b[1]-a[1]*b[0];
+	
 	dummy=sqrt(pow(res[0],2)+pow(res[1],2)+pow(res[2],2));
 	
 	*n1=res[0]/dummy;
@@ -153,22 +95,24 @@ double  a[3],b[3],*n1,*n2,*n3;
 	*n3=res[2]/dummy;
 }
 
-void dot(a,b,d)
+/* Beat Lüthi Nov 2008
+* Dot product of two vectors 
+* TODO: use ready subroutines from vec_utils.h
+*
+*/
 
-double  a[3],b[3],*d;
-//Beat Lüthi Nov 2008
+void dot(double a, double b, *d) {
 
-{
-	*d=a[0]*b[0]+a[1]*b[1]+a[2]*b[2];
+	*d = a[0]*b[0] + a[1]*b[1] + a[2]*b[2];
 }
 
-void modu(a,m)
 
-double  a[3],*m;
+/* Modulus of a vector
+* TODO: use ready subroutine called norm in vec_utils.h
+*/
 //Beat Lüthi Nov 2008
-
-{
-	*m=sqrt(a[0]*a[0]+a[1]*a[1]+a[2]*a[2]);
+void modu(double a[3], *m) {
+	*m=sqrt(a[0]*a[0] + a[1]*a[1] + a[2]*a[2]);
 }
 
 void ray_tracing_v2 (x,y,Ex,I,G,mm,Xb2,Yb2,Zb2,a3,b3,c3)
