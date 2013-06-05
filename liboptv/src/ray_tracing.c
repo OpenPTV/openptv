@@ -22,57 +22,16 @@ Routines contained:		-
 
 #include "ray_tracing.h"
 
-
-
-
-void ray_tracing (double x,double y,Calibraton *c, double *Xb2,double *Yb2,
-double *Zb2, double *a3, double *b3, double *c3) {
-
-	double  a1, b1, c1, a2, b2, c2, Xb1, Yb1, Zb1, d1, d2, cosi1, cosi2,
-			vect1[3], vect2[3], factor, s2;
-
-	s2 = sqrt (x*x + y*y + I.cc*I.cc);
-	
-	/* direction cosines in image coordinate system */
-	vect1[0] = x/s2;  vect1[1] = y/s2;	vect1[2] = -I.cc/s2;
-
-	matmul (vect2, (double *) Ex.dm, vect1, 3,3,1);
- 	
-	/* direction cosines in space coordinate system , medium n1 */
-	a1 = vect2[0];  b1 = vect2[1];  c1 = vect2[2];  
-	
-       	d1 = -(Ex.z0 - mm.d[0]) / c1;
-
-	/* point on the horizontal plane between n1,n2 */
-	Xb1 = Ex.x0 + d1*a1;  Yb1 = Ex.y0 + d1*b1;  Zb1 = Ex.z0 + d1*c1;
-	
-	cosi1 = c1;
-	factor = cosi1 * mm.n1/mm.n2[0]
-		   + sqrt (1 - (mm.n1*mm.n1)/(mm.n2[0]*mm.n2[0])
-		   			 + (cosi1*cosi1)*(mm.n1*mm.n1)/(mm.n2[0]*mm.n2[0]));
-
-	/* direction cosines in space coordinate system , medium n2 */
-	a2 = a1 * mm.n1/mm.n2[0];
-	b2 = b1 * mm.n1/mm.n2[0];
-	c2 = c1 * mm.n1/mm.n2[0] - factor;
-	
-	d2 = -mm.d[0]/c2;
-
-	/* point on the horizontal plane between n2,n3 */
-	*Xb2 = Xb1 + d2*a2;  *Yb2 = Yb1 + d2*b2;  *Zb2 = Zb1 + d2*c2;
-	
-	cosi2 = c2;
-	factor = cosi2 * mm.n2[0]/mm.n3 
-		   + sqrt (1 - (mm.n2[0]*mm.n2[0])/(mm.n3*mm.n3)
-		   			 + (cosi2*cosi2)*(mm.n2[0]*mm.n2[0])/(mm.n3*mm.n3));
-
-	/* direction cosines in space coordinate system , medium mm.n3 */
-	*a3 = a2 * mm.n2[0]/mm.n3;
-	*b3 = b2 * mm.n2[0]/mm.n3;
-	*c3 = c2 * mm.n2[0]/mm.n3 - factor;
-}
-
-/* removed point_line_line from ray_tracing - it is never used here */
+/* Normalized cross product of two vectors
+*
+* Arguments:
+*	double a[3], double b[3] - two vectors of 3 x 1 
+* Returns:
+* 	double *n1, *n2, *n3 - three components of the cross product vector. 
+*  Note: the vector is normalized to unity length
+*
+* TODO: replace by standard vec_utils subroutines 
+*/
 
 void norm_cross(double a[3], double b[3], double *n1, double *n2, double *n3) {
 
@@ -84,11 +43,11 @@ void norm_cross(double a[3], double b[3], double *n1, double *n2, double *n3) {
 	res[1]=a[2]*b[0]-a[0]*b[2];
 	res[2]=a[0]*b[1]-a[1]*b[0];
 	
-	dummy=sqrt(pow(res[0],2)+pow(res[1],2)+pow(res[2],2));
+	norm = sqrt((res[0]*res[0])+(res[1]*res[1]) + (res[2]*res[2]));
 	
-	*n1=res[0]/dummy;
-	*n2=res[1]/dummy;
-	*n3=res[2]/dummy;
+	*n1=res[0]/norm;
+	*n2=res[1]/norm;
+	*n3=res[2]/norm;
 }
 
 /* Beat Lüthi Nov 2008
@@ -107,22 +66,22 @@ void dot(double a, double b, *d) {
 * TODO: use ready subroutine called norm in vec_utils.h
 */
 //Beat Lüthi Nov 2008
-void modu(double a[3], *m) {
+void modu(double a[3], double *m) {
 	*m=sqrt(a[0]*a[0] + a[1]*a[1] + a[2]*a[2]);
 }
 
-void ray_tracing_v2 (x,y,Ex,I,G,mm,Xb2,Yb2,Zb2,a3,b3,c3)
 
-double		x, y;
-Exterior	Ex;
-Interior	I;
-Glass       G;
-mm_np		mm;
-double		*Xb2, *Yb2, *Zb2, *a3, *b3, *c3;
+/* ray_tracing_v2 
+*
+*
 
+*/
+
+
+void ray_tracing_v2 (double x, double y,Exterior Ex, Interior I, Glass G, mm_np mm,\
+double *Xb2, double *Yb2, double *Zb2, double *a3, double *b3, double *c3) {
 /* ray-tracing, see HOEHLE and Manual of Photogrammetry */
 
-{
 	double  a1, b1, c1, a2, b2, c2, Xb1, Yb1, Zb1, d1, d2, cosi1, cosi2,
 			vect1[3], vect2[3], factor, s2;
 
