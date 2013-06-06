@@ -246,8 +246,8 @@ control_par* read_control_par(char *filename) {
     if(fscanf(par_file, "%d\n", &(ret->tiff_flag)) == 0) goto handle_error;
     if(fscanf(par_file, "%d\n", &(ret->imx)) == 0) goto handle_error;
     if(fscanf(par_file, "%d\n", &(ret->imy)) == 0) goto handle_error;
-    if(fscanf(par_file, "%d\n", &(ret->pix_x)) == 0) goto handle_error;
-    if(fscanf(par_file, "%d\n", &(ret->pix_y)) == 0) goto handle_error;
+    if(fscanf(par_file, "%lf\n", &(ret->pix_x)) == 0) goto handle_error;
+    if(fscanf(par_file, "%lf\n", &(ret->pix_y)) == 0) goto handle_error;
     if(fscanf(par_file, "%d\n", &(ret->chfield)) == 0) goto handle_error;
     if(fscanf(par_file, "%lf\n", &(ret->mm->n1)) == 0) goto handle_error;
     if(fscanf(par_file, "%lf\n", &(ret->mm->n2[0])) == 0) goto handle_error;
