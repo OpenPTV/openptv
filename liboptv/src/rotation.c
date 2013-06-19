@@ -19,14 +19,10 @@ Routines contained:		-
 ****************************************************************************/
 
 #include <math.h>
+#include <stdlib.h>
 #include "calibration.h"
 
-void rotation_matrix (Ex, dm)
-
-Exterior  Ex;
-Dmatrix   dm;
-
-{
+void rotation_matrix (Exterior Ex, Dmatrix dm) {
     dm[0][0] = cos(Ex.phi) * cos(Ex.kappa);
     dm[0][1] = (-1) * cos(Ex.phi) * sin(Ex.kappa);
     dm[0][2] = sin(Ex.phi);
