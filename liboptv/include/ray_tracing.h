@@ -10,6 +10,7 @@
 #ifndef RAYTRACING_H
 #define RAYTRACING_H
 
+#include "parameters.h"
 #include "calibration.h"
 #include "tracking_frame_buf.h"
 
@@ -20,7 +21,7 @@ void norm_cross(double a[3], double b[3], double *n1, double *n2, double *n3);
 
 
 void ray_tracing_v2 (double x, double y,Exterior Ex, Interior I, Glass G, mm_np mm,\
-double *Xb2, double *Yb2, double *Zb2, double *a3, double *b3, double *c3) 
+double *Xb2, double *Yb2, double *Zb2, double *a3, double *b3, double *c3); 
 
 
 

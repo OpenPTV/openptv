@@ -22,6 +22,7 @@ Routines contained:		-
 
 #include "ray_tracing.h"
 #include "lsqadj.h"
+#include "math.h"
 
 
 /* removed point_line_line from ray_tracing - it is never used here */
@@ -41,7 +42,7 @@ void norm_cross(double a[3], double b[3], double *n1, double *n2, double *n3) {
 
 //Beat Lüthi Nov 2008
 
-	double  res[3],dummy;
+	double  res[3], dummy, norm;
 
 	res[0]=a[1]*b[2]-a[2]*b[1];
 	res[1]=a[2]*b[0]-a[0]*b[2];
@@ -60,7 +61,7 @@ void norm_cross(double a[3], double b[3], double *n1, double *n2, double *n3) {
 *
 */
 
-void dot(double a, double b, *d) {
+void dot(double a[3], double b[3], double *d) {
 
 	*d = a[0]*b[0] + a[1]*b[1] + a[2]*b[2];
 }
@@ -71,7 +72,8 @@ void dot(double a, double b, *d) {
 */
 //Beat Lüthi Nov 2008
 void modu(double a[3], double *m) {
-	*m=sqrt(a[0]*a[0] + a[1]*a[1] + a[2]*a[2]);
+
+	*m = sqrt(a[0]*a[0] + a[1]*a[1] + a[2]*a[2]);
 }
 
 
