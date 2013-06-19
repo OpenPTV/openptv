@@ -16,7 +16,6 @@ add_executable(check_ray_tracing check_ray_tracing.c)
 add_dependencies(check_ray_tracing optv)
 
 
-
 get_property(OPTV_LIBRARY TARGET optv PROPERTY LOCATION)
 set(LIBS ${LIBS} ${CHECK_LIBRARIES} ${OPTV_LIBRARY})
 
@@ -34,6 +33,7 @@ add_test(check_parameters ${CMAKE_CURRENT_BINARY_DIR}/check_parameters)
 add_custom_command(TARGET check_parameters PRE_BUILD
     COMMAND ${CMAKE_COMMAND} -E copy_directory
     ${CMAKE_CURRENT_SOURCE_DIR}/testing_fodder $<TARGET_FILE_DIR:check_parameters>/testing_fodder)
+
 
 target_link_libraries(check_calibration ${LIBS})
 add_test(check_calibration ${CMAKE_CURRENT_BINARY_DIR}/check_calibration)

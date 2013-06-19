@@ -3,33 +3,36 @@
 #include <stdlib.h>
 #include <string.h>
 #include <stdio.h>
+#include <math.h>
+#include "tracking_frame_buf.h"
 #include "calibration.h"
 
 
 /* Write exterior and interior orientation, and - if available, parameters for
-   distortion corrections.
-
-   Arguments:
-   Exterior Ex - exterior orientation.
-   Interior I - interior orientation.
-   Glass G - glass parameters.
-   ap_52 addp - optional additional (distortion) parameters. NULL is fine if
-      add_file is NULL.
-   char *filename - path of file to contain interior, exterior and glass
-      orientation data.
-   char *add_file - path of file to contain added (distortions) parameters.
+*   distortion corrections.
+*
+*   Arguments:
+*   Exterior Ex - exterior orientation.
+*   Interior I - interior orientation.
+*   Glass G - glass parameters.
+*   ap_52 addp - optional additional (distortion) parameters. NULL is fine if
+*      add_file is NULL.
+*   char *filename - path of file to contain interior, exterior and glass
+*      orientation data.
+*   char *add_file - path of file to contain added (distortions) parameters.
 */
-void write_ori (Ex, I, G, ap, filename, add_file)
-Exterior Ex;
-Interior I;
-Glass    G;
-ap_52 ap;
-char *filename, *add_file;
-{
+
+int write_ori (Exterior Ex, Interior I, Glass G, ap_52 ap, \
+        char *filename, char *add_file){
   FILE	*fp;
-  int  	i;
+  int  	i, success = 0;
 
   fp = fopen (filename, "w");
+  if (! fp) {
+        printf("Can't open ascii file: %s\n", filename);
+        goto finalize;
+  }
+    
   fprintf (fp, "%11.4f %11.4f %11.4f\n    %10.7f  %10.7f  %10.7f\n\n",
 	   Ex.x0, Ex.y0, Ex.z0, Ex.omega, Ex.phi, Ex.kappa);
   for (i=0; i<3; i++)  fprintf (fp, "    %10.7f %10.7f %10.7f\n",
@@ -38,40 +41,47 @@ char *filename, *add_file;
   fprintf (fp,"\n    %20.15f %20.15f  %20.15f\n", G.vec_x, G.vec_y, G.vec_z);
   fclose (fp);
   
-  if (add_file == NULL) return;
+
+  if (add_file == NULL) goto finalize;
   fp = fopen (add_file, "w");
+  if (! fp) {
+        printf("Can't open ascii file: %s\n", add_file);
+        goto finalize;
+  }
   fprintf (fp, "%f %f %f %f %f %f %f", ap.k1, ap.k2, ap.k3, ap.p1, ap.p2,
     ap.scx, ap.she);
   fclose (fp);
+  success = 1;
+  return success;
+  
+finalize:
+    if (fp != NULL) fclose (fp);
+    return success;
 }
 
-
-int read_ori (Ex, I, G, ori_file, addp, add_file, add_fallback)
 /*  read exterior and interior orientation, and - if available, parameters for
-    distortion corrections.
-    
-    Arguments:
-    Exterior *Ex - output buffer for exterior orientation.
-    Interior *I - output buffer for interior orientation.
-    Glass *G - output buffer for glass parameters.
-    char *ori_file - path of file contatining interior and exterior orientation
-        data
-    ap_52 addp - output buffer for additional (distortion) parameters.
-    char *add_file - path of file contatining added (distortions) parameters.
-    char *add_fallback - path to file for use if add_file can't be openned.
-    
-    Returns:
-    true value on success, false on failure. Failure can happen if add_file
-    can't be opened, or the fscanf results are wrong, but if the additional
-    parameters' file or fallback can't be opened, they're just assigned default
-    values.
+*   distortion corrections.
+*   
+*   Arguments:
+*   Exterior *Ex - output buffer for exterior orientation.
+*   Interior *I - output buffer for interior orientation.
+*   Glass *G - output buffer for glass parameters.
+*   char *ori_file - path of file contatining interior and exterior orientation
+*       data
+*   ap_52 addp - output buffer for additional (distortion) parameters.
+*   char *add_file - path of file contatining added (distortions) parameters.
+*   char *add_fallback - path to file for use if add_file can't be openned.
+*   
+*   Returns:
+*   true value on success, false on failure. Failure can happen if add_file
+*   can't be opened, or the fscanf results are wrong, but if the additional
+*   parameters' file or fallback can't be opened, they're just assigned default
+*   values.
 */
-Exterior *Ex;
-Interior *I;
-Glass    *G;
-ap_52    *addp;
-char	 *ori_file, *add_file, *add_fallback;
-{
+
+int read_ori (Exterior Ex[], Interior I[], Glass G[], char *ori_file, \
+    ap_52 addp[], char *add_file, char *add_fallback){
+    
   FILE	*fp;
   int  	i, scan_res;
 
@@ -239,7 +249,9 @@ Calibration *read_calibration(char *ori_file, char *add_file,
     if (read_ori(&(ret->ext_par), &(ret->int_par), &(ret->glass_par), ori_file,
         &(ret->added_par), add_file, fallback_file))
     {
-        rotation_matrix(ret->ext_par, ret->ext_par.dm);
+
+        rotation_matrix(&(ret->ext_par));
+
         return ret;
     } else {
         free(ret);
@@ -247,5 +259,38 @@ Calibration *read_calibration(char *ori_file, char *add_file,
     }
 }
 
+
+/* rotation_matrix() rotates the Dmatrix of Exterior Ex using
+*  three angles of the camera
+*
+*  Arguments:
+*   Exterior Ex
+*
+*  Returns:
+*   modified Exterior Ex
+*
+*/
+ void rotation_matrix (Exterior *Ex) {
+ 
+ double cp,sp,co,so,ck,sk;
+ 
+ 
+    cp = cos(Ex->phi);
+    sp = sin(Ex->phi);
+    co = cos(Ex->omega);
+    so = sin(Ex->omega);
+    ck = cos(Ex->kappa);
+    sk = sin(Ex->kappa);
+
+    Ex->dm[0][0] = cp * cp;
+    Ex->dm[0][1] = -cp * sk;
+    Ex->dm[0][2] = sp;
+    Ex->dm[1][0] = co * sk + so * sp * ck;
+    Ex->dm[1][1] = co * ck - so * sp * sk;
+    Ex->dm[1][2] = -so * cp;
+    Ex->dm[2][0] = so * sk - co * sp * ck;
+    Ex->dm[2][1] = so * ck + co* sp * sk;
+    Ex->dm[2][2] = co * cp;
+}
 
 

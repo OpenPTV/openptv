@@ -9,7 +9,6 @@
 
 #include "tracking_frame_buf.h"
 
-
 #ifndef CALIBRATION_H
 #define CALIBRATION_H
 
@@ -56,6 +55,7 @@ void write_ori(Exterior Ex, Interior I, Glass G, ap_52 ap, char *filename,
     char *add_file);
 int read_ori (Exterior *Ex, Interior *I, Glass *G, char *ori_file, ap_52 *addp, 
     char *add_file, char *add_fallback);
+
 int compare_exterior(Exterior *e1, Exterior *e2);
 int compare_interior(Interior *i1, Interior *i2);
 int compare_glass(Glass *g1, Glass *g2);
@@ -65,7 +65,8 @@ int compare_calib(Calibration *c1, Calibration *c2);
 Calibration *read_calibration(char *ori_file, char *add_file,
     char *fallback_file);
 
-void rotation_matrix();
+
+void rotation_matrix(Exterior *Ex);
 
 #endif
 
