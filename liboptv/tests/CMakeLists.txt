@@ -43,7 +43,7 @@ add_custom_command(TARGET check_calibration PRE_BUILD
     ${CMAKE_CURRENT_SOURCE_DIR}/testing_fodder $<TARGET_FILE_DIR:check_calibration>/testing_fodder)
         
 target_link_libraries(check_ray_tracing ${LIBS})
-add_test(check_calibration ${CMAKE_CURRENT_BINARY_DIR}/check_ray_tracing)
+add_test(check_ray_tracing ${CMAKE_CURRENT_BINARY_DIR}/check_ray_tracing)
 
 add_custom_command(TARGET check_ray_tracing PRE_BUILD
     COMMAND ${CMAKE_COMMAND} -E copy_directory
