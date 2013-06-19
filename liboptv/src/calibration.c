@@ -22,8 +22,8 @@
 *   char *add_file - path of file to contain added (distortions) parameters.
 */
 
-int write_ori (Exterior Ex, Interior I, Glass G, ap_52 ap, \
-        char *filename, char *add_file){
+int write_ori (Exterior Ex, Interior I, Glass G, ap_52 ap, char *filename, \
+char *add_file){
   FILE	*fp;
   int  	i, success = 0;
 

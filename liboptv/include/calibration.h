@@ -51,8 +51,8 @@ typedef struct {
 
 
 
-void write_ori(Exterior Ex, Interior I, Glass G, ap_52 ap, char *filename, 
-    char *add_file);
+int write_ori(Exterior Ex, Interior I, Glass G, ap_52 ap, char *filename, \
+char *add_file);
 int read_ori (Exterior *Ex, Interior *I, Glass *G, char *ori_file, ap_52 *addp, 
     char *add_file, char *add_fallback);
 
@@ -64,7 +64,6 @@ int compare_calib(Calibration *c1, Calibration *c2);
 
 Calibration *read_calibration(char *ori_file, char *add_file,
     char *fallback_file);
-
 
 void rotation_matrix(Exterior *Ex);
 
