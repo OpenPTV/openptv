@@ -18,7 +18,7 @@
 
 void modu(double a[3], double *m);
 void norm_cross(double a[3], double b[3], double *n1, double *n2, double *n3);
-
+void dot(double a[3], double b[3], double *d);
 
 void ray_tracing_v2 (double x, double y,Exterior Ex, Interior I, Glass G, mm_np mm,\
 double *Xb2, double *Yb2, double *Zb2, double *a3, double *b3, double *c3); 
