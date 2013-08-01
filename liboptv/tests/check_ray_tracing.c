@@ -8,7 +8,7 @@
 #include "calibration.h"
 #include "ray_tracing.h"
 
-START_TEST(test_rotation_matrix)
+START_TEST(test_ray_tracing)
 {
     
     fail_unless(1 == 1);    
@@ -17,7 +17,7 @@ START_TEST(test_rotation_matrix)
 END_TEST
 
 
-START_TEST(test_ray_tracing)
+START_TEST(test_rotation_matrix)
 {
     Exterior Ex_correct, Ex; 
     
@@ -82,6 +82,8 @@ START_TEST(test_ray_tracing)
     
 }
 END_TEST
+
+
 
 
 Suite* fb_suite(void) {

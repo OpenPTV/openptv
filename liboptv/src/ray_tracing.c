@@ -48,7 +48,7 @@ void norm_cross(double a[3], double b[3], double *n1, double *n2, double *n3) {
 	res[1]=a[2]*b[0]-a[0]*b[2];
 	res[2]=a[0]*b[1]-a[1]*b[0];
 	
-	norm = sqrt((res[0]*res[0])+(res[1]*res[1]) + (res[2]*res[2]));
+	norm = sqrt( (res[0]*res[0]) + (res[1]*res[1]) + (res[2]*res[2]) );
 	
 	*n1=res[0]/norm;
 	*n2=res[1]/norm;
@@ -80,7 +80,7 @@ void modu(double a[3], double *m) {
 /* ray_tracing_v2 
 *
 *
-
+* 
 */
 
 
@@ -122,10 +122,10 @@ double *Xb2, double *Yb2, double *Zb2, double *a3, double *b3, double *c3) {
 	vect2[2]=-1./sqrt(2.);*/
    
 	
-	a[0]=Ex.x0;a[1]=Ex.y0;a[2]=Ex.z0;
-	b[0]=vect2[0];b[1]=vect2[1];b[2]=vect2[2];
-	c=sqrt(G.vec_x*G.vec_x+G.vec_y*G.vec_y+G.vec_z*G.vec_z);
-	base2[0]=G.vec_x/c;base2[1]=G.vec_y/c;base2[2]=G.vec_z/c;
+	a[0] = Ex.x0; a[1] = Ex.y0; a[2] = Ex.z0;
+	b[0] = vect2[0]; b[1] = vect2[1]; b[2] = vect2[2];
+	c = sqrt(G.vec_x*G.vec_x + G.vec_y*G.vec_y + G.vec_z*G.vec_z);
+	base2[0] = G.vec_x/c; base2[1] = G.vec_y/c; base2[2] = G.vec_z/c;
 
 	c=c+mm.d[0];
 	dummy=base2[0]*a[0]+base2[1]*a[1]+base2[2]*a[2];
