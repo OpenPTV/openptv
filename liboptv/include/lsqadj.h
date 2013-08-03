@@ -3,6 +3,10 @@
 #ifndef LSQADJ_H
 #define LSQADJ_H
 
+#include <stdlib.h>
+#include <stdio.h>
+
+
 void ata(double *a, double *ata, int m, int n);
 void ata_v2(double *a, double *ata, int m, int n, int n_large);
 void atl(double *a, double *u, double *l, int m, int n);

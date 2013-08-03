@@ -4,6 +4,8 @@
 * anymore, but ata_v2 is used in orientation.c 
 */
 
+#include "lsqadj.h"
+
 void ata ( double *a, double *ata, int m, int n ) {
  /* matrix a and resultmatrix ata = at a 
 		       a is m * n, ata is n * n  */

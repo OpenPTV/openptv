@@ -21,8 +21,7 @@ Routines contained:		-
 
 
 #include "ray_tracing.h"
-#include "lsqadj.h"
-#include "math.h"
+
 
 
 /* removed point_line_line from ray_tracing - it is never used here */
@@ -48,11 +47,27 @@ void norm_cross(double a[3], double b[3], double *n1, double *n2, double *n3) {
 	res[1]=a[2]*b[0]-a[0]*b[2];
 	res[2]=a[0]*b[1]-a[1]*b[0];
 	
-	norm = sqrt( (res[0]*res[0]) + (res[1]*res[1]) + (res[2]*res[2]) );
+	// norm = sqrt( (res[0]*res[0]) + (res[1]*res[1]) + (res[2]*res[2]) );
 	
+	// printf("Res: %6.3f %6.3f %6.3f\n", res[0],res[1],res[2]);
+	
+	modu(res,&norm);
+	
+	// printf(" Norm : %6.3f \n",norm);
+	
+	// fixing the zero length norm bug:
+	// Alex, Aug 3, 2013
+	// Thanks for the test suite :)
+	
+	if (norm == 0.0){
+		*n1 = res[0];
+		*n2 = res[0];
+		*n3 = res[0];
+	} else {	
 	*n1=res[0]/norm;
 	*n2=res[1]/norm;
 	*n3=res[2]/norm;
+	}
 }
 
 /* Beat Lüthi Nov 2008
