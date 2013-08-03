@@ -8,6 +8,8 @@
 #include "calibration.h"
 #include "ray_tracing.h"
 
+#define EPS 0.001
+
 
 START_TEST(test_norm_cross)
 {
@@ -101,7 +103,9 @@ START_TEST(test_matmul)
     // printf("b: %6.3f %6.3f %6.3f\n", b[0],b[1],b[2]);
     
     
-     ck_assert_msg( fabs(b[0] - 0.9)<.001 && fabs(b[1] - 1.20)<0.001 && fabs(b[2] - 0.7)<0.001 ,
+     ck_assert_msg( fabs(b[0] - 0.9) < EPS && 
+     				fabs(b[1] - 1.20) < EPS && 
+     			    fabs(b[2] - 0.700)  < EPS,
          "Was expecting b to be 0.9,1.2,0.7 but found %f %f %f\n", b[0],b[1],b[2]);
     // mark_point();     
     // ck_assert_msg( (1 == 2), "test was not successful");
