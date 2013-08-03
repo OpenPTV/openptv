@@ -22,8 +22,8 @@
 *   char *add_file - path of file to contain added (distortions) parameters.
 */
 
-int write_ori (Exterior Ex, Interior I, Glass G, ap_52 ap, \
-        char *filename, char *add_file){
+int write_ori (Exterior Ex, Interior I, Glass G, ap_52 ap, char *filename, \
+char *add_file){
   FILE	*fp;
   int  	i, success = 0;
 
@@ -41,6 +41,7 @@ int write_ori (Exterior Ex, Interior I, Glass G, ap_52 ap, \
   fprintf (fp,"\n    %20.15f %20.15f  %20.15f\n", G.vec_x, G.vec_y, G.vec_z);
   fclose (fp);
   
+
   if (add_file == NULL) goto finalize;
   fp = fopen (add_file, "w");
   if (! fp) {
@@ -248,7 +249,9 @@ Calibration *read_calibration(char *ori_file, char *add_file,
     if (read_ori(&(ret->ext_par), &(ret->int_par), &(ret->glass_par), ori_file,
         &(ret->added_par), add_file, fallback_file))
     {
+
         rotation_matrix(&(ret->ext_par));
+
         return ret;
     } else {
         free(ret);
@@ -265,7 +268,11 @@ Calibration *read_calibration(char *ori_file, char *add_file,
 *
 *  Returns:
 *   modified Exterior Ex
-*
+* 
+* Alex: for some reason the explanation by photogrammetric people
+* e.g. https://engineering.purdue.edu/~bethel/rot2.pdf
+* gives the transposed matrix: M = M_k * M_phi * M_omega
+* 
 */
  void rotation_matrix (Exterior *Ex) {
  
@@ -279,14 +286,14 @@ Calibration *read_calibration(char *ori_file, char *add_file,
     ck = cos(Ex->kappa);
     sk = sin(Ex->kappa);
 
-    Ex->dm[0][0] = cp * cp;
+    Ex->dm[0][0] = cp * ck;
     Ex->dm[0][1] = -cp * sk;
     Ex->dm[0][2] = sp;
     Ex->dm[1][0] = co * sk + so * sp * ck;
     Ex->dm[1][1] = co * ck - so * sp * sk;
     Ex->dm[1][2] = -so * cp;
     Ex->dm[2][0] = so * sk - co * sp * ck;
-    Ex->dm[2][1] = so * ck + co* sp * sk;
+    Ex->dm[2][1] = so * ck + co * sp * sk;
     Ex->dm[2][2] = co * cp;
 }
 
