@@ -107,11 +107,6 @@ START_TEST(test_matmul)
      				fabs(b[1] - 1.20) < EPS && 
      			    fabs(b[2] - 0.700)  < EPS,
          "Was expecting b to be 0.9,1.2,0.7 but found %f %f %f\n", b[0],b[1],b[2]);
-    // mark_point();     
-    // ck_assert_msg( (1 == 2), "test was not successful");
-    
-	// fail_unless( (b[0] == 0.900) && (b[1] == 1.200) && (b[2] == 0.700),'b failed');
-	
     
 }
 END_TEST
@@ -120,6 +115,22 @@ END_TEST
 
 START_TEST(test_ray_tracing)
 {
+	double a[] = {1.0,1.0,1.0};
+	double b[] = {0.0,0.0,0.0};
+		
+	Exterior test_ext = {
+        0.0, 0.0, 100.0,
+        0.0, 0.0, 0.0, 
+        {{1.0, 0.2, -0.3}, 
+        {0.2, 1.0, 0.0},
+        {-0.3, 0.0, 1.0}}};
+        
+    Interior test_int = {0., 0., 100.};
+    Glass test_glass = {0.0001, 0.00001, 1.};
+    ap_52 test_addp = {0., 0., 0., 0., 0., 1., 0.};
+        
+            
+    ray_tracing_v2 (x1,y1, test_ext, I1, G1, mmp, &X1, &Y1, &Z1, &a, &b, &c);
     
     fail_unless(1 == 1);    
     

@@ -99,7 +99,7 @@ void modu(double a[3], double *m) {
 */
 
 
-void ray_tracing_v2 (double x, double y,Exterior Ex, Interior I, Glass G, mm_np mm,\
+void ray_tracing_v2 (double x, double y, Exterior Ex, Interior I, Glass G, mm_np mm,\
 double *Xb2, double *Yb2, double *Zb2, double *a3, double *b3, double *c3) {
 /* ray-tracing, see HOEHLE and Manual of Photogrammetry */
 
@@ -142,17 +142,17 @@ double *Xb2, double *Yb2, double *Zb2, double *a3, double *b3, double *c3) {
 	c = sqrt(G.vec_x*G.vec_x + G.vec_y*G.vec_y + G.vec_z*G.vec_z);
 	base2[0] = G.vec_x/c; base2[1] = G.vec_y/c; base2[2] = G.vec_z/c;
 
-	c=c+mm.d[0];
-	dummy=base2[0]*a[0]+base2[1]*a[1]+base2[2]*a[2];
-	dummy=dummy-c;
-	d1=-dummy/(base2[0]*b[0]+base2[1]*b[1]+base2[2]*b[2]);
+	c = c + mm.d[0];
+	dummy = base2[0]*a[0]+base2[1]*a[1]+base2[2]*a[2];
+	dummy = dummy-c;
+	d1 = -dummy/(base2[0]*b[0]+base2[1]*b[1]+base2[2]*b[2]);
 	
 
 	/* point on the horizontal plane between n1,n2 */
 	//old Xb1 = Ex.x0 + d1*a1;  Yb1 = Ex.y0 + d1*b1;  Zb1 = Ex.z0 + d1*c1;
-	Xb1=a[0]+b[0]*d1;
-	Yb1=a[1]+b[1]*d1;
-	Zb1=a[2]+b[2]*d1;
+	Xb1 = a[0] + b[0]*d1;
+	Yb1 = a[1] + b[1]*d1;
+	Zb1 = a[2] + b[2]*d1;
 	
 	//old cosi1 = c1;
 	//cosi1=base2[0]*b[0]+base2[1]*b[1]+base2[2]*b[2];
@@ -167,20 +167,20 @@ double *Xb2, double *Yb2, double *Zb2, double *a3, double *b3, double *c3) {
 	
 	//old d2 = -mm.d[0]/c2;
 
-    bn[0]=base2[0];bn[1]=base2[1];bn[2]=base2[2];
-	n=(b[0]*bn[0]+b[1]*bn[1]+b[2]*bn[2]);
-	bp[0]=b[0]-bn[0]*n;bp[1]=b[1]-bn[1]*n;bp[2]=b[2]-bn[2]*n;
-	dummy=sqrt(bp[0]*bp[0]+bp[1]*bp[1]+bp[2]*bp[2]);
-	bp[0]=bp[0]/dummy;bp[1]=bp[1]/dummy;bp[2]=bp[2]/dummy;
+    bn[0] = base2[0]; bn[1] = base2[1]; bn[2] = base2[2];
+	n = (b[0]*bn[0]+b[1]*bn[1]+b[2]*bn[2]);
+	bp[0] = b[0] - bn[0]*n; bp[1] = b[1] - bn[1]*n; bp[2] = b[2] - bn[2]*n;
+	dummy = sqrt(bp[0]*bp[0] + bp[1]*bp[1] + bp[2]*bp[2]);
+	bp[0] = bp[0]/dummy;bp[1]=bp[1]/dummy;bp[2]=bp[2]/dummy;
 
-	p=sqrt(1-n*n);
+	p = sqrt(1 - n*n);
 	p = p * mm.n1/mm.n2[0];//interface parallel
 	//n = n * mm.n1/mm.n2[0] - factor;//interface normal
-	n=-sqrt(1-p*p);
-	a2=p*bp[0]+n*bn[0];
-	b2=p*bp[1]+n*bn[1];
-	c2=p*bp[2]+n*bn[2];
-    d2=mm.d[0]/fabs((base2[0]*a2+base2[1]*b2+base2[2]*c2));
+	n =-sqrt(1-p*p);
+	a2 = p*bp[0]+n*bn[0];
+	b2 = p*bp[1]+n*bn[1];
+	c2 = p*bp[2]+n*bn[2];
+    d2 = mm.d[0]/fabs((base2[0]*a2+base2[1]*b2+base2[2]*c2));
 	
 
 	/* point on the horizontal plane between n2,n3 */
@@ -205,7 +205,7 @@ double *Xb2, double *Yb2, double *Zb2, double *a3, double *b3, double *c3) {
 	p=sqrt(1-n*n);
 	p = p * mm.n2[0]/mm.n3;//interface parallel
 	//n = n * mm.n2[0]/mm.n3 - factor;//interface normal
-	n=-sqrt(1-p*p);
+	n = -sqrt(1-p*p);
 	*a3=p*bp[0]+n*bn[0];
 	*b3=p*bp[1]+n*bn[1];
 	*c3=p*bp[2]+n*bn[2];
