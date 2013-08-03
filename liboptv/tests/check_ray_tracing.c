@@ -101,8 +101,10 @@ START_TEST(test_matmul)
     // printf("b: %6.3f %6.3f %6.3f\n", b[0],b[1],b[2]);
     
     
-    ck_assert_msg( (b[0] == 0.9),
-         "Was expecting b[0] to be 0.9, but found %6.3f", b[0]);
+     ck_assert_msg( fabs(b[0] - 0.9)<.001 && fabs(b[1] - 1.20)<0.001 && fabs(b[2] - 0.7)<0.001 ,
+         "Was expecting b to be 0.9,1.2,0.7 but found %f %f %f\n", b[0],b[1],b[2]);
+    // mark_point();     
+    // ck_assert_msg( (1 == 2), "test was not successful");
     
 	// fail_unless( (b[0] == 0.900) && (b[1] == 1.200) && (b[2] == 0.700),'b failed');
 	
