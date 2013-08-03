@@ -176,11 +176,13 @@ START_TEST(test_ray_tracing)
     ck_assert_msg( fabs(X1 - 110.406944) < EPS && 
      			   fabs(Y1 - 88.325788) < EPS && 
      			   fabs(Z1 - 0.988076)  < EPS,
-         "Was expecting X1,Y1,Z1 to be 110.406944 88.325788 0.988076 but found %f %f %f\n", X1,Y1,Z1);
+         "Was expecting X1,Y1,Z1 to be 110.407 88.326 0.988 but found %f %f %f\n", \
+         		X1,Y1,Z1);
     ck_assert_msg( fabs(a - 0.387960) < EPS && 
      			   fabs(b - 0.310405) < EPS && 
      			   fabs(c - -0.867834)  < EPS,
-         "Was expecting a,b,c to be 0.387960 0.310405 -0.867834 but found %f %f %f\n", a,b,c);     
+         "Was expecting a,b,c to be 0.387960 0.310405 -0.867834 but found %f %f %f\n", \
+         a,b,c);          
     
     
     

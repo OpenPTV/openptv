@@ -9,6 +9,9 @@ Address:		       	Institute of Geodesy and Photogrammetry
 			       		CH - 8093 Zurich
 
 Creation Date:			21.4.88
+Modification date: 		August 4, 2013, Alex Liberzon
+						ray_tracing_v2 is the only functions used
+						
 	
 Description:	       	traces one ray, given by image coordinates,
 			       	exterior and interior orientation 

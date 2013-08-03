@@ -30,6 +30,5 @@ double *Xb2, double *Yb2, double *Zb2, double *a3, double *b3, double *c3);
 
 
 
-
 #endif
 
