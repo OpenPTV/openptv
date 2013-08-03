@@ -44,10 +44,19 @@ void norm_cross(double a[3], double b[3], double *n1, double *n2, double *n3) {
 	res[2]=a[0]*b[1]-a[1]*b[0];
 	
 	norm = sqrt((res[0]*res[0])+(res[1]*res[1]) + (res[2]*res[2]));
+	// fixing the zero length norm bug:
+	// Alex, Aug 3, 2013
+	// Thanks for the test suite :)
 	
-	*n1=res[0]/norm;
-	*n2=res[1]/norm;
-	*n3=res[2]/norm;
+	if (norm == 0.0){
+		*n1 = res[0];
+		*n2 = res[0];
+		*n3 = res[0];
+	} else {
+        *n1=res[0]/norm;
+        *n2=res[1]/norm;
+        *n3=res[2]/norm;
+	}
 }
 
 /* Beat Lüthi Nov 2008

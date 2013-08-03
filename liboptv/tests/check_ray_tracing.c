@@ -72,7 +72,6 @@ fail_unless( m == 10.0);
 END_TEST
 
 
-
 START_TEST(test_ray_tracing)
 {
     
