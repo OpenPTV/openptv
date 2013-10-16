@@ -9,7 +9,7 @@ add_executable(check_calibration check_calibration.c)
 add_dependencies(check_calibration optv)
 add_executable(check_parameters check_parameters.c)
 add_dependencies(check_parameters optv)
-add_executable(check_ray_tracing check_ray_tracing.c)
+add_executable(check_lsqadj check_lsqadj.c)
 add_dependencies(check_lsqadj optv)
 
 get_property(OPTV_LIBRARY TARGET optv PROPERTY LOCATION)

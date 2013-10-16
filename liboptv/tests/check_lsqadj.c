@@ -6,6 +6,7 @@
 #include <math.h>
 #include "parameters.h"
 #include "calibration.h"
+#include "lsqadj.h"
 
 #define EPS 1E-5
 
@@ -135,7 +136,7 @@ Suite* fb_suite(void) {
     TCase *tc = tcase_create ("lsadj test");
     tcase_add_test(tc, test_norm_cross);
     tcase_add_test(tc, test_dot);
-    tcase_add_test(tc, test_dot);
+    tcase_add_test(tc, test_modu);
     tcase_add_test(tc, test_matmul);
     suite_add_tcase (s, tc);   
     return s;

@@ -244,3 +244,60 @@ void mat_transpose (double *mat1, double *mat2, int m, int n) {
   	}
   }
 }
+
+
+void norm_cross(double a[3], double b[3], double *n1, double *n2, double *n3) {
+
+//Beat L¸thi Nov 2008
+
+	double  res[3], dummy, norm;
+
+	res[0]=a[1]*b[2]-a[2]*b[1];
+	res[1]=a[2]*b[0]-a[0]*b[2];
+	res[2]=a[0]*b[1]-a[1]*b[0];
+	
+	// norm = sqrt( (res[0]*res[0]) + (res[1]*res[1]) + (res[2]*res[2]) );
+	
+	// printf("Res: %6.3f %6.3f %6.3f\n", res[0],res[1],res[2]);
+	
+	modu(res,&norm);
+	
+	// printf(" Norm : %6.3f \n",norm);
+	
+	// fixing the zero length norm bug:
+	// Alex, Aug 3, 2013
+	// Thanks for the test suite :)
+	
+	if (norm == 0.0){
+		*n1 = res[0];
+		*n2 = res[0];
+		*n3 = res[0];
+	} else {	
+	*n1=res[0]/norm;
+	*n2=res[1]/norm;
+	*n3=res[2]/norm;
+	}
+}
+
+/* Beat L¸thi Nov 2008
+* Dot product of two vectors 
+* TODO: use ready subroutines from vec_utils.h
+*
+*/
+
+void dot(double a[3], double b[3], double *d) {
+
+	*d = a[0]*b[0] + a[1]*b[1] + a[2]*b[2];
+}
+
+
+/* Modulus of a vector
+* TODO: use ready subroutine called norm in vec_utils.h
+*/
+//Beat L¸thi Nov 2008
+void modu(double a[3], double *m) {
+
+	*m = sqrt(a[0]*a[0] + a[1]*a[1] + a[2]*a[2]);
+}
+
+
