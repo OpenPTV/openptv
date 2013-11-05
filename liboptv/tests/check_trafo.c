@@ -28,7 +28,7 @@ START_TEST(test_metric_to_pixel)
     double xp, yp;        
         
     
-    metric_to_pixel (xc, yc, imx, imy, pix_x, pix_y, &xp, &yp, field);    
+    metric_to_pixel (&xp, &yp, xc, yc, imx, imy, pix_x, pix_y,  field);    
     
     
      ck_assert_msg( fabs(xp - 512.0) < EPS && 
@@ -38,7 +38,7 @@ START_TEST(test_metric_to_pixel)
     xc = 1.0;
     yc = 0.0;
     
-    metric_to_pixel (xc, yc, imx, imy, pix_x, pix_y, &xp, &yp, field);    
+    metric_to_pixel (&xp, &yp, xc, yc, imx, imy, pix_x, pix_y,  field);    
     
     
      ck_assert_msg( fabs(xp - 612.0) < EPS && 
@@ -48,7 +48,7 @@ START_TEST(test_metric_to_pixel)
     xc = 0.0;
     yc = -1.0;
     
-    metric_to_pixel (xc, yc, imx, imy, pix_x, pix_y, &xp, &yp, field);    
+    metric_to_pixel (&xp, &yp, xc, yc, imx, imy, pix_x, pix_y,  field);    
     
     
      ck_assert_msg( fabs(xp - 512.0) < EPS && 
@@ -77,8 +77,8 @@ START_TEST(test_pixel_to_metric)
     double xc1, yc1;      
         
     
-    metric_to_pixel (xc, yc, imx, imy, pix_x, pix_y, &xp, &yp, field); 
-    pixel_to_metric (xp, yp, imx, imy, pix_x, pix_y, &xc1, &yc1, field);   
+    metric_to_pixel (&xp, &yp, xc, yc, imx, imy, pix_x, pix_y,  field); 
+    pixel_to_metric (&xc1, &yc1,xp, yp, imx, imy, pix_x, pix_y,  field);   
     
     
      ck_assert_msg( fabs(xc1 - xc) < EPS && 
@@ -88,8 +88,8 @@ START_TEST(test_pixel_to_metric)
     xc = 1.0;
     yc = 0.0;
     
-    metric_to_pixel (xc, yc, imx, imy, pix_x, pix_y, &xp, &yp, field);    
-    pixel_to_metric (xp, yp, imx, imy, pix_x, pix_y, &xc1, &yc1, field);   
+    metric_to_pixel (&xp, &yp, xc, yc, imx, imy, pix_x, pix_y,  field);    
+    pixel_to_metric (&xc1, &yc1,xp, yp, imx, imy, pix_x, pix_y,  field);   
     
     
      ck_assert_msg( fabs(xc1 - xc) < EPS && 
@@ -99,8 +99,8 @@ START_TEST(test_pixel_to_metric)
     xc = 0.0;
     yc = -1.0;
     
-    metric_to_pixel (xc, yc, imx, imy, pix_x, pix_y, &xp, &yp, field);    
-    pixel_to_metric (xp, yp, imx, imy, pix_x, pix_y, &xc1, &yc1, field);   
+    metric_to_pixel (&xp, &yp, xc, yc, imx, imy, pix_x, pix_y,  field);    
+    pixel_to_metric (&xc1, &yc1,xp, yp, imx, imy, pix_x, pix_y,  field);   
     
     
      ck_assert_msg( fabs(xc1 - xc) < EPS && 
