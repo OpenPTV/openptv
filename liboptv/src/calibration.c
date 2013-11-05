@@ -269,9 +269,9 @@ Calibration *read_calibration(char *ori_file, char *add_file,
 *  Returns:
 *   modified Exterior Ex
 * 
-* Alex: for some reason the explanation by photogrammetric people
+* Note that in some versions photogrammetric community 
 * e.g. https://engineering.purdue.edu/~bethel/rot2.pdf
-* gives the transposed matrix: M = M_k * M_phi * M_omega
+* uses the transposed matrix: M = M_k * M_phi * M_omega
 * 
 */
  void rotation_matrix (Exterior *Ex) {

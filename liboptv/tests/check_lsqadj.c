@@ -14,40 +14,40 @@
 START_TEST(test_norm_cross)
 {
 
-double n[3];
+	double n[3];
 
-// test simple cross-product normalized to unity
+	// test simple cross-product normalized to unity
 
-double a[] = {1.0, 0.0, 0.0};
-double b[] = {0.0, 2.0, 0.0};
+	double a[] = {1.0, 0.0, 0.0};
+	double b[] = {0.0, 2.0, 0.0};
 
-norm_cross(a,b,&n[0],&n[1],&n[2]);
-fail_unless( (n[0] == 0.0) && (n[1] == 0.0) && (n[2] == 1.0));
-
-
-// test negative values in the output
-
-norm_cross(b,a,&n[0],&n[1],&n[2]);
-// fail_unless( (n[0] == 0.0) && (n[1] == 0.0) && (n[2] == -1.0));
+	norm_cross(a,b,&n[0],&n[1],&n[2]);
+	fail_unless( (n[0] == 0.0) && (n[1] == 0.0) && (n[2] == 1.0));
 
 
-ck_assert_msg( fabs(n[0] - 0.0) < EPS && 
-     		   fabs(n[1] - 0.0) < EPS && 
-     		   fabs(n[2] - -1.0)  < EPS,
-         "Was expecting n to be 0., 0., -1. but found %f %f %f\n", n[0],n[1],n[2]);
-         
+	// test negative values in the output
 
-// our norm_cross had a bug when multiplying the parallel vectors
-// it was returning nan instead of 0.0
-// fixed Aug. 3, 2013, see in ray_tracing.c
+	norm_cross(b,a,&n[0],&n[1],&n[2]);
+	// fail_unless( (n[0] == 0.0) && (n[1] == 0.0) && (n[2] == -1.0));
 
-norm_cross(a,a,&n[0],&n[1],&n[2]);
-// fail_unless( (n[0] == 0.0) && (n[1] == 0.0) && (n[2] == 0.0));
 
-ck_assert_msg( fabs(n[0] - 0.0) < EPS && 
-     		   fabs(n[1] - 0.0) < EPS && 
-     		   fabs(n[2] - 0.0)  < EPS,
-         "Was expecting n to be 0., 0., 0. but found %f %f %f\n", n[0],n[1],n[2]);
+	ck_assert_msg( fabs(n[0] - 0.0) < EPS && 
+				   fabs(n[1] - 0.0) < EPS && 
+				   fabs(n[2] - -1.0)  < EPS,
+			 "Was expecting n to be 0., 0., -1. but found %f %f %f\n", n[0],n[1],n[2]);
+		 
+
+	// our norm_cross had a bug when multiplying the parallel vectors
+	// it was returning nan instead of 0.0
+	// fixed Aug. 3, 2013, see in ray_tracing.c
+
+	norm_cross(a,a,&n[0],&n[1],&n[2]);
+	// fail_unless( (n[0] == 0.0) && (n[1] == 0.0) && (n[2] == 0.0));
+
+	ck_assert_msg( fabs(n[0] - 0.0) < EPS && 
+				   fabs(n[1] - 0.0) < EPS && 
+				   fabs(n[2] - 0.0)  < EPS,
+			 "Was expecting n to be 0., 0., 0. but found %f %f %f\n", n[0],n[1],n[2]);
 
 
 }
@@ -57,27 +57,27 @@ END_TEST
 START_TEST(test_dot)
 {
 
-double d;
+	double d;
 
-// test simple cross-product normalized to unity
+	// test simple cross-product normalized to unity
 
-double a[] = {1.0, 0.0, 0.0};
-double b[] = {0.0, 2.0, 0.0};
+	double a[] = {1.0, 0.0, 0.0};
+	double b[] = {0.0, 2.0, 0.0};
 
-dot(a,b,&d);
+	dot(a,b,&d);
 
-//fail_unless( d == 0.0 );
-ck_assert_msg( fabs(d - 0.0) < EPS,
-         "Was expecting d to be 0.0 but found %f \n", d);
+	//fail_unless( d == 0.0 );
+	ck_assert_msg( fabs(d - 0.0) < EPS,
+			 "Was expecting d to be 0.0 but found %f \n", d);
 
-b[0] = 2.0;
-b[1] = 2.0;
-b[2] = 0.0;
+	b[0] = 2.0;
+	b[1] = 2.0;
+	b[2] = 0.0;
 
-dot(b,a,&d);
-// fail_unless( d == 2.0 );
-ck_assert_msg( fabs(d - 2.0) < EPS,
-         "Was expecting d to be 2.0 but found %f \n", d);
+	dot(b,a,&d);
+	// fail_unless( d == 2.0 );
+	ck_assert_msg( fabs(d - 2.0) < EPS,
+			 "Was expecting d to be 2.0 but found %f \n", d);
 
 }
 END_TEST
@@ -85,14 +85,14 @@ END_TEST
 
 START_TEST(test_modu)
 {
-double a[]= {10.0, 0.0, 0.0};
-double m;
+	double a[]= {10.0, 0.0, 0.0};
+	double m;
 
-modu(a,&m);
+	modu(a,&m);
 
-// fail_unless( m == 10.0);
-ck_assert_msg( fabs(m - 10.0) < EPS,
-         "Was expecting m to be 10.0 but found %f \n", m);
+	// fail_unless( m == 10.0);
+	ck_assert_msg( fabs(m - 10.0) < EPS,
+			 "Was expecting m to be 10.0 but found %f \n", m);
 
 }
 END_TEST
@@ -111,14 +111,10 @@ START_TEST(test_matmul)
         {0.2, 1.0, 0.0},
         {-0.3, 0.0, 1.0}}};
         
-    // printf("a: %6.3f %6.3f %6.3f\n", a[0],a[1],a[2]);
-    // printf("b: %6.3f %6.3f %6.3f\n", b[0],b[1],b[2]);
     
     
     matmul (b, (double *) test_Ex.dm, a, 3,3,1);
     
-    // printf("a: %6.3f %6.3f %6.3f\n", a[0],a[1],a[2]);
-    // printf("b: %6.3f %6.3f %6.3f\n", b[0],b[1],b[2]);
     
     
      ck_assert_msg( fabs(b[0] - 0.9) < EPS && 

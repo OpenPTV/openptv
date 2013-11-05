@@ -7,12 +7,9 @@
         pp.165-168
 */
 
-#include "tracking_frame_buf.h"
-
 #ifndef CALIBRATION_H
 #define CALIBRATION_H
 
-#define PI 3.14159
 
 
 typedef	double	Dmatrix[3][3];	/* 3 x 3 rotation matrix */
