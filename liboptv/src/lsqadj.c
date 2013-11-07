@@ -1,3 +1,8 @@
+#include "lsqadj.h"
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <math.h>
 /* parts of code of adjlib.c from Horst Beyer, Hannes Kirndorfer */
 
 /* TODO: understand what ata means and why it's not used 

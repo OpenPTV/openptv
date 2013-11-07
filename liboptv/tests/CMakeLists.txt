@@ -47,7 +47,7 @@ add_custom_command(TARGET check_parameters PRE_BUILD
     ${CMAKE_CURRENT_SOURCE_DIR}/testing_fodder $<TARGET_FILE_DIR:check_parameters>/testing_fodder)
 
 target_link_libraries(check_lsqadj ${LIBS})
-add_test(check_parameters ${CMAKE_CURRENT_BINARY_DIR}/check_lsqadj)
+add_test(check_lsqadj ${CMAKE_CURRENT_BINARY_DIR}/check_lsqadj)
 
 add_custom_command(TARGET check_lsqadj PRE_BUILD
     COMMAND ${CMAKE_COMMAND} -E copy_directory
