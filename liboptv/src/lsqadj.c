@@ -1,12 +1,13 @@
 /* parts of code of adjlib.c from Horst Beyer, Hannes Kirndorfer */
 
-#include "ptv.h"
+/* TODO: understand what ata means and why it's not used 
+* anymore, but ata_v2 is used in orientation.c 
+*/
 
-void ata ( a, ata, m, n )
-int      m, n;
-double   *a, *ata;  /* matrix a and resultmatrix ata = at a 
+void ata ( double *a, double *ata, int m, int n ) {
+ /* matrix a and resultmatrix ata = at a 
 		       a is m * n, ata is n * n  */
-{
+
   register int      i, j, k;
   
   for (i = 0; i < n; i++)
@@ -18,13 +19,13 @@ double   *a, *ata;  /* matrix a and resultmatrix ata = at a
 	    *(ata+i*n+j) +=  *(a+k*n+i)  * *(a+k*n+j);
 	}
     }
-}	/* end ata.c */
+}
 
-void ata_v2 ( a, ata, m, n, n_large )
-int      m, n, n_large;
-double   *a, *ata;  /* matrix a and resultmatrix ata = at a 
+
+void ata_v2 (double *a, double *ata, int m, int n, int n_large ) {
+/* matrix a and resultmatrix ata = at a 
 		       a is m * n, ata is n * n  */
-{
+
   register int      i, j, k;
   
   for (i = 0; i < n; i++)
@@ -36,15 +37,14 @@ double   *a, *ata;  /* matrix a and resultmatrix ata = at a
 	    *(ata+i*n_large+j) +=  *(a+k*n_large+i)  * *(a+k*n_large+j);
 	}
     }
-}	/* end ata.c */
+}
 
 
-void atl (u, a, l, m, n)
-int      m, n;
-double   *a, *u, *l;  /* matrix a , vector l and 
+void atl (double *u, double *a, double *l, int m, int n) {
+
+/* matrix a , vector l and 
 			 resultvector u = at l ,  a(m,n)  */
 
-{  
   int      i, k;
   
   for (i = 0; i < n; i++)
@@ -52,16 +52,15 @@ double   *a, *u, *l;  /* matrix a , vector l and
       *(u + i) = 0.0;
       for (k = 0; k < m; k++)
 	*(u + i) += *(a + k * n + i) * *(l + k);
-    }
-  
-} /* end atl.c */
+    }  
+} 
 
-void atl_v2 (u, a, l, m, n, n_large)
-int      m, n, n_large;
-double   *a, *u, *l;  /* matrix a , vector l and 
+
+
+void atl_v2 (double *u, double *a, double *l, int m, int n, int n_large) {
+/* matrix a , vector l and 
 			 resultvector u = at l ,  a(m,n)  */
 
-{  
   int      i, k;
   
   for (i = 0; i < n; i++)
@@ -71,15 +70,12 @@ double   *a, *u, *l;  /* matrix a , vector l and
 	*(u + i) += *(a + k * n_large + i) * *(l + k);
     }
   
-} /* end atl.c */
+}
 
+/* input matrix size n * n */
+/* number of observations */
 
-void matinv (a, n)
-
-double   *a;	/* input matrix size n * n */
-int      n;         /* number of observations */
-
-{
+void matinv (double *a, int n) {
   int      ipiv, irow, icol;
   double   pivot;	/* pivot element = 1.0 / aii */
   double	npivot;	/*	negative of pivot */
@@ -112,14 +108,12 @@ int      n;         /* number of observations */
 	}
       *(a + ipiv * n + ipiv) = pivot;
     }
-}	/* end matinv */
+}
 
-void matinv_v2 (a, n, n_large)
 
-double   *a;	/* input matrix size n * n */
-int      n, n_large;         /* number of observations */
-
-{
+/* a is the input matrix size n * n */
+/* n is the number of observations */
+void matinv_v2 (double *a, int n, int n_large) {
   int      ipiv, irow, icol;
   double   pivot;	/* pivot element = 1.0 / aii */
   double	npivot;	/*	negative of pivot */
@@ -155,11 +149,9 @@ int      n, n_large;         /* number of observations */
 }	/* end matinv */
 
 
-void matmul (a,b,c,m,n,k)
-int    m,n,k;
-double  *a,*b,*c;
+void matmul (double *a, double *b, double *c, int m, int n, int k) {  
 
-{  int    i,j,l;
+int    i,j,l;
 double  x,*pa,*pb,*pc;
 
 for (i=0; i<k; i++)
@@ -179,40 +171,40 @@ for (i=0; i<k; i++)
   }
 }
 
-void matmul_v2 (a,b,c,m,n,k,m_large,n_large)
-int    m,n,k,m_large,n_large;
-double  *a,*b,*c;
 
-{  int    i,j,l;
+
+void matmul_v2 (double *a, double *b, double *c, int m,int n,int k,\
+int m_large, int n_large) { 
+
+int    i,j,l;
 double  x,*pa,*pb,*pc;
 
-for (i=0; i<k; i++)
-  {  pb = b;
+for (i=0; i<k; i++) {  
+  pb = b;
   pa = a++;
-  for (j=0; j<m; j++)
-    {  pc = c;
+  for (j=0; j<m; j++) {  
+    pc = c;
     x = 0.0;
-    for (l=0; l<n; l++)
-      {  x = x + *pb++ * *pc;
+    for (l=0; l<n; l++) {  
+      x = x + *pb++ * *pc;
       pc += k;
       }
-	for (l=0;l<n_large-n;l++)
-	  {pb++;
-       pc += k;
+	for (l=0;l<n_large-n;l++) {
+	  pb++;
+	  pc += k;
 	  }
     *pa = x;
     pa += k;
     }
-  for (j=0;j<m_large-m;j++)
-    {pa += k;}
+  for (j=0;j<m_large-m;j++) {
+    pa += k;
+    }
   c++;
   }
 }
 
-void transp (a,m,n)
-double  a[];
-int    m,n;
-{  
+
+void transp (double a[], int m, int n) {  
   double  *b,*c,*d,*e;
   int    i,j;
   
@@ -242,11 +234,68 @@ err:
   exit (-1);
 }
 
-void mat_transpose (mat1, mat2, m, n)
-double	*mat1, *mat2;
-int		n, m;
-{
+void mat_transpose (double *mat1, double *mat2, int m, int n) {
   int		i, j;
-   
-  for (i=0; i<m; i++)	for (j=0; j<n; j++)	*(mat2+j*m+i) = *(mat1+i*n+j);
+  for (i=0; i<m; i++){ 
+  	for (j=0; j<n; j++){
+  		*(mat2+j*m+i) = *(mat1+i*n+j);
+  	}
+  }
 }
+
+
+void norm_cross(double a[3], double b[3], double *n1, double *n2, double *n3) {
+
+//Beat L¸thi Nov 2008
+
+	double  res[3], dummy, norm;
+
+	res[0]=a[1]*b[2]-a[2]*b[1];
+	res[1]=a[2]*b[0]-a[0]*b[2];
+	res[2]=a[0]*b[1]-a[1]*b[0];
+	
+	// norm = sqrt( (res[0]*res[0]) + (res[1]*res[1]) + (res[2]*res[2]) );
+	
+	// printf("Res: %6.3f %6.3f %6.3f\n", res[0],res[1],res[2]);
+	
+	modu(res,&norm);
+	
+	// printf(" Norm : %6.3f \n",norm);
+	
+	// fixing the zero length norm bug:
+	// Alex, Aug 3, 2013
+	// Thanks for the test suite :)
+	
+	if (norm == 0.0){
+		*n1 = res[0];
+		*n2 = res[0];
+		*n3 = res[0];
+	} else {	
+	*n1=res[0]/norm;
+	*n2=res[1]/norm;
+	*n3=res[2]/norm;
+	}
+}
+
+/* Beat L¸thi Nov 2008
+* Dot product of two vectors 
+* TODO: use ready subroutines from vec_utils.h
+*
+*/
+
+void dot(double a[3], double b[3], double *d) {
+
+	*d = a[0]*b[0] + a[1]*b[1] + a[2]*b[2];
+}
+
+
+/* Modulus of a vector
+* TODO: use ready subroutine called norm in vec_utils.h
+*/
+//Beat L¸thi Nov 2008
+void modu(double a[3], double *m) {
+
+	*m = sqrt(a[0]*a[0] + a[1]*a[1] + a[2]*a[2]);
+}
+
+
