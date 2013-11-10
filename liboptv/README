@@ -42,7 +42,7 @@ CMake. Before installation first we need to make sure that the dependencies are 
    
      $ cmake
      $ make
-     $ make check # optional, runs the test suite.
+     $ make verify # optional, runs the test suite.
      $ make install
 
 The install process will put the header files and libraries in default system
@@ -128,7 +128,7 @@ if it is a different path in your system.
 Now to build and install liboptv, type
 
     $ make
-    $ make check
+    $ make verify
     $ make install
 
 This would install liboptv in what MSYS refers to as /usr, which is 
