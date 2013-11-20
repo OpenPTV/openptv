@@ -279,7 +279,7 @@ Calibration *read_calibration(char *ori_file, char *add_file,
     ck = cos(Ex->kappa);
     sk = sin(Ex->kappa);
 
-    Ex->dm[0][0] = cp * cp;
+    Ex->dm[0][0] = cp * ck;
     Ex->dm[0][1] = -cp * sk;
     Ex->dm[0][2] = sp;
     Ex->dm[1][0] = co * sk + so * sp * ck;
