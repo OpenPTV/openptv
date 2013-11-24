@@ -15,8 +15,7 @@ add_dependencies(check_parameters optv)
 add_executable(check_lsqadj EXCLUDE_FROM_ALL check_lsqadj.c)
 add_dependencies(check_lsqadj optv)
 
-
-add_executable(check_lsqadj EXCLUDE_FROM_ALL check_ray_tracing.c)
+add_executable(check_ray_tracing EXCLUDE_FROM_ALL check_ray_tracing.c)
 add_dependencies(check_ray_tracing optv)
 
 get_property(OPTV_LIBRARY TARGET optv PROPERTY LOCATION)
