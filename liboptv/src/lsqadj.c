@@ -1,8 +1,5 @@
 #include "lsqadj.h"
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <math.h>
+
 /* parts of code of adjlib.c from Horst Beyer, Hannes Kirndorfer */
 
 /* TODO: understand what ata means and why it's not used 
@@ -246,52 +243,6 @@ void mat_transpose (double *mat1, double *mat2, int m, int n) {
   		*(mat2+j*m+i) = *(mat1+i*n+j);
   	}
   }
-}
-
-
-void norm_cross(double a[3], double b[3], double *n1, double *n2, double *n3) {
-
-//Beat Luethi Nov 2008
-
-	double  res[3], dummy, norm;
-
-	res[0]=a[1]*b[2]-a[2]*b[1];
-	res[1]=a[2]*b[0]-a[0]*b[2];
-	res[2]=a[0]*b[1]-a[1]*b[0];
-	
-	modu(res,&norm);
-	
-	
-	if (norm == 0.0){ // avoids zero length vector bug
-		*n1 = res[0];
-		*n2 = res[0];
-		*n3 = res[0];
-	} else {	
-	*n1=res[0]/norm;
-	*n2=res[1]/norm;
-	*n3=res[2]/norm;
-	}
-}
-
-/* Beat Luethi Nov 2008
-* Dot product of two vectors 
-* TODO: use ready subroutines from vec_utils.h
-*
-*/
-
-void dot(double a[3], double b[3], double *d) {
-
-	*d = a[0]*b[0] + a[1]*b[1] + a[2]*b[2];
-}
-
-
-/* Modulus of a vector
-* TODO: use ready subroutine called norm in vec_utils.h
-*/
-//Beat Lue	thi Nov 2008
-void modu(double a[3], double *m) {
-
-	*m = sqrt(a[0]*a[0] + a[1]*a[1] + a[2]*a[2]);
 }
 
 

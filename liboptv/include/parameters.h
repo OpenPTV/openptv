@@ -38,8 +38,6 @@ typedef struct {
 volume_par* read_volume_par(char *filename);
 int compare_volume_par(volume_par *v1, volume_par *v2);
 
-
-
 typedef struct {
     int  	nlay; 
     double  n1;
