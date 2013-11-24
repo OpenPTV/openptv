@@ -6,7 +6,9 @@
 #include <math.h>
 #include "parameters.h"
 #include "calibration.h"
+#include "lsqadj.h"
 #include "ray_tracing.h"
+
 
 
 #define EPS 1E-5
