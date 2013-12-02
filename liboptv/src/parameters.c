@@ -254,8 +254,8 @@ control_par* read_control_par(char *filename) {
     if(fscanf(par_file, "%lf\n", &(ret->mm->n3)) == 0) goto handle_error;
     if(fscanf(par_file, "%lf\n", &(ret->mm->d[0])) == 0) goto handle_error; 
     
-    return ret;
     fclose(par_file);
+    return ret;
 
 handle_error:
     fclose(par_file);
