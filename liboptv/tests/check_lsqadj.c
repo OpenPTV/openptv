@@ -126,6 +126,38 @@ START_TEST(test_matmul)
 END_TEST
 
 
+
+START_TEST(test_ata)
+{
+
+	double a[4][3] = {{1, 0, 1}, {2, 2, 4},{1, 2, 3}, {2, 4, 3}};
+	double b[3][3];
+	double expected[3][3] = {{10, 14, 18}, {14, 24, 26},{18, 26, 35}};
+	
+	int i, j;
+	
+		
+	for (i=0; i<3; i++){
+            for (j=0; j<3; j++){
+                 b[i][j] = 0.0;
+                 }
+            }
+        
+    ata((double*) a, (double *) b, 4, 3, 3);
+    
+    for (i=0; i<3; i++){
+            for (j=0; j<3; j++){
+                 ck_assert_msg(fabs(b[i][j] - expected[i][j]) < EPS, "wrong item \
+                 [%d][%d] %f instead of %f", i,j,b[i][j],expected[i][j]);
+                 }
+            }
+    
+}
+END_TEST
+
+
+
+
 Suite* fb_suite(void) {
     Suite *s = suite_create ("lsqadj");
  
@@ -134,6 +166,7 @@ Suite* fb_suite(void) {
     tcase_add_test(tc, test_dot);
     tcase_add_test(tc, test_modu);
     tcase_add_test(tc, test_matmul);
+    tcase_add_test(tc, test_ata);
     suite_add_tcase (s, tc);   
     return s;
 }

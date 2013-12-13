@@ -5,30 +5,20 @@
 #include <math.h>
 /* parts of code of adjlib.c from Horst Beyer, Hannes Kirndorfer */
 
-/* TODO: understand what ata means and why it's not used 
-* anymore, but ata_v2 is used in orientation.c 
+
+/* Multiply transpose of a matrix A by matrix A itself, creating symmetric matrix
+%  with the option of working with the sub-matrix only 
+*
+*   Arguments:
+*   a - matrix of doubles of the size (m x n_large).
+*   ata  - matrix of the result multiply(a.T,a) of size (n x n)
+*   m - number of rows in matrix a
+*   n - number of rows and columns in the output ata - the size of the sub-matrix
+*   n_large - number of columns in matrix a
 */
 
-void ata ( double *a, double *ata, int m, int n ) {
- /* matrix a and resultmatrix ata = at a 
-		       a is m * n, ata is n * n  */
-
-  register int      i, j, k;
-  
-  for (i = 0; i < n; i++)
-    {
-      for (j = 0; j < n; j++)
-	{
-	  *(ata+i*n+j) = 0.0;
-	  for (k = 0; k < m; k++)
-	    *(ata+i*n+j) +=  *(a+k*n+i)  * *(a+k*n+j);
-	}
-    }
-}
-
-
-void ata_v2 (double *a, double *ata, int m, int n, int n_large ) {
-/* matrix a and resultmatrix ata = at a 
+void ata (double *a, double *ata, int m, int n, int n_large ) {
+/* matrix a and result matrix ata = at a 
 		       a is m * n, ata is n * n  */
 
   register int      i, j, k;
