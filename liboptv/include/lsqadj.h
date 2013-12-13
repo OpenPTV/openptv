@@ -4,8 +4,7 @@
 #define LSQADJ_H
 
 void ata(double *a, double *ata, int m, int n, int n_large);
-void atl(double *a, double *u, double *l, int m, int n);
-void atl_v2 (double *u, double *a, double *l, int m, int n, int n_large);
+void atl(double *u, double *a, double *l, int m, int n, int n_large);
 
 
 void matinv(double *a, int n);

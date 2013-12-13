@@ -155,7 +155,30 @@ START_TEST(test_ata)
 }
 END_TEST
 
+START_TEST(test_atl)
+{
 
+	double a[4][3] = {{1, 0, 1}, {2, 2, 4},{1, 2, 3}, {2, 4, 3}};
+	double l[4] = {1,2,3,4};
+	double u[3];
+	double expected[3] = {16, 26, 30};
+	
+	int i, j;
+	
+	for (i=0; i<3; i++){
+                 u[i] = 0.0;
+            }
+            
+    atl((double *)u, (double *)a, (double *)l, 4, 3, 3);
+    
+    
+    for (i=0; i<3; i++){
+                 ck_assert_msg(fabs(u[i] - expected[i]) < EPS, "wrong item \
+                 [%d] %f instead of %f", i,u[i],expected[i]);
+            }
+    
+}
+END_TEST
 
 
 Suite* fb_suite(void) {
@@ -167,6 +190,7 @@ Suite* fb_suite(void) {
     tcase_add_test(tc, test_modu);
     tcase_add_test(tc, test_matmul);
     tcase_add_test(tc, test_ata);
+    tcase_add_test(tc, test_atl);
     suite_add_tcase (s, tc);   
     return s;
 }

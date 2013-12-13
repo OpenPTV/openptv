@@ -7,7 +7,7 @@
 
 
 /* Multiply transpose of a matrix A by matrix A itself, creating symmetric matrix
-%  with the option of working with the sub-matrix only 
+*  with the option of working with the sub-matrix only 
 *
 *   Arguments:
 *   a - matrix of doubles of the size (m x n_large).
@@ -35,26 +35,22 @@ void ata (double *a, double *ata, int m, int n, int n_large ) {
 }
 
 
-void atl (double *u, double *a, double *l, int m, int n) {
 
+/* Multiply transpose of a matrix A by vector l , creating vector u
+*  with the option of working with the sub-vector only, when n < n_large 
+*
+*   Arguments:
+*   u - vector of doubles of the size (n x 1)
+*   a - matrix of doubles of the size (m x n_large).
+*   l  - vector of doubles (m x 1)
+*   m - number of rows in matrix a
+*   n - length of the output u - the size of the sub-matrix
+*   n_large - number of columns in matrix a
+*/
+
+void atl (double *u, double *a, double *l, int m, int n, int n_large) {
 /* matrix a , vector l and 
-			 resultvector u = at l ,  a(m,n)  */
-
-  int      i, k;
-  
-  for (i = 0; i < n; i++)
-    {
-      *(u + i) = 0.0;
-      for (k = 0; k < m; k++)
-	*(u + i) += *(a + k * n + i) * *(l + k);
-    }  
-} 
-
-
-
-void atl_v2 (double *u, double *a, double *l, int m, int n, int n_large) {
-/* matrix a , vector l and 
-			 resultvector u = at l ,  a(m,n)  */
+			 result vector u = at l ,  a(m,n)  */
 
   int      i, k;
   
