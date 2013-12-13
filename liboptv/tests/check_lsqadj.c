@@ -181,6 +181,31 @@ START_TEST(test_atl)
 END_TEST
 
 
+START_TEST(test_matinv)
+{
+
+	double c[3][3] = {{ 1, 2, 3}, { 0, 4, 5 }, { 1, 0, 6 }};
+	double expected[3][3] = {{1.090909, -0.545455, -0.090909},\
+	{0.227273, 0.136364, -0.227273}, {-0.181818, 0.090909, 0.181818}};
+	
+	int i, j;
+
+            
+    matinv ((double*) c, 3, 3);
+    
+    for (i=0; i<3; i++){
+            for (j=0; j<3; j++){
+                 ck_assert_msg(fabs(c[i][j] - expected[i][j]) < EPS, "wrong item \
+                 [%d][%d] %f instead of %f", i,j,c[i][j],expected[i][j]);
+                 }
+            }
+    
+}
+END_TEST
+
+
+
+
 Suite* fb_suite(void) {
     Suite *s = suite_create ("lsqadj");
  
@@ -191,6 +216,7 @@ Suite* fb_suite(void) {
     tcase_add_test(tc, test_matmul);
     tcase_add_test(tc, test_ata);
     tcase_add_test(tc, test_atl);
+    tcase_add_test(tc, test_matinv);
     suite_add_tcase (s, tc);   
     return s;
 }

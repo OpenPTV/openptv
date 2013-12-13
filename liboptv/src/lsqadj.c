@@ -59,52 +59,20 @@ void atl (double *u, double *a, double *l, int m, int n, int n_large) {
       *(u + i) = 0.0;
       for (k = 0; k < m; k++)
 	*(u + i) += *(a + k * n_large + i) * *(l + k);
-    }
-  
-}
-
-/* input matrix size n * n */
-/* number of observations */
-
-void matinv (double *a, int n) {
-  int      ipiv, irow, icol;
-  double   pivot;	/* pivot element = 1.0 / aii */
-  double	npivot;	/*	negative of pivot */
-  
-  
-  for (ipiv = 0; ipiv < n; ipiv++)
-    {
-      pivot = 1.0 / *(a + ipiv * n + ipiv);
-      npivot = - pivot;
-      for (irow = 0; irow < n; irow++)
-	{
-	  for (icol = 0; icol < n; icol++)
-	    {
-	      if (irow != ipiv && icol != ipiv)
-		{
-		  *(a + irow * n + icol) -= *(a + ipiv * n + icol) * 
-		    *(a + irow * n + ipiv) * pivot;
-		}
-	    }
-	}
-      for (icol = 0; icol < n; icol++)
-	{
-	  if (ipiv != icol) 
-	    *(a + ipiv * n + icol) *= npivot;
-	}
-      for (irow = 0; irow < n; irow++)
-	{
-	  if (ipiv != irow)
-	    *(a + irow * n + ipiv) *= pivot;
-	}
-      *(a + ipiv * n + ipiv) = pivot;
-    }
+    }  
 }
 
 
-/* a is the input matrix size n * n */
-/* n is the number of observations */
-void matinv_v2 (double *a, int n, int n_large) {
+/* Calculate inverse of a matrix A,
+*  with the option of working with the sub-vector only, when n < n_large 
+*
+*   Arguments:
+*   a - matrix of doubles of the size (n_large x n_large).
+*   n - size of the output - size of the sub-matrix, number of observations
+*   n_large - number of rows and columns in matrix a
+*/
+
+void matinv (double *a, int n, int n_large) {
   int      ipiv, irow, icol;
   double   pivot;	/* pivot element = 1.0 / aii */
   double	npivot;	/*	negative of pivot */
@@ -237,8 +205,6 @@ void mat_transpose (double *mat1, double *mat2, int m, int n) {
 
 void norm_cross(double a[3], double b[3], double *n1, double *n2, double *n3) {
 
-//Beat Luethi Nov 2008
-
 	double  res[3], dummy, norm;
 
 	res[0]=a[1]*b[2]-a[2]*b[1];
@@ -259,8 +225,7 @@ void norm_cross(double a[3], double b[3], double *n1, double *n2, double *n3) {
 	}
 }
 
-/* Beat Luethi Nov 2008
-* Dot product of two vectors 
+/* Dot product of two vectors 
 * TODO: use ready subroutines from vec_utils.h
 *
 */
@@ -274,7 +239,6 @@ void dot(double a[3], double b[3], double *d) {
 /* Modulus of a vector
 * TODO: use ready subroutine called norm in vec_utils.h
 */
-//Beat Lue	thi Nov 2008
 void modu(double a[3], double *m) {
 
 	*m = sqrt(a[0]*a[0] + a[1]*a[1] + a[2]*a[2]);
