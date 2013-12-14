@@ -153,47 +153,6 @@ for (i=0; i<k; i++) {
   }
 }
 
-
-void transp (double a[], int m, int n) {  
-  double  *b,*c,*d,*e;
-  int    i,j;
-  
-  b = (double*) malloc (m*n*sizeof(double));
-  if (b == 0) goto err;
-  d = a;
-  e = b;
-  
-  for (i=0; i<m; i++)
-    {  c = b++;
-    for (j=0; j<n; j++)
-      {  *c = *a++;
-      c += m;
-      }
-    }
-  
-  for (i=0; i<m*n; i++)
-    *d++ = *e++;
-  /*
-    free (b);
-    */   
-  return;
-  
-err:
-  printf ("\n\n ***   no memory space in C-subroutine transp   ***");
-  printf ("\n\n");
-  exit (-1);
-}
-
-void mat_transpose (double *mat1, double *mat2, int m, int n) {
-  int		i, j;
-  for (i=0; i<m; i++){ 
-  	for (j=0; j<n; j++){
-  		*(mat2+j*m+i) = *(mat1+i*n+j);
-  	}
-  }
-}
-
-
 void norm_cross(double a[3], double b[3], double *n1, double *n2, double *n3) {
 
 	double  res[3], dummy, norm;
