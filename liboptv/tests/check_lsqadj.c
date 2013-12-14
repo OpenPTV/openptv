@@ -21,13 +21,13 @@ START_TEST(test_norm_cross)
     double a[] = {1.0, 0.0, 0.0};
     double b[] = {0.0, 2.0, 0.0};
 
-    norm_cross(a,b,&n[0],&n[1],&n[2]);
+    norm_cross(a,b,n);
     fail_unless( (n[0] == 0.0) && (n[1] == 0.0) && (n[2] == 1.0));
 
 
     // test negative values in the output
 
-    norm_cross(b,a,&n[0],&n[1],&n[2]);
+    norm_cross(b,a,n);
     // fail_unless( (n[0] == 0.0) && (n[1] == 0.0) && (n[2] == -1.0));
 
 
@@ -41,7 +41,7 @@ START_TEST(test_norm_cross)
     // it was returning nan instead of 0.0
     // fixed Aug. 3, 2013, see in ray_tracing.c
 
-    norm_cross(a,a,&n[0],&n[1],&n[2]);
+    norm_cross(a,a,n);
     // fail_unless( (n[0] == 0.0) && (n[1] == 0.0) && (n[2] == 0.0));
 
     ck_assert_msg( fabs(n[0] - 0.0) < EPS && 

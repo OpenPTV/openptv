@@ -9,7 +9,7 @@ void matinv (double *a, int n, int n_large);
 void matmul(double *a, double *b, double *c, int m,int n,int k,\
 int m_large, int n_large);
 void modu(double a[3], double *m);
-void norm_cross(double a[3], double b[3], double *n1, double *n2, double *n3);
+void norm_cross(double a[3], double b[3], double n[3]);
 void dot(double a[3], double b[3], double *d);
 
 
