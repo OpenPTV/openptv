@@ -12,6 +12,11 @@ add_dependencies(check_calibration optv)
 add_executable(check_parameters EXCLUDE_FROM_ALL check_parameters.c)
 add_dependencies(check_parameters optv)
 
+
+add_executable(check_lsqadj EXCLUDE_FROM_ALL check_lsqadj.c)
+add_dependencies(check_lsqadj optv)
+
+
 get_property(OPTV_LIBRARY TARGET optv PROPERTY LOCATION)
 set(LIBS ${LIBS} ${CHECK_LIBRARIES} ${OPTV_LIBRARY})
 
@@ -41,6 +46,13 @@ add_custom_command(TARGET check_parameters PRE_BUILD
     COMMAND ${CMAKE_COMMAND} -E copy_directory
     ${CMAKE_CURRENT_SOURCE_DIR}/testing_fodder $<TARGET_FILE_DIR:check_parameters>/testing_fodder)
 
+target_link_libraries(check_lsqadj ${LIBS})
+add_test(check_lsqadj ${CMAKE_CURRENT_BINARY_DIR}/check_lsqadj)
+
+add_custom_command(TARGET check_lsqadj PRE_BUILD
+    COMMAND ${CMAKE_COMMAND} -E copy_directory
+    ${CMAKE_CURRENT_SOURCE_DIR}/testing_fodder $<TARGET_FILE_DIR:check_lsqadj>/testing_fodder)
+
 add_custom_target(verify COMMAND ${CMAKE_CTEST_COMMAND})
-add_dependencies(verify check_fb check_calibration check_parameters)
+add_dependencies(verify check_fb check_calibration check_parameters check_lsqadj)
 
