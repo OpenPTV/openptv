@@ -8,8 +8,7 @@ void atl(double *u, double *a, double *l, int m, int n, int n_large);
 
 
 void matinv (double *a, int n, int n_large);
-void matmul(double *a, double *b, double *c, int m, int n, int k);
-void matmul_v2 (double *a, double *b, double *c, int m,int n,int k,\
+void matmul(double *a, double *b, double *c, int m,int n,int k,\
 int m_large, int n_large);
 void transp (double a[], int m, int n);
 void mat_transpose(double *mat1, double *mat2, int m, int n);

@@ -101,8 +101,14 @@ END_TEST
 START_TEST(test_matmul)
 {
 
-	double a[] = {1.0,1.0,1.0};
-	double b[] = {0.0,0.0,0.0};
+	double a[3] = {1.0,1.0,1.0};
+	double b[3] = {0.0,0.0,0.0};
+	double d[4][4] = {{1, 2, 3, 99}, {4, 5, 6, 99}, {7, 8, 9, 99},{99, 99, 99, 99}};
+    double e[4] = {10, 11, 12, 99};
+    double f[3] = {0, 0, 0};
+    double expected[3] = {68, 167, 266};
+    int i,j,k;
+        
 		
 	Exterior test_Ex = {
         0.0, 0.0, 100.0,
@@ -113,7 +119,7 @@ START_TEST(test_matmul)
         
     
     
-    matmul (b, (double *) test_Ex.dm, a, 3,3,1);
+      matmul((double *)b, (double *) test_Ex.dm, (double *)a, 3,3,1,3,3);
     
     
     
@@ -121,6 +127,18 @@ START_TEST(test_matmul)
      				fabs(b[1] - 1.20) < EPS && 
      			    fabs(b[2] - 0.700)  < EPS,
          "Was expecting b to be 0.9,1.2,0.7 but found %f %f %f\n", b[0],b[1],b[2]);
+    
+    
+
+
+		matmul((double *)f, (double *) d, (double *) e, 3, 3, 1, 4, 4);
+                
+    for (i=0; i<3; i++){
+                 ck_assert_msg(fabs(f[i] - expected[i]) < EPS, "wrong item \
+                 [%d] %f instead of %f", i,a[i],expected[i]);
+                 }
+    
+    
     
 }
 END_TEST
@@ -202,9 +220,6 @@ START_TEST(test_matinv)
     
 }
 END_TEST
-
-
-
 
 Suite* fb_suite(void) {
     Suite *s = suite_create ("lsqadj");

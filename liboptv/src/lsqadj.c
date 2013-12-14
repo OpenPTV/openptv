@@ -108,31 +108,22 @@ void matinv (double *a, int n, int n_large) {
 }	/* end matinv */
 
 
-void matmul (double *a, double *b, double *c, int m, int n, int k) {  
 
-int    i,j,l;
-double  x,*pa,*pb,*pc;
+/* Calculate dot product of a matrix 'b' of the size (m_large x n_large) with 
+*  a vector 'c' of the size (n_large x 1) to get vector 'a' of the size 
+*  (m x 1), when m < m_large and n < n_large
+*  i.e. one can get dot product of the submatrix of b with sub-vector of c
+*   when n_large > n and m_large > m
+*   Arguments:
+*   a - output vector of doubles of the size (m x 1).
+*   b - matrix of doubles of the size (m x n)
+*   c - vector of doubles of the size (n x 1)
+*   m - integer, number of rows of a
+*   n - integer, number of columns in a
+*   k - integer, size of the vector output 'a', typically k = 1
+*/
 
-for (i=0; i<k; i++)
-  {  pb = b;
-  pa = a++;
-  for (j=0; j<m; j++)
-    {  pc = c;
-    x = 0.0;
-    for (l=0; l<n; l++)
-      {  x = x + *pb++ * *pc;
-      pc += k;
-      }
-    *pa = x;
-    pa += k;
-    }
-  c++;
-  }
-}
-
-
-
-void matmul_v2 (double *a, double *b, double *c, int m,int n,int k,\
+void matmul (double *a, double *b, double *c, int m,int n,int k,\
 int m_large, int n_large) { 
 
 int    i,j,l;
