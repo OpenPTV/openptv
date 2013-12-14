@@ -19,18 +19,18 @@
 
 void ata (double *a, double *ata, int m, int n, int n_large ) {
 /* matrix a and result matrix ata = at a 
-		       a is m * n, ata is n * n  */
+               a is m * n, ata is n * n  */
 
   register int      i, j, k;
   
   for (i = 0; i < n; i++)
     {
       for (j = 0; j < n; j++)
-	{
-	  *(ata+i*n_large+j) = 0.0;
-	  for (k = 0; k < m; k++)
-	    *(ata+i*n_large+j) +=  *(a+k*n_large+i)  * *(a+k*n_large+j);
-	}
+    {
+      *(ata+i*n_large+j) = 0.0;
+      for (k = 0; k < m; k++)
+        *(ata+i*n_large+j) +=  *(a+k*n_large+i)  * *(a+k*n_large+j);
+    }
     }
 }
 
@@ -50,7 +50,7 @@ void ata (double *a, double *ata, int m, int n, int n_large ) {
 
 void atl (double *u, double *a, double *l, int m, int n, int n_large) {
 /* matrix a , vector l and 
-			 result vector u = at l ,  a(m,n)  */
+             result vector u = at l ,  a(m,n)  */
 
   int      i, k;
   
@@ -58,7 +58,7 @@ void atl (double *u, double *a, double *l, int m, int n, int n_large) {
     {
       *(u + i) = 0.0;
       for (k = 0; k < m; k++)
-	*(u + i) += *(a + k * n_large + i) * *(l + k);
+    *(u + i) += *(a + k * n_large + i) * *(l + k);
     }  
 }
 
@@ -74,8 +74,8 @@ void atl (double *u, double *a, double *l, int m, int n, int n_large) {
 
 void matinv (double *a, int n, int n_large) {
   int      ipiv, irow, icol;
-  double   pivot;	/* pivot element = 1.0 / aii */
-  double	npivot;	/*	negative of pivot */
+  double   pivot;   /* pivot element = 1.0 / aii */
+  double    npivot; /*  negative of pivot */
   
   
   for (ipiv = 0; ipiv < n; ipiv++)
@@ -83,29 +83,29 @@ void matinv (double *a, int n, int n_large) {
       pivot = 1.0 / *(a + ipiv * n_large + ipiv);
       npivot = - pivot;
       for (irow = 0; irow < n; irow++)
-	{
-	  for (icol = 0; icol < n; icol++)
-	    {
-	      if (irow != ipiv && icol != ipiv)
-		{
-		  *(a + irow * n_large + icol) -= *(a + ipiv * n_large + icol) * 
-		    *(a + irow * n_large + ipiv) * pivot;
-		}
-	    }
-	}
+    {
       for (icol = 0; icol < n; icol++)
-	{
-	  if (ipiv != icol) 
-	    *(a + ipiv * n_large + icol) *= npivot;
-	}
+        {
+          if (irow != ipiv && icol != ipiv)
+        {
+          *(a + irow * n_large + icol) -= *(a + ipiv * n_large + icol) * 
+            *(a + irow * n_large + ipiv) * pivot;
+        }
+        }
+    }
+      for (icol = 0; icol < n; icol++)
+    {
+      if (ipiv != icol) 
+        *(a + ipiv * n_large + icol) *= npivot;
+    }
       for (irow = 0; irow < n; irow++)
-	{
-	  if (ipiv != irow)
-	    *(a + irow * n_large + ipiv) *= pivot;
-	}
+    {
+      if (ipiv != irow)
+        *(a + irow * n_large + ipiv) *= pivot;
+    }
       *(a + ipiv * n_large + ipiv) = pivot;
     }
-}	/* end matinv */
+}   /* end matinv */
 
 
 
@@ -139,10 +139,10 @@ for (i=0; i<k; i++) {
       x = x + *pb++ * *pc;
       pc += k;
       }
-	for (l=0;l<n_large-n;l++) {
-	  pb++;
-	  pc += k;
-	  }
+    for (l=0;l<n_large-n;l++) {
+      pb++;
+      pc += k;
+      }
     *pa = x;
     pa += k;
     }
@@ -155,24 +155,24 @@ for (i=0; i<k; i++) {
 
 void norm_cross(double a[3], double b[3], double *n1, double *n2, double *n3) {
 
-	double  res[3], dummy, norm;
+    double  res[3], dummy, norm;
 
-	res[0]=a[1]*b[2]-a[2]*b[1];
-	res[1]=a[2]*b[0]-a[0]*b[2];
-	res[2]=a[0]*b[1]-a[1]*b[0];
-	
-	modu(res,&norm);
-	
-	
-	if (norm == 0.0){ // avoids zero length vector bug
-		*n1 = res[0];
-		*n2 = res[0];
-		*n3 = res[0];
-	} else {	
-	*n1=res[0]/norm;
-	*n2=res[1]/norm;
-	*n3=res[2]/norm;
-	}
+    res[0]=a[1]*b[2]-a[2]*b[1];
+    res[1]=a[2]*b[0]-a[0]*b[2];
+    res[2]=a[0]*b[1]-a[1]*b[0];
+    
+    modu(res,&norm);
+    
+    
+    if (norm == 0.0){ // avoids zero length vector bug
+        *n1 = res[0];
+        *n2 = res[0];
+        *n3 = res[0];
+    } else {    
+    *n1=res[0]/norm;
+    *n2=res[1]/norm;
+    *n3=res[2]/norm;
+    }
 }
 
 /* Dot product of two vectors 
@@ -182,7 +182,7 @@ void norm_cross(double a[3], double b[3], double *n1, double *n2, double *n3) {
 
 void dot(double a[3], double b[3], double *d) {
 
-	*d = a[0]*b[0] + a[1]*b[1] + a[2]*b[2];
+    *d = a[0]*b[0] + a[1]*b[1] + a[2]*b[2];
 }
 
 
@@ -191,7 +191,7 @@ void dot(double a[3], double b[3], double *d) {
 */
 void modu(double a[3], double *m) {
 
-	*m = sqrt(a[0]*a[0] + a[1]*a[1] + a[2]*a[2]);
+    *m = sqrt(a[0]*a[0] + a[1]*a[1] + a[2]*a[2]);
 }
 
 
