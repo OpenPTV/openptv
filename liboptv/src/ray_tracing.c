@@ -38,7 +38,7 @@ double *a3, double *b3,double *c3){
 	/* direction cosines in image coordinate system */
 	vect1[0] = x/s2;  vect1[1] = y/s2;	vect1[2] = -I.cc/s2;
 
-	matmul (vect2, (double *) Ex.dm, vect1, 3,3,1);
+	matmul (vect2, (double *) Ex.dm, vect1, 3,3,1, 3,3);
  	
 	/* direction cosines in space coordinate system , medium n1 */
 	a1 = vect2[0];  b1 = vect2[1];  c1 = vect2[2];  
