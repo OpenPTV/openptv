@@ -14,17 +14,9 @@
 #include "tracking_frame_buf.h"
 #include "lsqadj.h"
 
-
-void point_line_line(Calibration *c0, double gX0, double gY0, double gZ0, \
-double a0, double b0, double c0,\
-Calibration *c1, double gX1, double gY1, double gZ1, double a1, \
-double b1, double c1, double *x, double *y,double *z);
-
-
 void ray_tracing (double x, double y, Exterior Ex, Interior I, Glass G,\
                   mm_np mm, double *Xb2, double *Yb2, double *Zb2, \
                   double *a3, double *b3,double *c3);
-
 
 
 #endif
