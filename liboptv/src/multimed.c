@@ -18,7 +18,7 @@ Routines contained:		-
 
 ****************************************************************************/
 
-
+#include "multimed.h"
 
 
 void  multimed_nlay (Exterior ex, Exterior ex_o, mm_np mm, \
