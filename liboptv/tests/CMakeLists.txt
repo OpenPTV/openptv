@@ -18,7 +18,7 @@ add_dependencies(check_lsqadj optv)
 add_executable(check_ray_tracing EXCLUDE_FROM_ALL check_ray_tracing.c)
 add_dependencies(check_ray_tracing optv)
 
-add_executable(check_fb EXCLUDE_FROM_ALL check_trafo.c)
+add_executable(check_trafo EXCLUDE_FROM_ALL check_trafo.c)
 add_dependencies(check_trafo optv)
 
 

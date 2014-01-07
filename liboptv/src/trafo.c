@@ -30,8 +30,8 @@ Arguments:
 */
 
 
-void pixel_to_metric (double xp, double yp, int imx, int imy, double pix_x, double pix_y,\ 
-double *xc, double *yc, int field){
+void pixel_to_metric (double xp, double yp, int imx, int imy, double pix_x, \
+double pix_y, double *xc, double *yc, int field){
   switch (field)
     {
     case 1:  yp = 2 * yp + 1;  break;
