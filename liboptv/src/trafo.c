@@ -16,22 +16,22 @@ Routines contained:		pix_crd, crd_pix, affin_trafo, affin_retour
 
 ****************************************************************************/
 
-#include "ptv.h"
+#include "trafo.h"
+
+/* pixel_to_metric converts pixel coordinates to metric coordinates
+Arguments:
+	xp,yp (double) pixel coordinates in pixels
+	(xc,yc) (double *) metric coordinates in [mm]
+	imx,imy (int) image size in pixels
+	pix_x, pix_y (double) size of the pixel of the sensor, in [mm]  
+    field (flag [int], 0 is frame, 1 is for odd or 2 is for even fields) 
+    Note: field or chfield in the parameters is not used anymore (no interlaced cameras) 
+    and it is kept only for backward compatibility. 
+*/
 
 
-
-void pixel_to_metric (xp,yp, imx,imy, pix_x,pix_y, xc,yc, field)
-
-double 	xp, yp;	       	/* input: pixel coordinates */
-double 	*xc, *yc;      	/* output: metric coordinates */
-int    	imx, imy;      	/* image format */
-double 	pix_x, pix_y;	/* pixel size */
-int    	field;
-
-/*  transformation detection pixel coordinates -> geometric coordinates */
-/*  single point  */
-
-{
+void pixel_to_metric (double xp, double yp, int imx, int imy, double pix_x, double pix_y,\ 
+double *xc, double *yc, int field){
   switch (field)
     {
     case 1:  yp = 2 * yp + 1;  break;
@@ -45,19 +45,11 @@ int    	field;
 
 
 
-
-void metric_to_pixel (xc,yc, imx,imy, pix_x,pix_y, xp,yp, field)
-
-double 	xc, yc;	       	/* input: metric coordinates */
-double 	*xp, *yp;      	/* output: pixel coordinates */
-int    	imx, imy;      	/* image format */
-double 	pix_x, pix_y;	/* pixel size */
-int    	field;
-
 /*  transformation detection pixel coordinates -> geometric coordinates */
-/*  without read and write  */
+/* Arguments - see above for the pixel_to_metric */
 
-{
+void metric_to_pixel (double xc, double yc, int imx, int imy, double pix_x, \
+double pix_y, double *xp, double *yp, int field){
   *xp = (xc/pix_x) + imx/2;
   *yp = imy/2 - (yc/pix_y);
   
@@ -68,15 +60,8 @@ int    	field;
     }
 }
 
-
-void distort_brown_affin (x, y, ap, x1, y1)
-
-double	x, y, *x1, *y1;
-ap_52	ap;
-
 /*  transformation with Brown + affine  */
-   
-{
+void distort_brown_affin (double x, double y, ap_52 ap, double *x1, double *y1){
   double		r;
   
   
@@ -95,14 +80,9 @@ ap_52	ap;
 
 
 
-
-void correct_brown_affin (x, y, ap, x1, y1)
-
-double	x, y, *x1, *y1;
-ap_52	ap;
 /*  correct crd to geo with Brown + affine  */
-   
-{
+void correct_brown_affin (double x, double y, ap_52 ap, double *x1, double *y1){
+
   double  r, xq, yq;
 	
 
