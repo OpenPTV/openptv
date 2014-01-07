@@ -18,16 +18,11 @@ Routines contained:		-
 
 ****************************************************************************/
 
-#include "ptv.h"
 
-double get_mmf_from_mmLUT ();
 
-void  multimed_nlay_v2 (ex,ex_o,mm,X,Y,Z,Xq,Yq)
-Exterior	ex;
-Exterior	ex_o;
-mm_np		mm;
-double  	X, Y, Z, *Xq,*Yq;
-{
+
+void  multimed_nlay (Exterior ex, Exterior ex_o, mm_np mm, \
+double X, double Y, double Z, double *Xq, double *Yq){
   
   //Beat Lüthi, Nov 2007 comment actually only Xq is affected since all Y and Yq are always zero
   int		i, it=0;
@@ -88,13 +83,9 @@ double  	X, Y, Z, *Xq,*Yq;
 	
 }
 
-void back_trans_Point_back(X_t,Y_t,Z_t,mm,G,cross_p,cross_c,X,Y,Z)
+void back_trans_Point_back(double X_t, double Y_t, double Z_t,mm_np mm, Glass G, \
+double cross_p[], double cross_c[], double *X, double *Y, double *Z){
 
-double X_t,Y_t,Z_t,cross_p[],cross_c[];
-mm_np mm;
-Glass G;
-double *X,*Y,*Z;
-{
     double nVe,nGl;
 	nGl=sqrt(pow(G.vec_x,2.)+pow(G.vec_y,2.)+pow(G.vec_z,2.));
 	nVe=sqrt( pow(cross_p[0]-(cross_c[0]-mm.d[0]*G.vec_x/nGl),2.)
@@ -109,16 +100,9 @@ double *X,*Y,*Z;
 
 
 
-void trans_Cam_Point_back(ex,mm,gl,X,Y,Z,ex_t,X_t,Y_t,Z_t,cross_p,cross_c)
+void trans_Cam_Point_back(Exterior x,mm_np mm,Glass gl, double X, double Y, double Z,\
+Exterior *ex_t, double *X_t, double *Y_t, double *Z_t, double *cross_p, double *cross_c){
 
-Exterior	ex;
-mm_np		mm;
-Glass		gl;
-double		X, Y, Z;
-Exterior	*ex_t;
-double		*X_t, *Y_t, *Z_t;
-double      *cross_p, *cross_c;
-{
   //--Beat Lüthi June 07: I change the stuff to a system perpendicular to the interface
   double dummy;
   double nGl;
@@ -146,16 +130,9 @@ double      *cross_p, *cross_c;
       
 }
 
-void trans_Cam_Point(ex,mm,gl,X,Y,Z,ex_t,X_t,Y_t,Z_t,cross_p,cross_c)
+void trans_Cam_Point(Exterior ex, mm_np mm, Glass gl, double X, double Y, double Z, \
+Exterior *ex_t, double *X_t, double *Y_t, double *Z_t, double *cross_p, double *cross_c){
 
-Exterior	ex;
-mm_np		mm;
-Glass		gl;
-double		X, Y, Z;
-Exterior	*ex_t;
-double		*X_t, *Y_t, *Z_t;
-double      *cross_p, *cross_c;
-{
   //--Beat Lüthi June 07: I change the stuff to a system perpendicular to the interface
   double dist_cam_glas,dist_point_glas,dist_o_glas; //glas inside at water 
   
@@ -182,13 +159,8 @@ double      *cross_p, *cross_c;
       
 }
 
-void back_trans_Point(X_t,Y_t,Z_t,mm,G,cross_p,cross_c,X,Y,Z)
-
-double X_t,Y_t,Z_t,cross_p[],cross_c[];
-mm_np mm;
-Glass G;
-double *X,*Y,*Z;
-{
+void back_trans_Point(double X_t, double Y_t, double Z_t, mm_np mm, Glass G, \
+double cross_p[], double cross_c[], double *X, double *Y, double *Z){
     
     double nVe,nGl;
 	nGl=sqrt(pow(G.vec_x,2.)+pow(G.vec_y,2.)+pow(G.vec_z,2.));
@@ -203,13 +175,10 @@ double *X,*Y,*Z;
 
 }
 
-double multimed_r_nlay_v2 (ex,ex_o,mm,X,Y,Z)
 /* calculates and returns the radial shift */
-Exterior	ex;
-Exterior	ex_o;
-mm_np		mm;
-double		X, Y, Z;
-{
+double multimed_r_nlay (Exterior ex, Exterior ex_o, mm_np mm, double X, double Y,\
+double Z){
+
   int  	i, it=0;
   double beta1, beta2[32], beta3, r, rbeta, rdiff, rq, mmf;
   double ocf=1.0; // over compensation factor for faster convergence 
@@ -270,9 +239,8 @@ double		X, Y, Z;
 
 
 
-void init_mmLUT (i_cam)
-int    	i_cam;
-{
+void init_mmLUT (int i_cam){
+
   register int	i,j, nr, nz;
   double       	X,Y,Z, R, X1,Y1,Z1, Zmin, Rmax=0,Zmax, a,b,c;
   double       	x,y, *Ri,*Zi;
@@ -306,7 +274,7 @@ int    	i_cam;
   x = x - I[i_cam].xh;
   y = y - I[i_cam].yh;
   correct_brown_affin (x, y, ap[i_cam], &x,&y);
-  ray_tracing_v2 (x,y, Ex[i_cam], I[i_cam], G[i_cam], mmp, &X1, &Y1, &Z1, &a, &b, &c);
+  ray_tracing (x,y, Ex[i_cam], I[i_cam], G[i_cam], mmp, &X1, &Y1, &Z1, &a, &b, &c);
   Z = Zmin;   X = X1 + (Z-Z1) * a/c;   Y = Y1 + (Z-Z1) * b/c;
   //trans
   trans_Cam_Point(Ex[i_cam],mmp,G[i_cam],X,Y,Z,&Ex_t[i_cam],&X_t,&Y_t,&Z_t,&cross_p,&cross_c);
@@ -332,7 +300,7 @@ int    	i_cam;
   x = x - I[i_cam].xh;
   y = y - I[i_cam].yh;
   correct_brown_affin (x, y, ap[i_cam], &x,&y);
-  ray_tracing_v2 (x,y, Ex[i_cam], I[i_cam], G[i_cam], mmp, &X1, &Y1, &Z1, &a, &b, &c);
+  ray_tracing (x,y, Ex[i_cam], I[i_cam], G[i_cam], mmp, &X1, &Y1, &Z1, &a, &b, &c);
   Z = Zmin;   X = X1 + (Z-Z1) * a/c;   Y = Y1 + (Z-Z1) * b/c;
   //trans
   trans_Cam_Point(Ex[i_cam],mmp,G[i_cam],X,Y,Z,&Ex_t[i_cam],&X_t,&Y_t,&Z_t,&cross_p,&cross_c);
@@ -358,7 +326,7 @@ int    	i_cam;
   x = x - I[i_cam].xh;
   y = y - I[i_cam].yh;
   correct_brown_affin (x, y, ap[i_cam], &x,&y);
-  ray_tracing_v2 (x,y, Ex[i_cam], I[i_cam], G[i_cam], mmp, &X1, &Y1, &Z1, &a, &b, &c);
+  ray_tracing (x,y, Ex[i_cam], I[i_cam], G[i_cam], mmp, &X1, &Y1, &Z1, &a, &b, &c);
   Z = Zmin;   X = X1 + (Z-Z1) * a/c;   Y = Y1 + (Z-Z1) * b/c;
   //trans
   trans_Cam_Point(Ex[i_cam],mmp,G[i_cam],X,Y,Z,&Ex_t[i_cam],&X_t,&Y_t,&Z_t,&cross_p,&cross_c);
@@ -385,7 +353,7 @@ int    	i_cam;
   x = x - I[i_cam].xh;
   y = y - I[i_cam].yh;
   correct_brown_affin (x, y, ap[i_cam], &x,&y);
-  ray_tracing_v2 (x,y, Ex[i_cam], I[i_cam], G[i_cam], mmp, &X1, &Y1, &Z1, &a, &b, &c);
+  ray_tracing (x,y, Ex[i_cam], I[i_cam], G[i_cam], mmp, &X1, &Y1, &Z1, &a, &b, &c);
   Z = Zmin;   X = X1 + (Z-Z1) * a/c;   Y = Y1 + (Z-Z1) * b/c;
   //trans
   trans_Cam_Point(Ex[i_cam],mmp,G[i_cam],X,Y,Z,&Ex_t[i_cam],&X_t,&Y_t,&Z_t,&cross_p,&cross_c);
@@ -448,10 +416,8 @@ int    	i_cam;
 
 
 
-double get_mmf_from_mmLUT (i_cam, X,Y,Z)
-int		i_cam;
-double	X,Y,Z;
-{
+double get_mmf_from_mmLUT (int i_cam, double X, double Y, double Z){
+
   int		i, ir,iz, nr,nz, v4[4];
   double	R, sr,sz, rw, mmf=1;
   
@@ -494,10 +460,9 @@ double	X,Y,Z;
 
 
 
-void volumedimension (xmax, xmin, ymax, ymin, zmax, zmin, num_cams)
-double *xmax, *xmin, *ymax, *ymin, *zmax, *zmin;
-int num_cams;
-{
+void volumedimension (double *xmax, double *xmin, double *ymax, double *ymin, \
+double *zmax, double *zmin, int num_cams){
+
   int	i_cam;
   double X,Y,Z, R, X1,Y1,Z1, Zmin, Rmax=0,Zmax, a,b,c;
   double x,y;
