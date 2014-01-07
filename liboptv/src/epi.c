@@ -6,30 +6,22 @@
 
 int dumbbell_pyptv;
 
-
-int epi_mm (x1, y1, Ex1, I1, G1, Ex2, I2, G2, mmp, vpar, xmin, ymin, xmax, ymax)
-
-double     x1, y1;	  	/* input coord */
-Exterior   Ex1, Ex2;           	/* orientation data */
-Interior   I1, I2;	      	/* orientation data */
-Glass      G1, G2;	      	/* glass data */
-mm_np	   mmp;		        /* multimed param. (layers) */
-volume_par *vpar;
-double	   *xmin, *ymin, *xmax, *ymax;    /* output search window */
-
-{
-  /*  ray tracing gives the point of exit and the direction
+/*  ray tracing gives the point of exit and the direction
       cosines at the waterside of the glass;
       min. and max. depth give window in object space,
       which can be transformed into _2 image
-      (use img_xy_mm because of comparison with img_geo)  */
+      (use img_xy_mm because of comparison with img_geo)  
+*/
+
+int  epi_mm(double xl, double yl, Exterior Ex1, Interior I1, Glass G1,
+    Exterior Ex2, Interior I2, Glass G2, mm_np mmp, volume_par *vpar,
+    double *xmin, double *ymin, double *xmax, double *ymax){
 
   double a, b, c, xa,ya,xb,yb;
   double X1,Y1,Z1, X, Y, Z;
   double Zmin, Zmax;
 
-  //ray_tracing    (x1,y1, Ex1, I1,     mmp, &X1, &Y1, &Z1, &a, &b, &c);
-  ray_tracing_v2 (x1,y1, Ex1, I1, G1, mmp, &X1, &Y1, &Z1, &a, &b, &c);
+  ray_tracing (x1,y1, Ex1, I1, G1, mmp, &X1, &Y1, &Z1, &a, &b, &c);
 
   /* calculate min and max depth for position (valid only for one setup) */
   Zmin = vpar->Zmin_lay[0]
