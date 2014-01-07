@@ -7,8 +7,8 @@
 #include "tracking_frame_buf.h"
 #include "lsqadj.h"
 
-void pixel_to_metric (double xp, double yp, int imx, int imy, double pix_x, double pix_y,\ 
-double *xc, double *yc, int field);
+void pixel_to_metric (double xp, double yp, int imx, int imy, double pix_x, \
+double pix_y, double *xc, double *yc, int field);
 void metric_to_pixel (double xc, double yc, int imx, int imy, double pix_x, \
 double pix_y, double *xp, double *yp, int field);
 void correct_brown_affin (double x, double y, ap_52 ap, double *x1, double *y1);
