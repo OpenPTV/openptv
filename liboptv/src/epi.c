@@ -6,51 +6,6 @@
 
 int dumbbell_pyptv;
 
-double epi_line (xl, yl, Ex1, I1, G1, Ex2, I2, G2)
-
-double    xl, yl;
-Exterior  Ex1, Ex2;
-Interior  I1, I2;
-Glass     G1, G2;
-
-{
-  int i,j;
-  double m2;
-  double vect1[3], vect2[3], vect3[3], nk[3], n2[3],
-    p1l[3], K2[3], k2[3], D2t[3][3];
-  void crossprod ();
-
-  /* base O1 -> O2 */
-  vect1[0] = Ex2.x0 - Ex1.x0;
-  vect1[1] = Ex2.y0 - Ex1.y0;
-  vect1[2] = Ex2.z0 - Ex1.z0;
-
-  /* coordinates of arbitrary point P1 in image1 */
-  p1l[0] = xl;  p1l[1] = yl;	p1l[2] = - I1.cc;
-
-  /* beam O1 -> P in space */
-  matmul (vect2, (double *) Ex1.dm, p1l, 3,3,1);
-
-  /* normale to epipolar plane */
-  crossprod (vect1,vect2,nk);
-
-  /* normale to image2 */
-  vect3[0] = 0;	vect3[1] = 0;	vect3[2] = - I2.cc;
-
-  /* normale to image 2, in space */
-  matmul (n2, (double *) Ex2.dm, vect3, 3,3,1);
-
-  /* epipolar line in image2, in space */
-  crossprod (nk,n2,K2);
-
-  /* epipolar line in image2 */
-  for (i=0; i<3; i++)  for (j=0; j<3; j++)  D2t[i][j] = Ex2.dm[j][i];
-  matmul (k2, (double *) D2t, K2, 3,3,1);
-  m2 = k2[1] / k2[0];
-  return (m2);
-}
-
-
 
 int epi_mm (x1, y1, Ex1, I1, G1, Ex2, I2, G2, mmp, vpar, xmin, ymin, xmax, ymax)
 

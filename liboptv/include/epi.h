@@ -14,8 +14,6 @@ typedef struct {
   double  tol, corr;
 } candidate;
 
-double epi_line(double xl, double yl, Exterior Ex1, Interior I1, Glass G1,
-    Exterior Ex2, Interior I2, Glass G2);
 int  epi_mm(double xl, double yl, Exterior Ex1, Interior I1, Glass G1,
     Exterior Ex2, Interior I2, Glass G2, mm_np mmp, volume_par *vpar,
     double *xmin, double *ymin, double *xmax, double *ymax);
