@@ -2,17 +2,17 @@
 #define MULTIMED_H
 
 #include <math.h>
-#include "parameters.h"
-#include "calibration.h"
+#include "optv/calibration.h"
+#include <optv/parameters.h>
+#include <optv/ray_tracing.h>
 #include <optv/tracking_frame_buf.h>
-#include "ray_tracing.h"
-#include "lsqadj.h"
+#include <optv/lsqadj.h>
 
 double get_mmf_from_mmLUT (int i_cam, double X, double Y, double Z);
 
 /* Note that multimed_nlay_v2 is renamted to _nlay) */
 void  multimed_nlay (Exterior ex, Exterior ex_o, mm_np mm, \
-double X, double Y, double Z, double *Xq, double *Yq);
+double X, double Y, double Z, double *Xq, double *Yq, int cam);
 
 void back_trans_Point_back(double X_t, double Y_t, double Z_t,mm_np mm, Glass G, \
 double cross_p[], double cross_c[], double *X, double *Y, double *Z);

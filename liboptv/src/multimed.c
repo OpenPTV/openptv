@@ -22,28 +22,22 @@ Routines contained:     -
 
 
 void  multimed_nlay (Exterior ex, Exterior ex_o, mm_np mm, \
-double X, double Y, double Z, double *Xq, double *Yq){
+double X, double Y, double Z, double *Xq, double *Yq, int cam){
   
   /* Beat Lüthi, Nov 2007 comment actually only Xq is affected since all Y and Yq are always zero */
   int       i, it=0;
   double    beta1, beta2[32], beta3, r, rbeta, rdiff, rq, mmf;
   
   /* interpolation in mmLUT, if selected (requires some global variables) */
-  if (mm.lut)
-    {    
-      // check, which is the correct image 
-      for (i=0; i<n_img; i++)
-    if (Ex[i].x0 == ex_o.x0  &&  Ex[i].y0 == ex_o.y0  &&  Ex[i].z0 == ex_o.z0)
-      break;
-      
-      mmf = get_mmf_from_mmLUT (i, X,Y,Z);
+  if (mm.lut){         
+      mmf = get_mmf_from_mmLUT (cam, X,Y,Z);
       
       if (mmf > 0)
-    {
-      *Xq = ex.x0 + (X-ex.x0) * mmf;
-      *Yq = ex.y0 + (Y-ex.y0) * mmf;
-      return;
-    }
+      {
+          *Xq = ex.x0 + (X-ex.x0) * mmf;
+          *Yq = ex.y0 + (Y-ex.y0) * mmf;
+          return;
+       }
     }
   
   // iterative procedure (if mmLUT does not exist or has no entry) 
@@ -163,21 +157,28 @@ void back_trans_Point(double X_t, double Y_t, double Z_t, mm_np mm, Glass G, \
 double cross_p[], double cross_c[], double *X, double *Y, double *Z){
     
     double nVe,nGl;
-    nGl=sqrt(pow(G.vec_x,2.)+pow(G.vec_y,2.)+pow(G.vec_z,2.));
-    nVe=sqrt( pow(cross_p[0]-(cross_c[0]-mm.d[0]*G.vec_x/nGl),2.)
-             +pow(cross_p[1]-(cross_c[1]-mm.d[0]*G.vec_y/nGl),2.)
-             +pow(cross_p[2]-(cross_c[2]-mm.d[0]*G.vec_z/nGl),2.));
-    
+	nGl=sqrt(pow(G.vec_x,2.)+pow(G.vec_y,2.)+pow(G.vec_z,2.));
+	nVe=sqrt( pow(cross_p[0]-(cross_c[0]-mm.d[0]*G.vec_x/nGl),2.)
+		     +pow(cross_p[1]-(cross_c[1]-mm.d[0]*G.vec_y/nGl),2.)
+			 +pow(cross_p[2]-(cross_c[2]-mm.d[0]*G.vec_z/nGl),2.));
 
-    *X=cross_c[0]-mm.d[0]*G.vec_x/nGl+X_t*(cross_p[0]-(cross_c[0]-mm.d[0]*G.vec_x/nGl))/nVe+Z_t*G.vec_x/nGl;
-    *Y=cross_c[1]-mm.d[0]*G.vec_y/nGl+X_t*(cross_p[1]-(cross_c[1]-mm.d[0]*G.vec_y/nGl))/nVe+Z_t*G.vec_y/nGl;
-    *Z=cross_c[2]-mm.d[0]*G.vec_z/nGl+X_t*(cross_p[2]-(cross_c[2]-mm.d[0]*G.vec_z/nGl))/nVe+Z_t*G.vec_z/nGl;
+	*X = cross_c[0]-mm.d[0]*G.vec_x/nGl + Z_t*G.vec_x/nGl;
+	*Y = cross_c[1]-mm.d[0]*G.vec_y/nGl + Z_t*G.vec_y/nGl;
+	*Z = cross_c[2]-mm.d[0]*G.vec_z/nGl + Z_t*G.vec_z/nGl;
 
+    if (nVe > 0) {  
+        // We need this for when the cam-point line is exactly perp. to glass.
+        // The degenerate case will have nVe == 0 and produce NaNs on the
+        // following calculations.
+        *X += X_t*(cross_p[0] - (cross_c[0] - mm.d[0]*G.vec_x/nGl))/nVe;
+        *Y += X_t*(cross_p[1] - (cross_c[1] - mm.d[0]*G.vec_y/nGl))/nVe;
+        *Z += X_t*(cross_p[2] - (cross_c[2] - mm.d[0]*G.vec_z/nGl))/nVe;
+    }
 }
 
 /* calculates and returns the radial shift */
 double multimed_r_nlay (Exterior ex, Exterior ex_o, mm_np mm, double X, double Y,\
-double Z){
+double Z, int cam){
 
   int   i, it=0;
   double beta1, beta2[32], beta3, r, rbeta, rdiff, rq, mmf;
@@ -198,17 +199,10 @@ double Z){
   
   
   // interpolation in mmLUT, if selected (requires some global variables) 
-  if (mm.lut)
-    {
-      // check, which is the correct image 
-      for (i=0; i<n_img; i++)
-    if (Ex[i].x0 == ex_o.x0  &&  Ex[i].y0 == ex_o.y0  &&  Ex[i].z0 == ex_o.z0)
-      break;
-      
-      mmf = get_mmf_from_mmLUT (i, X,Y,Z);
-      
-      if (mmf > 0)  return (mmf);
-    }
+  if (mm.lut) {
+    mmf = get_mmf_from_mmLUT(cam, X, Y, Z);
+    if (mmf > 0) return (mmf);
+  }
  
   // iterative procedure 
   r = sqrt ((X-ex.x0)*(X-ex.x0)+(Y-ex.y0)*(Y-ex.y0));
@@ -274,7 +268,7 @@ void init_mmLUT (int i_cam){
   x = x - I[i_cam].xh;
   y = y - I[i_cam].yh;
   correct_brown_affin (x, y, ap[i_cam], &x,&y);
-  ray_tracing (x,y, Ex[i_cam], I[i_cam], G[i_cam], mmp, &X1, &Y1, &Z1, &a, &b, &c);
+  ray_tracing(x,y, Ex[i_cam], I[i_cam], G[i_cam], mmp, &X1, &Y1, &Z1, &a, &b, &c);
   Z = Zmin;   X = X1 + (Z-Z1) * a/c;   Y = Y1 + (Z-Z1) * b/c;
   //trans
   trans_Cam_Point(Ex[i_cam],mmp,G[i_cam],X,Y,Z,&Ex_t[i_cam],&X_t,&Y_t,&Z_t,&cross_p,&cross_c);
@@ -300,7 +294,7 @@ void init_mmLUT (int i_cam){
   x = x - I[i_cam].xh;
   y = y - I[i_cam].yh;
   correct_brown_affin (x, y, ap[i_cam], &x,&y);
-  ray_tracing (x,y, Ex[i_cam], I[i_cam], G[i_cam], mmp, &X1, &Y1, &Z1, &a, &b, &c);
+  ray_tracing(x,y, Ex[i_cam], I[i_cam], G[i_cam], mmp, &X1, &Y1, &Z1, &a, &b, &c);
   Z = Zmin;   X = X1 + (Z-Z1) * a/c;   Y = Y1 + (Z-Z1) * b/c;
   //trans
   trans_Cam_Point(Ex[i_cam],mmp,G[i_cam],X,Y,Z,&Ex_t[i_cam],&X_t,&Y_t,&Z_t,&cross_p,&cross_c);
@@ -326,7 +320,7 @@ void init_mmLUT (int i_cam){
   x = x - I[i_cam].xh;
   y = y - I[i_cam].yh;
   correct_brown_affin (x, y, ap[i_cam], &x,&y);
-  ray_tracing (x,y, Ex[i_cam], I[i_cam], G[i_cam], mmp, &X1, &Y1, &Z1, &a, &b, &c);
+  ray_tracing(x,y, Ex[i_cam], I[i_cam], G[i_cam], mmp, &X1, &Y1, &Z1, &a, &b, &c);
   Z = Zmin;   X = X1 + (Z-Z1) * a/c;   Y = Y1 + (Z-Z1) * b/c;
   //trans
   trans_Cam_Point(Ex[i_cam],mmp,G[i_cam],X,Y,Z,&Ex_t[i_cam],&X_t,&Y_t,&Z_t,&cross_p,&cross_c);
@@ -353,7 +347,7 @@ void init_mmLUT (int i_cam){
   x = x - I[i_cam].xh;
   y = y - I[i_cam].yh;
   correct_brown_affin (x, y, ap[i_cam], &x,&y);
-  ray_tracing (x,y, Ex[i_cam], I[i_cam], G[i_cam], mmp, &X1, &Y1, &Z1, &a, &b, &c);
+  ray_tracing(x,y, Ex[i_cam], I[i_cam], G[i_cam], mmp, &X1, &Y1, &Z1, &a, &b, &c);
   Z = Zmin;   X = X1 + (Z-Z1) * a/c;   Y = Y1 + (Z-Z1) * b/c;
   //trans
   trans_Cam_Point(Ex[i_cam],mmp,G[i_cam],X,Y,Z,&Ex_t[i_cam],&X_t,&Y_t,&Z_t,&cross_p,&cross_c);
@@ -409,8 +403,8 @@ void init_mmLUT (int i_cam){
     //trans
     trans_Cam_Point(Ex[i_cam],mmp,G[i_cam],X,Y,Z,&Ex_t[i_cam],&X_t,&Y_t,&Z_t,&cross_p,&cross_c);
       mmLUT[i_cam].data[i*nz + j]
-    = multimed_r_nlay_v2 (Ex_t[i_cam], Ex[i_cam], mmp, 
-                          Ri[i]+Ex_t[i_cam].x0, Ex_t[i_cam].y0, Zi[j]);
+    = multimed_r_nlay (Ex_t[i_cam], Ex[i_cam], mmp, 
+                          Ri[i]+Ex_t[i_cam].x0, Ex_t[i_cam].y0, Zi[j], i_cam);
     }
 }
 
@@ -489,7 +483,7 @@ double *zmax, double *zmin, int num_cams){
       x = x - I[i_cam].xh;
       y = y - I[i_cam].yh;
       correct_brown_affin (x, y, ap[i_cam], &x,&y);
-      ray_tracing_v2 (x,y, Ex[i_cam], I[i_cam], G[i_cam], mmp, &X1, &Y1, &Z1, &a, &b, &c);
+      ray_tracing(x,y, Ex[i_cam], I[i_cam], G[i_cam], mmp, &X1, &Y1, &Z1, &a, &b, &c);
       Z = Zmin;   X = X1 + (Z-Z1) * a/c;   Y = Y1 + (Z-Z1) * b/c;
       R = sqrt (  (X-Ex[i_cam].x0)*(X-Ex[i_cam].x0)
           + (Y-Ex[i_cam].y0)*(Y-Ex[i_cam].y0)); 
@@ -514,7 +508,7 @@ double *zmax, double *zmin, int num_cams){
       x = x - I[i_cam].xh;
       y = y - I[i_cam].yh;
       correct_brown_affin (x, y, ap[i_cam], &x,&y);
-      ray_tracing_v2 (x,y, Ex[i_cam], I[i_cam], G[i_cam], mmp, &X1, &Y1, &Z1, &a, &b, &c);
+      ray_tracing(x,y, Ex[i_cam], I[i_cam], G[i_cam], mmp, &X1, &Y1, &Z1, &a, &b, &c);
       Z = Zmin;   X = X1 + (Z-Z1) * a/c;   Y = Y1 + (Z-Z1) * b/c;
       R = sqrt (  (X-Ex[i_cam].x0)*(X-Ex[i_cam].x0)
           + (Y-Ex[i_cam].y0)*(Y-Ex[i_cam].y0));
@@ -540,7 +534,7 @@ double *zmax, double *zmin, int num_cams){
       x = x - I[i_cam].xh;
       y = y - I[i_cam].yh;
       correct_brown_affin (x, y, ap[i_cam], &x,&y);
-      ray_tracing_v2 (x,y, Ex[i_cam], I[i_cam], G[i_cam], mmp, &X1, &Y1, &Z1, &a, &b, &c);
+      ray_tracing(x,y, Ex[i_cam], I[i_cam], G[i_cam], mmp, &X1, &Y1, &Z1, &a, &b, &c);
       Z = Zmin;   X = X1 + (Z-Z1) * a/c;   Y = Y1 + (Z-Z1) * b/c;
       R = sqrt (  (X-Ex[i_cam].x0)*(X-Ex[i_cam].x0)
           + (Y-Ex[i_cam].y0)*(Y-Ex[i_cam].y0));
@@ -566,7 +560,7 @@ double *zmax, double *zmin, int num_cams){
       x = x - I[i_cam].xh;
       y = y - I[i_cam].yh;
       correct_brown_affin (x, y, ap[i_cam], &x,&y);
-      ray_tracing_v2 (x,y, Ex[i_cam], I[i_cam], G[i_cam], mmp, &X1, &Y1, &Z1, &a, &b, &c);
+      ray_tracing(x,y, Ex[i_cam], I[i_cam], G[i_cam], mmp, &X1, &Y1, &Z1, &a, &b, &c);
       Z = Zmin;   X = X1 + (Z-Z1) * a/c;   Y = Y1 + (Z-Z1) * b/c;
       R = sqrt (  (X-Ex[i_cam].x0)*(X-Ex[i_cam].x0)
           + (Y-Ex[i_cam].y0)*(Y-Ex[i_cam].y0)); 
