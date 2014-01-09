@@ -19,8 +19,31 @@ Routines contained:      -
 
 #include "ray_tracing.h"
 
+/*  wraps previous ray_tracing, parameters are read directly from control_par* structure */
+void ray_tracing (double x
+				, double y
+				, Calibration* cal
+				, mm_np mm
+				, double X[3]
+				, double a[3]){
 
-void ray_tracing (double x, double y, Exterior Ex, Interior I, Glass G,\
+old_ray_tracing(x
+			, y
+			, cal->ext_par
+			, cal->int_par
+			, cal->glass_par
+			, mm
+			, &X[0]
+			, &X[1]
+			, &X[2]
+			, &a[0]
+			, &a[1]
+			, &a[2]);
+}
+
+
+
+void old_ray_tracing (double x, double y, Exterior Ex, Interior I, Glass G,\
 mm_np mm, double  *Xb2, double  *Yb2, double  *Zb2, \
 double  *a3, double  *b3,double  *c3){
 

@@ -27,6 +27,8 @@ START_TEST(test_ray_tracing)
     
     Interior test_I = {0.0, 0.0, 100.0};
     Glass test_G = {0.0001, 0.00001, 1.0};
+    ap_52 test_addp = {0., 0., 0., 0., 0., 1., 0.};
+    Calibration test_cal = {test_Ex, test_I, test_G, test_addp};
     
     mm_np test_mm = {
     	3, 
@@ -38,29 +40,31 @@ START_TEST(test_ray_tracing)
     
     /* output */
     
-    double X,Y,Z,a,b,c; 
+    double X[3],a[3]; 
 
 
     
-    
+/*    
       ray_tracing (x, y, test_Ex, test_I, test_G, test_mm, \
       &X, &Y, &Z, \
       &a, &b, &c);
+*/      
+      ray_tracing (x, y, &test_cal, test_mm, (double *)X, (double *)a);
 
      
     
     
-     ck_assert_msg( fabs(X - 110.406944) < EPS && 
-                    fabs(Y - 88.325788) < EPS && 
-                    fabs(Z - 0.988076)  < EPS,
-         "Expected 110.406944, 88.325788, 0.988076 but found %f %f %f\n", X,Y,Z);
+     ck_assert_msg( fabs(X[0] - 110.406944) < EPS && 
+                    fabs(X[1] - 88.325788) < EPS && 
+                    fabs(X[2] - 0.988076)  < EPS,
+         "Expected 110.406944, 88.325788, 0.988076 but found %f %f %f\n", X);
       
       
          
-     ck_assert_msg( fabs(a - 0.387960) < EPS && 
-                    fabs(b - 0.310405) < EPS && 
-                    fabs(c + 0.867834)  < EPS,
-         "Expected 0.387960,0.310405,-0.867834 but found %f %f %f\n", a,b,c);
+     ck_assert_msg( fabs(a[0] - 0.387960) < EPS && 
+                    fabs(a[1] - 0.310405) < EPS && 
+                    fabs(a[2] + 0.867834)  < EPS,
+         "Expected 0.387960,0.310405,-0.867834 but found %f %f %f\n", a);
   
     
 }
