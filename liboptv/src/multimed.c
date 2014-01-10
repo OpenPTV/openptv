@@ -61,7 +61,7 @@ double X, double Y, double Z, double *Xq, double *Yq, int cam){
   if (it >= 40)
     {
       *Xq = X; *Yq = Y;
-      puts ("Multimed_nlay stopped after 40. Iteration");   return;
+      printf("Multimed_nlay stopped after 40. Iteration\n");   return;
     }
     
   if (r != 0)
@@ -94,7 +94,7 @@ double cross_p[], double cross_c[], double *X, double *Y, double *Z){
 
 
 
-void trans_Cam_Point_back(Exterior x,mm_np mm,Glass gl, double X, double Y, double Z,\
+void trans_Cam_Point_back(Exterior ex, mm_np mm, Glass gl, double X, double Y, double Z,\
 Exterior *ex_t, double *X_t, double *Y_t, double *Z_t, double *cross_p, double *cross_c){
 
   //--Beat Lüthi June 07: I change the stuff to a system perpendicular to the interface
@@ -233,38 +233,32 @@ double Z, int cam){
 
 
 
-void init_mmLUT (int i_cam){
+void init_mmLUT (int i_cam, volume_par *vpar, control_par *cpar, mmlut *mmLUT){
 
   register int  i,j, nr, nz;
-  double        X,Y,Z, R, X1,Y1,Z1, Zmin, Rmax=0,Zmax, a,b,c;
+  double        X,Y,Z, R, X1,Y1,Z1, Zmin, Rmax=0, Zmax, a,b,c;
   double        x,y, *Ri,*Zi;
-  double        rw = 2; //was 2, has unit [mm]??, Beat Lüthi Aug 1, 2007, is ok
+  double        rw = 2.0; 
   Exterior      Ex_t[4];
   double        X_t,Y_t,Z_t,cross_p[3],cross_c[3],Zmin_t,Zmax_t;
-    
+  FILE          *fpp;
+
+ 
   /* find extrema of imaged object volume */
   /* ==================================== */
   
   /* find extrema in depth */
   
-  fpp = fopen ("parameters/criteria.par", "r");
-  fscanf (fpp, "%lf\n", &X);
-  fscanf (fpp, "%lf\n", &Zmin);
-  fscanf (fpp, "%lf\n", &Zmax);
-  fscanf (fpp, "%lf\n", &X);
-  fscanf (fpp, "%lf\n", &Z);    if (Z < Zmin)   Zmin = Z;
-  fscanf (fpp, "%lf\n", &Z);    if (Z > Zmax)   Zmax = Z;
-  fclose (fpp);
   
-  Zmin -= fmod (Zmin, rw);
-  Zmax += (rw - fmod (Zmax, rw));
-  Zmin_t=Zmin;
-  Zmax_t=Zmax;
+  Zmin -= fmod (vpar->Zmin_lay[0], rw);
+  Zmax += (rw - fmod (vpar->Zmax_lay[0], rw));
+  Zmin_t = Zmin;
+  Zmax_t = Zmax;
   
   /* intersect with image vertices rays */
-  
-  //--00
-  pixel_to_metric (0., 0., imx,imy, pix_x,pix_y, &x,&y, chfield);
+
+  /* --00 */
+  pixel_to_metric (0., 0., cpar->imx, cpar->imy, cpar->pix_x, cpar->pix_y, &x, &y, cpar->chfield);
   x = x - I[i_cam].xh;
   y = y - I[i_cam].yh;
   correct_brown_affin (x, y, ap[i_cam], &x,&y);
