@@ -46,6 +46,13 @@ void metric_to_pixel (double * x_pixel
 		      , double pix_size_x
 		      , double pix_size_y
 		      , int y_remap_mode);
+		      
+void metric_to_pixel_control_par(double * x_pixel
+				 , double * y_pixel
+				 , double x_metric
+				 , double y_metric
+				 , control_par* parameters				 
+				 );
 
 /* correct for Brown affine transformation */
 void correct_brown_affin (double x

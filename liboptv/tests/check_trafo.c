@@ -59,6 +59,58 @@ START_TEST(test_metric_to_pixel)
 }
 END_TEST
 
+
+
+START_TEST(test_metric_to_pixel_contol_par)
+{
+    /* input */
+    double xc = 0.0; // [mm]
+    double yc = 0.0; // [mm]
+    control_par cpar;
+       
+    /* output */
+    double xp, yp;     
+
+    
+    cpar.imx = 1024; 
+    cpar.imy = 1008;
+    cpar.pix_x = 0.01;
+    cpar.pix_y = 0.01;
+    cpar.chfield = 0;
+    
+       
+    
+    metric_to_pixel_control_par (&xp, &yp, xc, yc, &cpar);    
+    
+    
+     ck_assert_msg( fabs(xp - 512.0) < EPS && 
+                    fabs(yp - 504.0) < EPS,
+         "Expected 512.0, 504.0, but got %f %f\n", xp, yp);
+         
+    xc = 1.0;
+    yc = 0.0;
+    
+    metric_to_pixel_control_par (&xp, &yp, xc, yc, &cpar);    
+    
+    
+     ck_assert_msg( fabs(xp - 612.0) < EPS && 
+                    fabs(yp - 504.0) < EPS,
+         "Expected 612.0, 504.0, but got %f %f\n", xp, yp);
+         
+    xc = 0.0;
+    yc = -1.0;
+    
+    metric_to_pixel_control_par (&xp, &yp, xc, yc, &cpar);     
+    
+    
+     ck_assert_msg( fabs(xp - 512.0) < EPS && 
+                    fabs(yp - 604.0) < EPS,
+         "Expected 512.0, 604.0, but got %f %f\n", xp, yp);
+  
+    
+}
+END_TEST
+
 START_TEST(test_pixel_to_metric)
 {
     /* input */
@@ -109,6 +161,63 @@ START_TEST(test_pixel_to_metric)
     
 }
 END_TEST
+
+
+
+START_TEST(test_pixel_to_metric_control_par)
+{
+    /* input */
+    double xc = 0.0; // [mm]
+    double yc = 0.0; // [mm]
+    control_par cpar;
+       
+    /* output */
+    double xp, yp;     
+
+    
+    cpar.imx = 1024; 
+    cpar.imy = 1008;
+    cpar.pix_x = 0.01;
+    cpar.pix_y = 0.01;
+    cpar.chfield = 0;  
+    
+    /* compare the xc, yc to the original */
+    double xc1, yc1;      
+        
+    
+    metric_to_pixel_control_par (&xp, &yp, xc, yc, &cpar); 
+    pixel_to_metric_control_par (&xc1, &yc1, xp, yp, &cpar);   
+    
+    
+     ck_assert_msg( fabs(xc1 - xc) < EPS && 
+                    fabs(yc1 - yc) < EPS,
+         "Expected %f, %f but got %f %f\n", xc, yc, xc1, yc1);
+         
+    xc = 1.0;
+    yc = 0.0;
+    
+    metric_to_pixel_control_par (&xp, &yp, xc, yc, &cpar); 
+    pixel_to_metric_control_par (&xc1, &yc1, xp, yp, &cpar);  
+    
+    
+     ck_assert_msg( fabs(xc1 - xc) < EPS && 
+                    fabs(yc1 - yc) < EPS,
+         "Expected %f, %f, but got %f %f\n", xc,yc,xc1, yc1);
+         
+    xc = 0.0;
+    yc = -1.0;
+    
+    metric_to_pixel_control_par (&xp, &yp, xc, yc, &cpar); 
+    pixel_to_metric_control_par (&xc1, &yc1, xp, yp, &cpar);   
+    
+    
+     ck_assert_msg( fabs(xc1 - xc) < EPS && 
+                    fabs(yc1 - yc) < EPS,
+         "Expected %f, %f, but got %f %f\n", xc,yc,xc1, yc1);
+    
+}
+END_TEST
+
 
 
 START_TEST(test_distort_brown_affin)
@@ -164,6 +273,8 @@ Suite* fb_suite(void) {
     Suite *s = suite_create ("trafo");
     TCase *tc = tcase_create ("trafo_test");
     tcase_add_test(tc, test_metric_to_pixel);
+    tcase_add_test(tc, test_metric_to_pixel_contol_par);
+    tcase_add_test(tc, test_pixel_to_metric_control_par );
     tcase_add_test(tc, test_pixel_to_metric);
     tcase_add_test(tc, test_distort_brown_affin);
     tcase_add_test(tc, test_correct_brown_affin);
