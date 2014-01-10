@@ -78,6 +78,24 @@ void pixel_to_metric_control_par(double * x_metric
 
 }
 
+/* wrap metric_to_pixel */
+void metric_to_pixel_control_par(double * x_pixel
+				 , double * y_pixel
+				 , double x_metric
+				 , double y_metric
+				 , control_par* parameters				 
+				 ){
+  metric_to_pixel(x_pixel
+		  , y_pixel
+		  , x_metric
+		  , y_metric
+		  , parameters->imx
+		  , parameters->imy
+		  , parameters->pix_x
+		  , parameters->pix_y
+		  , parameters->chfield);
+}
+
 
 /*  transformation detection geometric coordinates -> pixel coordinates */
 void metric_to_pixel (double * x_pixel
