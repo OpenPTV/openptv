@@ -232,8 +232,14 @@ double Z, int cam){
 }
 
 
+/* TODO: in jw_ptv.c we need to update the call to init_mmLUT in the following format */
 
-void init_mmLUT (int i_cam, volume_par *vpar, control_par *cpar, mmlut *mmLUT){
+void init_mmLUT (int i_cam
+               , volume_par *vpar
+               , control_par *cpar
+               , Calibration *cal
+               , ap_52 *ap
+               , mmlut *mmLUT){
 
   register int  i,j, nr, nz;
   double        X,Y,Z, R, X1,Y1,Z1, Zmin, Rmax=0, Zmax, a,b,c;
@@ -258,11 +264,19 @@ void init_mmLUT (int i_cam, volume_par *vpar, control_par *cpar, mmlut *mmLUT){
   /* intersect with image vertices rays */
 
   /* --00 */
-  pixel_to_metric (0., 0., cpar->imx, cpar->imy, cpar->pix_x, cpar->pix_y, &x, &y, cpar->chfield);
-  x = x - I[i_cam].xh;
-  y = y - I[i_cam].yh;
-  correct_brown_affin (x, y, ap[i_cam], &x,&y);
+  pixel_to_metric_control_par (&x, &y, 0., 0., &cpar);
+  /* x = x - I[i_cam].xh;
+     y = y - I[i_cam].yh;
+  */
+  x = x - cal->int_par.xh;
+  y = y - cal->int_par.yh;
+  
+  /* correct_brown_affin (x, y, ap[i_cam], &x,&y); */
+  correct_brown_affin (x, y, ap, &x,&y);
+
+  /* ray_tracing(x,y, Ex[i_cam], I[i_cam], G[i_cam], mmp, &X1, &Y1, &Z1, &a, &b, &c); */
   ray_tracing(x,y, Ex[i_cam], I[i_cam], G[i_cam], mmp, &X1, &Y1, &Z1, &a, &b, &c);
+  
   Z = Zmin;   X = X1 + (Z-Z1) * a/c;   Y = Y1 + (Z-Z1) * b/c;
   //trans
   trans_Cam_Point(Ex[i_cam],mmp,G[i_cam],X,Y,Z,&Ex_t[i_cam],&X_t,&Y_t,&Z_t,&cross_p,&cross_c);
