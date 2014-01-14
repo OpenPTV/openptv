@@ -239,8 +239,12 @@ void init_mmLUT (volume_par *vpar
                , mmlut *mmLUT){
 
   register int  i,j, nr, nz;
+<<<<<<< HEAD
   double        X,Y,Z, R, Zmin, Rmax=0, Zmax;
   double		pos[3], a[3]; 
+=======
+  double        X,Y,Z, R, X1,Y1,Z1, Zmin, Rmax=0, Zmax, a,b,c;
+>>>>>>> a396db496de5863b1f569639b787e01fba762c44
   double        x,y, *Ri,*Zi;
   double        rw = 2.0; 
   Exterior      Ex_t[4];
@@ -281,7 +285,7 @@ void init_mmLUT (volume_par *vpar
 	  correct_brown_affin (x, y, ap[i_cam], &x,&y);
 	  
 	  /* ray_tracing(x,y, Ex[i_cam], I[i_cam], G[i_cam], mmp, &X1, &Y1, &Z1, &a, &b, &c); */
-	  ray_tracing(x,y, cal[i_cam], mmp, &pos, &a);
+     ray_tracing(x,y, cal[i_cam], mmp, &pos, &a);
   
 	  /* Z = Zmin;   X = X1 + (Z-Z1) * a/c;   Y = Y1 + (Z-Z1) * b/c; */
 	  Z = Zmin;   
