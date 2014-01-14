@@ -239,7 +239,8 @@ void init_mmLUT (volume_par *vpar
                , mmlut *mmLUT){
 
   register int  i,j, nr, nz;
-  double        X,Y,Z, R, X1,Y1,Z1, Zmin, Rmax=0, Zmax, a,b,c;
+  double        X,Y,Z, R, Zmin, Rmax=0, Zmax;
+  double		pos[3], a[3]; 
   double        x,y, *Ri,*Zi;
   double        rw = 2.0; 
   Exterior      Ex_t[4];
@@ -280,9 +281,13 @@ void init_mmLUT (volume_par *vpar
 	  correct_brown_affin (x, y, ap[i_cam], &x,&y);
 	  
 	  /* ray_tracing(x,y, Ex[i_cam], I[i_cam], G[i_cam], mmp, &X1, &Y1, &Z1, &a, &b, &c); */
-	  ray_tracing(x,y, Ex[i_cam], I[i_cam], G[i_cam], mmp, &X1, &Y1, &Z1, &a, &b, &c);
+	  ray_tracing(x,y, cal[i_cam], mmp, &pos, &a);
   
-	  Z = Zmin;   X = X1 + (Z-Z1) * a/c;   Y = Y1 + (Z-Z1) * b/c;
+	  /* Z = Zmin;   X = X1 + (Z-Z1) * a/c;   Y = Y1 + (Z-Z1) * b/c; */
+	  Z = Zmin;   
+	  X = pos[0] + (Z - pos[2]) * a[0]/a[2];   
+	  Y = pos[1] + (Z - pos[2]) * a[1]/a[2];
+	  
 	  //trans
 	  trans_Cam_Point(Ex[i_cam],mmp,G[i_cam],X,Y,Z,&Ex_t[i_cam],&X_t,&Y_t,&Z_t,&cross_p,&cross_c);
 	  if(Z_t<Zmin_t)Zmin_t=Z_t;
