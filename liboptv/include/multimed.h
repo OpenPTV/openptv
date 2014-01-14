@@ -52,7 +52,11 @@ double cross_p[], double cross_c[], double *X, double *Y, double *Z);
 double multimed_r_nlay (Exterior ex, Exterior ex_o, mm_np mm, double X, double Y,\
 double Z, int cam);
 
-void init_mmLUT (int i_cam, volume_par *vpar, control_par *cpar, Calibration *cal, mmlut *mmLUT);
+void init_mmLUT (volume_par *vpar
+               , control_par *cpar
+               , Calibration *cal
+               , ap_52 *ap
+               , mmlut *mmLUT);
 
 void volumedimension (double *xmax, double *xmin, double *ymax, double *ymin, \
 double *zmax, double *zmin, int num_cams);
