@@ -12,20 +12,15 @@
 #include "lsqadj.h"
 
 
+typedef struct {
+    double x, y, z;
+} Origin; 
+
 /* mmLUT structure */
 typedef struct {
-    int num_cams;
-    char **img_base_name; /* Note the duplication with sequence_par. */
-    char **cal_img_base_name;
-    int hp_flag;
-    int allCam_flag;
-    int tiff_flag;
-    int imx;
-    int imy;
-    double pix_x;
-    double pix_y;
-    int chfield; 
-    mm_np *mm; 
+    Origin origin;
+    int    nr, nz, rw;
+    double data[]; 
 } mmlut;
 
 
@@ -55,7 +50,6 @@ double Z, int cam);
 void init_mmLUT (volume_par *vpar
                , control_par *cpar
                , Calibration *cal
-               , ap_52 *ap
                , mmlut *mmLUT);
 
 void volumedimension (double *xmax, double *xmin, double *ymax, double *ymin, \
