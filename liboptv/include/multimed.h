@@ -20,12 +20,12 @@ typedef struct {
 typedef struct {
     Origin origin;
     int    nr, nz, rw;
-    double data[]; 
+    double *data; 
 } mmlut;
 
 
 
-double get_mmf_from_mmLUT (int i_cam, double X, double Y, double Z);
+double get_mmf_from_mmLUT (int i_cam, double X, double Y, double Z, mmlut *mmLUT);
 
 /* Note that multimed_nlay_v2 is renamted to _nlay) */
 void  multimed_nlay (Exterior ex, Exterior ex_o, mm_np mm, \
@@ -34,11 +34,11 @@ double X, double Y, double Z, double *Xq, double *Yq, int cam);
 void back_trans_Point_back(double X_t, double Y_t, double Z_t,mm_np mm, Glass G, \
 double cross_p[], double cross_c[], double *X, double *Y, double *Z);
 
-void trans_Cam_Point_back(Exterior x,mm_np mm,Glass gl, double X, double Y, double Z,\
-Exterior *ex_t, double *X_t, double *Y_t, double *Z_t, double *cross_p, double *cross_c);
+void trans_Cam_Point_back(Exterior x, mm_np mm,Glass gl, double X, double Y, double Z,\
+Exterior *ex_t, double *X_t, double *Y_t, double *Z_t, double cross_p[3], double cross_c[3]);
 
 void trans_Cam_Point(Exterior ex, mm_np mm, Glass gl, double X, double Y, double Z, \
-Exterior *ex_t, double *X_t, double *Y_t, double *Z_t, double *cross_p, double *cross_c);
+Exterior *ex_t, double *X_t, double *Y_t, double *Z_t, double cross_p[3], double cross_c[3]);
 
 void back_trans_Point(double X_t, double Y_t, double Z_t, mm_np mm, Glass G, \
 double cross_p[], double cross_c[], double *X, double *Y, double *Z);

@@ -27,10 +27,11 @@ double X, double Y, double Z, double *Xq, double *Yq, int cam){
   /* Beat Lüthi, Nov 2007 comment actually only Xq is affected since all Y and Yq are always zero */
   int       i, it=0;
   double    beta1, beta2[32], beta3, r, rbeta, rdiff, rq, mmf;
+  mmlut     *mmLUT;
   
   /* interpolation in mmLUT, if selected (requires some global variables) */
   if (mm.lut){         
-      mmf = get_mmf_from_mmLUT (cam, X,Y,Z);
+      mmf = get_mmf_from_mmLUT (cam, X,Y,Z, (mmlut *)mmLUT);
       
       if (mmf > 0)
       {
@@ -125,7 +126,7 @@ Exterior *ex_t, double *X_t, double *Y_t, double *Z_t, double *cross_p, double *
 }
 
 void trans_Cam_Point(Exterior ex, mm_np mm, Glass gl, double X, double Y, double Z, \
-Exterior *ex_t, double *X_t, double *Y_t, double *Z_t, double *cross_p, double *cross_c){
+Exterior *ex_t, double *X_t, double *Y_t, double *Z_t, double cross_p[3], double cross_c[3]){
 
   //--Beat Lüthi June 07: I change the stuff to a system perpendicular to the interface
   double dist_cam_glas,dist_point_glas,dist_o_glas; //glas inside at water 
@@ -190,8 +191,11 @@ double Z, int cam){
   double dir_water_z=ex.z0-Z;
   double dist=pow(dir_water_x*dir_water_x+dir_water_z*dir_water_z,0.5);
   double xInInterFace,comp_parallel,comp_perpendicular,dir_air_x,dir_air_z,error_x,error_z;
+  mmlut  *mmLUT;
+  
   dir_water_x=dir_water_x/dist;
   dir_water_z=dir_water_z/dist;
+  
   
   
   // 1-medium case 
@@ -200,7 +204,7 @@ double Z, int cam){
   
   // interpolation in mmLUT, if selected (requires some global variables) 
   if (mm.lut) {
-    mmf = get_mmf_from_mmLUT(cam, X, Y, Z);
+    mmf = get_mmf_from_mmLUT (cam, X,Y,Z, (mmlut *)mmLUT);
     if (mmf > 0) return (mmf);
   }
  
@@ -231,19 +235,23 @@ double Z, int cam){
   if (r != 0)   return (rq/r);  else return (1.0);
 }
 
+/* init_mmLUT prepares the Look-Up Table
+Arguments:
 
+*/ 
 void init_mmLUT (volume_par *vpar
                , control_par *cpar
                , Calibration *cal
                , mmlut *mmLUT){
 
-  register int  i,j, nr, nz;
+  register int  i,j, nr, nz, i_cam;
   double        X,Y,Z, R, Zmin, Rmax=0, Zmax;
   double		pos[3], a[3]; 
   double        x,y, *Ri,*Zi;
   double        rw = 2.0; 
   Exterior      Ex_t[4];
-  double        X_t,Y_t,Z_t,cross_p[3],cross_c[3],Zmin_t,Zmax_t;
+  double        X_t,Y_t,Z_t, Zmin_t,Zmax_t;
+  double        cross_p[3],cross_c[3]; 
   FILE          *fpp;
   double        xc[2], yc[2];  /* image corners */
   
@@ -282,17 +290,17 @@ void init_mmLUT (volume_par *vpar
 	  
 	  for (i = 0; i < 2; i ++) for (j = 0; j < 2; j++) {
 	  	  
-		  pixel_to_metric_control_par (&x, &y, xc[i], yc[j], &cpar);
+		  pixel_to_metric_control_par (&x, &y, xc[i], yc[j], cpar);
 		  /* x = x - I[i_cam].xh;
 			 y = y - I[i_cam].yh;
 		  */
-		  x = x - cal[i_cam]->int_par.xh;
-		  y = y - cal[i_cam]->int_par.yh;
+		  x = x - cal[i_cam].int_par.xh;
+		  y = y - cal[i_cam].int_par.yh;
   
-		  correct_brown_affin (x, y, cal[i_cam]->added_par, &x,&y);
+		  correct_brown_affin (x, y, cal[i_cam].added_par, &x,&y);
 	  
 		  /* ray_tracing(x,y, Ex[i_cam], I[i_cam], G[i_cam], mmp, &X1, &Y1, &Z1, &a, &b, &c); */
-		  ray_tracing(x,y, cal[i_cam], mmp, &pos, &a);
+		  ray_tracing(x,y, &cal[i_cam], *(cpar->mm), pos, a);
   
 		  /* Z = Zmin;   X = X1 + (Z-Z1) * a/c;   Y = Y1 + (Z-Z1) * b/c; */
 		  Z = Zmin;   
@@ -301,8 +309,8 @@ void init_mmLUT (volume_par *vpar
 	  
 		  /* trans */
 		  /* trans_Cam_Point(Ex[i_cam],mmp,G[i_cam],X,Y,Z,&Ex_t[i_cam],&X_t,&Y_t,&Z_t,&cross_p,&cross_c); */
-		  trans_Cam_Point(cal[i_cam]->ext_par, mmp, cal[i_cam]->glass_par, X, Y, Z, \
-		  &Ex_t[i_cam], &X_t, &Y_t, &Z_t, &cross_p, &cross_c);
+		  trans_Cam_Point(cal[i_cam].ext_par, *(cpar->mm), cal[i_cam].glass_par, X, Y, Z, \
+		  &Ex_t[i_cam], &X_t, &Y_t, &Z_t, (double *)cross_p, (double *)cross_c);
 	  
 		  if( Z_t < Zmin_t ) Zmin_t = Z_t;
 		  if( Z_t > Zmax_t ) Zmax_t = Z_t;
@@ -320,8 +328,8 @@ void init_mmLUT (volume_par *vpar
 	  
 		  /* trans */
 		  /* trans_Cam_Point(Ex[i_cam],mmp,G[i_cam],X,Y,Z,&Ex_t[i_cam],&X_t,&Y_t,&Z_t,&cross_p,&cross_c); */
-		  trans_Cam_Point(cal[i_cam]->ext_par, mmp, cal[i_cam]->glass_par, X, Y, Z, \
-		  &Ex_t[i_cam], &X_t, &Y_t, &Z_t, &cross_p, &cross_c);
+		  trans_Cam_Point(cal[i_cam].ext_par, *(cpar->mm), cal[i_cam].glass_par, X, Y, Z, \
+		  &Ex_t[i_cam], &X_t, &Y_t, &Z_t, (double *)cross_p, (double *)cross_c);
 	  
 		  if( Z_t < Zmin_t ) Zmin_t = Z_t;
 		  if( Z_t > Zmax_t ) Zmax_t = Z_t;
@@ -343,8 +351,8 @@ void init_mmLUT (volume_par *vpar
  
 	  /* create two dimensional mmLUT structure */
 	  
-	  trans_Cam_Point(cal[i_cam]->ext_par, mmp, cal[i_cam]->glass_par, X, Y, Z, \
-		  &Ex_t[i_cam], &X_t, &Y_t, &Z_t, &cross_p, &cross_c);
+	  trans_Cam_Point(cal[i_cam].ext_par, *(cpar->mm), cal[i_cam].glass_par, X, Y, Z, \
+		  &Ex_t[i_cam], &X_t, &Y_t, &Z_t, (double *)cross_p, (double *)cross_c);
 
 	  mmLUT[i_cam].origin.x = Ex_t[i_cam].x0;
 	  mmLUT[i_cam].origin.y = Ex_t[i_cam].y0;
@@ -367,11 +375,11 @@ void init_mmLUT (volume_par *vpar
 		//old mmLUT[i_cam].data[i*nz + j]= multimed_r_nlay (Ex[i_cam], mmp, 
 		//                                                  Ri[i]+Ex[i_cam].x0, Ex[i_cam].y0, Zi[j]);
 		//trans
-		trans_Cam_Point(cal[i_cam]->ext_par, mmp, cal[i_cam]->glass_par, X, Y, Z, \
-		  &Ex_t[i_cam], &X_t, &Y_t, &Z_t, &cross_p, &cross_c);
+		trans_Cam_Point(cal[i_cam].ext_par, *(cpar->mm), cal[i_cam].glass_par, X, Y, Z, \
+		  &Ex_t[i_cam], &X_t, &Y_t, &Z_t, (double *)cross_p, (double *)cross_c);
 		  
 		  mmLUT[i_cam].data[i*nz + j]
-		= multimed_r_nlay (Ex_t[i_cam], Ex[i_cam], mmp, 
+		= multimed_r_nlay (Ex_t[i_cam], cal[i_cam].ext_par, *(cpar->mm), 
 							  Ri[i] + Ex_t[i_cam].x0, Ex_t[i_cam].y0, Zi[j], i_cam);
 		} /* for nr,nz */
     } /* for n_cams */
@@ -379,7 +387,7 @@ void init_mmLUT (volume_par *vpar
 
 
 
-double get_mmf_from_mmLUT (int i_cam, double X, double Y, double Z){
+double get_mmf_from_mmLUT (int i_cam, double X, double Y, double Z, mmlut *mmLUT){
 
   int       i, ir,iz, nr,nz, v4[4];
   double    R, sr,sz, rw, mmf=1;
@@ -429,6 +437,7 @@ double *zmax, double *zmin, int num_cams){
   int   i_cam;
   double X,Y,Z, R, X1,Y1,Z1, Zmin, Rmax=0,Zmax, a,b,c;
   double x,y;
+  FILE *fpp;
     
   /* find extrema of imaged object volume */
   /* ==================================== */
