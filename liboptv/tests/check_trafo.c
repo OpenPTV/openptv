@@ -13,7 +13,7 @@
 #define EPS 1E-5
 
 
-START_TEST(test_metric_to_pixel)
+START_TEST(test_old_metric_to_pixel)
 {
     /* input */
     double xc = 0.0; // [mm]
@@ -28,7 +28,7 @@ START_TEST(test_metric_to_pixel)
     double xp, yp;        
         
     
-    metric_to_pixel (&xp, &yp, xc, yc, imx, imy, pix_x, pix_y,  field);    
+    old_metric_to_pixel (&xp, &yp, xc, yc, imx, imy, pix_x, pix_y,  field);    
     
     
      ck_assert_msg( fabs(xp - 512.0) < EPS && 
@@ -38,7 +38,7 @@ START_TEST(test_metric_to_pixel)
     xc = 1.0;
     yc = 0.0;
     
-    metric_to_pixel (&xp, &yp, xc, yc, imx, imy, pix_x, pix_y,  field);    
+    old_metric_to_pixel (&xp, &yp, xc, yc, imx, imy, pix_x, pix_y,  field);    
     
     
      ck_assert_msg( fabs(xp - 612.0) < EPS && 
@@ -48,7 +48,7 @@ START_TEST(test_metric_to_pixel)
     xc = 0.0;
     yc = -1.0;
     
-    metric_to_pixel (&xp, &yp, xc, yc, imx, imy, pix_x, pix_y,  field);    
+    old_metric_to_pixel (&xp, &yp, xc, yc, imx, imy, pix_x, pix_y,  field);    
     
     
      ck_assert_msg( fabs(xp - 512.0) < EPS && 
@@ -61,7 +61,7 @@ END_TEST
 
 
 
-START_TEST(test_metric_to_pixel_contol_par)
+START_TEST(test_metric_to_pixel)
 {
     /* input */
     double xc = 0.0; // [mm]
@@ -80,7 +80,7 @@ START_TEST(test_metric_to_pixel_contol_par)
     
        
     
-    metric_to_pixel_control_par (&xp, &yp, xc, yc, &cpar);    
+    metric_to_pixel (&xp, &yp, xc, yc, &cpar);    
     
     
      ck_assert_msg( fabs(xp - 512.0) < EPS && 
@@ -90,7 +90,7 @@ START_TEST(test_metric_to_pixel_contol_par)
     xc = 1.0;
     yc = 0.0;
     
-    metric_to_pixel_control_par (&xp, &yp, xc, yc, &cpar);    
+    metric_to_pixel (&xp, &yp, xc, yc, &cpar);    
     
     
      ck_assert_msg( fabs(xp - 612.0) < EPS && 
@@ -100,7 +100,7 @@ START_TEST(test_metric_to_pixel_contol_par)
     xc = 0.0;
     yc = -1.0;
     
-    metric_to_pixel_control_par (&xp, &yp, xc, yc, &cpar);     
+    metric_to_pixel (&xp, &yp, xc, yc, &cpar);     
     
     
      ck_assert_msg( fabs(xp - 512.0) < EPS && 
@@ -111,7 +111,7 @@ START_TEST(test_metric_to_pixel_contol_par)
 }
 END_TEST
 
-START_TEST(test_pixel_to_metric)
+START_TEST(test_old_pixel_to_metric)
 {
     /* input */
     double xc = 0.0; // [mm]
@@ -129,8 +129,8 @@ START_TEST(test_pixel_to_metric)
     double xc1, yc1;      
         
     
-    metric_to_pixel (&xp, &yp, xc, yc, imx, imy, pix_x, pix_y,  field); 
-    pixel_to_metric (&xc1, &yc1,xp, yp, imx, imy, pix_x, pix_y,  field);   
+    old_metric_to_pixel (&xp, &yp, xc, yc, imx, imy, pix_x, pix_y,  field); 
+    old_pixel_to_metric (&xc1, &yc1,xp, yp, imx, imy, pix_x, pix_y,  field);   
     
     
      ck_assert_msg( fabs(xc1 - xc) < EPS && 
@@ -140,8 +140,8 @@ START_TEST(test_pixel_to_metric)
     xc = 1.0;
     yc = 0.0;
     
-    metric_to_pixel (&xp, &yp, xc, yc, imx, imy, pix_x, pix_y,  field);    
-    pixel_to_metric (&xc1, &yc1,xp, yp, imx, imy, pix_x, pix_y,  field);   
+    old_metric_to_pixel (&xp, &yp, xc, yc, imx, imy, pix_x, pix_y,  field);    
+    old_pixel_to_metric (&xc1, &yc1,xp, yp, imx, imy, pix_x, pix_y,  field);   
     
     
      ck_assert_msg( fabs(xc1 - xc) < EPS && 
@@ -151,8 +151,8 @@ START_TEST(test_pixel_to_metric)
     xc = 0.0;
     yc = -1.0;
     
-    metric_to_pixel (&xp, &yp, xc, yc, imx, imy, pix_x, pix_y,  field);    
-    pixel_to_metric (&xc1, &yc1,xp, yp, imx, imy, pix_x, pix_y,  field);   
+    old_metric_to_pixel (&xp, &yp, xc, yc, imx, imy, pix_x, pix_y,  field);    
+    old_pixel_to_metric (&xc1, &yc1,xp, yp, imx, imy, pix_x, pix_y,  field);   
     
     
      ck_assert_msg( fabs(xc1 - xc) < EPS && 
@@ -164,7 +164,7 @@ END_TEST
 
 
 
-START_TEST(test_pixel_to_metric_control_par)
+START_TEST(test_pixel_to_metric)
 {
     /* input */
     double xc = 0.0; // [mm]
@@ -185,8 +185,8 @@ START_TEST(test_pixel_to_metric_control_par)
     double xc1, yc1;      
         
     
-    metric_to_pixel_control_par (&xp, &yp, xc, yc, &cpar); 
-    pixel_to_metric_control_par (&xc1, &yc1, xp, yp, &cpar);   
+    metric_to_pixel (&xp, &yp, xc, yc, &cpar); 
+    pixel_to_metric (&xc1, &yc1, xp, yp, &cpar);   
     
     
      ck_assert_msg( fabs(xc1 - xc) < EPS && 
@@ -196,8 +196,8 @@ START_TEST(test_pixel_to_metric_control_par)
     xc = 1.0;
     yc = 0.0;
     
-    metric_to_pixel_control_par (&xp, &yp, xc, yc, &cpar); 
-    pixel_to_metric_control_par (&xc1, &yc1, xp, yp, &cpar);  
+    metric_to_pixel (&xp, &yp, xc, yc, &cpar); 
+    pixel_to_metric (&xc1, &yc1, xp, yp, &cpar);  
     
     
      ck_assert_msg( fabs(xc1 - xc) < EPS && 
@@ -207,8 +207,8 @@ START_TEST(test_pixel_to_metric_control_par)
     xc = 0.0;
     yc = -1.0;
     
-    metric_to_pixel_control_par (&xp, &yp, xc, yc, &cpar); 
-    pixel_to_metric_control_par (&xc1, &yc1, xp, yp, &cpar);   
+    metric_to_pixel (&xp, &yp, xc, yc, &cpar); 
+    pixel_to_metric (&xc1, &yc1, xp, yp, &cpar);   
     
     
      ck_assert_msg( fabs(xc1 - xc) < EPS && 
@@ -272,10 +272,10 @@ END_TEST
 Suite* fb_suite(void) {
     Suite *s = suite_create ("trafo");
     TCase *tc = tcase_create ("trafo_test");
+    tcase_add_test(tc, test_old_metric_to_pixel);
     tcase_add_test(tc, test_metric_to_pixel);
-    tcase_add_test(tc, test_metric_to_pixel_contol_par);
-    tcase_add_test(tc, test_pixel_to_metric_control_par );
-    tcase_add_test(tc, test_pixel_to_metric);
+    tcase_add_test(tc, test_pixel_to_metric );
+    tcase_add_test(tc, test_old_pixel_to_metric);
     tcase_add_test(tc, test_distort_brown_affin);
     tcase_add_test(tc, test_correct_brown_affin);
     suite_add_tcase (s, tc);   

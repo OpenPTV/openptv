@@ -16,19 +16,8 @@ typedef enum {
 } y_remap_mode_t;
 
 
-/*  transformation detection pixel coordinates -> geometric coordinates */
-void pixel_to_metric (double * x_metric
-		       , double * y_metric
-		       , double x_pixel
-		       , double y_pixel
-		       , int im_size_x
-		       , int im_size_y
-		       , double pix_size_x
-		       , double pix_size_y
-		       , int y_remap_mode);
-
 /*  wraps previous one, parameters are read directly from control_par* structure */
-void pixel_to_metric_control_par(double * x_metric
+void pixel_to_metric(double * x_metric
 				 , double * y_metric
 				 , double x_pixel
 				 , double y_pixel
@@ -37,17 +26,8 @@ void pixel_to_metric_control_par(double * x_metric
 
 
 /*  transformation detection geometric coordinates -> pixel coordinates */
-void metric_to_pixel (double * x_pixel
-		      , double * y_pixel
-		      , double x_metric
-		      , double y_metric
-		      , int im_size_x
-		      , int im_size_y
-		      , double pix_size_x
-		      , double pix_size_y
-		      , int y_remap_mode);
-		      
-void metric_to_pixel_control_par(double * x_pixel
+
+void metric_to_pixel(double * x_pixel
 				 , double * y_pixel
 				 , double x_metric
 				 , double y_metric

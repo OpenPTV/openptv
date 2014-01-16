@@ -18,6 +18,9 @@ Routines contained:		pix_crd, crd_pix, affin_trafo, affin_retour
 
 #include "trafo.h"
 
+void old_pixel_to_metric();
+void old_metric_to_pixel();
+
 /* pixel_to_metric converts pixel coordinates to metric coordinates
 Arguments:
 	xp,yp (double) pixel coordinates in pixels
@@ -30,7 +33,7 @@ Arguments:
 */
 
 /*  transformation detection pixel coordinates -> geometric coordinates */
-void pixel_to_metric (double * x_metric
+void old_pixel_to_metric (double * x_metric
 		       , double * y_metric
 		       , double x_pixel
 		       , double y_pixel
@@ -59,13 +62,13 @@ void pixel_to_metric (double * x_metric
 }
 
 /*  wraps previous one, parameters are read directly from control_par* structure */
-void pixel_to_metric_control_par(double * x_metric
+void pixel_to_metric(double * x_metric
 				 , double * y_metric
 				 , double x_pixel
 				 , double y_pixel
 				 , control_par* parameters				 
 				 ){
-  pixel_to_metric(x_metric
+  old_pixel_to_metric(x_metric
 		  , y_metric
 		  , x_pixel
 		  , y_pixel
@@ -79,13 +82,13 @@ void pixel_to_metric_control_par(double * x_metric
 }
 
 /* wrap metric_to_pixel */
-void metric_to_pixel_control_par(double * x_pixel
+void metric_to_pixel(double * x_pixel
 				 , double * y_pixel
 				 , double x_metric
 				 , double y_metric
 				 , control_par* parameters				 
 				 ){
-  metric_to_pixel(x_pixel
+  old_metric_to_pixel(x_pixel
 		  , y_pixel
 		  , x_metric
 		  , y_metric
@@ -98,7 +101,7 @@ void metric_to_pixel_control_par(double * x_pixel
 
 
 /*  transformation detection geometric coordinates -> pixel coordinates */
-void metric_to_pixel (double * x_pixel
+void old_metric_to_pixel (double * x_pixel
 		      , double * y_pixel
 		      , double x_metric
 		      , double y_metric
