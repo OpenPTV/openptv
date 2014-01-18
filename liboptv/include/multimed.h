@@ -52,8 +52,15 @@ void init_mmLUT (volume_par *vpar
                , Calibration *cal
                , mmlut *mmLUT);
 
-void volumedimension (double *xmax, double *xmin, double *ymax, double *ymin, \
-double *zmax, double *zmin, int num_cams);
+void volumedimension (double *xmax
+					, double *xmin
+					, double *ymax
+					, double *ymin
+					, double *zmax
+					, double *zmin
+					, volume_par *vpar
+               		, control_par *cpar
+               		, Calibration *cal);
 
 
 
