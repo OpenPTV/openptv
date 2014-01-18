@@ -13,6 +13,7 @@
 #define EPS 1E-5
 
 void print_Exterior(Exterior Ex_t);
+int compare_exterior_diff(Exterior *e1, Exterior *e2);
 
 
 START_TEST(test_trans_Cam_Point_back)
@@ -82,8 +83,7 @@ START_TEST(test_trans_Cam_Point_back)
       print_Exterior(correct_Ex_t);
       print_Exterior(Ex_t);
       
-      ck_assert_msg(compare_exterior(&correct_Ex_t, &Ex_t) == 1, 
-         "Expected different Exterior parameters, see above \n");
+      fail_unless(compare_exterior_diff(&correct_Ex_t, &Ex_t));
       
     
 }
@@ -118,5 +118,19 @@ void print_Exterior (Exterior Ex){
 	   Ex.x0, Ex.y0, Ex.z0, Ex.omega, Ex.phi, Ex.kappa);
   for (i=0; i<3; i++)  printf ("    %10.7f %10.7f %10.7f\n",
 				Ex.dm[i][0], Ex.dm[i][1], Ex.dm[i][2]);
+}
+
+int compare_exterior_diff(Exterior *e1, Exterior *e2) {
+    int row, col;
+    
+    for (row = 0; row < 3; row++)
+        for (col = 0; col < 3; col++)
+            if (fabs(e1->dm[row][col] - e2->dm[row][col]) > EPS)
+                return 0;
+    
+    return ((fabs(e1->x0 - e2->x0) < EPS) && (fabs(e1->y0 - e2->y0) < EPS) \
+    && (fabs(e1->z0 - e2->z0) < EPS) \
+        && (fabs(e1->omega - e2->omega) < EPS) && (fabs(e1->phi - e2->phi) < EPS)\
+        && (fabs(e1->kappa - e2->kappa) < EPS));
 }
 
