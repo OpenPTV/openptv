@@ -10,7 +10,7 @@
 #include "ray_tracing.h"
 #include "multimed.h"
 
-#define EPS 1E-5
+#define EPS 1E-3
 
 void print_Exterior(Exterior Ex_t);
 int compare_exterior_diff(Exterior *e1, Exterior *e2);
@@ -55,7 +55,6 @@ START_TEST(test_trans_Cam_Point_back)
     double X_t, Y_t, Z_t;
     double cross_p[3], cross_c[3]; 
 
-     printf("Entered test_trans_Cam_Point_back \n");
      trans_Cam_Point_back(test_Ex, test_mm, test_G, x, y, z, &Ex_t, &X_t, &Y_t, &Z_t, \
      cross_p, cross_c);
     
@@ -80,9 +79,6 @@ START_TEST(test_trans_Cam_Point_back)
          "Expected -0.009400 -0.000940 6.000001 but found %f %f %f\n", cross_c[0],cross_c[1],cross_c[2]);
         
       
-      print_Exterior(correct_Ex_t);
-      print_Exterior(Ex_t);
-      
       fail_unless(compare_exterior_diff(&correct_Ex_t, &Ex_t));
       
     
@@ -90,11 +86,106 @@ START_TEST(test_trans_Cam_Point_back)
 END_TEST
 
 
+
+
+START_TEST(test_volumedimension)
+{
+
+    /* input */
+    double xmax, xmin, ymax, ymin, zmax, zmin;
+    int i; 
+    
+    Calibration test_cal[4];
+            
+     /* input */
+    double x = -7.713157;
+    double y = 6.144260;        
+        
+    Exterior test_Ex = {
+        128.011300, 69.300100, 572.731900,
+        -0.121629, 0.242729, 0.005532, 
+        {{0.970671, -0.005369, 0.240352}, 
+        {-0.023671 ,  0.992758 ,  0.117773},
+        {-0.239244 ,  -0.120008 ,  0.963515}}};
+    
+    Interior test_I = {0.0, 0.0, 70.0};
+    Glass test_G = {0.000010, 0.000010, 125.000000};
+    ap_52 test_addp = {0.0, 0.0, 0.0, 0.0, 0.0, 1.003025, -0.009194};
+    
+    /*
+     Calibration test_cal = {test_Ex, test_I, test_G, test_addp};
+    */ 
+    
+    mm_np test_mm = {
+    	3, 
+    	1.0, 
+    	{1.33, 0.0, 0.0}, 
+    	{6.0, 0.0, 0.0},
+    	1.46,
+    	1};
+    
+    
+    
+    control_par test_cpar;
+    volume_par test_vpar; 
+    
+    test_cpar.imx = 1280; 
+    test_cpar.imy = 1024;
+    test_cpar.pix_x = 0.012;
+    test_cpar.pix_y = 0.012;
+    test_cpar.num_cams = 4;
+    test_cpar.mm = &test_mm;
+    
+    
+    /* test values for zmin,zmax,xmax,xmin */
+    test_vpar.Zmin_lay[0] = -20.0;
+    test_vpar.Zmax_lay[0] = 20.0;
+    test_vpar.X_lay[1]    = 40.0;
+    test_vpar.X_lay[0]    = -40.0;
+
+    
+     
+    for (i=0; i<test_cpar.num_cams; i++){
+     	test_cal[i].ext_par = test_Ex;
+     	test_cal[i].int_par = test_I;
+     	test_cal[i].glass_par = test_G;
+     	test_cal[i].added_par =  test_addp;
+     }
+
+
+     
+     volumedimension (&xmax, &xmin, &ymax, &ymin, &zmax, &zmin, \
+     &test_vpar, &test_cpar, test_cal);
+    
+    
+     ck_assert_msg( fabs(xmax - 57.892) < EPS && 
+                    fabs(xmin + 73.420) < EPS && 
+                    fabs(ymax - 54.053)  < EPS &&
+                    fabs(ymin + 48.745)  < EPS &&
+                    fabs(zmax - 20.00)  < EPS &&
+                    fabs(zmin + 20.00)  < EPS,
+         "\n Expected 57.892 -73.420 54.053 -48.745 20.000 -20.000 \n  \
+         but found %4.3f %4.3f %4.3f %4.3f %4.3f %4.3f \n", xmax, xmin, ymax, ymin, zmax, zmin);
+      
+    
+}
+END_TEST
+
+
+
+
+
+
+
+
+
+
 Suite* fb_suite(void) {
     Suite *s = suite_create ("multimed");
  
     TCase *tc = tcase_create ("multimed_test");
     tcase_add_test(tc, test_trans_Cam_Point_back);
+    tcase_add_test(tc, test_volumedimension);
     suite_add_tcase (s, tc);   
     return s;
 }
@@ -133,4 +224,3 @@ int compare_exterior_diff(Exterior *e1, Exterior *e2) {
         && (fabs(e1->omega - e2->omega) < EPS) && (fabs(e1->phi - e2->phi) < EPS)\
         && (fabs(e1->kappa - e2->kappa) < EPS));
 }
-

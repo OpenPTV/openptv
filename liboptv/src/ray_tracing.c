@@ -22,10 +22,10 @@ Routines contained:      -
 /*  wraps previous ray_tracing, parameters are read directly from control_par* structure */
 void ray_tracing (double x
 				, double y
-				, Calibration* cal
+				, Calibration *cal
 				, mm_np mm
-				, double X[3]
-				, double a[3]){
+				, double *X
+				, double *a){
 
 old_ray_tracing(x
 			, y
