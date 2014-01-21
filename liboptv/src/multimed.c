@@ -95,49 +95,6 @@ double cross_p[], double cross_c[], double *X, double *Y, double *Z){
 
 
 
-void trans_Cam_Point_back(Exterior ex
-                        , mm_np mm
-                        , Glass gl
-                        , double X
-                        , double Y
-                        , double Z
-                        , Exterior *ex_t
-                        , double *X_t
-                        , double *Y_t
-                        , double *Z_t
-                        , double cross_p[3]
-                        , double cross_c[3]){
-
-  /* 
-    Beat Lüthi June 07: I change the stuff to a system perpendicular to the interface
-  */
-  double dummy;
-  double nGl;
-  
-  nGl = sqrt(gl.vec_x * gl.vec_x + gl.vec_y * gl.vec_y + gl.vec_z * gl.vec_z);
-  
-  dummy = ex.x0 * gl.vec_x / nGl + ex.y0 * gl.vec_y / nGl + ex.z0 * gl.vec_z / nGl \
-  - nGl - mm.d[0];
-  cross_c[0] = ex.x0 - dummy * gl.vec_x / nGl;
-  cross_c[1] = ex.y0 - dummy * gl.vec_y / nGl;
-  cross_c[2] = ex.z0 - dummy * gl.vec_z / nGl;
-  ex_t->x0 = 0.;
-  ex_t->y0 = 0.;
-  ex_t->z0 = dummy;
-
-  dummy = nGl - X * gl.vec_x / nGl + Y * gl.vec_y / nGl + Z * gl.vec_z / nGl;
-  cross_p[0] = X + dummy * gl.vec_x / nGl;
-  cross_p[1] = Y + dummy * gl.vec_y / nGl;
-  cross_p[2] = Z + dummy * gl.vec_z / nGl;
-  *Z_t = -dummy - mm.d[0];
-  dummy = sqrt(pow(cross_p[0] - (cross_c[0] - mm.d[0] * gl.vec_x / nGl ), 2.)
-             + pow(cross_p[1] - (cross_c[1] - mm.d[0] * gl.vec_y / nGl ), 2.)
-             + pow(cross_p[2] - (cross_c[2] - mm.d[0] * gl.vec_z / nGl), 2.));
-  *X_t = dummy;
-  *Y_t = 0;
-      
-}
-
 void trans_Cam_Point(Exterior ex
                    , mm_np mm
                    , Glass gl
