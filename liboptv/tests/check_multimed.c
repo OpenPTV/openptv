@@ -89,6 +89,58 @@ START_TEST(test_trans_Cam_Point)
 END_TEST
 
 
+START_TEST(test_back_trans_Point)
+{
+    /* input */
+    double x = 100.0, y = 100.0, z =  0.0, X1,Y1,Z1;
+        
+    Exterior test_Ex = {
+        0.0, 0.0, 100.0,
+        0.0, 0.0, 0.0, 
+        {{1.0, 0.2, -0.3}, 
+        {0.2, 1.0, 0.0},
+        {-0.3, 0.0, 1.0}}};
+        
+    Exterior correct_Ex_t = {
+        0.0, 0.0, 99.0,
+        -0.0, 0.0, 0.0, 
+        {{-0.0, -0.0, -0.0}, 
+        {-0.0, 0.0, -0.0},
+        {0.0, -0.0, -0.0}}};
+    
+    Interior test_I = {0.0, 0.0, 100.0};
+    Glass test_G = {0.0001, 0.00001, 1.0};
+    ap_52 test_addp = {0., 0., 0., 0., 0., 1., 0.};
+    Calibration test_cal = {test_Ex, test_I, test_G, test_addp};
+    
+    mm_np test_mm = {
+    	3, 
+    	1.0, 
+    	{1.49, 0.0, 0.0}, 
+    	{5.0, 0.0, 0.0},
+    	1.33,
+    	1};
+    
+    /* output */
+    Exterior Ex_t; 
+    double X_t, Y_t, Z_t;
+    double cross_p[3], cross_c[3]; 
+
+     trans_Cam_Point(test_Ex, test_mm, test_G, x, y, z, &Ex_t, &X_t, &Y_t, &Z_t, \
+     cross_p, cross_c);
+    
+     back_trans_Point(X_t, Y_t, Z_t, test_mm, test_G, cross_p, cross_c, &X1, &Y1, &Z1);
+    
+     ck_assert_msg( fabs(x - X1) < EPS && 
+                    fabs(y - Y1) < EPS && 
+                    fabs(z - Z1)  < EPS,
+         "Expected %f, %f, %f  but found %f %f %f\n", x,y,z, X1, Y1, Z1);
+      
+    
+}
+END_TEST
+
+
 START_TEST(test_volumedimension)
 {
 
@@ -306,7 +358,8 @@ Suite* fb_suite(void) {
     TCase *tc = tcase_create ("multimed_test");
     tcase_add_test(tc, test_volumedimension);
     tcase_add_test(tc, test_init_mmLUT);
-    tcase_add_test(tc, test_trans_Cam_Point); 
+    tcase_add_test(tc, test_trans_Cam_Point);
+    tcase_add_test(tc, test_back_trans_Point); 
     suite_add_tcase (s, tc);   
     return s;
 }

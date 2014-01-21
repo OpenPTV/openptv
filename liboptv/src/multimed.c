@@ -78,21 +78,6 @@ double X, double Y, double Z, double *Xq, double *Yq, int cam){
     
 }
 
-void back_trans_Point_back(double X_t, double Y_t, double Z_t,mm_np mm, Glass G, \
-double cross_p[], double cross_c[], double *X, double *Y, double *Z){
-
-    double nVe,nGl;
-    nGl=sqrt(pow(G.vec_x,2.)+pow(G.vec_y,2.)+pow(G.vec_z,2.));
-    nVe=sqrt( pow(cross_p[0]-(cross_c[0]-mm.d[0]*G.vec_x/nGl),2.)
-             +pow(cross_p[1]-(cross_c[1]-mm.d[0]*G.vec_y/nGl),2.)
-             +pow(cross_p[2]-(cross_c[2]-mm.d[0]*G.vec_z/nGl),2.));
-    
-
-    *X=cross_c[0]+X_t*(cross_p[0]-(cross_c[0]-mm.d[0]*G.vec_x/nGl))/nVe+Z_t*G.vec_x/nGl;
-    *Y=cross_c[1]+X_t*(cross_p[1]-(cross_c[1]-mm.d[0]*G.vec_y/nGl))/nVe+Z_t*G.vec_y/nGl;
-    *Z=cross_c[2]+X_t*(cross_p[2]-(cross_c[2]-mm.d[0]*G.vec_z/nGl))/nVe+Z_t*G.vec_z/nGl;
-}
-
 
 
 void trans_Cam_Point(Exterior ex
@@ -140,26 +125,30 @@ void trans_Cam_Point(Exterior ex
       
 }
 
+
 void back_trans_Point(double X_t, double Y_t, double Z_t, mm_np mm, Glass G, \
 double cross_p[], double cross_c[], double *X, double *Y, double *Z){
     
-    double nVe,nGl;
-    nGl=sqrt(pow(G.vec_x,2.)+pow(G.vec_y,2.)+pow(G.vec_z,2.));
-    nVe=sqrt( pow(cross_p[0]-(cross_c[0]-mm.d[0]*G.vec_x/nGl),2.)
-             +pow(cross_p[1]-(cross_c[1]-mm.d[0]*G.vec_y/nGl),2.)
-             +pow(cross_p[2]-(cross_c[2]-mm.d[0]*G.vec_z/nGl),2.));
+    double nVe, nGl;
+    
+    nGl = sqrt( pow ( G.vec_x, 2. ) + pow( G.vec_y, 2.) + pow( G.vec_z ,2.) );
+    
+    nVe = sqrt( pow ( cross_p[0] - (cross_c[0] - mm.d[0] * G.vec_x / nGl ), 2.)
+              + pow ( cross_p[1] - (cross_c[1] - mm.d[0] * G.vec_y / nGl ), 2.)
+              + pow ( cross_p[2] - (cross_c[2] - mm.d[0] * G.vec_z / nGl ), 2.));
 
-    *X = cross_c[0]-mm.d[0]*G.vec_x/nGl + Z_t*G.vec_x/nGl;
-    *Y = cross_c[1]-mm.d[0]*G.vec_y/nGl + Z_t*G.vec_y/nGl;
-    *Z = cross_c[2]-mm.d[0]*G.vec_z/nGl + Z_t*G.vec_z/nGl;
+    *X = cross_c[0] - mm.d[0] * G.vec_x / nGl + Z_t * G.vec_x / nGl;
+    *Y = cross_c[1] - mm.d[0] * G.vec_y / nGl + Z_t * G.vec_y / nGl;
+    *Z = cross_c[2] - mm.d[0] * G.vec_z / nGl + Z_t * G.vec_z / nGl;
 
     if (nVe > 0) {  
-        // We need this for when the cam-point line is exactly perp. to glass.
-        // The degenerate case will have nVe == 0 and produce NaNs on the
-        // following calculations.
-        *X += X_t*(cross_p[0] - (cross_c[0] - mm.d[0]*G.vec_x/nGl))/nVe;
-        *Y += X_t*(cross_p[1] - (cross_c[1] - mm.d[0]*G.vec_y/nGl))/nVe;
-        *Z += X_t*(cross_p[2] - (cross_c[2] - mm.d[0]*G.vec_z/nGl))/nVe;
+        /* We need this for when the cam-point line is exactly perp. to glass.
+         The degenerate case will have nVe == 0 and produce NaNs on the
+         following calculations.
+        */
+        *X += X_t * (cross_p[0] - (cross_c[0] - mm.d[0] * G.vec_x / nGl)) / nVe;
+        *Y += X_t * (cross_p[1] - (cross_c[1] - mm.d[0] * G.vec_y / nGl)) / nVe;
+        *Z += X_t * (cross_p[2] - (cross_c[2] - mm.d[0] * G.vec_z / nGl)) / nVe;
     }
 }
 
