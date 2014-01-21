@@ -138,32 +138,48 @@ void trans_Cam_Point_back(Exterior ex
       
 }
 
-void trans_Cam_Point(Exterior ex, mm_np mm, Glass gl, double X, double Y, double Z, \
-Exterior *ex_t, double *X_t, double *Y_t, double *Z_t, double cross_p[3], double cross_c[3]){
+void trans_Cam_Point(Exterior ex
+                   , mm_np mm
+                   , Glass gl
+                   , double X
+                   , double Y
+                   , double Z
+                   , Exterior *ex_t
+                   , double *X_t
+                   , double *Y_t
+                   , double *Z_t
+                   , double cross_p[3]
+                   , double cross_c[3]){
 
   //--Beat Lüthi June 07: I change the stuff to a system perpendicular to the interface
   double dist_cam_glas,dist_point_glas,dist_o_glas; //glas inside at water 
   
-  dist_o_glas=sqrt(gl.vec_x*gl.vec_x+gl.vec_y*gl.vec_y+gl.vec_z*gl.vec_z);
-  dist_cam_glas   = ex.x0*gl.vec_x/dist_o_glas+ex.y0*gl.vec_y/dist_o_glas+ex.z0*gl.vec_z/dist_o_glas-dist_o_glas-mm.d[0];
-  dist_point_glas = X    *gl.vec_x/dist_o_glas+Y    *gl.vec_y/dist_o_glas+Z    *gl.vec_z/dist_o_glas-dist_o_glas; 
+  dist_o_glas = sqrt( gl.vec_x * gl.vec_x + gl.vec_y * gl.vec_y + gl.vec_z * gl.vec_z);
+  
+  dist_cam_glas = ex.x0 * gl.vec_x / dist_o_glas + ex.y0 * gl.vec_y / dist_o_glas + \
+  ex.z0 * gl.vec_z / dist_o_glas - dist_o_glas - mm.d[0];
+  
+  dist_point_glas = X * gl.vec_x / dist_o_glas + \
+                    Y * gl.vec_y / dist_o_glas + \
+                    Z *gl.vec_z / dist_o_glas - dist_o_glas; 
 
-  cross_c[0]=ex.x0-dist_cam_glas*gl.vec_x/dist_o_glas;
-  cross_c[1]=ex.y0-dist_cam_glas*gl.vec_y/dist_o_glas;
-  cross_c[2]=ex.z0-dist_cam_glas*gl.vec_z/dist_o_glas;
-  cross_p[0]=X    -dist_point_glas*gl.vec_x/dist_o_glas;
-  cross_p[1]=Y    -dist_point_glas*gl.vec_y/dist_o_glas;
-  cross_p[2]=Z    -dist_point_glas*gl.vec_z/dist_o_glas;
+  cross_c[0] = ex.x0 - dist_cam_glas * gl.vec_x / dist_o_glas;
+  cross_c[1] = ex.y0 - dist_cam_glas * gl.vec_y / dist_o_glas;
+  cross_c[2] = ex.z0 - dist_cam_glas * gl.vec_z / dist_o_glas;
+  
+  cross_p[0] =X - dist_point_glas * gl.vec_x / dist_o_glas;
+  cross_p[1] =Y - dist_point_glas * gl.vec_y / dist_o_glas;
+  cross_p[2] =Z - dist_point_glas * gl.vec_z / dist_o_glas;
 
-  ex_t->x0=0.;
-  ex_t->y0=0.;
-  ex_t->z0=dist_cam_glas+mm.d[0];
+  ex_t->x0 = 0.;
+  ex_t->y0 = 0.;
+  ex_t->z0 = dist_cam_glas + mm.d[0];
 
-  *X_t=sqrt( pow(cross_p[0]-(cross_c[0]-mm.d[0]*gl.vec_x/dist_o_glas),2.)
-            +pow(cross_p[1]-(cross_c[1]-mm.d[0]*gl.vec_y/dist_o_glas),2.)
-            +pow(cross_p[2]-(cross_c[2]-mm.d[0]*gl.vec_z/dist_o_glas),2.));
-  *Y_t=0;
-  *Z_t=dist_point_glas;
+  *X_t=sqrt( pow(cross_p[0] - (cross_c[0] - mm.d[0] * gl.vec_x / dist_o_glas ) ,2.)
+            +pow(cross_p[1] - (cross_c[1] - mm.d[0] * gl.vec_y / dist_o_glas ), 2.)
+            +pow(cross_p[2] - (cross_c[2] - mm.d[0] * gl.vec_z / dist_o_glas ), 2.));
+  *Y_t = 0;
+  *Z_t = dist_point_glas;
       
 }
 
@@ -205,6 +221,7 @@ double Z, int cam){
   double dist=pow(dir_water_x*dir_water_x+dir_water_z*dir_water_z,0.5);
   double xInInterFace,comp_parallel,comp_perpendicular,dir_air_x,dir_air_z,error_x,error_z;
   mmlut  *mmLUT;
+  int n_iter = 40;
   
   dir_water_x=dir_water_x/dist;
   dir_water_z=dir_water_z/dist;
@@ -221,7 +238,7 @@ double Z, int cam){
     if (mmf > 0) return (mmf);
   }
  
-  // iterative procedure 
+  /* iterative procedure */
   r = sqrt ((X-ex.x0)*(X-ex.x0)+(Y-ex.y0)*(Y-ex.y0));
   rq = r;
   
@@ -238,18 +255,23 @@ double Z, int cam){
       rq += rdiff;
       it++;
     }
-  while (((rdiff > 0.001) || (rdiff < -0.001))  &&  it < 40);
+  while (((rdiff > 0.001) || (rdiff < -0.001))  &&  it < n_iter);
   
-  if (it >= 40)
+  if (it >= n_iter)
     {
-      puts ("Multimed_r_nlay_v2 stopped after 40. Iteration");  return (1.0);
+      printf ("multimed_r_nlay stopped after %d iterations", n_iter);  return (1.0);
     }
   
   if (r != 0)   return (rq/r);  else return (1.0);
 }
 
 /* init_mmLUT prepares the Look-Up Table
-Arguments:
+Arguments: 
+	Pointer to volume parameters *vpar
+	pointer to the control parameters *cpar
+	pointer to the calibraiton parameters *cal
+Output:
+    pointer to the multi-media look-up table mmLUT structure
 
 */ 
 void init_mmLUT (volume_par *vpar
