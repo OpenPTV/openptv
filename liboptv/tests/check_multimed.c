@@ -10,10 +10,14 @@
 #include "ray_tracing.h"
 #include "multimed.h"
 
-#define EPS 1E-3
+#define EPS 1E-5
 
 void print_Exterior(Exterior Ex_t);
 int compare_exterior_diff(Exterior *e1, Exterior *e2);
+
+
+
+
 
 
 START_TEST(test_trans_Cam_Point)
@@ -330,7 +334,7 @@ START_TEST(test_init_mmLUT)
                  &test_vpar
                , &test_cpar
                , test_cal
-               , &test_mmlut);
+               , test_mmlut);
                    
     for (i=0; i<4; i++){
        ck_assert_msg( 
@@ -352,14 +356,151 @@ END_TEST
 
 
 
+
+START_TEST(test_get_mmf_mmLUT)
+{
+
+    /* input */
+    double xmax, xmin, ymax, ymin, zmax, zmin;
+    int i; 
+    
+    Calibration test_cal[4];
+            
+     /* input */
+    double x = -7.713157;
+    double y = 6.144260;        
+        
+    Exterior test_Ex = {
+        128.011300, 69.300100, 572.731900,
+        -0.121629, 0.242729, 0.005532, 
+        {{0.970671, -0.005369, 0.240352}, 
+        {-0.023671 ,  0.992758 ,  0.117773},
+        {-0.239244 ,  -0.120008 ,  0.963515}}};
+    
+    Interior test_I = {0.0, 0.0, 70.0};
+    Glass test_G = {0.000010, 0.000010, 125.000000};
+    ap_52 test_addp = {0.0, 0.0, 0.0, 0.0, 0.0, 1.003025, -0.009194};
+    
+    /*
+     Calibration test_cal = {test_Ex, test_I, test_G, test_addp};
+    */ 
+    
+    mm_np test_mm = {
+    	3, 
+    	1.0, 
+    	{1.33, 0.0, 0.0}, 
+    	{6.0, 0.0, 0.0},
+    	1.46,
+    	1};
+    
+    double mmf;
+    
+    control_par test_cpar;
+    volume_par test_vpar; 
+    
+    mmlut test_mmlut[4], correct_mmlut[4];
+    
+    
+    test_cpar.imx = 1280; 
+    test_cpar.imy = 1024;
+    test_cpar.pix_x = 0.012;
+    test_cpar.pix_y = 0.012;
+    test_cpar.num_cams = 4;
+    test_cpar.mm = &test_mm;
+    
+    
+    /* test values for zmin,zmax,xmax,xmin */
+    test_vpar.Zmin_lay[0] = -20.0;
+    test_vpar.Zmax_lay[0] = 20.0;
+    test_vpar.X_lay[1]    = 40.0;
+    test_vpar.X_lay[0]    = -40.0;
+
+    
+     
+    for (i=0; i<test_cpar.num_cams; i++){
+     	test_cal[i].ext_par = test_Ex;
+     	test_cal[i].int_par = test_I;
+     	test_cal[i].glass_par = test_G;
+     	test_cal[i].added_par =  test_addp;
+     }
+     
+     
+     correct_mmlut[0].origin.x = 0.0;
+     correct_mmlut[0].origin.y = 0.0;
+     correct_mmlut[0].origin.z = -125.0;
+     correct_mmlut[0].nr = 115;
+     correct_mmlut[0].nz = 64;
+     correct_mmlut[0].rw = 2;
+     
+     correct_mmlut[1].origin.x = 0.0;
+     correct_mmlut[1].origin.y = 0.0;
+     correct_mmlut[1].origin.z = -125.0;
+     correct_mmlut[1].nr = 116;
+     correct_mmlut[1].nz = 65;
+     correct_mmlut[1].rw = 2;
+ 
+     correct_mmlut[2].origin.x = 0.0;
+     correct_mmlut[2].origin.y = 0.0;
+     correct_mmlut[2].origin.z = -125.0;
+     correct_mmlut[2].nr = 117;
+     correct_mmlut[2].nz = 66;
+     correct_mmlut[2].rw = 2;
+     
+     correct_mmlut[3].origin.x = 0.0;
+     correct_mmlut[3].origin.y = 0.0;
+     correct_mmlut[3].origin.z = -125.0;
+     correct_mmlut[3].nr = 118;
+     correct_mmlut[3].nz = 67;
+     correct_mmlut[3].rw = 2;    
+     
+               
+     init_mmLUT (
+                 &test_vpar
+               , &test_cpar
+               , test_cal
+               , test_mmlut);
+               
+
+          
+    for (i=0; i<4; i++){
+       ck_assert_msg( 
+                    fabs(test_mmlut[i].origin.x - correct_mmlut[0].origin.x) < EPS && 
+                    fabs(test_mmlut[i].origin.y - correct_mmlut[0].origin.y) < EPS && 
+                    fabs(test_mmlut[i].origin.z - correct_mmlut[0].origin.z)  < EPS &&
+                    test_mmlut[i].nr == correct_mmlut[i].nr &&
+                    test_mmlut[i].nz == correct_mmlut[i].nz &&
+                    test_mmlut[i].rw ==  correct_mmlut[i].rw,
+         "\n Expected different correct_mmlut values \n  \
+         but found %4.3f %4.3f %4.3f %d %d %d in camera %d\n", \
+         test_mmlut[i].origin.x, test_mmlut[i].origin.y, test_mmlut[i].origin.z, \
+         test_mmlut[i].nr, test_mmlut[i].nz, test_mmlut[i].rw, i);
+    }
+    
+     for (i=0; i<4; i++){
+        printf(" test_mmlut[0].rw %d \n",  test_mmlut[i].rw);
+    }
+        printf ("going to get some mmf \n");     
+        mmf = get_mmf_from_mmLUT (0, 1.0, 1.0, 1.0, (mmlut *) test_mmlut);
+        printf ("Got mmf  %f \n", mmf);
+      
+    
+}
+END_TEST
+
+
+
+
 Suite* fb_suite(void) {
     Suite *s = suite_create ("multimed");
  
     TCase *tc = tcase_create ("multimed_test");
+    /*
     tcase_add_test(tc, test_volumedimension);
-    tcase_add_test(tc, test_init_mmLUT);
+    tcase_add_test(tc, test_init_mmLUT);    
     tcase_add_test(tc, test_trans_Cam_Point);
     tcase_add_test(tc, test_back_trans_Point); 
+    */
+    tcase_add_test(tc, test_get_mmf_mmLUT);
     suite_add_tcase (s, tc);   
     return s;
 }

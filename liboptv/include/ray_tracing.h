@@ -20,8 +20,8 @@ void ray_tracing (double x
 				, double y
 				, Calibration* cal
 				, mm_np mm
-				, double X[3]
-				, double a[3]);
+				, double *X
+				, double *a);
 				
 void old_ray_tracing (double x, double y, Exterior Ex, Interior I, Glass G,\
                   mm_np mm, double *Xb2, double *Yb2, double *Zb2, \

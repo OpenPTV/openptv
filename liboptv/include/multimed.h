@@ -28,8 +28,8 @@ typedef struct {
 double get_mmf_from_mmLUT (int i_cam, double X, double Y, double Z, mmlut *mmLUT);
 
 /* Note that multimed_nlay_v2 is renamted to _nlay) */
-void  multimed_nlay (Exterior ex, Exterior ex_o, mm_np mm, \
-double X, double Y, double Z, double *Xq, double *Yq, int cam);
+void  multimed_nlay (Exterior ex, mm_np mm, double X, double Y, double Z, \
+double *Xq, double *Yq, int cam, mmlut *mmLUT);
 
 void trans_Cam_Point(Exterior ex, mm_np mm, Glass gl, double X, double Y, double Z, \
 Exterior *ex_t, double *X_t, double *Y_t, double *Z_t, double cross_p[3], double cross_c[3]);
@@ -38,8 +38,8 @@ void back_trans_Point(double X_t, double Y_t, double Z_t, mm_np mm, Glass G, \
 double cross_p[3], double cross_c[3], double *X, double *Y, double *Z);
 
 /* Note that multimed_r_nlay_v2 is renamed */
-double multimed_r_nlay (Exterior ex, Exterior ex_o, mm_np mm, double X, double Y,\
-double Z, int cam);
+double multimed_r_nlay (Exterior ex, mm_np mm, double X, double Y, double Z, int cam, \
+mmlut *mmLUT);
 
 void init_mmLUT (volume_par *vpar
                , control_par *cpar

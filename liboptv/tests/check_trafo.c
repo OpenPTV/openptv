@@ -12,6 +12,9 @@
 
 #define EPS 1E-5
 
+void old_metric_to_pixel();
+void old_pixel_to_metric();
+
 
 START_TEST(test_old_metric_to_pixel)
 {
