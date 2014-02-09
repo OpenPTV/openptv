@@ -20,6 +20,8 @@ Routines contained:     -
 
 #include "multimed.h"
 
+void print_Exterior ();
+
 
 void  multimed_nlay (Exterior ex
                    , mm_np mm
@@ -252,6 +254,7 @@ void init_mmLUT (volume_par *vpar
   double        xc[2], yc[2];  /* image corners */
   
   
+  /* image corners */
   xc[0] = 0.0;
   xc[1] = (double) cpar->imx;
   yc[0] = 0.0;
@@ -279,12 +282,9 @@ void init_mmLUT (volume_par *vpar
       Zmax_t = Zmax;
   
       /* intersect with image vertices rays */
-
-      /* 0,0 pix corner */
       
-
-      
-      for (i = 0; i < 2; i ++) for (j = 0; j < 2; j++) {
+      for (i = 0; i < 2; i ++) {
+         for (j = 0; j < 2; j++) {
           
           pixel_to_metric (&x, &y, xc[i], yc[j], cpar);
           /* x = x - I[i_cam].xh;
@@ -324,8 +324,10 @@ void init_mmLUT (volume_par *vpar
       
           /* trans */
           /* trans_Cam_Point(Ex[i_cam],mmp,G[i_cam],X,Y,Z,&Ex_t[i_cam],&X_t,&Y_t,&Z_t,&cross_p,&cross_c); */
-          trans_Cam_Point(cal[i_cam].ext_par, *(cpar->mm), cal[i_cam].glass_par, X, Y, Z, \
+          trans_Cam_Point(cal[i_cam].ext_par, *(cpar->mm), cal[i_cam].glass_par, X, Y, Z,\
           &Ex_t[i_cam], &X_t, &Y_t, &Z_t, (double *)cross_p, (double *)cross_c);
+          
+        
       
           if( Z_t < Zmin_t ) Zmin_t = Z_t;
           if( Z_t > Zmax_t ) Zmax_t = Z_t;
@@ -336,6 +338,7 @@ void init_mmLUT (volume_par *vpar
   
       
           if (R > Rmax) Rmax = R;
+        }
       }
   
       /* round values (-> enlarge) */
@@ -347,8 +350,25 @@ void init_mmLUT (volume_par *vpar
  
       /* create two dimensional mmLUT structure */
       
+      /* 
+      printf("testing an apparently obsolete trans_cam_point call\n");
+      printf("X,Y,Z: %f %f %f \n", X,Y,Z);
+      printf("X_t,Y_t,Z_t, %f %f %f \n", X_t,Y_t,Z_t);
+      printf(" Exterior \n");
+      print_Exterior(Ex_t);
+      
+       
+      
       trans_Cam_Point(cal[i_cam].ext_par, *(cpar->mm), cal[i_cam].glass_par, X, Y, Z, \
           &Ex_t[i_cam], &X_t, &Y_t, &Z_t, (double *)cross_p, (double *)cross_c);
+          
+       printf("after the call\n");
+      printf("X,Y,Z: %f %f %f \n", X,Y,Z);
+      printf("X_t,Y_t,Z_t, %f %f %f \n", X_t,Y_t,Z_t);
+      printf(" Exterior \n");
+      print_Exterior(Ex_t);
+      
+      */
 
       mmLUT[i_cam].origin.x = Ex_t[i_cam].x0;
       mmLUT[i_cam].origin.y = Ex_t[i_cam].y0;
@@ -366,8 +386,8 @@ void init_mmLUT (volume_par *vpar
       Zi = (double *) malloc (nz * sizeof (double));
       for (i=0; i<nz; i++)  Zi[i] = Zmin_t + i*rw;
   
-      for (i=0; i<nr; i++)  for (j=0; j<nz; j++)
-        {
+      for (i=0; i<nr; i++) {
+        for (j=0; j<nz; j++) {
         /* old mmLUT[i_cam].data[i*nz + j]= multimed_r_nlay (Ex[i_cam], mmp, 
                                                           Ri[i]+Ex[i_cam].x0, Ex[i_cam].y0, Zi[j]);
         */
@@ -376,7 +396,9 @@ void init_mmLUT (volume_par *vpar
           
         mmLUT[i_cam].data[i*nz + j] = multimed_r_nlay (Ex_t[i_cam], *(cpar->mm), \
                               Ri[i] + Ex_t[i_cam].x0, Ex_t[i_cam].y0, Zi[j], i_cam, mmLUT);
-        } /* for nr,nz */
+                              
+          } /* nz */
+        } /* nr */
     } /* for n_cams */
 }
 
@@ -600,4 +622,13 @@ void volumedimension (double *xmax
       
       }
    }
+}
+
+void print_Exterior (Exterior Ex){
+  int i;
+  printf ("Exterior parameters \n");
+  printf ("%11.4f %11.4f %11.4f\n    %10.7f  %10.7f  %10.7f\n\n",
+	   Ex.x0, Ex.y0, Ex.z0, Ex.omega, Ex.phi, Ex.kappa);
+  for (i=0; i<3; i++)  printf ("    %10.7f %10.7f %10.7f\n",
+				Ex.dm[i][0], Ex.dm[i][1], Ex.dm[i][2]);
 }

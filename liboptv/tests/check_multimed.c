@@ -354,6 +354,108 @@ START_TEST(test_init_mmLUT)
 }
 END_TEST
 
+START_TEST(test_trivial_init_mmLUT)
+{
+
+    /* input */
+    double xmax, xmin, ymax, ymin, zmax, zmin;
+    int i; 
+    
+    Calibration test_cal[4];
+            
+     /* input */
+    double x = 0.0;
+    double y = 0.0;        
+        
+    Exterior test_Ex = {
+        0.0, 0.0, 100.0,
+        0.0, 0.0, 0.0, 
+        {{1.0, 0.0, 0.0}, 
+        {0.0 ,  1.0 ,  0.0},
+        {0.0 ,  0.0 ,  1.0}}};
+    
+    Interior test_I = {0.0, 0.0, 100.0};
+    Glass test_G = {0.0, 0.0, 1.0};
+    ap_52 test_addp = {0.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0};
+    
+    /*
+     Calibration test_cal = {test_Ex, test_I, test_G, test_addp};
+    */ 
+    
+    mm_np test_mm = {
+    	3, 
+    	1.0, 
+    	{1.0, 0.0, 0.0}, 
+    	{1.0, 0.0, 0.0},
+    	1.0,
+    	1};
+    
+    
+    
+    control_par test_cpar;
+    volume_par test_vpar; 
+    
+    mmlut test_mmlut[4], correct_mmlut[4];
+    
+    
+    test_cpar.imx = 1000; 
+    test_cpar.imy = 1000;
+    test_cpar.pix_x = 0.01;
+    test_cpar.pix_y = 0.01;
+    test_cpar.num_cams = 1;
+    test_cpar.mm = &test_mm;
+    
+    
+    /* test values for zmin,zmax,xmax,xmin */
+    test_vpar.Zmin_lay[0] = -20.0;
+    test_vpar.Zmax_lay[0] = 20.0;
+    test_vpar.X_lay[1]    = 40.0;
+    test_vpar.X_lay[0]    = -40.0;
+
+    
+     
+    for (i=0; i<test_cpar.num_cams; i++){
+     	test_cal[i].ext_par = test_Ex;
+     	test_cal[i].int_par = test_I;
+     	test_cal[i].glass_par = test_G;
+     	test_cal[i].added_par =  test_addp;
+     }
+     
+     
+     correct_mmlut[0].origin.x = 0.0;
+     correct_mmlut[0].origin.y = 0.0;
+     correct_mmlut[0].origin.z = -1.0;
+     correct_mmlut[0].nr = 5;
+     correct_mmlut[0].nz = 2;
+     correct_mmlut[0].rw = 2;
+        
+     
+               
+     init_mmLUT (
+                 &test_vpar
+               , &test_cpar
+               , test_cal
+               , test_mmlut);
+                   
+    for (i=0; i<test_cpar.num_cams; i++){
+       ck_assert_msg( 
+                    fabs(test_mmlut[i].origin.x - correct_mmlut[0].origin.x) < EPS && 
+                    fabs(test_mmlut[i].origin.y - correct_mmlut[0].origin.y) < EPS && 
+                    fabs(test_mmlut[i].origin.z - correct_mmlut[0].origin.z)  < EPS &&
+                    test_mmlut[i].nr == correct_mmlut[i].nr &&
+                    test_mmlut[i].nz == correct_mmlut[i].nz &&
+                    test_mmlut[i].rw ==  correct_mmlut[i].rw,
+         "\n Expected different correct_mmlut values \n  \
+         but found %4.3f %4.3f %4.3f %d %d %d in camera %d\n", \
+         test_mmlut[i].origin.x, test_mmlut[i].origin.y, test_mmlut[i].origin.z, \
+         test_mmlut[i].nr, test_mmlut[i].nz, test_mmlut[i].rw, i);
+    }
+      
+    
+}
+END_TEST
+
+
 
 
 
@@ -498,9 +600,10 @@ Suite* fb_suite(void) {
     tcase_add_test(tc, test_volumedimension);
     tcase_add_test(tc, test_init_mmLUT);    
     tcase_add_test(tc, test_trans_Cam_Point);
-    tcase_add_test(tc, test_back_trans_Point); 
-    */
+    tcase_add_test(tc, test_back_trans_Point);     
     tcase_add_test(tc, test_get_mmf_mmLUT);
+    */
+    tcase_add_test(tc, test_trivial_init_mmLUT);
     suite_add_tcase (s, tc);   
     return s;
 }
