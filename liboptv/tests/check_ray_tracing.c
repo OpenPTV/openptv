@@ -31,7 +31,7 @@ START_TEST(test_ray_tracing)
     Calibration test_cal = {test_Ex, test_I, test_G, test_addp};
     
     mm_np test_mm = {
-    	3, 
+    	1, 
     	1.0, 
     	{1.33, 0.0, 0.0}, 
     	{6.0, 0.0, 0.0},

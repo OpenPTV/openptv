@@ -369,7 +369,7 @@ void init_mmLUT (volume_par *vpar
       print_Exterior(Ex_t);
       
       */
-
+      
       mmLUT[i_cam].origin.x = Ex_t[i_cam].x0;
       mmLUT[i_cam].origin.y = Ex_t[i_cam].y0;
       mmLUT[i_cam].origin.z = Zmin_t;

@@ -47,7 +47,7 @@ START_TEST(test_trans_Cam_Point)
     Calibration test_cal = {test_Ex, test_I, test_G, test_addp};
     
     mm_np test_mm = {
-    	3, 
+    	1, 
     	1.0, 
     	{1.49, 0.0, 0.0}, 
     	{5.0, 0.0, 0.0},
@@ -118,7 +118,7 @@ START_TEST(test_back_trans_Point)
     Calibration test_cal = {test_Ex, test_I, test_G, test_addp};
     
     mm_np test_mm = {
-    	3, 
+    	1, 
     	1.0, 
     	{1.49, 0.0, 0.0}, 
     	{5.0, 0.0, 0.0},
@@ -174,7 +174,7 @@ START_TEST(test_volumedimension)
     */ 
     
     mm_np test_mm = {
-    	3, 
+    	1, 
     	1.0, 
     	{1.33, 0.0, 0.0}, 
     	{6.0, 0.0, 0.0},
@@ -193,7 +193,7 @@ START_TEST(test_volumedimension)
     test_cpar.imy = 1024;
     test_cpar.pix_x = 0.012;
     test_cpar.pix_y = 0.012;
-    test_cpar.num_cams = 4;
+    test_cpar.num_cams = 1;
     test_cpar.mm = &test_mm;
     
     
@@ -213,9 +213,12 @@ START_TEST(test_volumedimension)
      }
 
 
+     printf ("Going into volumedimension \n");
      
      volumedimension (&xmax, &xmin, &ymax, &ymin, &zmax, &zmin, \
      &test_vpar, &test_cpar, test_cal);
+     
+     printf("Got back \n");
     
     
      ck_assert_msg( fabs(xmax - 57.892) < EPS && 
@@ -262,7 +265,7 @@ START_TEST(test_init_mmLUT)
     */ 
     
     mm_np test_mm = {
-    	3, 
+    	1, 
     	1.0, 
     	{1.33, 0.0, 0.0}, 
     	{6.0, 0.0, 0.0},
@@ -375,7 +378,7 @@ START_TEST(test_trivial_init_mmLUT)
         {0.0 ,  0.0 ,  1.0}}};
     
     Interior test_I = {0.0, 0.0, 100.0};
-    Glass test_G = {0.0, 0.0, 1.0};
+    Glass test_G = {0.0, 0.0, 50.0};
     ap_52 test_addp = {0.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0};
     
     /*
@@ -383,10 +386,10 @@ START_TEST(test_trivial_init_mmLUT)
     */ 
     
     mm_np test_mm = {
-    	3, 
+    	1, 
     	1.0, 
     	{1.0, 0.0, 0.0}, 
-    	{1.0, 0.0, 0.0},
+    	{5.0, 0.0, 0.0},
     	1.0,
     	1};
     
@@ -424,9 +427,9 @@ START_TEST(test_trivial_init_mmLUT)
      
      correct_mmlut[0].origin.x = 0.0;
      correct_mmlut[0].origin.y = 0.0;
-     correct_mmlut[0].origin.z = -1.0;
+     correct_mmlut[0].origin.z = -50.0;
      correct_mmlut[0].nr = 5;
-     correct_mmlut[0].nz = 2;
+     correct_mmlut[0].nz = 27;
      correct_mmlut[0].rw = 2;
         
      
