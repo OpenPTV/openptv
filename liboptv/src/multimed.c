@@ -287,36 +287,59 @@ void init_mmLUT (volume_par *vpar
          for (j = 0; j < 2; j++) {
           
           pixel_to_metric (&x, &y, xc[i], yc[j], cpar);
+          
+          
+          printf("Sent pixels %f %f \n", xc[i],yc[j]);
+          printf("got back metric %f %f \n", x,y);
+          
           /* x = x - I[i_cam].xh;
              y = y - I[i_cam].yh;
           */
           x = x - cal[i_cam].int_par.xh;
           y = y - cal[i_cam].int_par.yh;
+          
+          printf("shifted them to %f %f \n", x,y);
   
           correct_brown_affin (x, y, cal[i_cam].added_par, &x,&y);
+          
+          printf("corrected affin  to %f %f \n", x,y);
       
           /* ray_tracing(x,y, Ex[i_cam], I[i_cam], G[i_cam], mmp, &X1, &Y1, &Z1, &a, &b, &c); */
           ray_tracing(x,y, &cal[i_cam], *(cpar->mm), pos, a);
+          
+          printf("ray traced into the flow to %f %f %f \n", pos[0],pos[1],pos[2]);
+          printf("ray traced into the flow to %f %f %f \n", a[0],a[1],a[2]);
   
           /* Z = Zmin;   X = X1 + (Z-Z1) * a/c;   Y = Y1 + (Z-Z1) * b/c; */
           Z = Zmin;   
           X = pos[0] + (Z - pos[2]) * a[0]/a[2];   
           Y = pos[1] + (Z - pos[2]) * a[1]/a[2];
+          
+          printf("estimated 3d point %f %f %f \n", X,Y,Z);
+          
       
           /* trans */
           /* trans_Cam_Point(Ex[i_cam],mmp,G[i_cam],X,Y,Z,&Ex_t[i_cam],&X_t,&Y_t,&Z_t,&cross_p,&cross_c); */
           trans_Cam_Point(cal[i_cam].ext_par, *(cpar->mm), cal[i_cam].glass_par, X, Y, Z, \
           &Ex_t[i_cam], &X_t, &Y_t, &Z_t, (double *)cross_p, (double *)cross_c);
+          
+          printf("adjusted 3d point for Zmin %f %f %f \n", X_t,Y_t,Z_t);
       
           if( Z_t < Zmin_t ) Zmin_t = Z_t;
           if( Z_t > Zmax_t ) Zmax_t = Z_t;
+          
+          printf(" new zmin,zmax are: %f %f \n", Zmin_t, Zmax_t); 
       
       
           R = sqrt (( X_t - Ex_t[i_cam].x0 ) * ( X_t - Ex_t[i_cam].x0 )
                   + ( Y_t - Ex_t[i_cam].y0 ) * ( Y_t - Ex_t[i_cam].y0 )); 
+                  
+        
   
           if (R > Rmax) Rmax = R;
-      
+          
+          printf ("radial shift is %f and max shift is %f \n", R, Rmax);
+                
           /* Z = Zmax;   X = X1 + (Z-Z1) * a/c;   Y = Y1 + (Z-Z1) * b/c; */
           Z = Zmax;   
           X = pos[0] + (Z - pos[2]) * a[0]/a[2];   
@@ -327,7 +350,7 @@ void init_mmLUT (volume_par *vpar
           trans_Cam_Point(cal[i_cam].ext_par, *(cpar->mm), cal[i_cam].glass_par, X, Y, Z,\
           &Ex_t[i_cam], &X_t, &Y_t, &Z_t, (double *)cross_p, (double *)cross_c);
           
-        
+         printf("adjusted 3d point for Zmax %f %f %f \n", X_t,Y_t,Z_t);
       
           if( Z_t < Zmin_t ) Zmin_t = Z_t;
           if( Z_t > Zmax_t ) Zmax_t = Z_t;
@@ -338,6 +361,8 @@ void init_mmLUT (volume_par *vpar
   
       
           if (R > Rmax) Rmax = R;
+          
+          printf ("radial shift is %f and max shift is %f \n", R, Rmax);
         }
       }
   

@@ -41,7 +41,7 @@ int compare_volume_par(volume_par *v1, volume_par *v2);
 
 
 typedef struct {
-    int  	nlay = 1;  // number of layers in the middle layer only !!!, default is 1 
+    int  	nlay;  // number of layers in the middle layer only !!!, default is 1 
     double  n1;    // index of refraction of the layer 1 (from the camera), i.e. air
     double  n2[3]; // n2[0] is the index of refraction of the layer 2 (glass), optional 3 sub-layers
     double  d[3];  // d3[0] is the thickness the layer 2 (glass), optional 3 sub-layers
