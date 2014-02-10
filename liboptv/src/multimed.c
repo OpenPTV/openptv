@@ -307,8 +307,8 @@ void init_mmLUT (volume_par *vpar
           /* ray_tracing(x,y, Ex[i_cam], I[i_cam], G[i_cam], mmp, &X1, &Y1, &Z1, &a, &b, &c); */
           ray_tracing(x,y, &cal[i_cam], *(cpar->mm), pos, a);
           
-          printf("ray traced into the flow to %f %f %f \n", pos[0],pos[1],pos[2]);
-          printf("ray traced into the flow to %f %f %f \n", a[0],a[1],a[2]);
+          printf("ray traced into the flow to pos %f %f %f \n", pos[0],pos[1],pos[2]);
+          printf("ray traced into the flow to a %f %f %f \n", a[0],a[1],a[2]);
   
           /* Z = Zmin;   X = X1 + (Z-Z1) * a/c;   Y = Y1 + (Z-Z1) * b/c; */
           Z = Zmin;   
@@ -416,8 +416,7 @@ void init_mmLUT (volume_par *vpar
         /* old mmLUT[i_cam].data[i*nz + j]= multimed_r_nlay (Ex[i_cam], mmp, 
                                                           Ri[i]+Ex[i_cam].x0, Ex[i_cam].y0, Zi[j]);
         */
-        trans_Cam_Point(cal[i_cam].ext_par, *(cpar->mm), cal[i_cam].glass_par, X, Y, Z, \
-          &Ex_t[i_cam], &X_t, &Y_t, &Z_t, (double *)cross_p, (double *)cross_c);
+
           
         mmLUT[i_cam].data[i*nz + j] = multimed_r_nlay (Ex_t[i_cam], *(cpar->mm), \
                               Ri[i] + Ex_t[i_cam].x0, Ex_t[i_cam].y0, Zi[j], i_cam, mmLUT);
