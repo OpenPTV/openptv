@@ -88,6 +88,71 @@ void  multimed_nlay (Exterior ex
 }
 
 
+/* calculates and returns the radial shift */
+double multimed_r_nlay (Exterior ex
+                      , mm_np mm
+                      , double X
+                      , double Y
+                      , double Z
+                      , int cam
+                      , mmlut *mmLUT){
+
+  int   i, it=0;
+  double beta1, beta2[32], beta3, r, rbeta, rdiff, rq, mmf;
+  /* ocf  over compensation factor for faster convergence
+   * is removed as it is never been used 
+   double ocf = 1.0;  
+   */
+
+  int n_iter = 40;
+
+  /* 1-medium case */
+  if (mm.n1 == 1 && mm.nlay == 1 && mm.n2[0]== 1 && mm.n3 == 1) return (1.0);
+  
+  
+  /* interpolation in mmLUT, if selected (requires some global variables) */
+  if (mm.lut) {
+    mmf = get_mmf_from_mmLUT (cam, X,Y,Z, (mmlut *)mmLUT);
+    if (mmf > 0) return (mmf);
+  }
+ 
+  /* iterative procedure */
+  r = sqrt ((X-ex.x0)*(X-ex.x0)+(Y-ex.y0)*(Y-ex.y0));
+  rq = r;
+  
+  do
+    {
+      beta1 = atan (rq/(ex.z0-Z));
+      for (i=0; i<mm.nlay; i++) beta2[i] = asin (sin(beta1) * mm.n1/mm.n2[i]);
+      beta3 = asin (sin(beta1) * mm.n1/mm.n3);
+      
+      rbeta = (ex.z0-mm.d[0]) * tan(beta1) - Z * tan(beta3);
+      for (i=0; i<mm.nlay; i++) rbeta += (mm.d[i] * tan(beta2[i]));
+      rdiff = r - rbeta;
+      /* rdiff *= ocf; */ 
+      rq += rdiff;
+      it++;
+    }
+  while (((rdiff > 0.001) || (rdiff < -0.001))  &&  it < n_iter);
+  
+  if (it >= n_iter) {
+      printf ("multimed_r_nlay stopped after %d iterations\n", n_iter);  
+      return (1.0);
+    }
+  
+    if (r != 0){   
+      return (rq/r);
+    }  
+    else {
+    	printf ("multimed_r_nlay stopped with r = 0\n"); 
+    	return (1.0);
+    }
+}
+
+
+
+
+
 void trans_Cam_Point(Exterior ex
                    , mm_np mm
                    , Glass gl
@@ -165,68 +230,7 @@ double cross_p[], double cross_c[], double *X, double *Y, double *Z){
 
 
 
-/* calculates and returns the radial shift */
-double multimed_r_nlay (Exterior ex
-                      , mm_np mm
-                      , double X
-                      , double Y
-                      , double Z
-                      , int cam
-                      , mmlut *mmLUT){
 
-  int   i, it=0;
-  double beta1, beta2[32], beta3, r, rbeta, rdiff, rq, mmf;
-  double ocf=1.0; // over compensation factor for faster convergence 
-
-  double absError=100;
-  int counter=0;
-  double dir_water_x = -X;
-  double dir_water_z = ex.z0 - Z;
-  double dist = pow(dir_water_x * dir_water_x + dir_water_z * dir_water_z, 0.5);
-  double xInInterFace,comp_parallel,comp_perpendicular,dir_air_x,dir_air_z,error_x,error_z;
-  int n_iter = 40;
-  
-  dir_water_x=dir_water_x/dist;
-  dir_water_z=dir_water_z/dist;
-  
-  
-  
-  /* 1-medium case */
-  if (mm.n1==1 && mm.nlay == 1 && mm.n2[0]==1 && mm.n3==1) return (1.0);
-  
-  
-  /* interpolation in mmLUT, if selected (requires some global variables) */
-  if (mm.lut) {
-    mmf = get_mmf_from_mmLUT (cam, X,Y,Z, (mmlut *)mmLUT);
-    if (mmf > 0) return (mmf);
-  }
- 
-  /* iterative procedure */
-  r = sqrt ((X-ex.x0)*(X-ex.x0)+(Y-ex.y0)*(Y-ex.y0));
-  rq = r;
-  
-  do
-    {
-      beta1 = atan (rq/(ex.z0-Z));
-      for (i=0; i<mm.nlay; i++) beta2[i] = asin (sin(beta1) * mm.n1/mm.n2[i]);
-      beta3 = asin (sin(beta1) * mm.n1/mm.n3);
-      
-      rbeta = (ex.z0-mm.d[0]) * tan(beta1) - Z * tan(beta3);
-      for (i=0; i<mm.nlay; i++) rbeta += (mm.d[i] * tan(beta2[i]));
-      rdiff = r - rbeta;
-      rdiff *= ocf;
-      rq += rdiff;
-      it++;
-    }
-  while (((rdiff > 0.001) || (rdiff < -0.001))  &&  it < n_iter);
-  
-  if (it >= n_iter)
-    {
-      printf ("multimed_r_nlay stopped after %d iterations", n_iter);  return (1.0);
-    }
-  
-  if (r != 0)   return (rq/r);  else return (1.0);
-}
 
 /* init_mmLUT prepares the Look-Up Table
 Arguments: 
@@ -242,7 +246,8 @@ void init_mmLUT (volume_par *vpar
                , Calibration *cal
                , mmlut *mmLUT){
 
-  register int  i,j, nr, nz, i_cam;
+  register int  i,j, nr, nz;
+  int           i_cam;
   double        X,Y,Z, R, Zmin, Rmax=0, Zmax;
   double        pos[3], a[3]; 
   double        x,y, *Ri,*Zi;

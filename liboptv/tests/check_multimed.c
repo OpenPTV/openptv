@@ -391,7 +391,7 @@ START_TEST(test_trivial_init_mmLUT)
     	{1.0, 0.0, 0.0}, 
     	{1.0, 0.0, 0.0},
     	1.0,
-    	1};
+    	0};
     
     
     
