@@ -179,7 +179,7 @@ START_TEST(test_volumedimension)
     	{1.33, 0.0, 0.0}, 
     	{6.0, 0.0, 0.0},
     	1.46,
-    	1};
+    	0};
     
     
     
@@ -215,8 +215,7 @@ START_TEST(test_volumedimension)
 
      printf ("Going into volumedimension \n");
      
-     volumedimension (&xmax, &xmin, &ymax, &ymin, &zmax, &zmin, \
-     &test_vpar, &test_cpar, test_cal);
+     // volumedimension (&xmax, &xmin, &ymax, &ymin, &zmax, &zmin, &test_vpar, &test_cpar, test_cal);
      
      printf("Got back \n");
     
@@ -371,7 +370,7 @@ START_TEST(test_trivial_init_mmLUT)
     double y = 0.0;        
         
     Exterior test_Ex = {
-        0.0, 0.0, 100.0,
+        0.0, 0.0, 151.0,
         0.0, 0.0, 0.0, 
         {{1.0, 0.0, 0.0}, 
         {0.0 ,  1.0 ,  0.0},
@@ -388,7 +387,7 @@ START_TEST(test_trivial_init_mmLUT)
     mm_np test_mm = {
     	1, 
     	1.0, 
-    	{1.0, 0.0, 0.0}, 
+    	{1.46, 0.0, 0.0}, 
     	{1.0, 0.0, 0.0},
     	1.0,
     	0};
@@ -401,8 +400,8 @@ START_TEST(test_trivial_init_mmLUT)
     mmlut test_mmlut[4], correct_mmlut[4];
     
     
-    test_cpar.imx = 1000; 
-    test_cpar.imy = 1000;
+    test_cpar.imx = 1280; 
+    test_cpar.imy = 1024;
     test_cpar.pix_x = 0.01;
     test_cpar.pix_y = 0.01;
     test_cpar.num_cams = 1;
@@ -428,7 +427,7 @@ START_TEST(test_trivial_init_mmLUT)
      correct_mmlut[0].origin.x = 0.0;
      correct_mmlut[0].origin.y = 0.0;
      correct_mmlut[0].origin.z = -50.0;
-     correct_mmlut[0].nr = 5;
+     correct_mmlut[0].nr = 7;
      correct_mmlut[0].nz = 27;
      correct_mmlut[0].rw = 2;
         
@@ -491,12 +490,12 @@ START_TEST(test_get_mmf_mmLUT)
     */ 
     
     mm_np test_mm = {
-    	3, 
+    	1, 
     	1.0, 
     	{1.33, 0.0, 0.0}, 
     	{6.0, 0.0, 0.0},
     	1.46,
-    	1};
+    	0};
     
     double mmf;
     
@@ -508,9 +507,9 @@ START_TEST(test_get_mmf_mmLUT)
     
     test_cpar.imx = 1280; 
     test_cpar.imy = 1024;
-    test_cpar.pix_x = 0.012;
-    test_cpar.pix_y = 0.012;
-    test_cpar.num_cams = 4;
+    test_cpar.pix_x = 0.01;
+    test_cpar.pix_y = 0.01;
+    test_cpar.num_cams = 1;
     test_cpar.mm = &test_mm;
     
     
@@ -567,7 +566,7 @@ START_TEST(test_get_mmf_mmLUT)
                
 
           
-    for (i=0; i<4; i++){
+    for (i=0; i< test_cpar.num_cams; i++){
        ck_assert_msg( 
                     fabs(test_mmlut[i].origin.x - correct_mmlut[0].origin.x) < EPS && 
                     fabs(test_mmlut[i].origin.y - correct_mmlut[0].origin.y) < EPS && 
@@ -581,7 +580,7 @@ START_TEST(test_get_mmf_mmLUT)
          test_mmlut[i].nr, test_mmlut[i].nz, test_mmlut[i].rw, i);
     }
     
-     for (i=0; i<4; i++){
+     for (i=0; i< test_cpar.num_cams; i++){
         printf(" test_mmlut[0].rw %d \n",  test_mmlut[i].rw);
     }
         printf ("going to get some mmf \n");     
