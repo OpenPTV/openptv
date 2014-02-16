@@ -488,10 +488,7 @@ double get_mmf_from_mmLUT (int i_cam
   return (mmf);
   
   	
-  }
-
-    
-  
+  }  
 }
 
 
@@ -507,10 +504,13 @@ void volumedimension (double *xmax
                     , Calibration *cal){
 
   int   i_cam, i, j;
-  double X, Y, Z, R, Zmin, Rmax=0, Zmax;
-  double *pos, *a;
+  double X, Y, Z, R, Rmax=0, Zmin, Zmax;
+  double pos[3], a[3];
   double x,y;  
-  double        xc[2], yc[2];  /* image corners */
+  double xc[2], yc[2];  /* image corners */
+  Exterior Ex_t[4];
+  double X_t, Y_t, Z_t, Zmin_t,Zmax_t;
+  double        cross_p[3],cross_c[3];
   
   xc[0] = 0.0;
   xc[1] = (double) cpar->imx;
@@ -519,15 +519,11 @@ void volumedimension (double *xmax
   
   
   
-  
-  Zmin = vpar->Zmin_lay[0];
-  Zmax = vpar->Zmax_lay[0];
+       Zmin = vpar->Zmin_lay[0];
+       Zmax = vpar->Zmax_lay[0];
 
-  *zmin = Zmin;
-  *zmax = Zmax;
-  
-  *xmax = vpar->X_lay[1];
-  *xmin = vpar->X_lay[0];
+       *zmin = Zmin;
+       *zmax = Zmax;
  
 
     
@@ -536,8 +532,11 @@ void volumedimension (double *xmax
   
 
   for (i_cam = 0; i_cam < cpar->num_cams; i_cam++){
-    for (i = 0; i < 2; i ++) for (j = 0; j < 2; j++) {
-
+      for (i = 0; i < 2; i ++) for (j = 0; j < 2; j++) {
+        
+//        *xmax = vpar->X_lay[1];
+//        *xmin = vpar->X_lay[0];
+ 
   
       /* intersect with image vertices rays */
 /*
@@ -552,12 +551,8 @@ void volumedimension (double *xmax
 
 */ 
           pixel_to_metric (&x, &y, xc[i], yc[j], cpar);
-          
-          
           x = x - cal[i_cam].int_par.xh;
           y = y - cal[i_cam].int_par.yh;
-          
-  
           correct_brown_affin (x, y, cal[i_cam].added_par, &x, &y);
           
           
@@ -567,14 +562,23 @@ void volumedimension (double *xmax
           Z = Zmin;   
           X = pos[0] + (Zmin - pos[2]) * a[0]/a[2];   
           Y = pos[1] + (Zmin - pos[2]) * a[1]/a[2];
-          R = sqrt (( X - cal[i_cam].ext_par.x0 ) * ( X - cal[i_cam].ext_par.x0 )
-                  + ( Y - cal[i_cam].ext_par.y0 ) * ( Y - cal[i_cam].ext_par.y0 ));
           
-           
-          if ( X > *xmax) *xmax=X;
-          if ( X < *xmin) *xmin=X;
-          if ( Y > *ymax) *ymax=Y;
-          if ( Y < *ymin) *ymin=Y;
+                     
+          if ( X > *xmax) *xmax = X;
+          if ( X < *xmin) *xmin = X;
+          if ( Y > *ymax) *ymax = Y;
+          if ( Y < *ymin) *ymin = Y;
+          
+          
+        /* old version, not clear why Beat didn't introduce trans_Cam into volumedimension 
+        R = sqrt (( X - cal[i_cam].ext_par.x0 ) * ( X - cal[i_cam].ext_par.x0 )
+                  + ( Y - cal[i_cam].ext_par.y0 ) * ( Y - cal[i_cam].ext_par.y0 )); 
+        */ 
+        trans_Cam_Point(cal[i_cam].ext_par, *(cpar->mm), cal[i_cam].glass_par, X, Y, Z,\
+          &Ex_t[i_cam], &X_t, &Y_t, &Z_t, (double *)cross_p, (double *)cross_c);
+          
+          R = sqrt (( X_t - Ex_t[i_cam].x0 ) * ( X_t - Ex_t[i_cam].x0 )
+                  + ( Y_t - Ex_t[i_cam].y0 ) * ( Y_t - Ex_t[i_cam].y0 )); 
 
           if (R > Rmax) Rmax = R;
               
@@ -588,13 +592,24 @@ void volumedimension (double *xmax
         Z = Zmax;
         X = pos[0] + (Z - pos[2]) * a[0]/a[2];   
         Y = pos[1] + (Z - pos[2]) * a[1]/a[2];
+        
+        
+       if ( X > *xmax) *xmax = X;
+       if ( X < *xmin) *xmin = X;
+       if ( Y > *ymax) *ymax = Y;
+       if ( Y < *ymin) *ymin = Y;
+        
+        
+        /* old version, not clear why Beat didn't introduce trans_Cam into volumedimension 
         R = sqrt (( X - cal[i_cam].ext_par.x0 ) * ( X - cal[i_cam].ext_par.x0 )
                   + ( Y - cal[i_cam].ext_par.y0 ) * ( Y - cal[i_cam].ext_par.y0 )); 
+        */ 
+        trans_Cam_Point(cal[i_cam].ext_par, *(cpar->mm), cal[i_cam].glass_par, X, Y, Z,\
+          &Ex_t[i_cam], &X_t, &Y_t, &Z_t, (double *)cross_p, (double *)cross_c);
+          
+          R = sqrt (( X_t - Ex_t[i_cam].x0 ) * ( X_t - Ex_t[i_cam].x0 )
+                  + ( Y_t - Ex_t[i_cam].y0 ) * ( Y_t - Ex_t[i_cam].y0 )); 
 
-      if ( X > *xmax) *xmax=X;
-      if ( X < *xmin) *xmin=X;
-      if ( Y > *ymax) *ymax=Y;
-      if ( Y < *ymin) *ymin=Y;
       
       if (R > Rmax) Rmax = R;
       

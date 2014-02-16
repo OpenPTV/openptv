@@ -10,7 +10,7 @@
 #include "ray_tracing.h"
 #include "multimed.h"
 
-#define EPS 1E-5
+#define EPS 1E-4
 
 void print_Exterior(Exterior Ex_t);
 int compare_exterior_diff(Exterior *e1, Exterior *e2);
@@ -152,82 +152,37 @@ START_TEST(test_volumedimension)
     double xmax, xmin, ymax, ymin, zmax, zmin;
     int i; 
     
-    Calibration test_cal[4];
-            
-     /* input */
-    double x = -7.713157;
-    double y = 6.144260;        
+    Calibration *cal;
+    char ori_file[] = "testing_fodder/cal/cam3.tif.ori";
+    char add_file[] = "testing_fodder/cal/cam3.tif.addpar";    
+    cal = read_calibration(ori_file, add_file, NULL);
         
-    Exterior test_Ex = {
-        128.011300, 69.300100, 572.731900,
-        -0.121629, 0.242729, 0.005532, 
-        {{0.970671, -0.005369, 0.240352}, 
-        {-0.023671 ,  0.992758 ,  0.117773},
-        {-0.239244 ,  -0.120008 ,  0.963515}}};
-    
-    Interior test_I = {0.0, 0.0, 70.0};
-    Glass test_G = {0.000010, 0.000010, 125.000000};
-    ap_52 test_addp = {0.0, 0.0, 0.0, 0.0, 0.0, 1.003025, -0.009194};
-    
-    /*
-     Calibration test_cal = {test_Ex, test_I, test_G, test_addp};
-    */ 
-    
-    mm_np test_mm = {
-    	1, 
-    	1.0, 
-    	{1.33, 0.0, 0.0}, 
-    	{6.0, 0.0, 0.0},
-    	1.46,
-    	0};
+    volume_par *vpar;
+    vpar = read_volume_par("testing_fodder/parameters/criteria_2.par");
     
     
-    
-    control_par test_cpar;
-    volume_par test_vpar; 
-    
-    
-    /* additional initial values */
-    
-    test_cpar.imx = 1280; 
-    test_cpar.imy = 1024;
-    test_cpar.pix_x = 0.012;
-    test_cpar.pix_y = 0.012;
-    test_cpar.num_cams = 1;
-    test_cpar.mm = &test_mm;
-    
-    
-    /* test values for zmin,zmax,xmax,xmin */
-    test_vpar.Zmin_lay[0] = -20.0;
-    test_vpar.Zmax_lay[0] = 20.0;
-    test_vpar.X_lay[1]    = 40.0;
-    test_vpar.X_lay[0]    = -40.0;
-
-    
-     
-    for (i=0; i<test_cpar.num_cams; i++){
-     	test_cal[i].ext_par = test_Ex;
-     	test_cal[i].int_par = test_I;
-     	test_cal[i].glass_par = test_G;
-     	test_cal[i].added_par =  test_addp;
-     }
+    control_par *cpar;
+    char filename[] = "testing_fodder/parameters/ptv_2.par";
+    cpar = read_control_par(filename);
+    cpar->mm->lut = 1;
+    cpar->mm->nlay = 1;
 
 
      printf ("Going into volumedimension \n");
      
-     // volumedimension (&xmax, &xmin, &ymax, &ymin, &zmax, &zmin, &test_vpar, &test_cpar, test_cal);
+     volumedimension (&xmax, &xmin, &ymax, &ymin, &zmax, &zmin, vpar, cpar, cal);
      
      printf("Got back \n");
     
     
-     ck_assert_msg( fabs(xmax - 57.892) < EPS && 
-                    fabs(xmin + 73.420) < EPS && 
-                    fabs(ymax - 54.053)  < EPS &&
-                    fabs(ymin + 48.745)  < EPS &&
-                    fabs(zmax - 20.00)  < EPS &&
-                    fabs(zmin + 20.00)  < EPS,
-         "\n Expected 57.892 -73.420 54.053 -48.745 20.000 -20.000 \n  \
-         but found %4.3f %4.3f %4.3f %4.3f %4.3f %4.3f \n", xmax, xmin, ymax, ymin, zmax, zmin);
+     ck_assert_msg( fabs(xmax - 11.2017) < EPS && 
+                    fabs(xmin + 11.2017) < EPS && 
+                    fabs(ymax - 8.7392)  < EPS &&
+                    fabs(ymin + 8.7392)  < EPS &&
+                    fabs(zmax - 20.0000)  < EPS &&
+                    fabs(zmin + 20.0000)  < EPS,
+         "\n Expected 11.2017 -11.2017 8.7392 -8.7392 20.000 -20.000 \n  \
+         but found %6.4f %6.4f %6.4f %6.4f %6.4f %6.4f \n", xmax, xmin, ymax, ymin, zmax, zmin);
       
     
 }
@@ -246,45 +201,9 @@ START_TEST(test_init_mmLUT)
 
     
     char ori_file[] = "testing_fodder/cal/cam3.tif.ori";
-    char add_file[] = "testing_fodder/cal/cam3.tif.addpar";
-    
-    
-    printf("Reading from %s file \n",ori_file);
-    
-    
+    char add_file[] = "testing_fodder/cal/cam3.tif.addpar";    
     cal = read_calibration(ori_file, add_file, NULL);
-    
-    printf("from cal %f \n", cal[0].ext_par.z0);
-    
-     /* input */
-      
-    /*    
-    Exterior test_Ex = {
-        0.0, 0.0, 151.0,
-        0.0, 0.0, 0.0, 
-        {{1.0, 0.0, 0.0}, 
-        {0.0 ,  1.0 ,  0.0},
-        {0.0 ,  0.0 ,  1.0}}};
-    
-    Interior test_I = {0.0, 0.0, 100.0};
-    Glass test_G = {0.0, 0.0, 50.0};
-    ap_52 test_addp = {0.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0};
-    
-    
-    Calibration test_cal = {test_Ex, test_I, test_G, test_addp};
-    
-    
-    mm_np test_mm = {
-    	1, 
-    	1.0, 
-    	{1.46, 0.0, 0.0}, 
-    	{1.0, 0.0, 0.0},
-    	1.0,
-    	0};
-    
-    
-      */
-    
+        
     volume_par *vpar;
     vpar = read_volume_par("testing_fodder/parameters/criteria_2.par");
     
@@ -293,13 +212,12 @@ START_TEST(test_init_mmLUT)
     char filename[] = "testing_fodder/parameters/ptv_2.par";
     cpar = read_control_par(filename);
     /* two default values which are not in the parameter file */
-    
     cpar->mm->lut = 1;
     cpar->mm->nlay = 1;
 
 
 
-    mmlut test_mmlut[4], correct_mmlut[4];  
+     mmlut test_mmlut[4], correct_mmlut[4];  
      
      correct_mmlut[0].origin.x = 0.0;
      correct_mmlut[0].origin.y = 0.0;
@@ -335,140 +253,123 @@ END_TEST
             
 
 
-
-
-
-
 START_TEST(test_get_mmf_mmLUT)
 {
 
     /* input */
-    double xmax, xmin, ymax, ymin, zmax, zmin;
-    int i; 
+    double xmax, xmin, ymax, ymin, zmax, zmin, mmf;
+    int i, i_cam = 0; 
     
-    Calibration test_cal[4];
-            
-     /* input */
-    double x = -7.713157;
-    double y = 6.144260;        
-        
-    Exterior test_Ex = {
-        128.011300, 69.300100, 572.731900,
-        -0.121629, 0.242729, 0.005532, 
-        {{0.970671, -0.005369, 0.240352}, 
-        {-0.023671 ,  0.992758 ,  0.117773},
-        {-0.239244 ,  -0.120008 ,  0.963515}}};
-    
-    Interior test_I = {0.0, 0.0, 70.0};
-    Glass test_G = {0.000010, 0.000010, 125.000000};
-    ap_52 test_addp = {0.0, 0.0, 0.0, 0.0, 0.0, 1.003025, -0.009194};
-    
-    /*
-     Calibration test_cal = {test_Ex, test_I, test_G, test_addp};
-    */ 
-    
-    mm_np test_mm = {
-    	1, 
-    	1.0, 
-    	{1.33, 0.0, 0.0}, 
-    	{6.0, 0.0, 0.0},
-    	1.46,
-    	0};
-    
-    double mmf;
-    
-    control_par test_cpar;
-    volume_par test_vpar; 
-    
-    mmlut test_mmlut[4], correct_mmlut[4];
-    
-    
-    test_cpar.imx = 1280; 
-    test_cpar.imy = 1024;
-    test_cpar.pix_x = 0.01;
-    test_cpar.pix_y = 0.01;
-    test_cpar.num_cams = 1;
-    test_cpar.mm = &test_mm;
-    
-    
-    /* test values for zmin,zmax,xmax,xmin */
-    test_vpar.Zmin_lay[0] = -20.0;
-    test_vpar.Zmax_lay[0] = 20.0;
-    test_vpar.X_lay[1]    = 40.0;
-    test_vpar.X_lay[0]    = -40.0;
+    Calibration *cal;
 
     
-     
-    for (i=0; i<test_cpar.num_cams; i++){
-     	test_cal[i].ext_par = test_Ex;
-     	test_cal[i].int_par = test_I;
-     	test_cal[i].glass_par = test_G;
-     	test_cal[i].added_par =  test_addp;
-     }
-     
+    char ori_file[] = "testing_fodder/cal/cam3.tif.ori";
+    char add_file[] = "testing_fodder/cal/cam3.tif.addpar";    
+    cal = read_calibration(ori_file, add_file, NULL);
+        
+    volume_par *vpar;
+    vpar = read_volume_par("testing_fodder/parameters/criteria_2.par");
+    
+    
+    control_par *cpar;
+    char filename[] = "testing_fodder/parameters/ptv_2.par";
+    cpar = read_control_par(filename);
+    /* two default values which are not in the parameter file */
+    cpar->mm->lut = 1;
+    cpar->mm->nlay = 1;
+
+
+
+     mmlut test_mmlut[4], correct_mmlut[4];  
      
      correct_mmlut[0].origin.x = 0.0;
      correct_mmlut[0].origin.y = 0.0;
-     correct_mmlut[0].origin.z = -125.0;
-     correct_mmlut[0].nr = 115;
-     correct_mmlut[0].nz = 64;
+     correct_mmlut[0].origin.z = -70.0;
+     correct_mmlut[0].nr = 9;
+     correct_mmlut[0].nz = 47;
      correct_mmlut[0].rw = 2;
+        
      
-     correct_mmlut[1].origin.x = 0.0;
-     correct_mmlut[1].origin.y = 0.0;
-     correct_mmlut[1].origin.z = -125.0;
-     correct_mmlut[1].nr = 116;
-     correct_mmlut[1].nz = 65;
-     correct_mmlut[1].rw = 2;
- 
-     correct_mmlut[2].origin.x = 0.0;
-     correct_mmlut[2].origin.y = 0.0;
-     correct_mmlut[2].origin.z = -125.0;
-     correct_mmlut[2].nr = 117;
-     correct_mmlut[2].nz = 66;
-     correct_mmlut[2].rw = 2;
-     
-     correct_mmlut[3].origin.x = 0.0;
-     correct_mmlut[3].origin.y = 0.0;
-     correct_mmlut[3].origin.z = -125.0;
-     correct_mmlut[3].nr = 118;
-     correct_mmlut[3].nz = 67;
-     correct_mmlut[3].rw = 2;    
-     
-               
-     init_mmLUT (
-                 &test_vpar
-               , &test_cpar
-               , test_cal
+     init_mmLUT (vpar
+               , cpar
+               , cal
                , test_mmlut);
                
+         mmf = get_mmf_from_mmLUT (i_cam, 1.0, 1.0, 1.0, (mmlut *) test_mmlut);
+        
+        ck_assert_msg( 
+                    fabs(mmf - 1.002236) < EPS,
+         "\n Expected mmf  1.002236 but found %8.6f in camera %d\n", \
+         mmf, i_cam);
+   
+}
+END_TEST
 
-          
-    for (i=0; i< test_cpar.num_cams; i++){
-       ck_assert_msg( 
-                    fabs(test_mmlut[i].origin.x - correct_mmlut[0].origin.x) < EPS && 
-                    fabs(test_mmlut[i].origin.y - correct_mmlut[0].origin.y) < EPS && 
-                    fabs(test_mmlut[i].origin.z - correct_mmlut[0].origin.z)  < EPS &&
-                    test_mmlut[i].nr == correct_mmlut[i].nr &&
-                    test_mmlut[i].nz == correct_mmlut[i].nz &&
-                    test_mmlut[i].rw ==  correct_mmlut[i].rw,
-         "\n Expected different correct_mmlut values \n  \
-         but found %4.3f %4.3f %4.3f %d %d %d in camera %d\n", \
-         test_mmlut[i].origin.x, test_mmlut[i].origin.y, test_mmlut[i].origin.z, \
-         test_mmlut[i].nr, test_mmlut[i].nz, test_mmlut[i].rw, i);
-    }
+
+
+START_TEST(test_multimed_nlay)
+{
+
+    /* input */
+    int i, i_cam = 0; 
     
-     for (i=0; i< test_cpar.num_cams; i++){
-        printf(" test_mmlut[0].rw %d \n",  test_mmlut[i].rw);
+    Calibration *cal;
+
+    
+    char ori_file[] = "testing_fodder/cal/cam3.tif.ori";
+    char add_file[] = "testing_fodder/cal/cam3.tif.addpar";    
+    cal = read_calibration(ori_file, add_file, NULL);
+        
+    volume_par *vpar;
+    vpar = read_volume_par("testing_fodder/parameters/criteria_2.par");
+    
+    
+    control_par *cpar;
+    char filename[] = "testing_fodder/parameters/ptv_2.par";
+    cpar = read_control_par(filename);
+    /* two default values which are not in the parameter file */
+    cpar->mm->lut = 1;
+    cpar->mm->nlay = 1;
+
+
+
+     mmlut test_mmlut[4];  
+
+        
+     
+     init_mmLUT (vpar
+               , cpar
+               , cal
+               , test_mmlut);
+                
+     double X,Y,Z;
+     X = Y = Z = 1.23;
+     double correct_Xq,correct_Yq, Xq, Yq;
+     correct_Xq = correct_Yq = 1.2334;   
+     
+            
+     multimed_nlay ( &cal[0].ext_par
+                   , cpar->mm
+                   , X
+                   , Y
+                   , Z
+                   , &Xq
+                   , &Yq
+                   , i_cam 
+                   , test_mmlut);
+        
+    for (i=0; i<cpar->num_cams; i++){
+       ck_assert_msg( 
+                    fabs(Xq - correct_Xq) < EPS && 
+                    fabs(Yq - correct_Yq) < EPS,
+         "\n Expected different correct_Xq, Yq values \n  \
+         but found %6.4f %6.4f \n", Xq, Yq);
     }
-        printf ("going to get some mmf \n");     
-        mmf = get_mmf_from_mmLUT (0, 1.0, 1.0, 1.0, (mmlut *) test_mmlut);
-        printf ("Got mmf  %f \n", mmf);
+
       
     
 }
 END_TEST
-
 
 
 
@@ -482,6 +383,7 @@ Suite* fb_suite(void) {
     tcase_add_test(tc, test_trans_Cam_Point);
     tcase_add_test(tc, test_back_trans_Point);     
     tcase_add_test(tc, test_get_mmf_mmLUT);
+    tcase_add_test(tc, test_multimed_nlay);
     suite_add_tcase (s, tc);   
     return s;
 }
