@@ -21,7 +21,9 @@ Routines contained:     -
 #include "multimed.h"
 
 
-
+/* using radial shift from the multimedia model 
+ * creates the Xq,Yq points for each X,Y point in the image space
+ */
 void  multimed_nlay (Exterior *ex
                    , mm_np *mm
                    , double X
@@ -121,7 +123,10 @@ double multimed_r_nlay (Exterior *ex
 
 
 
-
+/* Using Exterior and Interior parameters and the Glass vector of the variable
+ * window position creates the shifted points X_t,Y_t,Z_t for each position X,Y,Z
+ * and the two vectors that point to the crossing point
+ */ 
 void trans_Cam_Point(Exterior ex
                    , mm_np mm
                    , Glass gl
@@ -167,6 +172,7 @@ void trans_Cam_Point(Exterior ex
       
 }
 
+/* the opposite direction transfer from X_t,Y_t,Z_t to the X,Y,Z in 3D space */
 
 void back_trans_Point(double X_t, double Y_t, double Z_t, mm_np mm, Glass G, \
 double cross_p[], double cross_c[], double *X, double *Y, double *Z){
@@ -196,12 +202,7 @@ double cross_p[], double cross_c[], double *X, double *Y, double *Z){
 
 
 
-
-
-
-
-
-/* init_mmLUT prepares the Look-Up Table
+/* init_mmLUT prepares the multimedia Look-Up Table
 Arguments: 
 	Pointer to volume parameters *vpar
 	pointer to the control parameters *cpar
