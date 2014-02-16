@@ -20,7 +20,6 @@ Routines contained:     -
 
 #include "multimed.h"
 
-void print_Exterior ();
 
 
 void  multimed_nlay (Exterior *ex
@@ -615,13 +614,4 @@ void volumedimension (double *xmax
       
       }
    }
-}
-
-void print_Exterior (Exterior Ex){
-  int i;
-  printf ("Exterior parameters \n");
-  printf ("%11.4f %11.4f %11.4f\n    %10.7f  %10.7f  %10.7f\n\n",
-	   Ex.x0, Ex.y0, Ex.z0, Ex.omega, Ex.phi, Ex.kappa);
-  for (i=0; i<3; i++)  printf ("    %10.7f %10.7f %10.7f\n",
-				Ex.dm[i][0], Ex.dm[i][1], Ex.dm[i][2]);
 }
