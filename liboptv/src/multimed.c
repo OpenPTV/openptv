@@ -35,17 +35,10 @@ void  multimed_nlay (Exterior *ex
   
   double    radial_shift; 
 
-  /* call multimed_r_nlay with the inputs 
-   * the output is the rq/r or mmf or 1.0 depends on
-   * whether there is mm.lut == 1 or 
-   * if no value coming from mmLUT
-   * TODO: update multimed_r_nlay to comply with these rules
-   */
-   
-     radial_shift = multimed_r_nlay (ex, mm, X, Y, Z, i_cam, mmLUT); 
+    radial_shift = multimed_r_nlay (ex, mm, X, Y, Z, i_cam, mmLUT); 
 
-     /* maybe we need to check if radial_shift is not zero 
-      * note that if radial_shift == 1.0, then we get 
+     /* 
+      * if radial_shift == 1.0, then
       * Xq = X; Yq = Y;
       */
      *Xq = ex->x0 + (X - ex->x0) * radial_shift;
@@ -70,7 +63,9 @@ double multimed_r_nlay (Exterior *ex
                       , double Z
                       , int i_cam
                       , mmlut *mmLUT){
-
+ 
+ 
+ 
   int   i, it = 0;
   double beta1, beta2[32], beta3, r, rbeta, rdiff, rq, mmf;
   /* ocf  over compensation factor for faster convergence
@@ -79,6 +74,7 @@ double multimed_r_nlay (Exterior *ex
    */
 
   int n_iter = 40;
+ 
 
   /* 1-medium case */
   if (mm->n1 == 1 && mm->nlay == 1 && mm->n2[0]== 1 && mm->n3 == 1) return (1.0);
@@ -89,9 +85,9 @@ double multimed_r_nlay (Exterior *ex
     mmf = get_mmf_from_mmLUT (i_cam, X,Y,Z, (mmlut *)mmLUT);
     if (mmf > 0) return (mmf);
   }
- 
+  
   /* iterative procedure */
-  r = sqrt ((X - ex->x0)  *(X - ex->x0) + (Y - ex->y0) * (Y - ex->y0));
+  r = sqrt ((X - ex->x0) * (X - ex->x0) + (Y - ex->y0) * (Y - ex->y0));
   rq = r;
   
   do
@@ -109,6 +105,8 @@ double multimed_r_nlay (Exterior *ex
     }
   while (((rdiff > 0.001) || (rdiff < -0.001))  &&  it < n_iter);
   
+
+  
   if (it >= n_iter) {
       printf ("multimed_r_nlay stopped after %d iterations\n", n_iter);  
       return (1.0);
@@ -118,7 +116,6 @@ double multimed_r_nlay (Exterior *ex
       return (rq/r);
     }  
     else {
-    	printf ("multimed_r_nlay stopped with r = 0\n"); 
     	return (1.0);
     }
 }
@@ -232,6 +229,7 @@ void init_mmLUT (volume_par *vpar
   double        xc[2], yc[2];  /* image corners */
   
   
+  
   /* image corners */
   xc[0] = 0.0;
   xc[1] = (double) cpar->imx;
@@ -239,25 +237,20 @@ void init_mmLUT (volume_par *vpar
   yc[1] = (double) cpar->imy;
 
  
-  /* find extrema of imaged object volume */
-  /* ==================================== */
-  
-  /* find extrema in depth */
-  
-  /* move the loop through n_cams inside the function, i.e.
-  TODO: in jw_ptv.c change the call from:
-  for (i_img = 0; i_img < cpar->num_cams; i_img++) init_mmLUT(i_img);
-  to:
-  
-  init_mmLUT(vpar,cpar,cal,ap,mmLUT);
-  */
-  
+
+
   for (i_cam = 0; i_cam < cpar->num_cams; i_cam++){
   
-      Zmin -= fmod (vpar->Zmin_lay[0], rw);
-      Zmax += (rw - fmod (vpar->Zmax_lay[0], rw));
-      Zmin_t = Zmin;
-      Zmax_t = Zmax;
+      /* find extrema of imaged object volume */
+      
+      Zmin = vpar->Zmin_lay[0];
+      Zmax = vpar->Zmax_lay[0];
+   
+      Zmin -= fmod (Zmin, rw);
+  	  Zmax += (rw - fmod (Zmax, rw));
+      Zmin_t=Zmin;
+      Zmax_t=Zmax;
+      
   
       /* intersect with image vertices rays */
       
@@ -266,51 +259,37 @@ void init_mmLUT (volume_par *vpar
           
           pixel_to_metric (&x, &y, xc[i], yc[j], cpar);
           
-          /*
-          printf("Sent pixels %f %f \n", xc[i],yc[j]);
-          printf("got back metric %f %f \n", x,y);
-          */
-          
+        
           /* x = x - I[i_cam].xh;
              y = y - I[i_cam].yh;
           */
           x = x - cal[i_cam].int_par.xh;
           y = y - cal[i_cam].int_par.yh;
           
-          /* printf("shifted them to %f %f \n", x,y); */
   
           correct_brown_affin (x, y, cal[i_cam].added_par, &x,&y);
           
-          /* printf("corrected affin  to %f %f \n", x,y); */
       
           /* ray_tracing(x,y, Ex[i_cam], I[i_cam], G[i_cam], mmp, &X1, &Y1, &Z1, &a, &b, &c); */
           ray_tracing(x,y, &cal[i_cam], *(cpar->mm), pos, a);
           
-          /* 
-           printf("ray traced into the flow to pos %f %f %f \n", pos[0],pos[1],pos[2]);
-           printf("ray traced into the flow to a %f %f %f \n", a[0],a[1],a[2]);
-          */
+                     
           
           /* Z = Zmin;   X = X1 + (Z-Z1) * a/c;   Y = Y1 + (Z-Z1) * b/c; */
           Z = Zmin;   
           X = pos[0] + (Z - pos[2]) * a[0]/a[2];   
           Y = pos[1] + (Z - pos[2]) * a[1]/a[2];
           
-          /* printf("estimated 3d point %f %f %f \n", X,Y,Z); */
           
-      
           /* trans */
           /* trans_Cam_Point(Ex[i_cam],mmp,G[i_cam],X,Y,Z,&Ex_t[i_cam],&X_t,&Y_t,&Z_t,&cross_p,&cross_c); */
           trans_Cam_Point(cal[i_cam].ext_par, *(cpar->mm), cal[i_cam].glass_par, X, Y, Z, \
           &Ex_t[i_cam], &X_t, &Y_t, &Z_t, (double *)cross_p, (double *)cross_c);
-          
-          /* printf("adjusted 3d point for Zmin %f %f %f \n", X_t,Y_t,Z_t); */
-      
+
+                
           if( Z_t < Zmin_t ) Zmin_t = Z_t;
           if( Z_t > Zmax_t ) Zmax_t = Z_t;
-          
-          /* printf(" new zmin,zmax are: %f %f \n", Zmin_t, Zmax_t);  */
-      
+                
       
           R = sqrt (( X_t - Ex_t[i_cam].x0 ) * ( X_t - Ex_t[i_cam].x0 )
                   + ( Y_t - Ex_t[i_cam].y0 ) * ( Y_t - Ex_t[i_cam].y0 )); 
@@ -346,6 +325,8 @@ void init_mmLUT (volume_par *vpar
           /* printf ("radial shift is %f and max shift is %f \n", R, Rmax); */
         }
       }
+      
+
   
       /* round values (-> enlarge) */
       Rmax += (rw - fmod (Rmax, rw));
@@ -354,30 +335,8 @@ void init_mmLUT (volume_par *vpar
       nr = Rmax/rw + 1;
       nz = (Zmax_t - Zmin_t)/rw + 1;
       
-      printf("Rmax, Zmax_t, Zmin_t, nr, nz \n");
-      printf("%f %f %f %d %d \n", Rmax, Zmax_t, Zmin_t, nr, nz);
  
       /* create two dimensional mmLUT structure */
-      
-      /* 
-      printf("testing an apparently obsolete trans_cam_point call\n");
-      printf("X,Y,Z: %f %f %f \n", X,Y,Z);
-      printf("X_t,Y_t,Z_t, %f %f %f \n", X_t,Y_t,Z_t);
-      printf(" Exterior \n");
-      print_Exterior(Ex_t);
-      
-       
-      
-      trans_Cam_Point(cal[i_cam].ext_par, *(cpar->mm), cal[i_cam].glass_par, X, Y, Z, \
-          &Ex_t[i_cam], &X_t, &Y_t, &Z_t, (double *)cross_p, (double *)cross_c);
-          
-       printf("after the call\n");
-      printf("X,Y,Z: %f %f %f \n", X,Y,Z);
-      printf("X_t,Y_t,Z_t, %f %f %f \n", X_t,Y_t,Z_t);
-      printf(" Exterior \n");
-      print_Exterior(Ex_t);
-      
-      */
       
       mmLUT[i_cam].origin.x = Ex_t[i_cam].x0;
       mmLUT[i_cam].origin.y = Ex_t[i_cam].y0;
@@ -386,6 +345,8 @@ void init_mmLUT (volume_par *vpar
       mmLUT[i_cam].nz = nz;
       mmLUT[i_cam].rw = rw;
       mmLUT[i_cam].data = (double *) malloc (nr*nz * sizeof (double));
+      
+
    
       /* fill mmLUT structure */
       /* ==================== */
@@ -394,6 +355,8 @@ void init_mmLUT (volume_par *vpar
       for (i=0; i<nr; i++)  Ri[i] = i*rw;
       Zi = (double *) malloc (nz * sizeof (double));
       for (i=0; i<nz; i++)  Zi[i] = Zmin_t + i*rw;
+      
+
   
       for (i=0; i<nr; i++) {
         for (j=0; j<nz; j++) {
@@ -404,9 +367,7 @@ void init_mmLUT (volume_par *vpar
           
         mmLUT[i_cam].data[i*nz + j] = multimed_r_nlay (&Ex_t[i_cam], cpar->mm, \
                               Ri[i] + Ex_t[i_cam].x0, Ex_t[i_cam].y0, Zi[j], i_cam, mmLUT);
-        
-        printf(" %d %f\n", i*nz+j, mmLUT[i_cam].data[i*nz+j]);
-        
+                
                               
           } /* nz */
         } /* nr */
