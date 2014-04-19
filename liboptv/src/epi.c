@@ -13,16 +13,22 @@ int dumbbell_pyptv;
       (use img_xy_mm because of comparison with img_geo)  
 */
 
-int  epi_mm(double xl, double yl, Calibration *cal1,
+void epi_mm(double xl, double yl, Calibration *cal1,
     Calibration *cal2, mm_np mmp, volume_par *vpar,
     double *xmin, double *ymin, double *xmax, double *ymax){
 
-  double a, b, c, xa,ya,xb,yb;
-  double X1,Y1,Z1, X, Y, Z;
+  double a, b, c, xa, ya, xb, yb;
+  double X1, Y1, Z1, X, Y, Z;
   double Zmin, Zmax;
+  double pos[3], v[3]; 
+  
 
   // ray_tracing (x1,y1, Ex1, I1, G1, mmp, &X1, &Y1, &Z1, &a, &b, &c);
-  ray_tracing (x1, y1, &test_cal, test_mm, (double *)X, (double *)v);
+  ray_tracing (x1, y1, &cal1, test_mm, pos, v);
+  
+  /* convert back into X1,Y1,Z1, a,b,c for clarity */
+  X1 = pos[0]; Y1 = pos[1]; Z1 = pos[2];
+  a = v[0]; b = v[1]; c = v[2]; 
 
   /* calculate min and max depth for position (valid only for one setup) */
   Zmin = vpar->Zmin_lay[0]
@@ -34,17 +40,17 @@ int  epi_mm(double xl, double yl, Calibration *cal1,
 
   Z = Zmin;   X = X1 + (Z-Z1) * a/c;   Y = Y1 + (Z-Z1) * b/c;
   //img_xy_mm_geo_old (X,Y,Z, Ex2, I2,     mmp, &xa, &ya);
-  img_xy_mm_geo     (X,Y,Z, Ex2, I2, G2, mmp, &xa, &ya);
+  img_xy_mm_geo (X, Y, Z, cal2, mmp, &xa, &ya);
 
   Z = Zmax;   X = X1 + (Z-Z1) * a/c;   Y = Y1 + (Z-Z1) * b/c;
   //img_xy_mm_geo_old (X,Y,Z, Ex2, I2,     mmp, &xb, &yb);
-  img_xy_mm_geo     (X,Y,Z, Ex2, I2, G2, mmp, &xb, &yb);
+  img_xy_mm_geo (X,Y,Z, cal2, mmp, &xb, &yb);
 
   /*  ==> window given by xa,ya,xb,yb  */
 
   *xmin = xa;  *ymin = ya;  *xmax = xb;  *ymax = yb;
 
-  return (0);
+  // return (0);
 }
 
 
@@ -54,7 +60,7 @@ int  epi_mm(double xl, double yl, Calibration *cal1,
       which can be transformed into _2 image
       (use img_xy_mm because of comparison with img_geo)  */
       
-int epi_mm_2D (double x1, double y1, Calibration *cal1, mm_np mmp, volume_par *vpar, \
+void epi_mm_2D (double x1, double y1, Calibration *cal1, mm_np mmp, volume_par *vpar, \
 double *xp, double *yp, double *zp){
 
 
@@ -80,7 +86,7 @@ double *xp, double *yp, double *zp){
   
   *xp=X; *yp=Y; *zp=Z;
 
-  return (0);
+  // return (0);
 }
 
 void find_candidate_plus (crd, pix, num, xa,ya,xb,yb, n, nx, ny, sumg,

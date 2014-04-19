@@ -21,7 +21,7 @@ typedef struct
 coord_2d;
 	
 
-int  epi_mm(double xl, double yl, Calibration *cal1,
+void  epi_mm(double xl, double yl, Calibration *cal1,
     Calibration *cal2, mm_np mmp, volume_par *vpar,
     double *xmin, double *ymin, double *xmax, double *ymax);
     
