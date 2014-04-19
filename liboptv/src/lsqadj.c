@@ -165,7 +165,7 @@ void norm_cross(double a[3], double b[3], double n[3]) {
 
     double  res[3], dummy, norm;
     
-    crossprod(a,b,res)
+    crossprod(a,b,res);
     
     modu(res,&norm);
     

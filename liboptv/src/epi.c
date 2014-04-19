@@ -89,11 +89,29 @@ double *xp, double *yp, double *zp){
   // return (0);
 }
 
+/* find_candidate_plus_msg is searching in the image space of the image all the candidates
+around the epipolar line originating from another camera.
+Inputs:
+	coord_2d structure of a pointer and x,y
+	target structure of all the particles in the image: x,y, n, nx, ny, sumg ...
+	num - number of particles in the image (int)
+	xa,ya,xb,yb - end points of the epipolar line (double, in millimeters)
+	n, nx, ny, sumg  - properties of the particle as defined in the parameters, number of 
+	pixels in total, size in pixels horizontally and vertically and sum of grey values
+	nr - number of the camera
+	volume parameters
+	control parameters
+	Calibration parameters
+	
+Output: 
+	count of the candidates (int pointer)
+    candidates structure - pointer, tolerance and correlation value (a sort of a quality)
+	
+*/
 
-
-void find_candidate_plus_msg (coord_2d crd[], target pix[], int num, double xa, double ya, \
+void find_candidate (coord_2d *crd, target *pix, int num, double xa, double ya, \
 double xb, double yb, int n, int nx, int ny, int sumg, candidate cand[], int *count, \
-int nr, volume *vpar){
+int nr, volume *vpar, control_par *cpar, Calibration *cal){
 /*  binarized search in a x-sorted coord-set, exploits shape information  */
 /*  gives messages (in examination)  */
 
@@ -102,7 +120,9 @@ int nr, volume *vpar){
   double      	m, b, d, temp, qn, qnx, qny, qsumg, corr;
   double       	xmin, xmax, ymin, ymax,particle_size;
   int           dumbbell = 0;
-  double tol_band_width;
+  double 		tol_band_width;
+  
+  int number_candidates = 4; /* or 8 as it was originally used - might be a memory issue */
   
 //Beat Mai 2010 for dumbbell
 
@@ -116,24 +136,36 @@ int nr, volume *vpar){
 	  */
 	  particle_size = MAX(nx,ny);
 	  
-	  tol_band_width = vpar->eps0 * 0.5 * (pix_x + pix_y) * particle_size;
+	  /* tol_band_width means that vpar->eps0 is not in millimeters anymore but in 
+	  some relative units: pix_x is millimeters per pixel, times pixel size of the particle
+	  gives particle size in millimeters. then we multiply it by eps0 and we get eps0 times
+	  the size of the particles
+	  */ 
+	  tol_band_width = vpar->eps0 * 0.5 * (cpar->pix_x + cpar->pix_y) * particle_size;
   }
   else {
+  /* for dumbbell it's still the millimiters given in the parameter file */
       tol_band_width = vpar->eps0;
   }
   
+  /* this line is therefore also not well defined - whether the limit is on millimeters
+  or in parts of the particle size? */
   if (tol_band_width < 0.05 ) tol_band_width = 0.05;
 
 
   /* define sensor format for search interrupt */
-  xmin = (-1) * pix_x * imx/2;	xmax = pix_x * imx/2;
-  ymin = (-1) * pix_y * imy/2;	ymax = pix_y * imy/2;
-  xmin -= I[nr].xh;	ymin -= I[nr].yh;
-  xmax -= I[nr].xh;	ymax -= I[nr].yh;
-  correct_brown_affin (xmin,ymin, ap[nr], &xmin,&ymin);
-  correct_brown_affin (xmax,ymax, ap[nr], &xmax,&ymax);
+  xmin = (-1) * cpar->pix_x * cpar->imx/2;	xmax = cpar->pix_x * cpar->imx/2;
+  ymin = (-1) * cpar->pix_y * cpar->imy/2;	ymax = cpar->pix_y * cpar->imy/2;
+  xmin -= cal[nr].int_par.xh;	ymin -= cal[nr].int_par.yh;
+  xmax -= cal[nr].int_par.xh;	ymax -= cal[nr].int_par.yh;
+  
+  
+  correct_brown_affin (xmin, ymin, cal[nr].added_par, &xmin, &ymin);
+  correct_brown_affin (xmax, ymax, cal[nr].added_par, &xmax, &ymax);
+  
+  
 
-  for (j=0; j<4; j++)
+  for (j=0; j<number_candidates; j++)
     {
       cand[j].pnr = -999;  cand[j].tol = -999;  cand[j].corr = -999;
     }
@@ -142,9 +174,10 @@ int nr, volume *vpar){
   /* line equation: y = m*x + b */
   if (xa == xb){	
   		xa += 1e-10;
-  		printf(“\n Warning: using xa == xb in candidate search \n”);
+  		printf("\n Warning: using xa == xb in candidate search \n");
    } 
   	
+   /* equation of a line */	
    m = (yb-ya)/(xb-xa);  b = ya - m*xa;
   	
 
@@ -199,13 +232,15 @@ int nr, volume *vpar){
             if (qn >= vpar->cn && qnx >= vpar->cnx && qny >= vpar->cny && 
                 qsumg > vpar->csumg)
 			{
-			  if (*count>=maxcand)
-			    { printf(“More candidates than (maxcand): %d\n”,*count); return; }
+			  if (*count >= MAXCAND){ 
+			  	printf(“More candidates than (maxcand): %d\n”,*count); 
+			  	return; 
+			  	}
 			  cand[*count].pnr = p2;
 			  cand[*count].tol = d;
  			  cand[*count].corr = corr;
 			  (*count)++;
-			  printf (“%d %3.0f/%3.1f \n”, p2, corr, d*1000);
+			  printf ("%d %3.0f/%3.1f \n", p2, corr, d*1000);
 			}
 		    }
 		}
