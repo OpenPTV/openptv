@@ -1,6 +1,12 @@
 #ifndef EPI_H
 #define EPI_H
 
+#ifndef MIN
+#define MIN(a,b) (((a)<(b))?(a):(b))
+
+#ifndef MAX
+#define MAX(a,b) (((a)>(b))?(a):(b))
+
 #include "calibration.h"
 #include <optv/tracking_frame_buf.h>
 #include "parameters.h"

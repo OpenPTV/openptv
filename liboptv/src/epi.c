@@ -89,48 +89,41 @@ double *xp, double *yp, double *zp){
   // return (0);
 }
 
-void find_candidate_plus (crd, pix, num, xa,ya,xb,yb, n, nx, ny, sumg,
-						  cand, count, nr, vpar)
+
+
+void find_candidate_plus_msg (coord_2d crd[], target pix[], int num, double xa, double ya, \
+double xb, double yb, int n, int nx, int ny, int sumg, candidate cand[], int *count, \
+int nr, volume *vpar){
 /*  binarized search in a x-sorted coord-set, exploits shape information  */
+/*  gives messages (in examination)  */
 
-coord_2d	crd[];
-target		pix[];
-int    		num, *count;
-double		xa, ya, xb, yb;
-int    		n, nx, ny, sumg;
-candidate	cand[];
-int	       	nr;	       	/* image number for ap etc. */
-volume_par *vpar;
-//const char** argv;
-
-
-{
   register int	j;
-  int dummy;
   int	       	j0, dj, p2;
   double      	m, b, d, temp, qn, qnx, qny, qsumg, corr;
   double       	xmin, xmax, ymin, ymax,particle_size;
-  int dumbbell=0;
+  int           dumbbell = 0;
   double tol_band_width;
   
 //Beat Mai 2010 for dumbbell
 
-    if (dumbbell_pyptv==1){    dumbbell=1;
-  }
+  if (dumbbell_pyptv==1) dumbbell=1;
 
   if (dumbbell==0){
 	
-	  /////here is new Beat version of April 2010
-	  if (nx>ny) particle_size=nx;
-	  else       particle_size=ny;
-	  tol_band_width = vpar->eps0*0.5*(pix_x + pix_y)*particle_size;
+	  /* Beat version of April 2010 
+	  if (nx > ny) particle_size = nx;
+	  else       particle_size = ny;
+	  */
+	  particle_size = MAX(nx,ny);
+	  
+	  tol_band_width = vpar->eps0 * 0.5 * (pix_x + pix_y) * particle_size;
   }
-  else{
+  else {
       tol_band_width = vpar->eps0;
   }
-  if(tol_band_width<0.05){
-       tol_band_width=0.05;
-  }
+  
+  if (tol_band_width < 0.05 ) tol_band_width = 0.05;
+
 
   /* define sensor format for search interrupt */
   xmin = (-1) * pix_x * imx/2;	xmax = pix_x * imx/2;
@@ -147,133 +140,13 @@ volume_par *vpar;
 
 
   /* line equation: y = m*x + b */
-  if (xa == xb)	xa += 1e-10;
-  m = (yb-ya)/(xb-xa);  b = ya - m*xa;
-
-  if (xa > xb)
-    {
-      temp = xa;  xa = xb;  xb = temp;
-    }
-  if (ya > yb)
-    {
-      temp = ya;  ya = yb;  yb = temp;
-    }
-
-  if ( (xb>xmin) && (xa<xmax) && (yb>ymin) && (ya<ymax))  /* sensor area */
-    {
-      /* binarized search for start point of candidate search */
-      for (j0=num/2, dj=num/4; dj>1; dj/=2)
-	{
-	  if (crd[j0].x < (xa - tol_band_width))  j0 += dj;
-	  else  j0 -= dj;
-	}
-      j0 -= 12;  if (j0 < 0)  j0 = 0;		       	/* due to trunc */
-
-      for (j=j0, *count=0; j<num; j++)			/* candidate search */
-	{
-	  if (crd[j].x > xb+tol_band_width)  return;		/* finish search */
-
-	  if ((crd[j].y > ya-tol_band_width) && (crd[j].y < yb+tol_band_width))
-	    {
-	      if ((crd[j].x > xa-tol_band_width) && (crd[j].x < xb+tol_band_width))
-		{
-		  d = fabs ((crd[j].y - m*crd[j].x - b) / sqrt(m*m+1));
-          
-		  /* Beat: modified in April 2010 to allow for better treatment of 
-		  //different sized traced particles, in particular colloids and tracers
-		  if ( d < eps ){
-          */
-          /////here is new Beat version of April 2010
-		   //if (nx>ny) particle_size=nx;
-		   //else       particle_size=ny;
-		   if ( d < tol_band_width ){
-		   ///////end of new Beat version
-
-		      p2 = crd[j].pnr;
-		      if (n  < pix[p2].n)      	qn  = (double) n/pix[p2].n;
-		      else		       	qn  = (double) pix[p2].n/n;
-		      if (nx < pix[p2].nx)	qnx = (double) nx/pix[p2].nx;
-		      else		       	qnx = (double) pix[p2].nx/nx;
-		      if (ny < pix[p2].ny)	qny = (double) ny/pix[p2].ny;
-		      else		       	qny = (double) pix[p2].ny/ny;
-		      if (sumg < pix[p2].sumg)
-			        qsumg = (double) sumg/pix[p2].sumg;
-		      else	qsumg = (double) pix[p2].sumg/sumg;
-
-		      // empirical correlation coefficient
-			  // from shape and brightness parameters 
-		      corr = (4*qsumg + 2*qn + qnx + qny);
-		      // create a tendency to prefer those matches
-			  // with brighter targets 
-		      corr *= ((double) (sumg + pix[p2].sumg));
-
-		      if (qn >= vpar->cn && qnx >= vpar->cnx && \
-                 qny >= vpar->cny && qsumg > vpar->csumg) {
-
-				 if ( *count < maxcand) {
-			        cand[*count].pnr = j;
-			        cand[*count].tol = d;
-			        cand[*count].corr = corr;
-			        (*count)++;
-		         } else {
-			        dummy=(int)maxcand;
-			        printf("in find_candidate_plus: count > maxcand\n");}
-			     }
-		      }
-		   }
-           
-           
-	    }
-	}
-    }
-
-  else  *count = -1;	 	/* out of sensor area */
-}
-
-
-
-
-void find_candidate_plus_msg (crd, pix, num, xa,ya,xb,yb, n, nx, ny, sumg,
-							  cand, count, i12, vpar)
-
-/*  binarized search in a x-sorted coord-set, exploits shape information  */
-/*  gives messages (in examination)  */
-
-coord_2d	crd[];
-target		pix[];
-int    		num, *count, i12;
-double		xa, ya, xb, yb;
-int    		n, nx, ny, sumg;
-volume_par *vpar;
-/*
-candidate	cand[3];
-*/
-candidate	cand[];
-
-{
-  register int	j;
-  int	       	j0, dj, p2;
-  double        m, b, d, temp, qn, qnx, qny, qsumg, corr;
-  double       	xmin, xmax, ymin, ymax;
-  double tol_band_width,particle_size;
-
-  /* define sensor format for search interrupt */
-  xmin = (-1) * pix_x * imx/2;	xmax = pix_x * imx/2;
-  ymin = (-1) * pix_y * imy/2;	ymax = pix_y * imy/2;
-  xmin -= I[i12].xh;	ymin -= I[i12].yh;
-  xmax -= I[i12].xh;	ymax -= I[i12].yh;
-  correct_brown_affin (xmin,ymin, ap[i12], &xmin,&ymin);
-  correct_brown_affin (xmax,ymax, ap[i12], &xmax,&ymax);
-
-  if (nx>ny) particle_size=nx;
-  else       particle_size=ny;
-  tol_band_width = vpar->eps0*0.5*(pix_x + pix_y)*particle_size;
-
-  for (j=0; j<4; j++)
-    {
-      cand[j].pnr = -999;  cand[j].tol = 999;
-    }
-  m = (yb-ya)/(xb-xa);  b = ya - m*xa;   /* line equation: y = m*x + b */
+  if (xa == xb){	
+  		xa += 1e-10;
+  		printf(“\n Warning: using xa == xb in candidate search \n”);
+   } 
+  	
+   m = (yb-ya)/(xb-xa);  b = ya - m*xa;
+  	
 
   if (xa > xb)
     {
@@ -312,7 +185,7 @@ candidate	cand[];
 		      if (ny < pix[p2].ny)	qny = (double) ny/pix[p2].ny;
 		      else		       	qny = (double) pix[p2].ny/ny;
 		      if (sumg < pix[p2].sumg)
-			qsumg = (double) sumg/pix[p2].sumg;
+			        qsumg = (double) sumg/pix[p2].sumg;
 		      else	qsumg = (double) pix[p2].sumg/sumg;
 
 
@@ -327,18 +200,18 @@ candidate	cand[];
                 qsumg > vpar->csumg)
 			{
 			  if (*count>=maxcand)
-			    { printf("More candidates than (maxcand): %d\n",*count); return; }
+			    { printf(“More candidates than (maxcand): %d\n”,*count); return; }
 			  cand[*count].pnr = p2;
 			  cand[*count].tol = d;
  			  cand[*count].corr = corr;
 			  (*count)++;
-			  printf ("%d %3.0f/%3.1f \n", p2, corr, d*1000);
+			  printf (“%d %3.0f/%3.1f \n”, p2, corr, d*1000);
 			}
 		    }
 		}
 	    }
 	}
-      if (*count == 0)  puts ("- - -");
+      if (*count == 0)  puts (“- - -”);
     }
   else  *count = -1;		       	       /* out of sensor area */
 
