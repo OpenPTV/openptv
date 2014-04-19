@@ -164,10 +164,8 @@ for (i=0; i<k; i++) {
 void norm_cross(double a[3], double b[3], double n[3]) {
 
     double  res[3], dummy, norm;
-
-    res[0]=a[1]*b[2]-a[2]*b[1];
-    res[1]=a[2]*b[0]-a[0]*b[2];
-    res[2]=a[0]*b[1]-a[1]*b[0];
+    
+    crossprod(a,b,res)
     
     modu(res,&norm);
     
@@ -177,11 +175,12 @@ void norm_cross(double a[3], double b[3], double n[3]) {
         n[1] = res[0];
         n[2] = res[0];
     } else {    
-    n[0]=res[0]/norm;
-    n[1]=res[1]/norm;
-    n[2]=res[2]/norm;
+    	n[0]=res[0]/norm;
+    	n[1]=res[1]/norm;
+    	n[2]=res[2]/norm;
     }
 }
+
 
 /* Dot product of two vectors 
 * TODO: use ready subroutines from vec_utils.h
@@ -202,4 +201,10 @@ void modu(double a[3], double *m) {
     *m = sqrt(a[0]*a[0] + a[1]*a[1] + a[2]*a[2]);
 }
 
+/* cross product of two vectors of 3 x 1 */
+void crossprod (double a[3], double b[3], double c[3]){
+	c[0] = a[1] * b[2]  -  a[2] * b[1];
+	c[1] = a[2] * b[0]  -  a[0] * b[2];
+	c[2] = a[0] * b[1]  -  a[1] * b[0];
+}
 
