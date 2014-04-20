@@ -81,13 +81,9 @@ double *xp, double *yp, double *zp){
   double pos[3], v[3];
   double Zmin, Zmax;
   
-  printf(" x1,y1 %6.4f %6.4f \n ", x1, y1);
-
   /* ray_tracing_v2 (x1,y1, Ex1, I1, G1, mmp, &X1, &Y1, &Z1, &a, &b, &c); */
   ray_tracing (x1, y1, cal1, mmp, pos, v);
   
-  printf(" pos %6.4f %6.4f %6.4f \n ", pos[0], pos[1], pos[2]);
-  printf(" v %6.4f %6.4f %6.4f \n ", v[0], v[1], v[2]);
   
   /* convert back into X1,Y1,Z1, a,b,c for clarity */
   X1 = pos[0]; Y1 = pos[1]; Z1 = pos[2];
@@ -107,8 +103,7 @@ double *xp, double *yp, double *zp){
   Y = Y1 + (Z-Z1) * b/c;
   
   *xp = X; *yp = Y; *zp = Z;
- 
-  // return (0);
+
 }
 
 /* find_candidate_plus_msg is searching in the image space of the image all the candidates

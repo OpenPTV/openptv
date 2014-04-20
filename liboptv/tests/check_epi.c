@@ -23,7 +23,7 @@ START_TEST(test_epi_mm_2D)
         {0.0, 0.0, 1.0}}};
     
     Interior test_I = {0.0, 0.0, 100.0};
-    Glass test_G = {0.0, 0.0, 1.0};
+    Glass test_G = {0.0, 0.0, 50.0};
     ap_52 test_addp = {0., 0., 0., 0., 0., 0., 0.};
     Calibration test_cal = {test_Ex, test_I, test_G, test_addp};
     
@@ -38,11 +38,22 @@ START_TEST(test_epi_mm_2D)
     volume_par test_vpar = {
         {-250., 250.}, {-100., -100.}, {100., 100.}, 0.01, 0.3, 0.3, 0.01, 1.0, 33
         };
-    /* trivial case */
-     x = 0.0; 
-     y = 0.0;
+        
+    /* non-trivial case */
+     x = 1.0; 
+     y = 10.0;
     
-    epi_mm_2D (x, y, &test_cal, test_mm, &test_vpar, &xp, &yp, &zp);\
+    epi_mm_2D (x, y, &test_cal, test_mm, &test_vpar, &xp, &yp, &zp);
+
+    
+    ck_assert_msg( fabs(xp - 0.8586) < EPS && 
+                    fabs(yp - 8.5858) < EPS && 
+                    fabs(zp - 0.0)  < EPS,
+         "\n Expected 0.8586 8.5858 0.0000 \n  \
+         but found %6.4f %6.4f %6.4f \n", xp, yp, zp);
+    
+    /* trivial case */     
+    epi_mm_2D (0.0, 0.0, &test_cal, test_mm, &test_vpar, &xp, &yp, &zp);
 
     
     ck_assert_msg( fabs(xp - 0.0) < EPS && 
