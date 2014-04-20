@@ -13,20 +13,15 @@
 #include <math.h>
 #include "parameters.h"
 #include "calibration.h"
-#include <optv/tracking_frame_buf.h>
+#include "tracking_frame_buf.h"
 #include "lsqadj.h"
 
 void ray_tracing (double x
 				, double y
 				, Calibration* cal
 				, mm_np mm
-				, double *X
-				, double *a);
-				
-void old_ray_tracing (double x, double y, Exterior Ex, Interior I, Glass G,\
-                  mm_np mm, double *Xb2, double *Yb2, double *Zb2, \
-                  double *a3, double *b3,double *c3);
-
+				, double X[3]
+				, double a[3]);
 
 #endif
 

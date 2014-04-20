@@ -60,6 +60,12 @@ void ray_tracing (double x
     double vect1[3], vect2[3], factor, s2;
     double b[3],base2[3],c, dummy,bn[3],bp[3],n,p;
     
+    Interior I;
+    Glass G;
+    
+    Ex = cal->ext_par;
+    I = cal->int_par;
+    G = cal->glass_par;
 
     s2  = sqrt (x * x + y * y + cal->int_par.cc * cal->int_par.cc);
         
