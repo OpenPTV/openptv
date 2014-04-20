@@ -56,17 +56,10 @@ void ray_tracing (double x
 
 /*   ray -  tracing, see HOEHLE and Manual of Photogrammetry  */
 
-    double a1, b1, c1, a2, b2, c2, Xb1, Yb1, Zb1, d1, d2, cosi1, cosi2;
+    double a1, b1, c1, a2, b2, c2, Xb1, Yb1, Zb1, d1, d2;
     double vect1[3], vect2[3], factor, s2;
     double b[3],base2[3],c, dummy,bn[3],bp[3],n,p;
     
-    Exterior Ex;
-    Interior I;
-    Glass G;
-    
-    Ex = cal->ext_par;
-    I = cal->int_par;
-    G = cal->glass_par;
 
     s2  = sqrt (x * x + y * y + cal->int_par.cc * cal->int_par.cc);
         
