@@ -17,7 +17,10 @@ Description:            traces one ray, given by image coordinates,
 Routines contained:      -  
 ***************************************************************/
 
+#include <stdio.h>
 #include "ray_tracing.h"
+
+#define EPS 1e-5
 
 /*  wraps previous ray_tracing, parameters are read directly from control_par* structure */
 void ray_tracing (double x
@@ -56,36 +59,44 @@ double  *a3, double  *b3,double  *c3){
     s2  = sqrt (x * x + y * y + I.cc * I.cc);
     
     /*   direction cosines in image coordinate system  */
-    vect1[0] = x/s2;
-    vect1[1] = y/s2;
-    vect1[2] =- I.cc/s2;
+    vect1[0] = x/s2;  vect1[1] = y/s2;  vect1[2] =- I.cc/s2;
 
     matmul (vect2, (double *)Ex.dm, vect1, 3,3,1, 3,3);
     
     /*   direction cosines in space coordinate system , medium n1  */
-    a1 = vect2[0];
-    b1 = vect2[1];
-    c1 = vect2[2];
+    a1 = vect2[0];  b1 = vect2[1];  c1 = vect2[2];
+    
+    printf("vect2 %6.4f %6.4f %6.4f \n", vect2[0], vect2[1], vect2[2]);
     
     
     a[0] = Ex.x0; 
     a[1] = Ex.y0; 
     a[2] = Ex.z0;
+    
     b[0] = vect2[0];
     b[1] = vect2[1];
     b[2] = vect2[2];
+    
     c  =  sqrt(G.vec_x * G.vec_x + G.vec_y * G.vec_y + G.vec_z * G.vec_z);
     base2[0] = G.vec_x/c; 
     base2[1] = G.vec_y/c; 
     base2[2] = G.vec_z/c;
+    
+    printf(" c %6.4f \n", c);
+    printf(" base2 %6.4f %6.4f %6.4f \n", base2[0], base2[1], base2[2]);
 
     c = c + mm.d[0];
     dummy = base2[0] * a[0] + base2[1] * a[1] + base2[2] * a[2];
+    
+    printf(" dummy %6.4f \n", dummy);
+    
     dummy = dummy - c;
     d1 =- dummy/(base2[0] * b[0] + base2[1] *  b[1] + base2[2] * b[2]);
     
+    printf(" d1 %6.4f \n", d1);
+    
 
-    /*   point on the horizontal plane between n1,n2  */
+    /*   point on the horizontal plane between n1, n2  */
     Xb1 = a[0] +  b[0] *  d1;
     Yb1 = a[1] +  b[1] *  d1;
     Zb1 = a[2] +  b[2] *  d1;
@@ -94,24 +105,40 @@ double  *a3, double  *b3,double  *c3){
     bn[1] = base2[1];
     bn[2] = base2[2];
     n = (b[0] *  bn[0] +  b[1] *  bn[1] +  b[2] *  bn[2]);
+    
+    printf(" interface normal n %6.4f \n", n);
+    printf("bn %6.4f %6.4f %6.4f \n", bn[0], bn[1], bn[2]);
+    
     bp[0] = b[0] -  bn[0] *  n;
     bp[1] = b[1] -  bn[1] *  n;
     bp[2] = b[2] -  bn[2] *  n;
     dummy = sqrt(bp[0] *  bp[0] +  bp[1] *  bp[1] +  bp[2] *  bp[2]);
+    
+    printf(" dummy %g \n", dummy);
+    printf("bp %g %g %g \n", bp[0], bp[1], bp[2]);
+    
+    if (dummy < EPS ) dummy = 1.0; 
     bp[0] = bp[0]/dummy;
     bp[1] = bp[1]/dummy;
     bp[2] = bp[2]/dummy;
+    
+    printf("normalized bp %6.4f %6.4f %6.4f \n", bp[0], bp[1], bp[2]);
 
     p = sqrt(1 -  n *  n);
     /*   interface parallel  */
     p  =  p  *   mm.n1/mm.n2[0];
+    printf(" interface parallel n %6.4f \n", p);
+    
     /*   interface normal  */
     n =  -sqrt(1 -  p * p);
+    
+    printf(" interface normal n %6.4f \n", n);
+    
     a2 = p * bp[0] + n * bn[0];
     b2 = p * bp[1] + n * bn[1];
     c2 = p * bp[2] + n * bn[2];
     d2 = mm.d[0]/fabs((base2[0] *  a2 + base2[1] * b2 + base2[2] * c2));
-    
+    printf(" d2  %6.4f \n", d2);
 
     /*   point on the horizontal plane between n2,n3  */
      *Xb2 = Xb1 + d2 * a2;   
@@ -119,17 +146,30 @@ double  *a3, double  *b3,double  *c3){
      *Zb2 = Zb1 + d2 * c2;
     
     n = (a2 *  bn[0] +  b2 *  bn[1] +  c2 *  bn[2]);
+    
     bp[0] = a2 - bn[0] * n;
     bp[1] = b2 - bn[1] * n;
     bp[2] = c2 - bn[2] *  n;
     dummy = sqrt(bp[0] * bp[0] + bp[1] * bp[1] + bp[2] * bp[2]);
+    
+    printf(" dummy %g \n", dummy);
+    printf("bp %g %g %g \n", bp[0], bp[1], bp[2]);
+    
+    if (dummy < EPS ) dummy = 1.0;
     bp[0] = bp[0] / dummy;
     bp[1] = bp[1] / dummy;
     bp[2] = bp[2] / dummy;
+    
+    printf("normalized bp %g %g %g \n", bp[0], bp[1], bp[2]);
 
     p = sqrt(1 - n * n);
     p = p * mm.n2[0]/mm.n3;
     n = -sqrt(1 - p * p);
+    
+    printf(" interface parallel n %6.4f \n", p);
+    printf(" interface normal n %6.4f \n", n);
+
+
     *a3 = p * bp[0] + n * bn[0];
     *b3 = p * bp[1] + n * bn[1];
     *c3 = p * bp[2] + n * bn[2];

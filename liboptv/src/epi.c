@@ -4,7 +4,20 @@
 
 #include "epi.h"
 
-int dumbbell_pyptv;
+
+
+int dumbbell_pyptv = 0;
+
+/* temprorary solution, add imgcoord.h */
+void img_xy_mm_geo (double X, double Y, double Z, Calibration *cal2, \
+mm_np mmp, double *xa, double *ya);
+
+void img_xy_mm_geo (double X, double Y, double Z, Calibration *cal2, \
+mm_np mmp, double *xa, double *ya){
+
+}
+
+
 
 /*  ray tracing gives the point of exit and the direction
       cosines at the waterside of the glass;
@@ -13,7 +26,7 @@ int dumbbell_pyptv;
       (use img_xy_mm because of comparison with img_geo)  
 */
 
-void epi_mm(double xl, double yl, Calibration *cal1,
+void epi_mm (double xl, double yl, Calibration *cal1,
     Calibration *cal2, mm_np mmp, volume_par *vpar,
     double *xmin, double *ymin, double *xmax, double *ymax){
 
@@ -24,7 +37,7 @@ void epi_mm(double xl, double yl, Calibration *cal1,
   
 
   // ray_tracing (x1,y1, Ex1, I1, G1, mmp, &X1, &Y1, &Z1, &a, &b, &c);
-  ray_tracing (x1, y1, &cal1, test_mm, pos, v);
+  ray_tracing (xl, yl, cal1, mmp, pos, v);
   
   /* convert back into X1,Y1,Z1, a,b,c for clarity */
   X1 = pos[0]; Y1 = pos[1]; Z1 = pos[2];
@@ -63,14 +76,23 @@ void epi_mm(double xl, double yl, Calibration *cal1,
 void epi_mm_2D (double x1, double y1, Calibration *cal1, mm_np mmp, volume_par *vpar, \
 double *xp, double *yp, double *zp){
 
-
-
   double a, b, c;
   double X1,Y1,Z1,X,Y,Z;
-  
+  double pos[3], v[3];
   double Zmin, Zmax;
+  
+  printf(" x1,y1 %6.4f %6.4f \n ", x1, y1);
 
-  ray_tracing_v2 (x1,y1, Ex1, I1, G1, mmp, &X1, &Y1, &Z1, &a, &b, &c);
+  /* ray_tracing_v2 (x1,y1, Ex1, I1, G1, mmp, &X1, &Y1, &Z1, &a, &b, &c); */
+  ray_tracing (x1, y1, cal1, mmp, pos, v);
+  
+  printf(" pos %6.4f %6.4f %6.4f \n ", pos[0], pos[1], pos[2]);
+  printf(" v %6.4f %6.4f %6.4f \n ", v[0], v[1], v[2]);
+  
+  /* convert back into X1,Y1,Z1, a,b,c for clarity */
+  X1 = pos[0]; Y1 = pos[1]; Z1 = pos[2];
+  a = v[0]; b = v[1]; c = v[2]; 
+  
 
   /* calculate min and max depth for position (valid only for one setup) */
   Zmin = vpar->Zmin_lay[0]
@@ -84,8 +106,8 @@ double *xp, double *yp, double *zp){
   X = X1 + (Z-Z1) * a/c;   
   Y = Y1 + (Z-Z1) * b/c;
   
-  *xp=X; *yp=Y; *zp=Z;
-
+  *xp = X; *yp = Y; *zp = Z;
+ 
   // return (0);
 }
 
@@ -111,7 +133,7 @@ Output:
 
 void find_candidate (coord_2d *crd, target *pix, int num, double xa, double ya, \
 double xb, double yb, int n, int nx, int ny, int sumg, candidate cand[], int *count, \
-int nr, volume *vpar, control_par *cpar, Calibration *cal){
+int nr, volume_par *vpar, control_par *cpar, Calibration *cal){
 /*  binarized search in a x-sorted coord-set, exploits shape information  */
 /*  gives messages (in examination)  */
 
@@ -233,7 +255,7 @@ int nr, volume *vpar, control_par *cpar, Calibration *cal){
                 qsumg > vpar->csumg)
 			{
 			  if (*count >= MAXCAND){ 
-			  	printf(“More candidates than (maxcand): %d\n”,*count); 
+			  	printf("More candidates than (maxcand): %d\n",*count); 
 			  	return; 
 			  	}
 			  cand[*count].pnr = p2;
@@ -246,7 +268,7 @@ int nr, volume *vpar, control_par *cpar, Calibration *cal){
 		}
 	    }
 	}
-      if (*count == 0)  puts (“- - -”);
+      if (*count == 0)  printf ("- - -");
     }
   else  *count = -1;		       	       /* out of sensor area */
 
