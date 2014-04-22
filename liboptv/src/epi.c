@@ -108,7 +108,7 @@ double *xp, double *yp, double *zp){
 /* find_candidate is searching in the image space of the image all the candidates
 around the epipolar line originating from another camera.
 Inputs:
-	coord_2d structure of a pointer and x,y
+	coord_2d structure of a pointer, x,y
 	target structure of all the particles in the image: x,y, n, nx, ny, sumg ...
 	num - number of particles in the image (int)
 	xa,ya,xb,yb - end points of the epipolar line (double, in millimeters)
@@ -140,7 +140,15 @@ int nr, volume_par *vpar, control_par *cpar, Calibration *cal){
   
   int number_candidates = 4; /* or 8 as it was originally used - might be a memory issue */
   
-//Beat Mai 2010 for dumbbell
+  /* Alex: decided to make tol_band_width back to eps - it's clear in mm
+  then all the following part is irrelevant at the moment, I will remove it out */
+  
+  tol_band_width = vpar->eps0;
+  
+  /* 
+     Beat Mai 2010 for dumbbell
+
+
 
   if (dumbbell_pyptv==1) dumbbell=1;
 
@@ -157,7 +165,13 @@ int nr, volume_par *vpar, control_par *cpar, Calibration *cal){
 	  gives particle size in millimeters. then we multiply it by eps0 and we get eps0 times
 	  the size of the particles
 	  */ 
-	  tol_band_width = vpar->eps0 * 0.5 * (cpar->pix_x + cpar->pix_y) * particle_size;
+	  
+	  /* Alex: decided to make tol_band_width back to eps - it's clear in mm */
+	  /* tol_band_width = vpar->eps0 * 0.5 * (cpar->pix_x + cpar->pix_y) * particle_size; */
+	  
+	  tol_band_width = vpar->eps0;
+	  
+	  printf("tol_band_width %f \n", tol_band_width);
   }
   else {
   /* for dumbbell it's still the millimiters given in the parameter file */
@@ -166,7 +180,7 @@ int nr, volume_par *vpar, control_par *cpar, Calibration *cal){
   
   /* this line is therefore also not well defined - whether the limit is on millimeters
   or in parts of the particle size? */
-  if (tol_band_width < 0.05 ) tol_band_width = 0.05;
+  if (tol_band_width < 0.05 ) tol_band_width = 0.05; /* 50 micron ? */
 
 
   /* define sensor format for search interrupt */
@@ -174,10 +188,12 @@ int nr, volume_par *vpar, control_par *cpar, Calibration *cal){
   ymin = (-1) * cpar->pix_y * cpar->imy/2;	ymax = cpar->pix_y * cpar->imy/2;
   xmin -= cal[nr].int_par.xh;	ymin -= cal[nr].int_par.yh;
   xmax -= cal[nr].int_par.xh;	ymax -= cal[nr].int_par.yh;
-  
+      
   
   correct_brown_affin (xmin, ymin, cal[nr].added_par, &xmin, &ymin);
   correct_brown_affin (xmax, ymax, cal[nr].added_par, &xmax, &ymax);
+  
+  printf(" xmin, xmax, ymin, ymax %f %f %f %f \n", xmin, xmax, ymin, ymax);
   
   
   /* instead of number_candidates i found 4 or 8 which was originally used - not sure why.
@@ -203,7 +219,9 @@ int nr, volume_par *vpar, control_par *cpar, Calibration *cal){
    /* equation of a line */	
    m = (yb-ya)/(xb-xa);  b = ya - m*xa;
   	
-
+  printf (" m, b %f %f \n", m, b);
+  
+  
   if (xa > xb)
     {
       temp = xa;  xa = xb;  xb = temp;
@@ -213,60 +231,70 @@ int nr, volume_par *vpar, control_par *cpar, Calibration *cal){
       temp = ya;  ya = yb;  yb = temp;
     }
 
-  if ( (xb>xmin) && (xa<xmax) && (yb>ymin) && (ya<ymax)) /* sensor area */
-    {
-      /* binarized search for start point of candidate search */
-      for (j0=num/2, dj=num/4; dj>1; dj/=2)
-	{
-	  if (crd[j0].x < (xa - tol_band_width))  j0 += dj;
-	  else  j0 -= dj;
-	}
-      j0 -= 12;  if (j0 < 0)  j0 = 0;  	/* due to trunc */
+  printf(" xa, xb, ya, yb %f %f %f %f \n", xa,xb,ya,yb);
 
-      for (j=j0, *count=0; j<num; j++) 	/* candidate search */
-	{
-	  if (crd[j].x > xb+tol_band_width)  return;      	/* finish search */
+  if ( (xb>xmin) && (xa<xmax) && (yb>ymin) && (ya<ymax)){ /* sensor area */
+    
+      /* binary search for start point of candidate search */
+      for (j0=num/2, dj=num/4; dj>1; dj/=2){
+	  	if (crd[j0].x < (xa - tol_band_width))  j0 += dj;
+	  	else  j0 -= dj;
+	  }
+      
+      j0 -= 12;  if (j0 < 0)  j0 = 0;  	/* due to truncation error we might shift to smaller x */
 
-	  if ((crd[j].y > ya-tol_band_width) && (crd[j].y < yb+tol_band_width))
-	    {
-	      if ((crd[j].x > xa-tol_band_width) && (crd[j].x < xb+tol_band_width))
-		{
-		  d = fabs ((crd[j].y - m*crd[j].x - b) / sqrt(m*m+1));
-          if ( d < tol_band_width ){
-		      p2 = crd[j].pnr;
-		      if (n  < pix[p2].n)      	qn  = (double) n/pix[p2].n;
-		      else		       	qn  = (double) pix[p2].n/n;
-		      if (nx < pix[p2].nx)	qnx = (double) nx/pix[p2].nx;
-		      else		       	qnx = (double) pix[p2].nx/nx;
-		      if (ny < pix[p2].ny)	qny = (double) ny/pix[p2].ny;
-		      else		       	qny = (double) pix[p2].ny/ny;
-		      if (sumg < pix[p2].sumg)
-			        qsumg = (double) sumg/pix[p2].sumg;
-		      else	qsumg = (double) pix[p2].sumg/sumg;
+      for (j=j0, *count=0; j<num; j++){ 	/* candidate search */
+	
+	    if (crd[j].x > xb+tol_band_width)  return;  /* finish search */
+
+	    if ((crd[j].y > ya-tol_band_width) && (crd[j].y < yb+tol_band_width)){
+	    
+			if ((crd[j].x > xa-tol_band_width) && (crd[j].x < xb+tol_band_width)){
+		
+			  d = fabs ((crd[j].y - m*crd[j].x - b) / sqrt(m*m+1));
+				  if ( d < tol_band_width ){
+					  
+					  p2 = crd[j].pnr;
+					  
+					  /* quality of each parameter is a ratio of the values of the 
+					  size n, nx, ny and sum of grey values sumg
+					  */
+					  if (n  < pix[p2].n)      	qn  = (double) n/pix[p2].n;
+					  else		       	qn  = (double) pix[p2].n/n;
+					  
+					  if (nx < pix[p2].nx)	qnx = (double) nx/pix[p2].nx;
+					  else		       	qnx = (double) pix[p2].nx/nx;
+					  
+					  if (ny < pix[p2].ny)	qny = (double) ny/pix[p2].ny;
+					  else		       	qny = (double) pix[p2].ny/ny;
+					  
+					  if (sumg < pix[p2].sumg)
+							qsumg = (double) sumg/pix[p2].sumg;
+					  else	qsumg = (double) pix[p2].sumg/sumg;
 
 
-		      /* empirical correlation coefficient
-			 from shape and brightness parameters */
-		      corr = (4*qsumg + 2*qn + qnx + qny);
-		      /* create a tendency to prefer those matches
-			 with brighter targets */
-		      corr *= ((double) (sumg + pix[p2].sumg));
+					  /* empirical correlation coefficient
+					 from shape and brightness parameters */
+					  corr = (4*qsumg + 2*qn + qnx + qny);
+					  /* create a tendency to prefer those matches
+					     with brighter targets */
+					  corr *= ((double) (sumg + pix[p2].sumg));
 
-            if (qn >= vpar->cn && qnx >= vpar->cnx && qny >= vpar->cny && 
-                qsumg > vpar->csumg)
-			{
-			  if (*count >= MAXCAND){ 
-			  	printf("More candidates than (maxcand): %d\n",*count); 
-			  	return; 
-			  	}
-			  cand[*count].pnr = p2;
-			  cand[*count].tol = d;
- 			  cand[*count].corr = corr;
-			  (*count)++;
-			  printf ("%d %3.0f/%3.1f \n", p2, corr, d*1000);
+					if (qn >= vpar->cn && qnx >= vpar->cnx && qny >= vpar->cny && 
+						qsumg > vpar->csumg){
+			
+						if (*count >= MAXCAND){ 
+							printf("More candidates than (maxcand): %d\n",*count); 
+							return; 
+						}
+						cand[*count].pnr = p2; /* or it should be here j as in _plus ??? */
+						cand[*count].tol = d;
+						cand[*count].corr = corr;
+						(*count)++;
+						printf ("%d %3.0f/%3.1f \n", p2, corr, d*1000);
+					}
+				}
 			}
-		    }
-		}
 	    }
 	}
       if (*count == 0)  printf ("- - -");

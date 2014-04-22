@@ -24,7 +24,7 @@ START_TEST(test_epi_mm_2D)
     
     Interior test_I = {0.0, 0.0, 100.0};
     Glass test_G = {0.0, 0.0, 50.0};
-    ap_52 test_addp = {0., 0., 0., 0., 0., 0., 0.};
+    ap_52 test_addp = {0., 0., 0., 0., 0., 1., 0.};
     Calibration test_cal = {test_Ex, test_I, test_G, test_addp};
     
     mm_np test_mm = {
@@ -72,6 +72,9 @@ START_TEST(test_find_candidate)
 
 coord_2d test_crd = {0, 0.0, 0.0}; /* pnr, x, y */
 
+
+/* general variables */
+int i;
 /* 
 typedef struct
 {
@@ -88,8 +91,6 @@ target;
 following the discussion on the mailing list we need to test this function
 with sorted and unsorted lists
 
-
-
 */
 
 target test_pix = {0,      
@@ -99,11 +100,7 @@ target test_pix = {0,
 				   
 int num = 1; /* length of the test_pix */
 
-/* epipolar line */
-double xa = 0.;
-double ya = 0.;
-double xb = 1.;
-double yb = 1.;
+
 
 /* parameters of the particle for which we look for the candidates */
 int n = 10; 
@@ -121,7 +118,7 @@ typedef struct {
 candidate test_cand[MAXCAND];
 
 int count; 
-int icam = 1; /* number of the camera from which we take the candidates */
+int icam = 0; /* number of the camera from which we take the candidates */
 
 Exterior test_Ex = {
         0.0, 0.0, 100.0,
@@ -132,7 +129,7 @@ Exterior test_Ex = {
     
     Interior test_I = {0.0, 0.0, 100.0};
     Glass test_G = {0.0, 0.0, 50.0};
-    ap_52 test_addp = {0., 0., 0., 0., 0., 0., 0.};
+    ap_52 test_addp = {0., 0., 0., 0., 0., 1., 0.};
     Calibration test_cal = {test_Ex, test_I, test_G, test_addp};
     
     mm_np test_mm = {
@@ -175,13 +172,22 @@ Exterior test_Ex = {
     test_cpar.tiff_flag = 1;
     test_cpar.imx = 1280;
     test_cpar.imy = 1024;
-    test_cpar.pix_x  = 0.017; 
-    test_cpar.pix_y = 0.017;
+    test_cpar.pix_x = 0.02; /* 20 micron pixel */
+    test_cpar.pix_y = 0.02;
     test_cpar.chfield = 0;
     test_cpar.mm->n1 = 1;
     test_cpar.mm->n2[0] = 1.49;
     test_cpar.mm->n3 = 1.33;
     test_cpar.mm->d[0] = 5;
+    
+    
+    /* the result is that the sensor size is 12.8 mm x 10.24 mm */
+    
+    /* epipolar line  */
+	double xa = -12.;
+	double ya = -10.;
+	double xb = 6.;
+	double yb = 10.;
 
 
 /* the call from correspondences looks like:
@@ -193,8 +199,13 @@ Exterior test_Ex = {
 			       
 */
 
-find_candidate (&test_crd, &test_pix, num, xa, ya, xb, yb, n, nx, ny, sumg, test_cand, &count, \
-icam, &test_vpar, &test_cpar, &test_cal);
+	find_candidate (&test_crd, &test_pix, num, xa, ya, xb, yb, n, nx, ny, sumg, \
+	test_cand, &count, icam, &test_vpar, &test_cpar, &test_cal);
+
+    for (i = 0; i<count; i++){
+    	printf("candidates %d %g %g \n " , test_cand[i].pnr, test_cand[i].tol, test_cand[i].corr);
+    	}
+     
  
 }
 END_TEST
