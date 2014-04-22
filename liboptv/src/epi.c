@@ -138,51 +138,11 @@ int nr, volume_par *vpar, control_par *cpar, Calibration *cal){
   int           dumbbell = 0;
   double 		tol_band_width;
   
-  int number_candidates = 4; /* or 8 as it was originally used - might be a memory issue */
-  
-  /* Alex: decided to make tol_band_width back to eps - it's clear in mm
-  then all the following part is irrelevant at the moment, I will remove it out */
-  
+  int number_candidates = 4; /* the minimum number of candidates to initialise the array */
+    
   tol_band_width = vpar->eps0;
   
-  /* 
-     Beat Mai 2010 for dumbbell
-
-
-
-  if (dumbbell_pyptv==1) dumbbell=1;
-
-  if (dumbbell==0){
-	
-	  /* Beat version of April 2010 
-	  if (nx > ny) particle_size = nx;
-	  else       particle_size = ny;
-	  */
-	  particle_size = MAX(nx,ny);
-	  
-	  /* tol_band_width means that vpar->eps0 is not in millimeters anymore but in 
-	  some relative units: pix_x is millimeters per pixel, times pixel size of the particle
-	  gives particle size in millimeters. then we multiply it by eps0 and we get eps0 times
-	  the size of the particles
-	  */ 
-	  
-	  /* Alex: decided to make tol_band_width back to eps - it's clear in mm */
-	  /* tol_band_width = vpar->eps0 * 0.5 * (cpar->pix_x + cpar->pix_y) * particle_size; */
-	  
-	  tol_band_width = vpar->eps0;
-	  
-	  printf("tol_band_width %f \n", tol_band_width);
-  }
-  else {
-  /* for dumbbell it's still the millimiters given in the parameter file */
-      tol_band_width = vpar->eps0;
-  }
-  
-  /* this line is therefore also not well defined - whether the limit is on millimeters
-  or in parts of the particle size? */
-  if (tol_band_width < 0.05 ) tol_band_width = 0.05; /* 50 micron ? */
-
-
+ 
   /* define sensor format for search interrupt */
   xmin = (-1) * cpar->pix_x * cpar->imx/2;	xmax = cpar->pix_x * cpar->imx/2;
   ymin = (-1) * cpar->pix_y * cpar->imy/2;	ymax = cpar->pix_y * cpar->imy/2;
