@@ -5,7 +5,6 @@
 #include "epi.h"
 
 
-
 int dumbbell_pyptv = 0;
 
 /* temprorary solution, add imgcoord.h */
@@ -106,7 +105,7 @@ double *xp, double *yp, double *zp){
 
 }
 
-/* find_candidate_plus_msg is searching in the image space of the image all the candidates
+/* find_candidate is searching in the image space of the image all the candidates
 around the epipolar line originating from another camera.
 Inputs:
 	coord_2d structure of a pointer and x,y
@@ -181,7 +180,14 @@ int nr, volume_par *vpar, control_par *cpar, Calibration *cal){
   correct_brown_affin (xmax, ymax, cal[nr].added_par, &xmax, &ymax);
   
   
-
+  /* instead of number_candidates i found 4 or 8 which was originally used - not sure why.
+  it looks like initialization of the structure that grows later up to MAXCAND
+  TODO: 
+  wouldn't it be wiser to initialize up to MAXCAND? 
+  something like:
+  struct candidate cand[MAXCAND]; 
+  or
+  struct candidate *cand = (struct candidate *) malloc (sizeof (struct candidate) * MAXCAND); */
   for (j=0; j<number_candidates; j++)
     {
       cand[j].pnr = -999;  cand[j].tol = -999;  cand[j].corr = -999;

@@ -69,6 +69,43 @@ END_TEST
 START_TEST(test_find_candidate)
 {
 
+
+coord_2d test_crd = {0, 0.0, 0.0}; /* pnr, x, y */
+
+/* 
+typedef struct
+{
+  int     pnr;
+  double  x, y;
+  int     n, nx, ny, sumg;
+  int     tnr;
+}
+target;
+*/ 
+
+/* set of particles to choose from */
+target test_pix = {0,      
+				   0., 0.,  
+				   10, 3, 3, 100,
+				   0} 
+int num = 1;
+
+/* epipolar line */
+double xa = 0.;
+double ya = 0.;
+double xb = 1.;
+double yb = 1.;
+
+/* parameters of the particle */
+int n = 10; 
+int nx = 3; 
+int ny = 3;
+int sumg = 100;
+
+					
+
+find_candidate (&test_crd, &test_pix, num, xa, ya, xb, yb, n, nx, ny, sumg, candidate cand[], int *count, \
+int nr, volume_par *vpar, control_par *cpar, Calibration *cal)
  
 }
 END_TEST
