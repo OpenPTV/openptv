@@ -83,12 +83,21 @@ typedef struct
 target;
 */ 
 
-/* set of particles to choose from */
+/* set of particles to choose from 
+
+following the discussion on the mailing list we need to test this function
+with sorted and unsorted lists
+
+
+
+*/
+
 target test_pix = {0,      
 				   0., 0.,  
 				   10, 3, 3, 100,
-				   0} 
-int num = 1;
+				   0}; 
+				   
+int num = 1; /* length of the test_pix */
 
 /* epipolar line */
 double xa = 0.;
@@ -96,16 +105,96 @@ double ya = 0.;
 double xb = 1.;
 double yb = 1.;
 
-/* parameters of the particle */
+/* parameters of the particle for which we look for the candidates */
 int n = 10; 
 int nx = 3; 
 int ny = 3;
 int sumg = 100;
 
-					
+/*
+typedef struct {
+  int  	pnr;
+  double  tol, corr;
+} candidate;
+*/
 
-find_candidate (&test_crd, &test_pix, num, xa, ya, xb, yb, n, nx, ny, sumg, candidate cand[], int *count, \
-int nr, volume_par *vpar, control_par *cpar, Calibration *cal)
+candidate test_cand[MAXCAND];
+
+int count; 
+int icam = 1; /* number of the camera from which we take the candidates */
+
+Exterior test_Ex = {
+        0.0, 0.0, 100.0,
+        0.0, 0.0, 0.0, 
+        {{1.0, 0.0, 0.0}, 
+        {0.0, 1.0, 0.0},
+        {0.0, 0.0, 1.0}}};
+    
+    Interior test_I = {0.0, 0.0, 100.0};
+    Glass test_G = {0.0, 0.0, 50.0};
+    ap_52 test_addp = {0., 0., 0., 0., 0., 0., 0.};
+    Calibration test_cal = {test_Ex, test_I, test_G, test_addp};
+    
+    mm_np test_mm = {
+    	1, 
+    	1.0, 
+    	{1.49, 0.0, 0.0}, 
+    	{5.0, 0.0, 0.0},
+    	1.33,
+    	1};
+    	
+    volume_par test_vpar = {
+        {-250., 250.}, {-100., -100.}, {100., 100.}, 0.01, 0.3, 0.3, 0.01, 1.0, 33
+        };
+        
+    
+    /* prepare test control parameters, basically for pix_x  */
+    int cam;
+    char img_format[] = "cam%d";
+    char cal_format[] = "cal/cam%d.tif";
+    control_par test_cpar, *cpar;
+    
+    test_cpar.num_cams = 4;
+    test_cpar.img_base_name = (char **) malloc(4*sizeof(char *));
+    test_cpar.cal_img_base_name = (char **) malloc(4*sizeof(char *));
+    test_cpar.mm = (mm_np *) malloc(sizeof(mm_np));
+    
+    
+    for (cam = 0; cam < 4; cam++) {
+        test_cpar.img_base_name[cam] = 
+            (char *) malloc((strlen(img_format) + 1) * sizeof(char));
+        sprintf(test_cpar.img_base_name[cam], img_format, cam + 1);
+        
+        test_cpar.cal_img_base_name[cam] = 
+            (char *) malloc((strlen(cal_format) + 1) * sizeof(char));
+        sprintf(test_cpar.cal_img_base_name[cam], cal_format, cam + 1);
+    }
+    
+    test_cpar.hp_flag = 1;
+    test_cpar.allCam_flag = 0;
+    test_cpar.tiff_flag = 1;
+    test_cpar.imx = 1280;
+    test_cpar.imy = 1024;
+    test_cpar.pix_x  = 0.017; 
+    test_cpar.pix_y = 0.017;
+    test_cpar.chfield = 0;
+    test_cpar.mm->n1 = 1;
+    test_cpar.mm->n2[0] = 1.49;
+    test_cpar.mm->n3 = 1.33;
+    test_cpar.mm->d[0] = 5;
+
+
+/* the call from correspondences looks like:
+
+      find_candidate_plus (geo[i2], pix[i2], num[i2],
+			       xa12, ya12, xb12, yb12, 
+			       pix[i1][pt1].n,pix[i1][pt1].nx,pix[i1][pt1].ny,
+			       pix[i1][pt1].sumg, cand, &count, i2, vpar);
+			       
+*/
+
+find_candidate (&test_crd, &test_pix, num, xa, ya, xb, yb, n, nx, ny, sumg, test_cand, &count, \
+icam, &test_vpar, &test_cpar, &test_cal);
  
 }
 END_TEST
