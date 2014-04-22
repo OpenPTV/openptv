@@ -186,9 +186,7 @@ int nr, volume_par *vpar, control_par *cpar, Calibration *cal){
   	
    /* equation of a line */	
    m = (yb-ya)/(xb-xa);  b = ya - m*xa;
-  	
-  printf (" m, b %f %f \n", m, b);
-  
+  	  
   
   if (xa > xb)
     {
@@ -198,8 +196,6 @@ int nr, volume_par *vpar, control_par *cpar, Calibration *cal){
     {
       temp = ya;  ya = yb;  yb = temp;
     }
-
-  printf(" xa, xb, ya, yb %f %f %f %f \n", xa,xb,ya,yb);
 
   if ( (xb>xmin) && (xa<xmax) && (yb>ymin) && (ya<ymax)){ /* sensor area */
     
@@ -212,12 +208,16 @@ int nr, volume_par *vpar, control_par *cpar, Calibration *cal){
       j0 -= 12;  if (j0 < 0)  j0 = 0;  	/* due to truncation error we might shift to smaller x */
 
       for (j=j0, *count=0; j<num; j++){ 	/* candidate search */
+      
+       printf("j, *count, num %d %d %d \n", j, *count, num);
 	
 	    if (crd[j].x > xb+tol_band_width)  return;  /* finish search */
 
 	    if ((crd[j].y > ya-tol_band_width) && (crd[j].y < yb+tol_band_width)){
 	    
 			if ((crd[j].x > xa-tol_band_width) && (crd[j].x < xb+tol_band_width)){
+			
+			printf("j, crd[j].{x,y} %d, %6.3f %6.3f \n", j, crd[j].x, crd[j].y);
 		
 			  d = fabs ((crd[j].y - m*crd[j].x - b) / sqrt(m*m+1));
 				  if ( d < tol_band_width ){
@@ -259,7 +259,7 @@ int nr, volume_par *vpar, control_par *cpar, Calibration *cal){
 						cand[*count].tol = d;
 						cand[*count].corr = corr;
 						(*count)++;
-						printf ("%d %3.0f/%3.1f \n", p2, corr, d*1000);
+						printf ("p2, corr, dist: %d %3.0f %3.1f \n", p2, corr, d*1000);
 					}
 				}
 			}

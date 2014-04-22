@@ -93,12 +93,16 @@ with sorted and unsorted lists
 
 */
 
-target test_pix = {0,      
-				   0., 0.,  
-				   10, 3, 3, 100,
-				   0}; 
+target test_pix[] = {{0, 0.0, 0.0, 10, 3, 3, 100, -999},
+					 {6, 0.1, 0.1, 10, 3, 3, 100, -999},
+					 {3, 0.2, 0.8, 10, 3, 3, 100, -999},
+					 {4, 0.4, -1.1, 10, 3, 3, 100, -999},
+					 {1, 0.7, -0.1, 10, 3, 3, 100, -999},
+					 {7, 1.2, 0.3, 10, 3, 3, 100, -999},
+					 {5, 10.4, 0.1, 10, 3, 3, 100, -999}
+					 };
 				   
-int num = 1; /* length of the test_pix */
+int num = 7; /* length of the test_pix */
 
 
 
@@ -184,9 +188,9 @@ Exterior test_Ex = {
     /* the result is that the sensor size is 12.8 mm x 10.24 mm */
     
     /* epipolar line  */
-	double xa = -12.;
+	double xa = -10.;
 	double ya = -10.;
-	double xb = 6.;
+	double xb = 10.;
 	double yb = 10.;
 
 
@@ -199,19 +203,19 @@ Exterior test_Ex = {
 			       
 */
 
-	find_candidate_sorted (&test_crd, &test_pix, num, xa, ya, xb, yb, n, nx, ny, sumg, \
+	find_candidate_sorted (&test_crd, test_pix, num, xa, ya, xb, yb, n, nx, ny, sumg, \
 	test_cand, &count, icam, &test_vpar, &test_cpar, &test_cal);
 
     for (i = 0; i<count; i++){
-    	printf("candidates %d %g %g \n " , test_cand[i].pnr, test_cand[i].tol, test_cand[i].corr);
+    	printf("cand[%d]: %d %f %f \n " , i, test_cand[i].pnr, test_cand[i].tol, test_cand[i].corr);
     	}
     	
-    find_candidate_sorted (&test_crd, &test_pix, num, xa, ya, xb, yb, n, nx, ny, sumg, \
-	test_cand, &count, icam, &test_vpar, &test_cpar, &test_cal);
-
-    for (i = 0; i<count; i++){
-    	printf("candidates %d %g %g \n " , test_cand[i].pnr, test_cand[i].tol, test_cand[i].corr);
-    	}
+   //  find_candidate_unsorted (&test_crd, &test_pix, num, xa, ya, xb, yb, n, nx, ny, sumg, \
+// 	test_cand, &count, icam, &test_vpar, &test_cpar, &test_cal);
+// 
+//     for (i = 0; i<count; i++){
+//     	printf("candidates %d %g %g \n " , test_cand[i].pnr, test_cand[i].tol, test_cand[i].corr);
+//     	}
      
  
 }
