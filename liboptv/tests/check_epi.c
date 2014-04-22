@@ -199,7 +199,14 @@ Exterior test_Ex = {
 			       
 */
 
-	find_candidate (&test_crd, &test_pix, num, xa, ya, xb, yb, n, nx, ny, sumg, \
+	find_candidate_sorted (&test_crd, &test_pix, num, xa, ya, xb, yb, n, nx, ny, sumg, \
+	test_cand, &count, icam, &test_vpar, &test_cpar, &test_cal);
+
+    for (i = 0; i<count; i++){
+    	printf("candidates %d %g %g \n " , test_cand[i].pnr, test_cand[i].tol, test_cand[i].corr);
+    	}
+    	
+    find_candidate_sorted (&test_crd, &test_pix, num, xa, ya, xb, yb, n, nx, ny, sumg, \
 	test_cand, &count, icam, &test_vpar, &test_cpar, &test_cal);
 
     for (i = 0; i<count; i++){

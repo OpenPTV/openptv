@@ -34,9 +34,14 @@ void  epi_mm (double xl, double yl, Calibration *cal1,
 void  epi_mm_2D (double xl, double yl, Calibration *cal1,
     mm_np mmp, volume_par *vpar, double *xout, double *yout, double *zout);
     
-void find_candidate(coord_2d *crd, target *pix, int num,
+void find_candidate_sorted (coord_2d *crd, target *pix, int num,
     double xa, double ya, double xb, double yb,
-    int n, int nx, int ny, int sumg, candidate cand[], int *count, int i12,
+    int n, int nx, int ny, int sumg, candidate cand[], int *count, int icam,
+    volume_par *vpar, control_par *cpar, Calibration *cal);
+    
+void find_candidate_unsorted (coord_2d *crd, target *pix, int num,
+    double xa, double ya, double xb, double yb,
+    int n, int nx, int ny, int sumg, candidate cand[], int *count, int icam,
     volume_par *vpar, control_par *cpar, Calibration *cal);
     
     
