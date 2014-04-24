@@ -174,7 +174,7 @@ int nr, volume_par *vpar, control_par *cpar, Calibration *cal){
   correct_brown_affin (xmax, ymax, cal[nr].added_par, &xmax, &ymax);
     
   
-  for (j=0; j<number_candidates; j++){
+  for (j=0; j<MAXCAND; j++){
       cand[j].pnr = -999;  cand[j].tol = -999;  cand[j].corr = -999;
    }
 
@@ -307,7 +307,7 @@ int nr, volume_par *vpar, control_par *cpar, Calibration *cal){
   correct_brown_affin (xmax, ymax, cal[nr].added_par, &xmax, &ymax);
     
   
-  for (j=0; j<number_candidates; j++){
+  for (j=0; j<MAXCAND; j++){
       cand[j].pnr = -999;  cand[j].tol = -999;  cand[j].corr = -999;
    }
 
