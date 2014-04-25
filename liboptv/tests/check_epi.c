@@ -69,12 +69,8 @@ END_TEST
 START_TEST(test_find_candidate)
 {
 
-
-
-
-
-/* general variables */
 int i;
+
 /* 
 typedef struct
 {
@@ -229,6 +225,64 @@ END_TEST
 START_TEST(test_epi_mm)
 {
 
+        double x, y, z, xmin, xmax, ymin, ymax;
+        double pos[3], v[3];
+ 
+ /* first camera */
+        
+    Exterior test_Ex_1 = {
+        0.0, 0.0, 100.0,
+        0.0, 0.0, 0.0, 
+        {{1.0, 0.0, 0.0}, 
+        {0.0, 1.0, 0.0},
+        {0.0, 0.0, 1.0}}};
+    
+    Interior test_I = {0.0, 0.0, 100.0};
+    Glass test_G = {0.0, 0.0, 50.0};
+    ap_52 test_addp = {0., 0., 0., 0., 0., 1., 0.};
+    Calibration test_cal_1 = {test_Ex_1, test_I, test_G, test_addp};
+    
+  /* second camera at small angle around y axis */
+        
+    Exterior test_Ex_2 = {
+        0.0, 0.0, 100.0,
+        0.0, 0.1, 0.0, 
+        {{1.0, 0.0, 0.0}, 
+        {0.0, 1.0, 0.0},
+        {0.0, 0.0, 1.0}}};
+
+    Calibration test_cal_2 = {test_Ex_2, test_I, test_G, test_addp};
+    
+    mm_np test_mm = {
+    	1, 
+    	1.0, 
+    	{1.49, 0.0, 0.0}, 
+    	{5.0, 0.0, 0.0},
+    	1.33,
+    	1};
+    	
+    volume_par test_vpar = {
+        {-250., 250.}, {-100., -100.}, {100., 100.}, 0.01, 0.3, 0.3, 0.01, 1.0, 33
+        };
+        
+    /* non-trivial case */
+     x = 1.0; 
+     y = 10.0;
+     
+     /* void  epi_mm (double xl, double yl, Calibration *cal1,
+    Calibration *cal2, mm_np mmp, volume_par *vpar,
+    double *xmin, double *ymin, double *xmax, double *ymax); */
+    
+    epi_mm (x, y, &test_cal_1, &test_cal_2, test_mm, &test_vpar, &xmin, &xmax, &ymin, &ymax);
+
+    
+    ck_assert_msg( fabs(xmin -  0.8586) < EPS && 
+                    fabs(xmax - 8.5858) < EPS && 
+                    fabs(ymin - 8.5858) < EPS && 
+                    fabs(ymax - 0.0)  < EPS,
+         "\n Expected 0.8586 8.5858 0.0000 \n  \
+         but found %6.4f %6.4f %6.4f %6.4f \n", xmin, xmax, ymin, ymax);
+    
       
     
 }

@@ -261,7 +261,7 @@ int nr, volume_par *vpar, control_par *cpar, Calibration *cal, int is_sorted){
 						cand[*count].tol = d;
 						cand[*count].corr = corr;
 						(*count)++;
-						printf ("j, p2, corr, dist: %d %d %3.0f %3.1f \n", j, p2, corr, d*1000);
+						// printf ("j, p2, corr, dist: %d %d %3.0f %3.1f \n", j, p2, corr, d*1000);
 					}
 				}
 			}
