@@ -3,17 +3,49 @@
 #include <string.h>
 
 #include "epi.h"
+#include "multimed.h"
 
 
 int dumbbell_pyptv = 0;
 
-/* temprorary solution, add imgcoord.h */
-void img_xy_mm_geo (double X, double Y, double Z, Calibration *cal2, \
-mm_np mmp, double *xa, double *ya);
+/* temprorary solution, add imgcoord.h and wait for imgcoord.c */
+void img_xy_mm_geo (double X, double Y, double Z, Calibration *cal, \
+mm_np mmp, int i_cam, mmlut *mmlut, double *xa, double *ya);
 
-void img_xy_mm_geo (double X, double Y, double Z, Calibration *cal2, \
-mm_np mmp, double *xa, double *ya){
 
+void img_xy_mm_geo (double X, double Y, double Z, Calibration *cal, \
+mm_np mm, int i_cam, mmlut *mmlut, double *x, double *y){
+
+  double deno;
+  Exterior Ex_t;
+  double X_t,Y_t,Z_t,cross_p[3],cross_c[3],Xh,Yh,Zh;
+
+  Exterior Ex = cal->ext_par;
+  Interior I = cal->int_par;
+  Glass G = cal->glass_par;
+  
+ 
+
+  trans_Cam_Point(Ex, mm, G, X, Y, Z, &Ex_t, &X_t, &Y_t, &Z_t, cross_p,cross_c); 
+   
+  /* 
+  multimed_nlay_v2 (Ex_t,Ex,mm,X_t,Y_t,Z_t,&X_t,&Y_t);
+  */
+  multimed_nlay (&Ex_t, &mm, X_t, Y_t, Z_t, &X_t, &Y_t, i_cam, mmlut);
+   
+  back_trans_Point(X_t, Y_t, Z_t, mm, G, cross_p, cross_c,&X,&Y,&Z);
+
+  deno = Ex.dm[0][2] * (X-Ex.x0)
+    + Ex.dm[1][2] * (Y-Ex.y0)
+    + Ex.dm[2][2] * (Z-Ex.z0);
+
+  *x = - I.cc *  (Ex.dm[0][0] * (X-Ex.x0)
+		  + Ex.dm[1][0] * (Y-Ex.y0)
+		  + Ex.dm[2][0] * (Z-Ex.z0)) / deno;
+
+  *y = - I.cc *  (Ex.dm[0][1] * (X-Ex.x0)
+		  + Ex.dm[1][1] * (Y-Ex.y0)
+		  + Ex.dm[2][1] * (Z-Ex.z0)) / deno;
 }
 
 
@@ -27,7 +59,7 @@ mm_np mmp, double *xa, double *ya){
 
 void epi_mm (double xl, double yl, Calibration *cal1,
     Calibration *cal2, mm_np mmp, volume_par *vpar,
-    double *xmin, double *ymin, double *xmax, double *ymax){
+    int i_cam, mmlut *mmlut, double *xmin, double *ymin, double *xmax, double *ymax){
 
   double a, b, c, xa, ya, xb, yb;
   double X1, Y1, Z1, X, Y, Z;
@@ -52,11 +84,11 @@ void epi_mm (double xl, double yl, Calibration *cal1,
 
   Z = Zmin;   X = X1 + (Z-Z1) * a/c;   Y = Y1 + (Z-Z1) * b/c;
   //img_xy_mm_geo_old (X,Y,Z, Ex2, I2,     mmp, &xa, &ya);
-  img_xy_mm_geo (X, Y, Z, cal2, mmp, &xa, &ya);
+  img_xy_mm_geo (X, Y, Z, cal2, mmp, i_cam, mmlut, &xa, &ya);
 
   Z = Zmax;   X = X1 + (Z-Z1) * a/c;   Y = Y1 + (Z-Z1) * b/c;
   //img_xy_mm_geo_old (X,Y,Z, Ex2, I2,     mmp, &xb, &yb);
-  img_xy_mm_geo (X,Y,Z, cal2, mmp, &xb, &yb);
+  img_xy_mm_geo (X,Y,Z, cal2, mmp, i_cam, mmlut, &xb, &yb);
 
   /*  ==> window given by xa,ya,xb,yb  */
 

@@ -271,9 +271,28 @@ START_TEST(test_epi_mm)
      
      /* void  epi_mm (double xl, double yl, Calibration *cal1,
     Calibration *cal2, mm_np mmp, volume_par *vpar,
+    int i_cam, mmlut *mmLUT,
     double *xmin, double *ymin, double *xmax, double *ymax); */
     
-    epi_mm (x, y, &test_cal_1, &test_cal_2, test_mm, &test_vpar, &xmin, &xmax, &ymin, &ymax);
+    int i_cam = 1;
+    
+     mmlut test_mmlut[4]; 
+     
+     control_par *cpar;
+    char filename[] = "testing_fodder/parameters/ptv_2.par";
+    cpar = read_control_par(filename);
+    /* two default values which are not in the parameter file */
+    cpar->mm->lut = 1;
+    cpar->mm->nlay = 1;
+ 
+     
+     init_mmLUT (&test_vpar
+               , cpar
+               , &test_cal_1
+               , test_mmlut);
+    
+    epi_mm (x, y, &test_cal_1, &test_cal_2, test_mm, &test_vpar, i_cam, test_mmlut, \
+    &xmin, &xmax, &ymin, &ymax);
 
     
     ck_assert_msg( fabs(xmin -  0.8586) < EPS && 

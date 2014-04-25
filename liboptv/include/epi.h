@@ -29,6 +29,7 @@ coord_2d;
 
 void  epi_mm (double xl, double yl, Calibration *cal1,
     Calibration *cal2, mm_np mmp, volume_par *vpar,
+    int i_cam, mmlut *mmLUT,
     double *xmin, double *ymin, double *xmax, double *ymax);
     
 void  epi_mm_2D (double xl, double yl, Calibration *cal1,
