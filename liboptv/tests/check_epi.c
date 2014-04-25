@@ -70,7 +70,7 @@ START_TEST(test_find_candidate)
 {
 
 
-coord_2d test_crd = {0, 0.0, 0.0}; /* pnr, x, y */
+
 
 
 /* general variables */
@@ -93,16 +93,26 @@ with sorted and unsorted lists
 
 */
 
-target test_pix[] = {{0, 0.0, 0.0, 10, 3, 3, 100, -999},
-					 {6, 0.1, 0.1, 10, 3, 3, 100, -999},
-					 {3, 0.2, 0.8, 10, 3, 3, 100, -999},
-					 {4, 0.4, -1.1, 10, 3, 3, 100, -999},
-					 {1, 0.7, -0.1, 10, 3, 3, 100, -999},
-					 {7, 1.2, 0.3, 10, 3, 3, 100, -999},
-					 {5, 10.4, 0.1, 10, 3, 3, 100, -999}
+target test_pix[] = {{0, 0.0, -0.2, 5, 1, 2, 10, -999},
+					 {6, 0.2, 0.0, 10, 8, 1, 20, -999},
+					 {3, 0.2, 0.8, 10, 3, 3, 30, -999},
+					 {4, 0.4, -1.1, 10, 3, 3, 40, -999},
+					 {1, 0.7, -0.1, 10, 3, 3, 50, -999},
+					 {7, 1.2, 0.3, 10, 3, 3, 60, -999},
+					 {5, 10.4, 0.1, 10, 3, 3, 70, -999}
 					 };
 				   
 int num = 7; /* length of the test_pix */
+
+/* coord_2d is int pnr, double x,y */
+coord_2d test_crd[] = {{0, 0.0, 0.0},
+					 {6, 0.1, 0.1},
+					 {3, 0.2, 0.8},
+					 {4, 0.4, -1.1},
+					 {1, 0.7, -0.1},
+					 {7, 1.2, 0.3},
+					 {5, 10.4, 0.1}
+					 };
 
 
 
@@ -194,29 +204,24 @@ Exterior test_Ex = {
 	double yb = 10.;
 
 
-/* the call from correspondences looks like:
+	int is_sorted = 1;
+	
+	find_candidate (test_crd, test_pix, num, xa, ya, xb, yb, n, nx, ny, sumg, \
+	test_cand, &count, icam, &test_vpar, &test_cpar, &test_cal, is_sorted);
 
-      find_candidate_plus (geo[i2], pix[i2], num[i2],
-			       xa12, ya12, xb12, yb12, 
-			       pix[i1][pt1].n,pix[i1][pt1].nx,pix[i1][pt1].ny,
-			       pix[i1][pt1].sumg, cand, &count, i2, vpar);
-			       
-*/
-
-	find_candidate_sorted (&test_crd, test_pix, num, xa, ya, xb, yb, n, nx, ny, sumg, \
-	test_cand, &count, icam, &test_vpar, &test_cpar, &test_cal);
-
+    double sum_corr;
+    
     for (i = 0; i<count; i++){
-    	printf("cand[%d]: %d %f %f \n " , i, test_cand[i].pnr, test_cand[i].tol, test_cand[i].corr);
+    	// printf("cand[%d]: %d %f %f \n " , i, test_cand[i].pnr, test_cand[i].tol, test_cand[i].corr);
+    	sum_corr += test_cand[i].corr;
     	}
     	
-   //  find_candidate_unsorted (&test_crd, &test_pix, num, xa, ya, xb, yb, n, nx, ny, sumg, \
-// 	test_cand, &count, icam, &test_vpar, &test_cpar, &test_cal);
-// 
-//     for (i = 0; i<count; i++){
-//     	printf("candidates %d %g %g \n " , test_cand[i].pnr, test_cand[i].tol, test_cand[i].corr);
-//     	}
-     
+   
+    ck_assert_msg( fabs(sum_corr - 2625.) < EPS && 
+                   (count == 4)  && 
+                    fabs(test_cand[3].tol  - 0.565685) < EPS,
+         "\n Expected ...  \n  \
+         but found %f %d %9.6f \n", sum_corr, count, test_cand[3].tol);	
  
 }
 END_TEST
