@@ -253,13 +253,6 @@ START_TEST(test_epi_mm)
 
     Calibration test_cal_2 = {test_Ex_2, test_I, test_G, test_addp};
     
-    mm_np test_mm = {
-    	1, 
-    	1.0, 
-    	{1.49, 0.0, 0.0}, 
-    	{5.0, 0.0, 0.0},
-    	1.33,
-    	1};
     	
     volume_par test_vpar = {
         {-250., 250.}, {-50., -50.}, {50., 50.}, 0.01, 0.3, 0.3, 0.01, 1.0, 33
@@ -281,9 +274,17 @@ START_TEST(test_epi_mm)
     control_par *cpar;
     char filename[] = "testing_fodder/parameters/ptv_2.par";
     cpar = read_control_par(filename);
-    /* two default values which are not in the parameter file */
-    cpar->mm->lut = 1;
+    /* correct the two default values of nlay, lut and fix the mm_np to all in water */
     cpar->mm->nlay = 1;
+    cpar->mm->n1 = 1.0;
+    cpar->mm->n2[0] = 1.0;
+    cpar->mm->n2[1] = 0.0;
+    cpar->mm->n2[2] = 0.0;
+    cpar->mm->d[0] =  1.0;
+    cpar->mm->d[1] =  0.0;
+    cpar->mm->d[2] =  0.0;
+    cpar->mm->n3   =  1.0;
+    cpar->mm->lut = 1;
  
      
      init_mmLUT (&test_vpar
@@ -291,15 +292,108 @@ START_TEST(test_epi_mm)
                , &test_cal_1
                , test_mmlut);
     
-    epi_mm (x, y, &test_cal_1, &test_cal_2, test_mm, &test_vpar, i_cam, test_mmlut, \
+    epi_mm (x, y, &test_cal_1, &test_cal_2, *(cpar->mm), &test_vpar, i_cam, test_mmlut, \
     &xmin, &xmax, &ymin, &ymax);
 
     
-    ck_assert_msg(  fabs(xmin -  26.4493) < EPS && 
-                    fabs(xmax - 10.0822) < EPS && 
-                    fabs(ymin - 51.6008) < EPS && 
-                    fabs(ymax - 10.0438)  < EPS,
-         "\n Expected 26.4493 10.0822 51.6008 10.0438 \n  \
+    ck_assert_msg(  fabs(xmin -  23.3333) < EPS && 
+                    fabs(xmax - 10.0000) < EPS && 
+                    fabs(ymin - 50.0000) < EPS && 
+                    fabs(ymax - 10.0000)  < EPS,
+         "\n Expected 23.3333 10.0000 50.0000 10.0000 \n  \
+         but found %6.4f %6.4f %6.4f %6.4f \n", xmin, xmax, ymin, ymax);
+    
+      
+    
+}
+END_TEST
+
+
+START_TEST(test_epi_mm_perpendicular)
+{
+
+    double x, y, z, xmin, xmax, ymin, ymax;
+ 
+ /* first camera */
+        
+    Exterior test_Ex_1 = {
+        0.0, 0.0, 100.0,
+        0.0, 0.0, 0.0, 
+        {{1.0, 0.0, 0.0}, 
+        {0.0, 1.0, 0.0},
+        {0.0, 0.0, 1.0}}};
+    
+    Interior test_I = {0.0, 0.0, 100.0};
+    Glass test_G = {0.0, 0.0, 50.0};
+    ap_52 test_addp = {0., 0., 0., 0., 0., 1., 0.};
+    Calibration test_cal_1 = {test_Ex_1, test_I, test_G, test_addp};
+    
+  /* second camera at small angle around y axis */
+        
+    Exterior test_Ex_2 = {
+        100.0, 0.0, 0.0,
+        0.0, 1.57, 0.0, 
+        {{1.0, 0.0, 0.0}, 
+        {0.0, 1.0, 0.0},
+        {0.0, 0.0, 1.0}}};
+
+    Calibration test_cal_2 = {test_Ex_2, test_I, test_G, test_addp};
+    
+    /* all in air */
+    mm_np test_mm = {
+    	1, 
+    	1.0, 
+    	{1.0, 0.0, 0.0}, 
+    	{1.0, 0.0, 0.0},
+    	1.0,
+    	1};
+    	
+    volume_par test_vpar = {
+        {-100., 100.}, {-100., -100.}, {100.0, 100.0}, 0.01, 0.3, 0.3, 0.01, 1.0, 33};
+        
+    /* non-trivial case */
+     x = 0.0; 
+     y = 0.0;
+     
+     /* void  epi_mm (double xl, double yl, Calibration *cal1,
+    Calibration *cal2, mm_np mmp, volume_par *vpar,
+    int i_cam, mmlut *mmLUT,
+    double *xmin, double *ymin, double *xmax, double *ymax); */
+    
+    int i_cam = 1;
+    
+    mmlut test_mmlut[4]; 
+     
+    control_par *cpar;
+    char filename[] = "testing_fodder/parameters/ptv_2.par";
+    cpar = read_control_par(filename);
+
+    /* correct the two default values of nlay, lut and fix the mm_np to all in water */
+    cpar->mm->nlay = 1;
+    cpar->mm->n1 = 1.0;
+    cpar->mm->n2[0] = 1.0;
+    cpar->mm->n2[1] = 0.0;
+    cpar->mm->n2[2] = 0.0;
+    cpar->mm->d[0] =  1.0;
+    cpar->mm->d[1] =  0.0;
+    cpar->mm->d[2] =  0.0;
+    cpar->mm->n3   =  1.0;
+    cpar->mm->lut = 1;
+    
+     init_mmLUT (&test_vpar
+               , cpar
+               , &test_cal_1
+               , test_mmlut);
+    
+    epi_mm (x, y, &test_cal_1, &test_cal_2, *(cpar->mm), &test_vpar, i_cam, test_mmlut, \
+    &xmin, &xmax, &ymin, &ymax);
+
+    
+    ck_assert_msg(  fabs(xmin + 100.0000) < EPS && 
+                    fabs(xmax - 0.0000) < EPS && 
+                    fabs(ymin - 100.0000) < EPS && 
+                    fabs(ymax - 0.0000)  < EPS,
+         "\n Expected -100.0000 0.0000 100.0000 -0.0000 \n  \
          but found %6.4f %6.4f %6.4f %6.4f \n", xmin, xmax, ymin, ymax);
     
       
@@ -313,7 +407,8 @@ END_TEST
 Suite* fb_suite(void) {
     Suite *s = suite_create ("epi");
     TCase *tc = tcase_create ("epi_test");
-     tcase_add_test(tc, test_epi_mm);
+    tcase_add_test(tc, test_epi_mm);
+    tcase_add_test(tc, test_epi_mm_perpendicular);
     tcase_add_test(tc, test_epi_mm_2D);    
     tcase_add_test(tc, test_find_candidate);
     suite_add_tcase (s, tc);   

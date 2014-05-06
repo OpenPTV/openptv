@@ -70,9 +70,6 @@ void epi_mm (double xl, double yl, Calibration *cal1,
   // ray_tracing (x1,y1, Ex1, I1, G1, mmp, &X1, &Y1, &Z1, &a, &b, &c);
   ray_tracing (xl, yl, cal1, mmp, pos, v);
   
-  printf("ray traced xl, yl to pos, v %f %f \n %f %f %f \n %f %f %f \n", xl, yl, \
-  pos[0],pos[1],pos[2], v[0],v[1],v[2]);
-  
 
   /* calculate min and max depth for position (valid only for one setup) */
   Zmin = vpar->Zmin_lay[0]
@@ -85,22 +82,16 @@ void epi_mm (double xl, double yl, Calibration *cal1,
     + (pos[0] - vpar->X_lay[0]) * (vpar->Zmax_lay[1] - vpar->Zmax_lay[0]) / 
     (vpar->X_lay[1] - vpar->X_lay[0]);
     
-    printf("Zmin, Zmax %f %f \n", Zmin, Zmax);
-
   Z = Zmin;   X = pos[0] + (Z-pos[2]) * v[0]/v[2];   Y = pos[1] + (Z-pos[2]) * v[1]/v[2];
   
   //img_xy_mm_geo_old (X,Y,Z, Ex2, I2,     mmp, &xa, &ya);
   img_xy_mm_geo (X, Y, Z, cal2, mmp, i_cam, mmlut, &xa, &ya);
-
-  printf("img_xy_mm_geo X,Y,Zmin to xa,ya %f %f %f \n %f %f \n", X,Y,Z, xa,ya);
 
 
   Z = Zmax;   X = pos[0] + (Z-pos[2]) * v[0]/v[2];   Y = pos[1] + (Z-pos[2]) * v[1]/v[2];
   
   //img_xy_mm_geo_old (X,Y,Z, Ex2, I2,     mmp, &xb, &yb);
   img_xy_mm_geo (X, Y, Z, cal2, mmp, i_cam, mmlut, &xb, &yb);
-
-  printf("img_xy_mm_geo X,Y,Zmax to xa,ya %f %f %f \n %f %f \n", X,Y,Z, xb,yb);
 
   /*  ==> window given by xa,ya,xb,yb  */
 
@@ -305,7 +296,6 @@ int nr, volume_par *vpar, control_par *cpar, Calibration *cal, int is_sorted){
 						cand[*count].tol = d;
 						cand[*count].corr = corr;
 						(*count)++;
-						// printf ("j, p2, corr, dist: %d %d %3.0f %3.1f \n", j, p2, corr, d*1000);
 					}
 				}
 			}
