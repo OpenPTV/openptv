@@ -231,8 +231,8 @@ START_TEST(test_epi_mm)
  /* first camera */
         
     Exterior test_Ex_1 = {
-        0.0, 0.0, 100.0,
-        0.0, 0.0, 0.0, 
+        10.0, 0.0, 100.0,
+        0.0, -0.01, 0.0, 
         {{1.0, 0.0, 0.0}, 
         {0.0, 1.0, 0.0},
         {0.0, 0.0, 1.0}}};
@@ -245,8 +245,8 @@ START_TEST(test_epi_mm)
   /* second camera at small angle around y axis */
         
     Exterior test_Ex_2 = {
-        0.0, 0.0, 100.0,
-        0.0, 0.1, 0.0, 
+        -10.0, 0.0, 100.0,
+        0.0, 0.01, 0.0, 
         {{1.0, 0.0, 0.0}, 
         {0.0, 1.0, 0.0},
         {0.0, 0.0, 1.0}}};
@@ -262,11 +262,11 @@ START_TEST(test_epi_mm)
     	1};
     	
     volume_par test_vpar = {
-        {-250., 250.}, {-100., -100.}, {100., 100.}, 0.01, 0.3, 0.3, 0.01, 1.0, 33
+        {-250., 250.}, {-50., -50.}, {50., 50.}, 0.01, 0.3, 0.3, 0.01, 1.0, 33
         };
         
     /* non-trivial case */
-     x = 1.0; 
+     x = 10.0; 
      y = 10.0;
      
      /* void  epi_mm (double xl, double yl, Calibration *cal1,
@@ -276,9 +276,9 @@ START_TEST(test_epi_mm)
     
     int i_cam = 1;
     
-     mmlut test_mmlut[4]; 
+    mmlut test_mmlut[4]; 
      
-     control_par *cpar;
+    control_par *cpar;
     char filename[] = "testing_fodder/parameters/ptv_2.par";
     cpar = read_control_par(filename);
     /* two default values which are not in the parameter file */
@@ -295,11 +295,11 @@ START_TEST(test_epi_mm)
     &xmin, &xmax, &ymin, &ymax);
 
     
-    ck_assert_msg( fabs(xmin -  0.8586) < EPS && 
-                    fabs(xmax - 8.5858) < EPS && 
-                    fabs(ymin - 8.5858) < EPS && 
-                    fabs(ymax - 0.0)  < EPS,
-         "\n Expected 0.8586 8.5858 0.0000 \n  \
+    ck_assert_msg(  fabs(xmin -  26.4493) < EPS && 
+                    fabs(xmax - 10.0822) < EPS && 
+                    fabs(ymin - 51.6008) < EPS && 
+                    fabs(ymax - 10.0438)  < EPS,
+         "\n Expected 26.4493 10.0822 51.6008 10.0438 \n  \
          but found %6.4f %6.4f %6.4f %6.4f \n", xmin, xmax, ymin, ymax);
     
       
