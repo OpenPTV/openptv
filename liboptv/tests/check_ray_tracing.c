@@ -57,14 +57,14 @@ START_TEST(test_ray_tracing)
      ck_assert_msg( fabs(X[0] - 53.855021) < EPS && 
                     fabs(X[1] - 43.084017) < EPS && 
                     fabs(X[2] - test_G.vec_z)  < EPS,
-         "Expected 110.393483, 88.314786, test_G.vec_z but found %f %f %f\n", X[0],X[1],X[2]);
+         "Expected 53.855021, 43.084017, test_G.vec_z but found %f %f %f\n", X[0],X[1],X[2]);
       
       
          
      ck_assert_msg( fabs(a[0] - 0.387973) < EPS && 
                     fabs(a[1] - 0.310378) < EPS && 
                     fabs(a[2] + 0.867838)  < EPS,
-         "Expected 0.387973, 0.310378,-0.867838 but found %g %g %g\n", a[0],a[1],a[2]);
+         "Expected 0.387973, 0.310378, -0.867838 but found %g %g %g\n", a[0],a[1],a[2]);
          
 }	
 END_TEST
