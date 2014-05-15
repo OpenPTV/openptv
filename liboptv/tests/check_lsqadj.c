@@ -193,6 +193,47 @@ START_TEST(test_atl)
 END_TEST
 
 
+START_TEST(test_unit_vector)
+{
+
+    double a[3];
+            
+    a[0] = 0.0; 
+    a[1] = 0.0;
+    a[2] = 0.0;
+            
+    unit_vector (a);
+    
+	ck_assert_msg( fabs(a[0] - 0.0) < EPS && 
+                   fabs(a[1] - 0.0) < EPS && 
+                   fabs(a[2] - 0.0)  < EPS,
+         "Was expecting b to be 0.0,0.0,0.0 but found %f %f %f\n", a[0],a[1],a[2]);
+         
+    a[0] = 100.0; 
+    a[1] = 0.0;
+    a[2] = 0.0;
+            
+    unit_vector (a);
+    
+	ck_assert_msg( fabs(a[0] - 1.0) < EPS && 
+                   fabs(a[1] - 0.0) < EPS && 
+                   fabs(a[2] - 0.0)  < EPS,
+         "Was expecting b to be 1.0,0.0,0.0 but found %f %f %f\n", a[0],a[1],a[2]);
+
+    a[0] = 2.0; 
+    a[1] = -2.0;
+    a[2] = 2.0;
+            
+    unit_vector (a);
+    
+	ck_assert_msg( fabs(a[0] - 0.57735) < EPS && 
+                   fabs(a[1] + 0.57735) < EPS && 
+                   fabs(a[2] - 0.57735)  < EPS,
+         "Was expecting b to be 1.0,1.0,1.0 but found %f %f %f\n", a[0],a[1],a[2]);
+    
+}
+END_TEST
+
 START_TEST(test_matinv)
 {
 
@@ -215,6 +256,7 @@ START_TEST(test_matinv)
 }
 END_TEST
 
+
 Suite* fb_suite(void) {
     Suite *s = suite_create ("lsqadj");
  
@@ -226,6 +268,7 @@ Suite* fb_suite(void) {
     tcase_add_test(tc, test_ata);
     tcase_add_test(tc, test_atl);
     tcase_add_test(tc, test_matinv);
+    tcase_add_test(tc, test_unit_vector);
     suite_add_tcase (s, tc);   
     return s;
 }

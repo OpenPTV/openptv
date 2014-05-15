@@ -23,36 +23,17 @@ Modification Date:     April 20, 2014
 #include <stdio.h>
 #include "ray_tracing.h"
 
-
-#define EPS 1e-5
-void unit_vector();
-
-/* returns a unit vector, normalized by the norm */
-void unit_vector(double a[3]){
-	double dummy; 
-	
-	dummy = sqrt(a[0] *  a[0] +  a[1] *  a[1] +  a[2] *  a[2]);
-	
-	/* if the vector is zero length we return zero vector back */
-	if (dummy < EPS) dummy = 1.0;
-	
-    a[0] = a[0]/dummy;
-    a[1] = a[1]/dummy;
-    a[2] = a[2]/dummy;
-}
-
-
 /* tracers the optical ray through the multi-media interface of three layers, typically
 air - glass - water, returns the two vectors: 
 position of the ray crossing point and the vector normal to the interface 
 */
 
 void ray_tracing (double x
-				, double y
-				, Calibration* cal
-				, mm_np mm
-				, double X[3]
-				, double a[3]){
+                , double y
+                , Calibration* cal
+                , mm_np mm
+                , double X[3]
+                , double a[3]){
 
 /*   ray -  tracing, see HOEHLE and Manual of Photogrammetry  */
 
@@ -60,21 +41,11 @@ void ray_tracing (double x
     double vect1[3], vect2[3], factor, s2;
     double b[3],base2[3],c, dummy,bn[3],bp[3],n,p;
     
-    Interior I;
-    Glass G;
-    
-    Ex = cal->ext_par;
-    I = cal->int_par;
-    G = cal->glass_par;
-
-    s2  = sqrt (x * x + y * y + cal->int_par.cc * cal->int_par.cc);
-        
-    
     /*   direction cosines in image coordinate system  */
-    vect1[0] = x/s2;
-    vect1[1] = y/s2;
-    vect1[2] =- cal->int_par.cc/s2;
-    
+    vect1[0] = x;
+    vect1[1] = y;
+    vect1[2] = -cal->int_par.cc;
+    unit_vector(vect1);    
 
     matmul (vect2, (double *)cal->ext_par.dm, vect1, 3,3,1, 3,3);
     
