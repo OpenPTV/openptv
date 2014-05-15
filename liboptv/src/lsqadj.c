@@ -3,6 +3,10 @@
 #include <stdlib.h>
 #include <string.h>
 #include <math.h>
+
+#define EPS 1e-5
+
+
 /* parts of code of adjlib.c from Horst Beyer, Hannes Kirndorfer */
 
 
@@ -202,4 +206,20 @@ void modu(double a[3], double *m) {
     *m = sqrt(a[0]*a[0] + a[1]*a[1] + a[2]*a[2]);
 }
 
+
+
+/* returns a unit vector, normalized by the norm */
+void unit_vector(double a[3]){
+    double dummy; 
+
+    // dummy = sqrt(a[0] *  a[0] +  a[1] *  a[1] +  a[2] *  a[2]);
+    modu(a,&dummy);    
+    
+    /* if the vector is zero length we return zero vector back */
+    if (dummy < EPS) dummy = 1.0;
+    
+    a[0] = a[0]/dummy;
+    a[1] = a[1]/dummy;
+    a[2] = a[2]/dummy;
+}
 
