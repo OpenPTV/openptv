@@ -41,15 +41,11 @@ void ray_tracing (double x
     double vect1[3], vect2[3], factor, s2;
     double b[3],base2[3],c, dummy,bn[3],bp[3],n,p;
     
-
-    s2  = sqrt (x * x + y * y + cal->int_par.cc * cal->int_par.cc);
-        
-    
     /*   direction cosines in image coordinate system  */
-    vect1[0] = x/s2;
-    vect1[1] = y/s2;
-    vect1[2] =- cal->int_par.cc/s2;
-    
+    vect1[0] = x;
+    vect1[1] = y;
+    vect1[2] = -cal->int_par.cc;
+    unit_vector(vect1);    
 
     matmul (vect2, (double *)cal->ext_par.dm, vect1, 3,3,1, 3,3);
     
