@@ -4,11 +4,11 @@
 #include <math.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <optv/calibration.h>
-#include <optv/parameters.h>
+#include "calibration.h"
+#include "parameters.h"
 #include "ray_tracing.h"
 #include "trafo.h"
-#include <optv/tracking_frame_buf.h>
+#include "tracking_frame_buf.h"
 #include "lsqadj.h"
 
 
