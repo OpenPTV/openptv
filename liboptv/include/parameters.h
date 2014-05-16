@@ -1,5 +1,5 @@
 /* Define classes for handling parameters (storing, reading, writing) so that
-   all of libptv has a single point of entry rather than different formats in 
+   all of liboptv has a single point of entry rather than different formats in 
    the same code.
 */
 
@@ -41,12 +41,12 @@ int compare_volume_par(volume_par *v1, volume_par *v2);
 
 
 typedef struct {
-    int  	nlay; 
-    double  n1;
-    double  n2[3];
-    double  d[3];
-    double  n3;
-    int     lut;
+    int  	nlay;  // number of layers in the middle layer only !!!, default is 1 
+    double  n1;    // index of refraction of the layer 1 (from the camera), i.e. air
+    double  n2[3]; // n2[0] is the index of refraction of the layer 2 (glass), optional 3 sub-layers
+    double  d[3];  // d3[0] is the thickness the layer 2 (glass), optional 3 sub-layers
+    double  n3;    // index of refraction of the layer 3 (the experiment itself), e.g. water
+    int     lut;   // flag for presence/absence of LUT model, faster ray_tracing
 } mm_np;
 
 
