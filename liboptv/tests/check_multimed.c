@@ -20,77 +20,7 @@ int compare_exterior_diff(Exterior *e1, Exterior *e2);
 
 
 
-START_TEST(test_trans_Cam_Point)
-{
-    /* input */
-    double x = 100.0;
-    double y = 100.0;
-    double z =  0.0;        
-        
-    Exterior test_Ex = {
-        0.0, 0.0, 100.0,
-        0.0, 0.0, 0.0, 
-        {{1.0, 0.2, -0.3}, 
-        {0.2, 1.0, 0.0},
-        {-0.3, 0.0, 1.0}}};
-        
-    Exterior correct_Ex_t = {
-        0.0, 0.0, 99.0,
-        -0.0, 0.0, 0.0, 
-        {{-0.0, -0.0, -0.0}, 
-        {-0.0, 0.0, -0.0},
-        {0.0, -0.0, -0.0}}};
-    
-    Interior test_I = {0.0, 0.0, 100.0};
-    Glass test_G = {0.0001, 0.00001, 1.0};
-    ap_52 test_addp = {0., 0., 0., 0., 0., 1., 0.};
-    Calibration test_cal = {test_Ex, test_I, test_G, test_addp};
-    
-    mm_np test_mm = {
-    	1, 
-    	1.0, 
-    	{1.49, 0.0, 0.0}, 
-    	{5.0, 0.0, 0.0},
-    	1.33,
-    	1};
-    
-    /* output */
-    Exterior Ex_t; 
-    double X_t, Y_t, Z_t;
-    double cross_p[3], cross_c[3]; 
 
-     trans_Cam_Point(test_Ex, test_mm, test_G, x, y, z, &Ex_t, &X_t, &Y_t, &Z_t, \
-     cross_p, cross_c);
-    
-    
-     ck_assert_msg( fabs(X_t - 141.429134) < EPS && 
-                    fabs(Y_t - 0.0) < EPS && 
-                    fabs(Z_t + 0.989000)  < EPS,
-         "Expected 141.429134 0.000000 -0.989000  but found %f %f %f\n", X_t, Y_t, Z_t);
-      
-      
-         
-     ck_assert_msg( fabs(cross_p[0] - 100.000099) < EPS && 
-                    fabs(cross_p[1] - 100.000010) < EPS && 
-                    fabs(cross_p[2] - 0.989000)  < EPS,
-         "Expected 100.0 100.0 0.989 but found %f %f %f\n", \
-         cross_p[0],cross_p[1],cross_p[2]);
-         
-    
-    
-      ck_assert_msg(fabs(cross_c[0] + 0.009400) < EPS && 
-                    fabs(cross_c[1] + 0.000940) < EPS && 
-                    fabs(cross_c[2] - 6.000001)  < EPS,
-         "Expected -0.009400 -0.000940 6.000001 but found %f %f %f\n", \
-         cross_c[0],cross_c[1],cross_c[2]);
-        
-      /* print_Exterior(Ex_t); */
-      
-      fail_unless(compare_exterior_diff(&correct_Ex_t, &Ex_t));
-      
-    
-}
-END_TEST
 
 
 START_TEST(test_back_trans_Point)
@@ -366,6 +296,82 @@ START_TEST(test_multimed_nlay)
          but found %6.4f %6.4f \n", Xq, Yq);
     }
 
+      
+    
+}
+END_TEST
+
+START_TEST(test_trans_Cam_Point)
+{
+    /* input */
+    double x = 100.0;
+    double y = 100.0;
+    double z =  0.0;        
+        
+    Exterior test_Ex = {
+        0.0, 0.0, 100.0,
+        0.0, 0.0, 0.0, 
+        {{1.0, 0.2, -0.3}, 
+        {0.2, 1.0, 0.0},
+        {-0.3, 0.0, 1.0}}};
+        
+    Exterior correct_Ex_t = {
+        0.0, 0.0, 50.0,
+        0.0, 0.0, 0.0, 
+        {{1.0, 0.2, -0.3}, 
+        {0.2, 1.0, 0.0},
+        {-0.3, 0.0, 1.0}}};
+    
+    Interior test_I = {0.0, 0.0, 100.0};
+    Glass test_G = {0.0, 0.0, 50.0};
+    ap_52 test_addp = {0., 0., 0., 0., 0., 1., 0.};
+    Calibration test_cal = {test_Ex, test_I, test_G, test_addp};
+    
+    mm_np test_mm = {
+    	1, 
+    	1.0, 
+    	{1.49, 0.0, 0.0}, 
+    	{5.0, 0.0, 0.0},
+    	1.33,
+    	1};
+    
+    /* output */
+    Exterior Ex_t; 
+    double X_t, Y_t, Z_t;
+    double cross_p[3], cross_c[3]; 
+
+     trans_Cam_Point(test_Ex, test_mm, test_G, x, y, z, &Ex_t, &X_t, &Y_t, &Z_t, \
+     cross_p, cross_c);
+    
+    
+     ck_assert_msg( fabs(X_t - 141.421356) < EPS && 
+                    fabs(Y_t - 0.0) < EPS && 
+                    fabs(Z_t + 50.000000)  < EPS,
+         "Expected 141.421356 0.000000 -50.000000  but found %f %f %f\n", X_t, Y_t, Z_t);
+      
+      
+         
+     ck_assert_msg( fabs(cross_p[0] - 100.000099) < EPS && 
+                    fabs(cross_p[1] - 100.000010) < EPS && 
+                    fabs(cross_p[2] - 50.00000)  < EPS,
+         "Expected 100.0 100.0 50.000 but found %f %f %f\n", \
+         cross_p[0],cross_p[1],cross_p[2]);
+         
+    
+    
+      ck_assert_msg(fabs(cross_c[0] + 0.0) < EPS && 
+                    fabs(cross_c[1] + 0.0) < EPS && 
+                    fabs(cross_c[2] - 55.0)  < EPS,
+         "Expected 0.000000 0.000000 55.000000 but found %f %f %f\n", \
+         cross_c[0],cross_c[1],cross_c[2]);
+        
+      /* 
+      print_Exterior(Ex_t);
+      print_Exterior(correct_Ex_t);
+      */
+      
+      
+      fail_unless(compare_exterior_diff(&correct_Ex_t, &Ex_t));
       
     
 }
