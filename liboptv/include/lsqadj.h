@@ -7,10 +7,10 @@ void ata(double *a, double *ata, int m, int n, int n_large);
 void atl(double *u, double *a, double *l, int m, int n, int n_large);
 void matinv (double *a, int n, int n_large);
 void matmul(double *a, double *b, double *c, int m,int n,int k,\
-int m_large, int n_large);
-void modu(double a[3], double *m);
+     int m_large, int n_large);
+double modu(double a[3]);
 void norm_cross(double a[3], double b[3], double n[3]);
-void dot(double a[3], double b[3], double *d);
+double dot(double a[3], double b[3]);
 void unit_vector(double a[3]);
 
 

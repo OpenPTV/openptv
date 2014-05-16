@@ -64,7 +64,7 @@ START_TEST(test_dot)
     double a[] = {1.0, 0.0, 0.0};
     double b[] = {0.0, 2.0, 0.0};
 
-    dot(a,b,&d);
+    d = dot(a,b);
 
     //fail_unless( d == 0.0 );
     ck_assert_msg( fabs(d - 0.0) < EPS,
@@ -74,7 +74,7 @@ START_TEST(test_dot)
     b[1] = 2.0;
     b[2] = 0.0;
 
-    dot(b,a,&d);
+    d = dot(b,a);
     // fail_unless( d == 2.0 );
     ck_assert_msg( fabs(d - 2.0) < EPS,
              "Was expecting d to be 2.0 but found %f \n", d);
@@ -88,7 +88,7 @@ START_TEST(test_modu)
     double a[]= {10.0, 0.0, 0.0};
     double m;
 
-    modu(a,&m);
+    m = modu(a);
 
     // fail_unless( m == 10.0);
     ck_assert_msg( fabs(m - 10.0) < EPS,

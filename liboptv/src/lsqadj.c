@@ -173,8 +173,6 @@ void norm_cross(double a[3], double b[3], double n[3]) {
     n[2]=a[0]*b[1]-a[1]*b[0];
     
     unit_vector(n);
-    
-    }
 }
 
 /* Scalar multiplication of two vectors of length 3 x 1
@@ -198,10 +196,11 @@ double dot(double a[3], double b[3]) {
    TODO: in essence it is a sqrt(dot(a,a))
    could be depreciated for simplicity
 */
-void modu(double a[3], double *m) {
+double modu(double a[3]) {
     double m;
 
     m = sqrt(dot(a,a));
+    return m;
 }
 
 
