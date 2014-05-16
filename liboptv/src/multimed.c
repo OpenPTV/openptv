@@ -117,7 +117,7 @@ double multimed_r_nlay (Exterior *ex
       return (rq/r);
     }  
     else {
-    	return (1.0);
+        return (1.0);
     }
 }
 
@@ -140,35 +140,47 @@ void trans_Cam_Point(Exterior ex
                    , double cross_p[3]
                    , double cross_c[3]){
 
-  /* --Beat Luethi June 07: I change the stuff to a system perpendicular to the interface */
-  double dist_cam_glas,dist_point_glas,dist_o_glas; //glas inside at water 
-  
-  dist_o_glas = sqrt( gl.vec_x * gl.vec_x + gl.vec_y * gl.vec_y + gl.vec_z * gl.vec_z);
-  
-  dist_cam_glas = ex.x0 * gl.vec_x / dist_o_glas + ex.y0 * gl.vec_y / dist_o_glas + \
-  ex.z0 * gl.vec_z / dist_o_glas - dist_o_glas - mm.d[0];
-  
-  dist_point_glas = X * gl.vec_x / dist_o_glas + \
+    /* --Beat Luethi June 07: I change the stuff to a system perpendicular to the interface */
+    double dist_cam_glas,dist_point_glas,dist_o_glas; //glas inside at water 
+    int row, col;
+
+    dist_o_glas = sqrt( gl.vec_x * gl.vec_x + gl.vec_y * gl.vec_y + gl.vec_z * gl.vec_z);
+
+
+    dist_cam_glas = ex.x0 * gl.vec_x / dist_o_glas + ex.y0 * gl.vec_y / dist_o_glas + \
+    ex.z0 * gl.vec_z / dist_o_glas - dist_o_glas - mm.d[0];
+
+    dist_point_glas = X * gl.vec_x / dist_o_glas + \
                     Y * gl.vec_y / dist_o_glas + \
                     Z * gl.vec_z / dist_o_glas - dist_o_glas; 
 
-  cross_c[0] = ex.x0 - dist_cam_glas * gl.vec_x / dist_o_glas;
-  cross_c[1] = ex.y0 - dist_cam_glas * gl.vec_y / dist_o_glas;
-  cross_c[2] = ex.z0 - dist_cam_glas * gl.vec_z / dist_o_glas;
-  
-  cross_p[0] = X - dist_point_glas * gl.vec_x / dist_o_glas;
-  cross_p[1] = Y - dist_point_glas * gl.vec_y / dist_o_glas;
-  cross_p[2] = Z - dist_point_glas * gl.vec_z / dist_o_glas;
+    cross_c[0] = ex.x0 - dist_cam_glas * gl.vec_x / dist_o_glas;
+    cross_c[1] = ex.y0 - dist_cam_glas * gl.vec_y / dist_o_glas;
+    cross_c[2] = ex.z0 - dist_cam_glas * gl.vec_z / dist_o_glas;
 
-  ex_t->x0 = 0.;
-  ex_t->y0 = 0.;
-  ex_t->z0 = dist_cam_glas + mm.d[0];
+    cross_p[0] = X - dist_point_glas * gl.vec_x / dist_o_glas;
+    cross_p[1] = Y - dist_point_glas * gl.vec_y / dist_o_glas;
+    cross_p[2] = Z - dist_point_glas * gl.vec_z / dist_o_glas;
 
-  *X_t=sqrt( pow(cross_p[0] - (cross_c[0] - mm.d[0] * gl.vec_x / dist_o_glas ) ,2.)
+
+    for (row = 0; row < 3; row++)
+        for (col = 0; col < 3; col++)
+             ex_t->dm[row][col] = ex.dm[row][col];
+
+
+    ex_t->omega = ex.omega;
+    ex_t->phi   = ex.phi;
+    ex_t->kappa = ex.kappa;
+
+    ex_t->x0 = 0.;
+    ex_t->y0 = 0.;
+    ex_t->z0 = dist_cam_glas + mm.d[0];
+
+    *X_t=sqrt( pow(cross_p[0] - (cross_c[0] - mm.d[0] * gl.vec_x / dist_o_glas ) ,2.)
             +pow(cross_p[1] - (cross_c[1] - mm.d[0] * gl.vec_y / dist_o_glas ), 2.)
             +pow(cross_p[2] - (cross_c[2] - mm.d[0] * gl.vec_z / dist_o_glas ), 2.));
-  *Y_t = 0;
-  *Z_t = dist_point_glas;
+    *Y_t = 0;
+    *Z_t = dist_point_glas;
       
 }
 
@@ -204,9 +216,9 @@ double cross_p[], double cross_c[], double *X, double *Y, double *Z){
 
 /* init_mmLUT prepares the multimedia Look-Up Table
 Arguments: 
-	Pointer to volume parameters *vpar
-	pointer to the control parameters *cpar
-	pointer to the calibraiton parameters *cal
+    Pointer to volume parameters *vpar
+    pointer to the control parameters *cpar
+    pointer to the calibraiton parameters *cal
 Output:
     pointer to the multi-media look-up table mmLUT structure
 
@@ -247,7 +259,7 @@ void init_mmLUT (volume_par *vpar
       Zmax = vpar->Zmax_lay[0];
    
       Zmin -= fmod (Zmin, rw);
-  	  Zmax += (rw - fmod (Zmax, rw));
+      Zmax += (rw - fmod (Zmax, rw));
       Zmin_t=Zmin;
       Zmax_t=Zmax;
       
@@ -407,12 +419,12 @@ double get_mmf_from_mmLUT (int i_cam
     ir = (int) sr; 
     sr -= ir;
     /*
-  	printf(" sr,ir %f, %d \n", sr, ir);
-  	printf("rw ,mmLUT[i_cam].rw: %d, %d \n", rw, mmLUT[i_cam].rw);
-  	printf("New position: %f, %f, %f \n", X,Y,Z);
-  	*/
-  	
-  	nz =  mmLUT[i_cam].nz;
+    printf(" sr,ir %f, %d \n", sr, ir);
+    printf("rw ,mmLUT[i_cam].rw: %d, %d \n", rw, mmLUT[i_cam].rw);
+    printf("New position: %f, %f, %f \n", X,Y,Z);
+    */
+    
+    nz =  mmLUT[i_cam].nz;
     nr =  mmLUT[i_cam].nr;
     
     /* printf("nz, nr, %d, %d \n", nz, nr); */
@@ -449,7 +461,7 @@ double get_mmf_from_mmLUT (int i_cam
     + mmLUT[i_cam].data[v4[3]] * sr*sz;
   
   /* printf(" mmf after all estimates is %f \n", mmf); */
-  return (mmf);  	
+  return (mmf);     
   }
   else {
   Z -= mmLUT[i_cam].origin.z; sz = Z/rw; iz = (int) sz; sz -= iz;
@@ -487,7 +499,7 @@ double get_mmf_from_mmLUT (int i_cam
   
   return (mmf);
   
-  	
+    
   }  
 }
 
