@@ -21,6 +21,7 @@ Modification Date:     April 20, 2014
 ***************************************************************/
 
 #include <stdio.h>
+#include <string.h>
 #include "ray_tracing.h"
 
 /* tracers the optical ray through the multi-media interface of three layers, typically
@@ -42,41 +43,31 @@ void ray_tracing (double x
     double b[3],base2[3],c, dummy,bn[3],bp[3],n,p;
     
     /*   direction cosines in image coordinate system  */
-    vect1[0] = x;
-    vect1[1] = y;
-    vect1[2] = -cal->int_par.cc;
+    create_vector(x,y,-cal->int_par.cc, vect1);
     unit_vector(vect1);    
 
     matmul (vect2, (double *)cal->ext_par.dm, vect1, 3,3,1, 3,3);
     
     
     /*   direction cosines in space coordinate system , medium n1  */
-    a1 = vect2[0];
-    b1 = vect2[1];
-    c1 = vect2[2];
-    
-    
-    a[0] = cal->ext_par.x0; 
-    a[1] = cal->ext_par.y0; 
-    a[2] = cal->ext_par.z0;
-    
+    create_vector(cal->ext_par.x0, cal->ext_par.y0, cal->ext_par.z0, a);
+
     b[0] = vect2[0];
     b[1] = vect2[1];
     b[2] = vect2[2];
     
-    c  =  sqrt(
-    cal->glass_par.vec_x * cal->glass_par.vec_x + \
-    cal->glass_par.vec_y * cal->glass_par.vec_y + \
-    cal->glass_par.vec_z * cal->glass_par.vec_z);
     
-    base2[0] = cal->glass_par.vec_x/c; 
-    base2[1] = cal->glass_par.vec_y/c; 
-    base2[2] = cal->glass_par.vec_z/c;
+    
+    create_vector(cal->glass_par.vec_x, cal->glass_par.vec_y, cal->glass_par.vec_z, base2);
+    
+    c = modu(base2);
+    unit_vector(base2);
     
     c = c + mm.d[0];
-    dummy = base2[0] * a[0] + base2[1] * a[1] + base2[2] * a[2];
+    
+    dummy = dot(base2,a);
     dummy = dummy - c;
-    d1 =- dummy/(base2[0] * b[0] + base2[1] *  b[1] + base2[2] * b[2]);
+    d1 = -dummy/dot(base2,b);
         
 
     /*   point on the horizontal plane between n1,n2  */
@@ -88,20 +79,11 @@ void ray_tracing (double x
     bn[0] = base2[0];
     bn[1] = base2[1];
     bn[2] = base2[2];
-    n = (b[0] *  bn[0] +  b[1] *  bn[1] +  b[2] *  bn[2]);
+    n = dot(b, bn); 
     
     bp[0] = b[0] -  bn[0] *  n;
     bp[1] = b[1] -  bn[1] *  n;
     bp[2] = b[2] -  bn[2] *  n;
-    
-     
-    
-     /*
-    dummy = sqrt(bp[0] *  bp[0] +  bp[1] *  bp[1] +  bp[2] *  bp[2]);
-    bp[0] = bp[0]/dummy;
-    bp[1] = bp[1]/dummy;
-    bp[2] = bp[2]/dummy;
-    */ 
     unit_vector(bp);
     
 
@@ -124,6 +106,7 @@ void ray_tracing (double x
      X[2] = Zb1 + d2 * c2;
          
     n = (a2 *  bn[0] +  b2 *  bn[1] +  c2 *  bn[2]);
+    
     bp[0] = a2 - bn[0] * n;
     bp[1] = b2 - bn[1] * n;
     bp[2] = c2 - bn[2] * n;

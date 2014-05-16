@@ -219,3 +219,14 @@ void unit_vector(double a[3]){
     a[2] = a[2]/dummy;
 }
 
+/* Creates array of doubles of length 3 x 1 from 3 double scalars
+   Arguments:
+   a0,a1,a2 double scalars
+   vec - double pointer to an array
+*/
+void create_vector(double a0, double a1, double a2, double vec[3]){
+    vec[0] = a0;
+    vec[1] = a1;
+    vec[2] = a2;
+}
+

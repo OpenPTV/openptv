@@ -12,6 +12,7 @@ double modu(double a[3]);
 void norm_cross(double a[3], double b[3], double n[3]);
 double dot(double a[3], double b[3]);
 void unit_vector(double a[3]);
+void create_vector(double a0, double a1, double a2, double vec[3]);
 
 
 #endif
