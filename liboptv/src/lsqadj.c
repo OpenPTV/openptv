@@ -158,7 +158,8 @@ for (i=0; i<k; i++) {
 }
 
 
-/* Cross product of two vectors of 3 x 1 
+/* Unit vector which is normal to two vectors, calculated as
+  a unit vector in the direction of the cross product of two vectors
 * Arguments
 * a - vector of doubles 3x1
 * b - vector of doubles 3x1
@@ -167,64 +168,65 @@ for (i=0; i<k; i++) {
 
 void norm_cross(double a[3], double b[3], double n[3]) {
 
-    double  res[3], dummy, norm;
+    n[0]=a[1]*b[2]-a[2]*b[1];
+    n[1]=a[2]*b[0]-a[0]*b[2];
+    n[2]=a[0]*b[1]-a[1]*b[0];
     
-    crossprod(a,b,res);
-    
-    modu(res,&norm);
-    
-    
-    if (norm == 0.0){ // avoids zero length vector bug
-        n[0] = res[0];
-        n[1] = res[0];
-        n[2] = res[0];
-    } else {    
-    	n[0]=res[0]/norm;
-    	n[1]=res[1]/norm;
-    	n[2]=res[2]/norm;
-    }
+    unit_vector(n);
 }
 
-
-/* Dot product of two vectors 
-* TODO: use ready subroutines from vec_utils.h
-*
+/* Scalar multiplication of two vectors of length 3 x 1
+   Arguments:
+   a,b = double vectors 3 x 1
+   function dot returns double scalar 
 */
 
-void dot(double a[3], double b[3], double *d) {
+double dot(double a[3], double b[3]) {
+    double d;
+    d = a[0]*b[0] + a[1]*b[1] + a[2]*b[2];
 
-    *d = a[0]*b[0] + a[1]*b[1] + a[2]*b[2];
+    return d;
 }
 
 
-/* Modulus of a vector
-* TODO: use ready subroutine called norm in vec_utils.h
+/* Modulus of a vector or norm of the vector 
+   Arguments:
+   a - double vector of 3 x 1
+   function returns real positive double value 
+   TODO: in essence it is a sqrt(dot(a,a))
+   could be depreciated for simplicity
 */
-void modu(double a[3], double *m) {
+double modu(double a[3]) {
+    double m;
 
-    *m = sqrt(a[0]*a[0] + a[1]*a[1] + a[2]*a[2]);
+    m = sqrt(dot(a,a));
+    return m;
 }
 
-/* cross product of two vectors of 3 x 1 */
-void crossprod (double a[3], double b[3], double c[3]){
-	c[0] = a[1] * b[2]  -  a[2] * b[1];
-	c[1] = a[2] * b[0]  -  a[0] * b[2];
-	c[2] = a[0] * b[1]  -  a[1] * b[0];
-}
 
 
 /* returns a unit vector, normalized by the norm */
 void unit_vector(double a[3]){
     double dummy; 
 
-    // dummy = sqrt(a[0] *  a[0] +  a[1] *  a[1] +  a[2] *  a[2]);
-    modu(a,&dummy);    
+    dummy = modu(a);    
     
-    /* if the vector is zero length we return zero vector back */
+    /* if the vector is zero length we return it as is */
     if (dummy < EPS) dummy = 1.0;
     
     a[0] = a[0]/dummy;
     a[1] = a[1]/dummy;
     a[2] = a[2]/dummy;
+}
+
+/* Creates array of doubles of length 3 x 1 from 3 double scalars
+   Arguments:
+   a0,a1,a2 double scalars
+   vec - double pointer to an array
+*/
+void create_vector(double a0, double a1, double a2, double vec[3]){
+    vec[0] = a0;
+    vec[1] = a1;
+    vec[2] = a2;
 }
 
