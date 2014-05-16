@@ -158,7 +158,8 @@ for (i=0; i<k; i++) {
 }
 
 
-/* Cross product of two vectors of 3 x 1 
+/* Unit vector which is normal to two vectors, calculated as
+  a unit vector in the direction of the cross product of two vectors
 * Arguments
 * a - vector of doubles 3x1
 * b - vector of doubles 3x1
@@ -167,43 +168,40 @@ for (i=0; i<k; i++) {
 
 void norm_cross(double a[3], double b[3], double n[3]) {
 
-    double  res[3], dummy, norm;
-
-    res[0]=a[1]*b[2]-a[2]*b[1];
-    res[1]=a[2]*b[0]-a[0]*b[2];
-    res[2]=a[0]*b[1]-a[1]*b[0];
+    n[0]=a[1]*b[2]-a[2]*b[1];
+    n[1]=a[2]*b[0]-a[0]*b[2];
+    n[2]=a[0]*b[1]-a[1]*b[0];
     
-    modu(res,&norm);
+    unit_vector(n);
     
-    
-    if (norm == 0.0){ // avoids zero length vector bug
-        n[0] = res[0];
-        n[1] = res[0];
-        n[2] = res[0];
-    } else {    
-    n[0]=res[0]/norm;
-    n[1]=res[1]/norm;
-    n[2]=res[2]/norm;
     }
 }
 
-/* Dot product of two vectors 
-* TODO: use ready subroutines from vec_utils.h
-*
+/* Scalar multiplication of two vectors of length 3 x 1
+   Arguments:
+   a,b = double vectors 3 x 1
+   function dot returns double scalar 
 */
 
-void dot(double a[3], double b[3], double *d) {
+double dot(double a[3], double b[3]) {
+    double d;
+    d = a[0]*b[0] + a[1]*b[1] + a[2]*b[2];
 
-    *d = a[0]*b[0] + a[1]*b[1] + a[2]*b[2];
+    return d;
 }
 
 
-/* Modulus of a vector
-* TODO: use ready subroutine called norm in vec_utils.h
+/* Modulus of a vector or norm of the vector 
+   Arguments:
+   a - double vector of 3 x 1
+   function returns real positive double value 
+   TODO: in essence it is a sqrt(dot(a,a))
+   could be depreciated for simplicity
 */
 void modu(double a[3], double *m) {
+    double m;
 
-    *m = sqrt(a[0]*a[0] + a[1]*a[1] + a[2]*a[2]);
+    m = sqrt(dot(a,a));
 }
 
 
@@ -212,10 +210,9 @@ void modu(double a[3], double *m) {
 void unit_vector(double a[3]){
     double dummy; 
 
-    // dummy = sqrt(a[0] *  a[0] +  a[1] *  a[1] +  a[2] *  a[2]);
-    modu(a,&dummy);    
+    dummy = modu(a);    
     
-    /* if the vector is zero length we return zero vector back */
+    /* if the vector is zero length we return it as is */
     if (dummy < EPS) dummy = 1.0;
     
     a[0] = a[0]/dummy;
