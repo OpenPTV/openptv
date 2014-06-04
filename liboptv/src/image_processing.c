@@ -219,31 +219,29 @@ void lowpass_n (int n, unsigned char *img, unsigned char *img_lp, \
 
 void unsharp_mask (int n, unsigned char *img0, unsigned char *img_lp,\
                    int imgsize, int imx, int imy){
+                   
 	register unsigned char	*imgum, *ptrl, *ptrr, *ptrz;
 	int  		       	*buf1, *buf2, buf, *end;
 	register int	       	*ptr, *ptr1, *ptr2, *ptr3;
 	int    		       	ii, n2, nq, m;
 	register int	       	i;
-	//imgsize=len1; // denis
+
 	n2 = 2*n + 1;  nq = n2 * n2;
-	printf("inside unsharp_mask\n");
+
 
 	imgum = (unsigned char *) calloc (imgsize, 1);
 	if ( ! imgum)
 	{
-		puts ("calloc for imgum --> error");  exit (1);
+		printf ("calloc for imgum --> error \n");  exit (1);
 	}
-	printf("after calloc unsharp_mask\n");		
+	
 	buf1 = (int *) calloc (imgsize, sizeof(int));
 	if ( ! buf1)
 	{
-		puts ("calloc for buf1 --> error");  exit (1);
+		printf ("calloc for buf1 --> error \n");  exit (1);
 	}
-	printf("imx= %d\n", imx);// imx=1280; //denis
-	//imy=1024; //denis
-	buf2 = (int *) calloc (imx, sizeof(int));
 
-	printf("after calloc2 unsharp_mask\n");	
+	buf2 = (int *) calloc (imx, sizeof(int));
 
 	/* set imgum = img0 (so there cannot be written to the original image) */
 	for (ptrl=imgum, ptrr=img0; ptrl<(imgum+imgsize); ptrl++, ptrr++)
@@ -292,7 +290,6 @@ void unsharp_mask (int n, unsigned char *img0, unsigned char *img_lp,\
 		}
 	}
 	
-	free (imgum);
 
 
 	/* -------------  average over columns  -------------- */
@@ -343,9 +340,9 @@ void unsharp_mask (int n, unsigned char *img0, unsigned char *img_lp,\
 		}
 	}
 	
-	
 	free (buf1);
-printf("end unsharp_mask\n");	
+	free (buf2);
+	free (imgum);
 
 }
 
