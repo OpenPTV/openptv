@@ -7,8 +7,9 @@ References:
 [1] https://nose.readthedocs.org/en/latest/
 """
 
-import unittest
-from optv.tracking_framebuf import read_targets
+import unittest, sys
+sys.path.append('../optv')
+from tracking_framebuf import read_targets
 
 class TestTargets(unittest.TestCase):
     def test_read_targets(self):
