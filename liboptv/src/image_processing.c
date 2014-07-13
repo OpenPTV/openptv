@@ -128,18 +128,26 @@ void histogram (unsigned char *img, int *hist, int imgsize){
 }
 
 
-
-
-
+/* lowpass_3  is a 2D moving average filter of size 3 x 3 
+*  that returns an average of 9 neighbours at the top left corner.
+*  Arguments:
+*      img, img_lp are the unsigned char array pointers to the original
+*      and the low passed images
+*      imgsize is the imx * imy the total size of the image
+*      imx is the horizontal size of the image
+*   
+*  See also the more developed version of lowpass_n
+* 
+*/ 
 
 void lowpass_3 (unsigned char *img, unsigned char *img_lp, int imgsize, int imx){
 
 	register unsigned char	*ptr,*ptr1,*ptr2,*ptr3,*ptr4,
 		       		*ptr5,*ptr6,*ptr7,*ptr8,*ptr9;
 	short  	       		buf;
-	register int   		i;
-	
-	ptr  = img_lp + 513; // not clear why it's 513?
+	register int   		i, j;
+		
+	ptr  = img_lp;       // it was img_lp + 513, apparently a bug. 
 	ptr1 = img;          // top left corner
 	ptr2 = img + 1;      // one to the left
 	ptr3 = img + 2;      // to the left
@@ -149,14 +157,16 @@ void lowpass_3 (unsigned char *img, unsigned char *img_lp, int imgsize, int imx)
 	ptr7 = img + 2*imx;
 	ptr8 = img + 2*imx+1;
 	ptr9 = img + 2*imx+2; // bottom right corner
-
+	
 	for (i=0; i<imgsize; i++)
 	{
 		buf = *ptr5++ + *ptr1++ + *ptr2++ + *ptr3++ + *ptr4++
-					  + *ptr6++ + *ptr7++ + *ptr8++ + *ptr9++;
+					  + *ptr6++ + *ptr7++ + *ptr8++ + *ptr9++ ;
+		
 		*ptr++ = buf/9;
+		
 	}
-
+    
 }
 
 
@@ -164,9 +174,9 @@ void lowpass_n (int n, unsigned char *img, unsigned char *img_lp, \
                 int imgsize, int imx, int imy){
 
 	register unsigned char	*ptrl, *ptrr, *ptrz;
-	short  		       	*buf1, *buf2, buf, *end;
+	short  		       	    *buf1, *buf2, buf, *end;
 	register short	       	*ptr, *ptr1, *ptr2, *ptr3;
-	int    		       	k, n2, nq;
+	int    		       	     k, n2, nq;
 	register int	       	i;
 	
 	n2 = 2*n + 1;  nq = n2 * n2;
