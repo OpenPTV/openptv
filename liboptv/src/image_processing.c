@@ -53,7 +53,7 @@ void filter_3 (unsigned char *img, unsigned char *img_lp, int imgsize, int imx){
 	fp = fopen ("filter.par","r");
 	if (fp == NULL){
 	    printf("filter.par was not found, fallback to default lowpass filter \n");
-	    for (i=0, sum=0; i<9; i++) m[i] = 1.0; 
+	    for (i=0, sum=0; i<9; i++) m[i] = 1.0; sum += m[i];
 	} else {    
 	      for (i=0, sum=0; i<9; i++){
 		      fscanf (fp, "%f", &m[i]);
@@ -139,16 +139,16 @@ void lowpass_3 (unsigned char *img, unsigned char *img_lp, int imgsize, int imx)
 	short  	       		buf;
 	register int   		i;
 	
-	ptr  = img_lp + 513;
-	ptr1 = img;
-	ptr2 = img + 1;
-	ptr3 = img + 2;
-	ptr4 = img + imx;
+	ptr  = img_lp + 513; // not clear why it's 513?
+	ptr1 = img;          // top left corner
+	ptr2 = img + 1;      // one to the left
+	ptr3 = img + 2;      // to the left
+	ptr4 = img + imx;    // one below, mid row left column
 	ptr5 = img + imx+1;
 	ptr6 = img + imx+2;
 	ptr7 = img + 2*imx;
 	ptr8 = img + 2*imx+1;
-	ptr9 = img + 2*imx+2;
+	ptr9 = img + 2*imx+2; // bottom right corner
 
 	for (i=0; i<imgsize; i++)
 	{
@@ -174,7 +174,7 @@ void lowpass_n (int n, unsigned char *img, unsigned char *img_lp, \
 	buf1 = (short *) calloc (imgsize, sizeof(short));
 	if ( ! buf1)
 	{
-		puts ("calloc for buf1 --> error");
+		printf ("calloc for buf1 --> error \n");
 		exit (1);
 	}
 	buf2 = (short *) calloc (imx, sizeof(short));

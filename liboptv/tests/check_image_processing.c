@@ -15,8 +15,10 @@ START_TEST(test_filter_3)
 {
         double x, y, z, xp, yp, zp;
         double pos[3], v[3];
+        
+    
             
-    ck_assert_msg( fabs(0.0 - 0.0) < EPS && 
+    ck_assert_msg(  fabs(0.0 - 0.0) < EPS && 
                     fabs(0.0 - 0.0) < EPS && 
                     fabs(0.0 - 0.0)  < EPS,
          "\n Expected 0.0 0.0 0.0 \n  \
@@ -24,6 +26,23 @@ START_TEST(test_filter_3)
     
 }
 END_TEST
+
+START_TEST(test_filter_3)
+{
+        double x, y, z, xp, yp, zp;
+        double pos[3], v[3];
+        
+    
+            
+    ck_assert_msg(  fabs(0.0 - 0.0) < EPS && 
+                    fabs(0.0 - 0.0) < EPS && 
+                    fabs(0.0 - 0.0)  < EPS,
+         "\n Expected 0.0 0.0 0.0 \n  \
+         but found %6.4f %6.4f %6.4f \n", xp, yp, zp);
+    
+}
+END_TEST
+
 
 
 Suite* fb_suite(void) {
