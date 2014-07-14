@@ -43,7 +43,7 @@ START_TEST(test_lowpass_3)
         	exit (1);
     	}
     	
-        img    = (unsigned char *) calloc (imgsize, 1);
+        img = (unsigned char *) calloc (imgsize, 1);
 
     	if (! img) {
         	printf ("calloc for img_lp --> error \n");

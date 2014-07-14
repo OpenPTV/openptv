@@ -146,7 +146,7 @@ void lowpass_3 (unsigned char *img, unsigned char *img_lp, int imgsize, int imx)
 		       		*ptr5,*ptr6,*ptr7,*ptr8,*ptr9;
 	short  	       		buf;
 	register int   		i, j;
-		
+	
 	ptr  = img_lp;       // it was img_lp + 513, apparently a bug. 
 	ptr1 = img;          // top left corner
 	ptr2 = img + 1;      // one to the left
@@ -165,8 +165,7 @@ void lowpass_3 (unsigned char *img, unsigned char *img_lp, int imgsize, int imx)
 		
 		*ptr++ = buf/9;
 		
-	}
-    
+	}    
 }
 
 
