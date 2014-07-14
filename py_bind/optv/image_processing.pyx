@@ -11,9 +11,8 @@ cdef extern from "optv/image_processing.h":
     void c_lowpass_3  "lowpass_3" (unsigned char *img , unsigned char *img_lp,  int imgsize, int imx)
 
 
-# @cython.boundscheck(False)
-# @cython.wraparound(False)
-
+@cython.boundscheck(False)
+@cython.wraparound(False)
 def lowpass_3(np.ndarray[DTYPE_t, ndim=2] img, np.ndarray[DTYPE_t, ndim=2] img_lp):
     """ lowpass_3(img, img_lp) uses 3 x 3 mean filter to create a low passed image
     Input: 

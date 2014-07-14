@@ -17,7 +17,7 @@ show()
 imshow(a-b,cmap='gray')
 show()
 
-a = 128*np.ones((3,3),dtype=np.uint8)
+a = np.ascontiguousarray(8*np.ones((3,3),dtype=np.uint8))
 b = np.copy(a)
 lowpass_3(a,b) 
 print a
