@@ -11,10 +11,18 @@ cdef extern from "optv/image_processing.h":
     void lowpass_3  "lowpass_3" (unsigned char *img , unsigned char *img_lp,  int imgsize, int imx)
 
 
+cdef extern from "optv/image_processing.h":
+    void lowpass_n "lowpass_n" (int n, unsigned char *img, unsigned char *img_lp, int imgsize, int imx, int imy)
+
 @cython.boundscheck(False)
 @cython.wraparound(False)
 def py_lowpass_3(np.ndarray[DTYPE_t, ndim=2] img1 not None, np.ndarray[DTYPE_t, ndim=2] img2 not None, imgsize, imx):
-    lowpass_3(<unsigned char *>img1.data, <unsigned char *>img2.data, <np.int> imgsize, <np.int> imx)
+    lowpass_3(<unsigned char *>img1.data, <unsigned char *>img2.data, <int> imgsize, <int> imx)
+ 
+# @cython.boundscheck(False)
+# @cython.wraparound(False)
+def py_lowpass_n(n, np.ndarray[DTYPE_t, ndim=2] img1 not None, np.ndarray[DTYPE_t, ndim=2] img2 not None, imgsize, imx, imy):
+    lowpass_n(<int> n, <unsigned char *>img1.data, <unsigned char *>img2.data, <int> imgsize, <int> imx, <int> imy)
  
  
 # @cython.boundscheck(False)
