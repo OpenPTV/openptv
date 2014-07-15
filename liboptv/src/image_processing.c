@@ -180,24 +180,40 @@ void lowpass_n (int n, unsigned char *img, unsigned char *img_lp, \
 	
 	n2 = 2*n + 1;  nq = n2 * n2;
 	
+	printf("n2, nq %d %d \n", n2, nq);
+	
+		
 	buf1 = (short *) calloc (imgsize, sizeof(short));
 	if ( ! buf1)
 	{
 		printf ("calloc for buf1 --> error \n");
 		exit (1);
 	}
+	
 	buf2 = (short *) calloc (imx, sizeof(short));
+	if ( ! buf2)
+	{
+		printf ("calloc for buf2 --> error \n");
+		exit (1);
+	}
 
 
 	/* --------------  average over lines  --------------- */
 	end = buf1 + imgsize;  buf = 0;
-	for (ptrr = img; ptrr < img + n2; ptrr ++)  buf += *ptrr;
+	for (ptrr = img; ptrr < img + n2; ptrr ++)  buf += *ptrr; 
 	*(buf1 + n) = buf;
+	
+	for (i=0; i<imgsize; i++) printf("buf1 %d\n", buf1[i]); 
+	 
 	
 	for (ptrl=img, ptr = buf1+n+1; ptr<end; ptrl++, ptr++, ptrr++)
 	{
-		buf += (*ptrr - *ptrl);  *ptr = buf;
+		buf += (*ptrr - *ptrl);  *ptr = buf; 
+		printf("ptrr ptrl, buf %d %d %d\n", *ptrr, *ptrl, *ptr);
 	}
+	
+	printf("after averaging rows\n");	
+	for (i=0; i<imgsize; i++) printf("buf1 %d\n", buf1[i]); 
 	
 	
 	
@@ -251,6 +267,11 @@ void unsharp_mask (int n, unsigned char *img0, unsigned char *img_lp,\
 	}
 
 	buf2 = (int *) calloc (imx, sizeof(int));
+	
+	if ( ! buf2)
+	{
+		printf ("calloc for buf2 --> error \n");  exit (1);
+	}
 
 	/* set imgum = img0 (so there cannot be written to the original image) */
 	for (ptrl=imgum, ptrr=img0; ptrl<(imgum+imgsize); ptrl++, ptrr++)
