@@ -12,7 +12,7 @@
 
 
 
-START_TEST(test_alex_lowpass_3)
+START_TEST(test_lowpass_3)
 {
         unsigned char *img, *img_lp;
         int imgsize, imx, imy, i, j;
@@ -46,42 +46,18 @@ START_TEST(test_alex_lowpass_3)
         img[1+5*1] = 255;
         img[3+5*3] = 255;   
 
-        /* call the function */ 
-        alex_lowpass_3 (img, img_lp, imgsize, imy);
-        
-        /* print the output */
-       for (i=0;i<imy;i++){ 
-            for(j=0;j<imx;j++){
-        		printf("%d\t", img[i*imx+j]);
-        	} 
-        	printf("\n");
-        } 
-        printf("------------------------------\n");        
-        for (i=0;i<imy;i++){ 
-            for(j=0;j<imx;j++){
-        		printf("%d\t", img_lp[i*imx+j]);
-        	} 
-        	printf("\n");
-        }
-        printf("------------------------------\n");       
-            
-       // ck_assert_msg( img_lp[8] == 113  && 
-//                       img_lp[12] == 142 && 
-//                       img_lp[16] == 113 ,
-//          "\n Expected 113, 142, 113 \n  \
-//          but found %d %d %d \n", img_lp[8], img_lp[12], img_lp[16] );
-         
          
         lowpass_3 (img, img_lp, imgsize, imy);
         
         /* print the output */
+        printf("--------original ---------------\n"); 
        for (i=0;i<imy;i++){ 
             for(j=0;j<imx;j++){
         		printf("%d\t", img[i*imx+j]);
         	} 
         	printf("\n");
         } 
-        printf("------------------------------\n");        
+        printf("--------low-passed ---------------\n");        
         for (i=0;i<imy;i++){ 
             for(j=0;j<imx;j++){
         		printf("%d\t", img_lp[i*imx+j]);
@@ -90,54 +66,14 @@ START_TEST(test_alex_lowpass_3)
         }
                
             
-       ck_assert_msg( img_lp[8] == 113  && 
-                      img_lp[12] == 142 && 
-                      img_lp[16] == 113 ,
-         "\n Expected 113, 142, 113 \n  \
+       ck_assert_msg( img_lp[8] == 142  && 
+                      img_lp[12] == 127 && 
+                      img_lp[16] == 99 ,
+         "\n Expected 142, 127, 99 \n  \
          but found %d %d %d \n", img_lp[8], img_lp[12], img_lp[16] );
 }
 END_TEST
 
-START_TEST(test_lowpass_3)
-{
-        unsigned char *img, *img_lp;
-        int imgsize, imx, i, j;
-        
-        imx = 4;
-        imgsize = imx*imx;
-        
-        /* Allocate the image arrays */
-        
-        img_lp = (unsigned char *) calloc (imgsize, 1);
-        if (! img_lp) {
-        	printf ("calloc for img_lp --> error \n");
-        	exit (1);
-    	}
-    	
-        img = (unsigned char *) calloc (imgsize, 1);
-
-    	if (! img) {
-        	printf ("calloc for img_lp --> error \n");
-        	exit (1);
-    	}
-        
-        /* Initialize the image arrays */
-        
-        for (i=0;i<imgsize;i++){ 
-        	img[i] = 128; img_lp[i] = 0; 
-        	}     
-         
-       
-        lowpass_3 (img, img_lp, imgsize, imx);
-               
-            
-       ck_assert_msg( fabs(img_lp[0] - 128) < EPS && 
-                    fabs(img_lp[7] - 99) < EPS && 
-                    fabs(img_lp[15] - 14)  < EPS,
-         "\n Expected 128, 99, 14 \n  \
-         but found %d %d %d \n", img_lp[0], img_lp[7], img_lp[15] );
-}
-END_TEST
 
 START_TEST(test_lowpass_n)
 {
@@ -209,8 +145,7 @@ END_TEST
 Suite* fb_suite(void) {
     Suite *s = suite_create ("image_processing");
     TCase *tc = tcase_create ("image_processing_test");
-    tcase_add_test(tc, test_alex_lowpass_3);
-    // tcase_add_test(tc, test_lowpass_3);
+    tcase_add_test(tc, test_lowpass_3);
     // tcase_add_test(tc, test_lowpass_n);
     suite_add_tcase (s, tc);   
     return s;
