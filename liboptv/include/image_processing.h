@@ -10,7 +10,9 @@ image_processing.c, segmentation.c and peakfitting.c */
 #include "lsqadj.h"
 #include "ray_tracing.h"
 #include "multimed.h"
-#include "epi.h"	
+#include "epi.h"
+
+#define A(i,j) A[(i) + (j)*ld]	
 
 /* I don't know why this has to be "unsigned" but I have no time to test
    dropping it */
@@ -21,6 +23,8 @@ void filter_3 (unsigned char *img, unsigned char *img_lp, int imgsize, int imx);
 void enhance (unsigned char	*img, int imgsize, int imx );
 void histogram (unsigned char *img, int *hist, int imgsize);
 void lowpass_3 (unsigned char *img, unsigned char *img_lp, \
+               int imgsize, int imx);
+void alex_lowpass_3 (unsigned char *img, unsigned char *img_lp, \
                int imgsize, int imx);
 void lowpass_n (int n, unsigned char *img, unsigned char *img_lp,\
                 int imgsize, int imx, int imy);

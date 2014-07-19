@@ -169,6 +169,49 @@ void lowpass_3 (unsigned char *img, unsigned char *img_lp, int imgsize, int imx)
 }
 
 
+void alex_lowpass_3 (unsigned char *img, unsigned char *img_lp, int imgsize, int imx){
+
+   unsigned int		X, Y;
+   int			    I, J;
+   long			    SUM;
+   int imy;
+   int F[3][3]; 
+	
+	imy = imgsize/imx;
+	
+    /* 3  X 3 FILTER MASK */
+   F[0][0] = 1; F[0][1] = 1; F[0][2] = 1;
+   F[1][0] = 1; F[1][1] = 1; F[1][2] = 1;
+   F[2][0] = 1; F[2][1] = 1; F[2][2] = 1;
+	
+for(Y=0; Y<imy; Y++)  {
+	for(X=0; X<imx; X++)  {
+	     SUM = 0;
+
+	  /* image boundaries */
+	  if(Y == 0 || Y == imy - 1 )
+		  SUM = (int) (*(img + X + Y*imx )) ;
+	  else if( X == 0 || X == imx - 1)
+		  SUM = (int) (*(img + X + Y*imx ));
+
+	  /* Convolution starts here */
+	  else   {
+	     for(I=-1; I<=1; I++)  {
+		    for(J=-1; J<=1; J++)  {
+		       SUM = SUM + (int)( (*(img + X + I + (Y + J)*imx )) * F[I+1][J+1]);
+		     }
+	     }
+	     SUM/=9;
+	  }
+	     
+	     if(SUM>255)  SUM=255;
+	     if(SUM<0)    SUM=0;
+
+	     *(img_lp + X + Y*imx) = (unsigned char)(SUM);	
+	}
+   }
+}
+
 void lowpass_n (int n, unsigned char *img, unsigned char *img_lp, \
                 int imgsize, int imx, int imy){
 
@@ -179,8 +222,6 @@ void lowpass_n (int n, unsigned char *img, unsigned char *img_lp, \
 	register int	       	i;
 	
 	n2 = 2*n + 1;  nq = n2 * n2;
-	
-	printf("n2, nq %d %d \n", n2, nq);
 	
 		
 	buf1 = (short *) calloc (imgsize, sizeof(short));
@@ -202,19 +243,12 @@ void lowpass_n (int n, unsigned char *img, unsigned char *img_lp, \
 	end = buf1 + imgsize;  buf = 0;
 	for (ptrr = img; ptrr < img + n2; ptrr ++)  buf += *ptrr; 
 	*(buf1 + n) = buf;
-	
-	for (i=0; i<imgsize; i++) printf("buf1 %d\n", buf1[i]); 
-	 
+		 
 	
 	for (ptrl=img, ptr = buf1+n+1; ptr<end; ptrl++, ptr++, ptrr++)
 	{
 		buf += (*ptrr - *ptrl);  *ptr = buf; 
-		printf("ptrr ptrl, buf %d %d %d\n", *ptrr, *ptrl, *ptr);
 	}
-	
-	printf("after averaging rows\n");	
-	for (i=0; i<imgsize; i++) printf("buf1 %d\n", buf1[i]); 
-	
 	
 	
 	/* -------------  average over columns  -------------- */
