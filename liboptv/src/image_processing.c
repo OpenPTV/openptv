@@ -187,23 +187,12 @@ void alex_lowpass_3 (unsigned char *img, unsigned char *img_lp, int imgsize, int
 for(Y=0; Y<imy; Y++)  {
 	for(X=0; X<imx; X++)  {
 	     SUM = 0;
-
-	  /* image boundaries */
-	  if(Y == 0 || Y == imy - 1 )
-		  SUM = (int) (*(img + X + Y*imx )) ;
-	  else if( X == 0 || X == imx - 1)
-		  SUM = (int) (*(img + X + Y*imx ));
-
-	  /* Convolution starts here */
-	  else   {
-	     for(I=-1; I<=1; I++)  {
-		    for(J=-1; J<=1; J++)  {
-		       SUM = SUM + (int)( (*(img + X + I + (Y + J)*imx )) * F[I+1][J+1]);
+	     for(I=0; I<=2; I++)  {
+		    for(J=0; J<=2; J++)  {
+		       SUM = SUM + (int)( (*(img + X + I + (Y + J)*imx )) * F[I][J]);
 		     }
 	     }
 	     SUM/=9;
-	  }
-	     
 	     if(SUM>255)  SUM=255;
 	     if(SUM<0)    SUM=0;
 
