@@ -36,7 +36,6 @@ Routines contained:    	filter_3:	3*3 filter, reads matrix from filter.par
  * 8-bit unsigned char image array by pointer *img_lp is an output
  * int imgsize, imx are image size and number of columns (pixels)
  */
-
 void filter_3 (unsigned char *img, unsigned char *img_lp, int imgsize, int imx){
 
 	register unsigned char	*ptr, *ptr1, *ptr2, *ptr3,
@@ -128,25 +127,29 @@ void filter_3 (unsigned char *img, unsigned char *img_lp, int imgsize, int imx){
 	*/
 }
 
-
-
-
-
-void enhance (unsigned char	*img, int imgsize, int imx ){
+/* enhance stretches the image information into full 8 bit range if not yet used
+ * Arguments:
+ * 8-bit unsigned char image array by pointer *img is an in- and output
+ * int imgsize, imx are image size and number of columns (pixels)
+ * uses histogramm to calculate gain for enhancement
+ */
+void enhance (unsigned char	*img, int imgsize, int imx )
+{
 	register unsigned char	*ptr;
 	unsigned char	       	*end, gmin = 255, gmax = 0, offs;
 	float		       	diff, gain;
 	int		       	i, sum, histo[256];
-	
-	//void histogram ();
-	
+		
 	end = img + imgsize;
-
+	//get histogramm
 	histogram (img, histo, imgsize);
+	//find minimal and maximal values in image
 	for (i=0, sum=0; (i<255)&&(sum<imx); sum += histo[i], i++)  gmin = i;	
 	for (i=255, sum=0; (i>0)&&(sum<512); sum+=histo[i], i--)  gmax = i;	
+	//calculate gain for enhancement
 	offs = gmin;  diff = gmax - gmin;  gain = 255 / diff;
 	
+	//rescale image values
 	for (ptr=img; ptr<end; ptr++)
 	{
 		if (*ptr < gmin) *ptr = gmin;  else if (*ptr > gmax) *ptr = gmax;
@@ -184,7 +187,6 @@ void histogram (unsigned char *img, int *hist, int imgsize){
 *  See also the more developed version of lowpass_n
 * 
 */ 
-
 void lowpass_3 (unsigned char *img, unsigned char *img_lp, int imgsize, int imx){
 
 	register unsigned char	*ptr,*ptr1,*ptr2,*ptr3,*ptr4,
