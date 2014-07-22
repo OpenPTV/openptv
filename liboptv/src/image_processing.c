@@ -511,3 +511,23 @@ unsigned char	* img_new, int imgsize){
       else  *ptr3 = *ptr1;
     }
  }
+
+
+/*
+* subtract_img8Bit  is a simple image arithmetic function that subtracts img2 from img1
+*  Arguments:
+*      img1, img2 are the unsigned char array pointers to the original images
+*      img_new is the pointer to the unsigned char array for the resulting image
+*      imgsize is the imx * imy the total size of the image
+*/
+void subtract_img8Bit (unsigned char *img1,unsigned char *img2,unsigned char *img_new, int imgsize) 
+{
+	register unsigned char 	*ptr1, *ptr2, *ptr3;
+	int i;
+	
+	for (i=0, ptr1=img1, ptr2=img2, ptr3=img_new; i<imgsize; ptr1++, ptr2++, ptr3++, i++)
+	{
+		if ((*ptr1 - *ptr2) < 0) *ptr3 = 0;
+		else  *ptr3 = *ptr1-*ptr2;
+	}
+ }

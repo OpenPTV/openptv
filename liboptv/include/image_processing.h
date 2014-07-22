@@ -39,5 +39,7 @@ void split (unsigned char	*img, int field, int imx, int imy, int imgsize);
 void subtract_mask (unsigned char	* img, unsigned char	* img_mask, \
 unsigned char	* img_new, int imgsize);
 
+void subtract_img8Bit (unsigned char *img1,unsigned char *img2,unsigned char *img_new, int imgsize);
+
 #endif
 
