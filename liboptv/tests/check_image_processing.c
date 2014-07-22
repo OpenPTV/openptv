@@ -202,12 +202,53 @@ START_TEST(test_alex_lowpass_3)
 }
 END_TEST
 
+START_TEST(test_histogram)
+{
+        unsigned char *img;
+        int imgsize, imx, imy, i, j;
+        int hist[256];
+        
+        imx = imy = 5;
+        imgsize = imx*imy;
+        
+        /* Allocate the image arrays */
+           	
+        img = (unsigned char *) calloc (imgsize, 1);
+
+    	if (! img) {
+        	printf ("calloc for img_lp --> error \n");
+        	exit (1);
+    	}
+        
+        /* Initialize the image arrays */
+        for (i=0;i<imy;i++){ 
+            for(j=0;j<imx;j++){
+        		img[i*imx+j] = 128; 
+        	} 
+        } 
+        img[2+5*2] = 0;
+        img[1+5*1] = 255;
+        img[3+5*3] = 255;   
+         
+        histogram (img, hist, imgsize);
+        
+        // for (i=0; i<256; i++)  printf("i, hist[i] %d %d\n",i,hist[i]);
+            
+       ck_assert_msg( hist[0]   == 1  && 
+                      hist[128] == 22 && 
+                      hist[255] == 2 ,
+         "\n Expected 1, 22, 2 \n  \
+         but found %d %d %d \n", hist[0], hist[128], hist[255]);
+}
+END_TEST
+
 Suite* fb_suite(void) {
     Suite *s = suite_create ("image_processing");
     TCase *tc = tcase_create ("image_processing_test");
     tcase_add_test(tc, test_lowpass_3);
     tcase_add_test(tc, test_lowpass_n);
     tcase_add_test(tc, test_alex_lowpass_3);
+    tcase_add_test(tc, test_histogram);
     suite_add_tcase (s, tc);   
     return s;
 }
