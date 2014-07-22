@@ -21,6 +21,7 @@ void highpass(unsigned char *img, unsigned char *img_hp, int dim_lp,
     int filter_hp, int field, int imgsize);
 void filter_3 (unsigned char *img, unsigned char *img_lp, int imgsize, int imx);
 void enhance (unsigned char	*img, int imgsize, int imx );
+void histeq (unsigned char	*img, int imgsize, int imx );
 void histogram (unsigned char *img, int *hist, int imgsize);
 void lowpass_3 (unsigned char *img, unsigned char *img_lp, \
                int imgsize, int imx);
