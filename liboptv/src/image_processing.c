@@ -30,11 +30,14 @@ Routines contained:    	filter_3:	3*3 filter, reads matrix from filter.par
 
 /* filter_3 is a 3 x 3 filter applied to the image
  * filter has to be predefined in the 'filter.par' file in the /parameters folders
- * default filter, if the file is not found or corrupted is [1,1,1; 1,1,1; 1,1,1]
+ * default filter, if the file is not found or corrupted is [1,1,1; 1,1,1; 1,1,1]/9.
  * Arguments:
  * 8-bit unsigned char image array by pointer *img is an input
  * 8-bit unsigned char image array by pointer *img_lp is an output
- * int imgsize, imx are image size and number of columns (pixels)
+ * int imgsize, imx are image size and number of columns (pixels), respectively.
+ * in this implementation, boundaries of 1 pixel thickness are untouched and copied 
+ * from the original image. the interior is filtered according to the filter.par
+ * see ../tests/check_image_processing.c for a couple of useful filters.
  */
 void filter_3 (unsigned char *img, unsigned char *img_lp, int imgsize, int imx){
 
@@ -53,16 +56,17 @@ void filter_3 (unsigned char *img, unsigned char *img_lp, int imgsize, int imx){
 	fp = fopen ("filter.par","r");
 	if (fp == NULL){
 	    printf("filter.par was not found, fallback to default lowpass filter \n");
-	    sum = 9;
-	    for (i=0, sum=0; i<3; i++){
+	    for (i=0, sum=9; i<3; i++){
 	       for(j=0;j<3; j++){
-	          m[i][j] = 1.0; 
+	          m[i][j] = 1.0/sum; 
 	        }
 	    }
-	} else {    
+	} else { 
+	      printf("filter.par was found, reading the values \n");  
 	      for (i=0, sum=0; i<3; i++){
 	          for(j=0; j<3; j++){
 		      	fscanf (fp, "%f", &m[i][j]);
+		      	// printf("%f", m[i][j]);
 		        sum += m[i][j];
 		       }
 		    }
@@ -70,10 +74,9 @@ void filter_3 (unsigned char *img, unsigned char *img_lp, int imgsize, int imx){
 	fclose (fp);  
 	if (sum == 0) {
 	    printf("filter.par is corrupted or empty, fallback to default lowpass filter \n");
-	    sum = 9;
-	    for (i=0, sum=0; i<3; i++){
+	    for (i=0, sum=9; i<3; i++){
 	        for (j=0; j<3; j++){
-	                m[i][j] = 1.0; 
+	                m[i][j] = 1.0/sum; 
 	        }
 	    } 
 	}
@@ -96,7 +99,7 @@ void filter_3 (unsigned char *img, unsigned char *img_lp, int imgsize, int imx){
 					buf += (int)( (*(img + X + I + (Y + J)*imx )) * m[I][J]); 
 				}
 			}
-	     buf/=9;
+	     // buf/=9;
 	     if(buf>255)  buf = 255;
 	     if(buf<0)    buf = 0;
 
@@ -139,7 +142,6 @@ void enhance (unsigned char	*img, int imgsize, int imx )
 	unsigned char	       	*end, gmin = 255, gmax = 0, offs;
 	float		       	diff, gain;
 	int		       	i, sum, histo[256];
-		
 	end = img + imgsize;
 	//get histogramm
 	histogram (img, histo, imgsize);
@@ -162,6 +164,45 @@ void enhance (unsigned char	*img, int imgsize, int imx )
 */
 void histogram (unsigned char *img, int *hist, int imgsize)
 {
+
+
+/* Apparently enhance is the histogram equalization algorithm but with some
+*  constraints that are not clear - why sum is less then imx and then less then 512 
+* 
+*  New function histeq is an implementation from the 
+*  Image Processing in C, 2nd Ed. by Dwayne Phillips, Listing 4.2 
+*/
+void histeq (unsigned char	*img, int imgsize, int imx ){
+	int		       	        X,Y, i, k, imy, histo[256];
+	int 			        sum, sum_of_h[256];
+    double 					constant;
+	
+	//void histogram ();
+	
+	imy = imgsize/imx;
+
+	histogram (img, histo, imgsize);
+	
+   sum = 0;
+   for(i=0; i<256; i++){
+      sum += histo[i];
+      sum_of_h[i] = sum;
+   }
+    /* constant = new # of gray levels div by area */
+   constant = (float)(255.1)/(float)(imgsize);
+   for(Y=0; Y<imy; Y++){
+      for(X=0; X<imx; X++){
+         k  = *(img + X + Y*imx);
+         *(img + X + Y*imx ) = (unsigned char)(sum_of_h[k] * constant);
+		} 
+	}
+}  /* ends histeq */
+	
+
+
+
+void histogram (unsigned char *img, int *hist, int imgsize){
+
 	int	       	i;
 	unsigned char  	*end;
 	register unsigned char	*ptr;
@@ -456,10 +497,6 @@ void unsharp_mask (int n, unsigned char *img0, unsigned char *img_lp,\
 	free (imgum);
 
 }
-
-
-
-
 
 
 void zoom (unsigned char *img, unsigned char *zoomimg, int xm, int ym, int zf, \
