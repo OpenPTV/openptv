@@ -248,7 +248,8 @@ START_TEST(test_enhance)
         int imgsize, imx, imy, i, j;
         int hist[256];
         
-        imx = imy = 5;
+        imx = 5;
+        imy = 7;
         imgsize = imx*imy;
         
         /* Allocate the image arrays */
@@ -304,6 +305,10 @@ START_TEST(test_enhance)
          
          /* Now let's try histeq */
          /* Initialize the image arrays */
+         
+         imx = 6;
+         imy = 5;	
+         
         for (i=0;i<imy;i++){ 
             for(j=0;j<imx;j++){
         		img[i*imx+j] = (i+1)*(j+1)*5; 
@@ -311,7 +316,7 @@ START_TEST(test_enhance)
         } 
         img[2+5*2] = 0;
         img[1+5*1] = 181;
-        img[3+5*3] = 255;   
+        img[imx*imy-1] = 255;   
         
         /* print the output */
         
@@ -337,11 +342,12 @@ START_TEST(test_enhance)
         
         // for (i=0; i<256; i++)  printf("i, hist[i] %d %d\n",i,hist[i]);
             
-        ck_assert_msg(img[2] == 61  && 
-                      img[7] == 122 && 
-                      img[24] == 235 ,
-         "\n Expected 61 122 235 \n  \
-         but found %d %d %d \n", img[2], img[7], img[24] );
+        ck_assert_msg(img[2] == 29  && 
+                      img[7] == 51 && 
+                      img[24] == 65 &&
+                      img[imgsize-1] == 255,
+         "\n Expected 29 51 65 255 \n  \
+         but found %d %d %d %d \n", img[2], img[7], img[24], img[imgsize-1] );
          
          
 }

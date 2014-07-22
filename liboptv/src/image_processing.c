@@ -161,14 +161,11 @@ void enhance (unsigned char	*img, int imgsize, int imx ){
 *  constraints that are not clear - why sum is less then imx and then less then 512 
 * 
 *  New function histeq is an implementation from the 
-*  Image Processing in C, 2nd Ed. by Dwayne Phillips 
+*  Image Processing in C, 2nd Ed. by Dwayne Phillips, Listing 4.2 
 */
 void histeq (unsigned char	*img, int imgsize, int imx ){
-	register unsigned char	*ptr;
-	unsigned char	       	*end, gmin = 255, gmax = 0, offs;
-	float		       	    diff, gain;
-	int		       	        i, j, k, imy, histo[256];
-	unsigned long 			sum, sum_of_h[256];
+	int		       	        X,Y, i, k, imy, histo[256];
+	int 			        sum, sum_of_h[256];
     double 					constant;
 	
 	//void histogram ();
@@ -177,19 +174,18 @@ void histeq (unsigned char	*img, int imgsize, int imx ){
 
 	histogram (img, histo, imgsize);
 	
-
    sum = 0;
    for(i=0; i<256; i++){
       sum += histo[i];
       sum_of_h[i] = sum;
    }
     /* constant = new # of gray levels div by area */
-   constant = (float)(256)/(float)(imgsize);
-   for(i=0; i<imy; i++){
-      for(j=0; j<imx; j++){
-      
-         k  = *(img + i + (j)*imx );
-         *(img + i + (j)*imx ) = sum_of_h[k] * constant;
+   constant = (float)(255.1)/(float)(imgsize);
+   printf(" constant %f \n", constant);
+   for(Y=0; Y<imy; Y++){
+      for(X=0; X<imx; X++){
+         k  = *(img + X + Y*imx);
+         *(img + X + Y*imx ) = (unsigned char)(sum_of_h[k] * constant);
 		} 
 	}
 }  /* ends perform_histogram_equalization */
