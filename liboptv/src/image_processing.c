@@ -42,29 +42,72 @@ void filter_3 (unsigned char *img, unsigned char *img_lp, int imgsize, int imx){
 	register unsigned char	*ptr, *ptr1, *ptr2, *ptr3,
 		             	    *ptr4, *ptr5, *ptr6,
 	                        *ptr7, *ptr8, *ptr9;
-	int	       	   end;
-	float	       	m[9], sum;
+	int	       	    end;
+	float	       	m[3][3], sum;
 	short	       	buf;
-	register int	i;
+	register int	i, j, X, Y, I, J;
 	FILE	       	*fp;
+	int 			imy; 
 
 	
 	/* read filter elements from parameter file */
 	fp = fopen ("filter.par","r");
 	if (fp == NULL){
 	    printf("filter.par was not found, fallback to default lowpass filter \n");
-	    for (i=0, sum=0; i<9; i++) m[i] = 1.0; sum += m[i];
+	    sum = 9;
+	    for (i=0, sum=0; i<3; i++){
+	       for(j=0;j<3; j++){
+	          m[i][j] = 1.0; 
+	        }
+	    }
 	} else {    
-	      for (i=0, sum=0; i<9; i++){
-		      fscanf (fp, "%f", &m[i]);
-		      sum += m[i];
-	       }
-	       fclose (fp);  
-	       if (sum == 0) {
-	           printf("filter.par is corrupted or empty, fallback to default lowpass filter \n");
-	           for (i=0, sum=0; i<9; i++) m[i] = 1.0; 
-	           }
-	} /* end of if .. else .. */
+	      for (i=0, sum=0; i<3; i++){
+	          for(j=0; j<3; j++){
+		      	fscanf (fp, "%f", &m[i][j]);
+		        sum += m[i][j];
+		       }
+		    }
+	    }
+	fclose (fp);  
+	if (sum == 0) {
+	    printf("filter.par is corrupted or empty, fallback to default lowpass filter \n");
+	    sum = 9;
+	    for (i=0, sum=0; i<3; i++){
+	        for (j=0; j<3; j++){
+	                m[i][j] = 1.0; 
+	        }
+	    } 
+	}
+	
+	imy = imgsize/imx;
+	
+	/* to ensure that the boundaries are original */
+	copy_images (img, img_lp, imgsize);
+	
+	for(Y=0; Y<(imy-2); Y++)  
+	{
+		for(X=0; X<(imx-2); X++)  
+		{
+	     buf = 0;
+			for(I=0; I<=2; I++)  
+			{
+				for(J=0; J<=2; J++)  
+				{
+					buf += (int)( (*(img + X + I + (Y + J)*imx )) * m[I][J]); 
+				}
+			}
+	     buf/=9;
+	     if(buf>255)  buf = 255;
+	     if(buf<0)    buf = 0;
+
+	     *(img_lp + X+1 + (Y+1)*imx) = (unsigned char)(buf);	
+		}
+	}
+	
+	
+	/* old version, 513 is probably for 512 x 512 images, obsolete and 
+	*  replaced by the newer version similar to alex_lowpass_3 
+	
 	
 	end = imgsize - 513;
 	
@@ -81,6 +124,7 @@ void filter_3 (unsigned char *img, unsigned char *img_lp, int imgsize, int imx){
 		buf /= sum;    if (buf > 255)  buf = 255;    if (buf < 8)  buf = 8;
 		*ptr++ = buf;
 	}
+	*/
 }
 
 
@@ -184,6 +228,10 @@ void alex_lowpass_3 (unsigned char *img, unsigned char *img_lp, int imgsize, int
 	F[0][0] = 1; F[0][1] = 1; F[0][2] = 1;
 	F[1][0] = 1; F[1][1] = 1; F[1][2] = 1;
 	F[2][0] = 1; F[2][1] = 1; F[2][2] = 1;
+	
+	/* to ensure that the boundaries are original */
+	
+	copy_images (img, img_lp, imgsize);
 	
 	for(Y=0; Y<(imy-2); Y++)  
 	{
@@ -528,7 +576,7 @@ void subtract_img8Bit (unsigned char *img1,unsigned char *img2,unsigned char *im
 	for (i=0, ptr1=img1, ptr2=img2, ptr3=img_new; i<imgsize; ptr1++, ptr2++, ptr3++, i++)
 	{
 		if ((*ptr1 - *ptr2) < 0) *ptr3 = 0;
-		else  *ptr3 = *ptr1-*ptr2;
+		else  *ptr3 = *ptr1- *ptr2;
 	}
 }
 
