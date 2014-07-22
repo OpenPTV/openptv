@@ -451,7 +451,7 @@ START_TEST(test_filter_3)
         }
                
             
-       ck_assert_msg( img_lp[8] == 112  && 
+       ck_assert_msg( img_lp[8] == 	112  && 
                       img_lp[12] == 140 && 
                       img_lp[16] == 112 ,
          "\n Expected 112 140 112  \n  \

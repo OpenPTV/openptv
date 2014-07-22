@@ -30,11 +30,14 @@ Routines contained:    	filter_3:	3*3 filter, reads matrix from filter.par
 
 /* filter_3 is a 3 x 3 filter applied to the image
  * filter has to be predefined in the 'filter.par' file in the /parameters folders
- * default filter, if the file is not found or corrupted is [1,1,1; 1,1,1; 1,1,1]
+ * default filter, if the file is not found or corrupted is [1,1,1; 1,1,1; 1,1,1]/9.
  * Arguments:
  * 8-bit unsigned char image array by pointer *img is an input
  * 8-bit unsigned char image array by pointer *img_lp is an output
- * int imgsize, imx are image size and number of columns (pixels)
+ * int imgsize, imx are image size and number of columns (pixels), respectively.
+ * in this implementation, boundaries of 1 pixel thickness are untouched and copied 
+ * from the original image. the interior is filtered according to the filter.par
+ * see ../tests/check_image_processing.c for a couple of useful filters.
  */
 
 void filter_3 (unsigned char *img, unsigned char *img_lp, int imgsize, int imx){
