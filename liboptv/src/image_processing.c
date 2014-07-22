@@ -160,11 +160,6 @@ void enhance (unsigned char	*img, int imgsize, int imx )
 	}
 }
 
-/* histogram computes a histogram from the image and returns it to hist
-*/
-void histogram (unsigned char *img, int *hist, int imgsize)
-{
-
 
 /* Apparently enhance is the histogram equalization algorithm but with some
 *  constraints that are not clear - why sum is less then imx and then less then 512 
@@ -200,7 +195,8 @@ void histeq (unsigned char	*img, int imgsize, int imx ){
 	
 
 
-
+/* histogram computes a histogram from the image and returns it to hist
+*/
 void histogram (unsigned char *img, int *hist, int imgsize){
 
 	int	       	i;
