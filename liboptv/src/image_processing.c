@@ -533,12 +533,17 @@ void split (unsigned char	*img, int field, int imx, int imy, int imgsize){
 
 
 
-
-void copy_images (unsigned char	*img1, unsigned char *img2, int imgsize){
+/*
+* copy_images8Bit  is a simple image arithmetic function that copies img1 into img2
+*  Arguments:
+*      img1, img2 are the unsigned char array pointers 
+*      imgsize is the imx * imy the total size of the image
+*/
+void copy_images (unsigned char	*img1, unsigned char *img2, int imgsize)
+{
 	register unsigned char 	*ptr1, *ptr2;
 	unsigned char	       	*end;
-
-
+	
 	for (end=img1+imgsize, ptr1=img1, ptr2=img2; ptr1<end; ptr1++, ptr2++)
 	*ptr2 = *ptr1;
 }
