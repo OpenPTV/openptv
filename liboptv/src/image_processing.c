@@ -530,4 +530,81 @@ void subtract_img8Bit (unsigned char *img1,unsigned char *img2,unsigned char *im
 		if ((*ptr1 - *ptr2) < 0) *ptr3 = 0;
 		else  *ptr3 = *ptr1-*ptr2;
 	}
- }
+
+/* initial commit with highpass from ehtz-ptv
+*
+*
+*
+*/
+void highpass (char pic_name[],unsigned char *img,unsigned char *img_hp,int dim_lp,int filter_hp,int field,int nr)
+{
+	//char	        pic_name[256];  /* image name */
+	//unsigned char  *img;
+	//unsigned char  *img_hp;       	/* highpass filtered image */
+	//int             dim_lp;	       	/* dimension of subtracted lowpass image */
+	//int	        filter_hp;     	/* flag for additional filtering of _hp */
+	//int    		field;	       	/* field to be used */
+	//int	      	nr;	       	/* image number for display */
+
+  register int	i;
+  FILE	       	*fp;
+  unsigned char *img_lp;
+  char	       	lp_name[256], hp_name[256];
+  register unsigned char *ptr1, *ptr2, *ptr3;
+  void 	unsharp_mask ();
+
+  sprintf (lp_name, "%s_lp", pic_name);
+  sprintf (hp_name, "%s_hp", pic_name);
+
+  /* allocate memory */
+
+  img_lp = (unsigned char *) calloc (imgsize, 1);
+  if ( ! img_lp)
+    {
+      puts ("calloc for img_lp --> error");
+      exit (1);
+    }
+
+  unsharp_mask (dim_lp, img, img_lp);
+
+  if (examine == 3)
+    {
+      fp = fopen (lp_name, "w");  /*  save lowpass image */
+      if (tiff_flag) { write_tiff (lp_name, img_lp, imx, imy); }
+      else { fwrite (img_lp, 1, imgsize, fp); }
+      printf("low pass: %s will be deleted when quitting ptv\n", lp_name);
+      fclose (fp);
+    }
+
+  /*  subtract lowpass from original  (=>   )  */
+  for (ptr1=img, ptr2=img_lp, ptr3=img_hp, i=0; i<imgsize;
+       ptr1++, ptr2++, ptr3++, i++)
+    {
+      if (*ptr1 > *ptr2)  *ptr3 = *ptr1 - *ptr2;
+      else  *ptr3 = 0;
+    }
+
+
+  /* consider field mode */
+  if (field == 1 || field == 2)  split (img_hp, field);
+
+
+  /* filter highpass image, if wanted */
+  switch (filter_hp)
+    {
+    case 0: break;
+    case 1: lowpass_3 (img_hp, img_hp);	break;
+    case 2: filter_3 (img_hp, img_hp);	break;
+    }
+
+  /* save highpass image for later use */
+  if (examine == 3)
+    {  fp = fopen (hp_name, "w");
+  if (tiff_flag) { write_tiff (hp_name, img_hp, imx, imy); }
+  else { fwrite (img_hp, 1, imgsize, fp);}
+  fclose (fp);
+  }
+
+  free (img_lp);
+}
+
