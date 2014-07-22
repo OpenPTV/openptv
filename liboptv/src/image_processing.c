@@ -82,7 +82,8 @@ void filter_3 (unsigned char *img, unsigned char *img_lp, int imgsize, int imx){
 	imy = imgsize/imx;
 	
 	/* to ensure that the boundaries are original */
-	copy_images (img, img_lp, imgsize);
+	//copy_images8Bit (img, img_lp, imgsize);
+	handle_imageborders8Bit(img, img_lp, imgsize, imx);
 	
 	for(Y=0; Y<(imy-2); Y++)  
 	{
@@ -230,8 +231,8 @@ void alex_lowpass_3 (unsigned char *img, unsigned char *img_lp, int imgsize, int
 	F[2][0] = 1; F[2][1] = 1; F[2][2] = 1;
 	
 	/* to ensure that the boundaries are original */
-	
-	copy_images (img, img_lp, imgsize);
+	//copy_images8Bit (img, img_lp, imgsize);
+	handle_imageborders8Bit(img, img_lp, imgsize, imx);
 	
 	for(Y=0; Y<(imy-2); Y++)  
 	{
@@ -530,7 +531,34 @@ void split (unsigned char	*img, int field, int imx, int imy, int imgsize){
 }
 
 
+/*
+* handle_imageborders8Bit  is a simple image arithmetic function that 
+* corrects the imageborders after filtering functions like lowpass_3 or filter_3 
+* it copies the outer pixel line(s) from img1 into img2
+*  Arguments:
+*      img1, img2 are the unsigned char array pointers 
+*      imgsize is the imx * imy the total size of the image
+*/
+void handle_imageborders8Bit(unsigned char	*img1, unsigned char *img2, int imgsize, int imx)
+{
+	register unsigned char 	*ptr1, *ptr2; //do we really need to register?
+	int i,j;
+	int imy;
 
+	imy = imgsize/imx;
+	ptr1 = img1;
+	ptr2 = img2;
+
+	for(i=0; i<imy; i++)
+		for(j=0; j<imx; j++)
+		{
+			if(i==0 || i==imy || j==0 || j==imx )
+			{
+				*(ptr2 +i*imx+j) = *(ptr1 +i*imx+j);
+			}
+
+		}
+}
 
 
 /*
@@ -539,7 +567,7 @@ void split (unsigned char	*img, int field, int imx, int imy, int imgsize){
 *      img1, img2 are the unsigned char array pointers 
 *      imgsize is the imx * imy the total size of the image
 */
-void copy_images (unsigned char	*img1, unsigned char *img2, int imgsize)
+void copy_images8Bit (unsigned char	*img1, unsigned char *img2, int imgsize, int imx)
 {
 	register unsigned char 	*ptr1, *ptr2;
 	unsigned char	       	*end;
@@ -549,12 +577,14 @@ void copy_images (unsigned char	*img1, unsigned char *img2, int imgsize)
 }
 
 
-
-/*------------------------------------------------------------------------
-	Subtract mask, Matthias Oswald, Juli 08
-  ------------------------------------------------------------------------*/
-void subtract_mask (unsigned char	* img, unsigned char	* img_mask, \
-unsigned char	* img_new, int imgsize){
+/*
+* Subtract_mask, by Matthias Oswald, Juli 08
+* subtrac_mask compares img with img_mask and creates a masked image img_new
+* pixels that are equal to zero in the img_mask
+* are overwritten with a default value (=0) in img_new
+*/
+void subtract_mask (unsigned char *img, unsigned char *img_mask, unsigned char *img_new, int imgsize)
+{
 	register unsigned char 	*ptr1, *ptr2, *ptr3;
 	int i;
 	
