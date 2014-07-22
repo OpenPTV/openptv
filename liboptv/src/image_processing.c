@@ -528,6 +528,6 @@ void subtract_img8Bit (unsigned char *img1,unsigned char *img2,unsigned char *im
 	for (i=0, ptr1=img1, ptr2=img2, ptr3=img_new; i<imgsize; ptr1++, ptr2++, ptr3++, i++)
 	{
 		if ((*ptr1 - *ptr2) < 0) *ptr3 = 0;
-		else  *ptr3 = *ptr1-*ptr2;
+		else  *ptr3 = *ptr1- *ptr2;
 	}
  }
