@@ -181,14 +181,13 @@ void histeq (unsigned char	*img, int imgsize, int imx ){
    }
     /* constant = new # of gray levels div by area */
    constant = (float)(255.1)/(float)(imgsize);
-   printf(" constant %f \n", constant);
    for(Y=0; Y<imy; Y++){
       for(X=0; X<imx; X++){
          k  = *(img + X + Y*imx);
          *(img + X + Y*imx ) = (unsigned char)(sum_of_h[k] * constant);
 		} 
 	}
-}  /* ends perform_histogram_equalization */
+}  /* ends histeq */
 	
 
 
@@ -492,10 +491,6 @@ void unsharp_mask (int n, unsigned char *img0, unsigned char *img_lp,\
 }
 
 
-
-
-
-
 void zoom (unsigned char *img, unsigned char *zoomimg, int xm, int ym, int zf, \
 int imgsize, int imx, int imy){
   int          	i0, j0, sx, sy, i1, i2, j1, j2;
@@ -540,10 +535,11 @@ int zimx, int zimy, int imx){
 }
 
 
-
-
-
-	
+/* obsolete function - used with the interlaced video images which were constructed
+ * from odd or even lines. if the image was full frames, the function returned the 
+ * original image
+ */
+ 	
 void split (unsigned char	*img, int field, int imx, int imy, int imgsize){
 	register int   		i, j;
 	register unsigned char	*ptr;
@@ -566,9 +562,6 @@ void split (unsigned char	*img, int field, int imx, int imy, int imgsize){
 	end = img + imgsize;
 	for (ptr=img+imgsize/2; ptr<end; ptr++)  *ptr = 2;
 }
-
-
-
 
 
 
