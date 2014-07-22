@@ -40,7 +40,7 @@ void subtract_mask (unsigned char	* img, unsigned char	* img_mask, \
 unsigned char	* img_new, int imgsize);
 
 void subtract_img8Bit (unsigned char *img1,unsigned char *img2,unsigned char *img_new, int imgsize);
-void highpass (char pic_name[],unsigned char *img,unsigned char *img_hp,int dim_lp,int filter_hp,int field,int nr);
+void highpass (char pic_name[], unsigned char *img, unsigned char *img_hp, int dim_lp, int filter_hp, int field, int nr, int imgsize, int imx);
 
 #endif
 
