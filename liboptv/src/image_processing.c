@@ -506,8 +506,19 @@ int zimx, int zimy, int imx){
 
 
 
-	
-void split (unsigned char	*img, int field, int imx, int imy, int imgsize){
+/*
+* split is a function, that is able to copy only odd or even lines into the image
+*  Arguments:
+*   img is the unsigned char array pointer 
+*   imgsize is the imx * imy the total size of the image
+*	field is the switch to select the case
+*	Cases:
+*	0 - return full frame
+*	1 - return oddlines in the first half of the image, the second half is filled with defaul value (2)
+*	2 - return even in the first half of the image, the second half is filled with defaul value (2)
+*/	
+void split (unsigned char *img, int field, int imx, int imy, int imgsize)
+{
 	register int   		i, j;
 	register unsigned char	*ptr;
 	unsigned char	       	*end;
