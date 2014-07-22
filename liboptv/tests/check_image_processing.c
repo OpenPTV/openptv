@@ -242,6 +242,68 @@ START_TEST(test_histogram)
 }
 END_TEST
 
+START_TEST(test_filter_3)
+{
+        unsigned char *img, *img_lp;
+        int imgsize, imx, imy, i, j;
+        
+        imx = imy = 5;
+        imgsize = imx*imy;
+        
+        /* Allocate the image arrays */
+        
+        img_lp = (unsigned char *) calloc (imgsize, 1);
+        if (! img_lp) {
+        	printf ("calloc for img_lp --> error \n");
+        	exit (1);
+    	}
+    	
+        img = (unsigned char *) calloc (imgsize, 1);
+
+    	if (! img) {
+        	printf ("calloc for img_lp --> error \n");
+        	exit (1);
+    	}
+        
+        /* Initialize the image arrays */
+        for (i=0;i<imy;i++){ 
+            for(j=0;j<imx;j++){
+        		img[i*imx+j] = 128; 
+        		//img_lp[i*imx+j] = 0; 
+        	} 
+        } 
+        img[2+5*2] = 0;
+        img[1+5*1] = 255;
+        img[3+5*3] = 255;   
+
+         
+        filter_3 (img, img_lp, imgsize, imx);
+        
+        /* print the output */
+        printf("--------original ---------------\n"); 
+       for (i=0;i<imy;i++){ 
+            for(j=0;j<imx;j++){
+        		printf("%d\t", img[i*imx+j]);
+        	} 
+        	printf("\n");
+        } 
+        printf("--------passed filter_3---------------\n");        
+        for (i=0;i<imy;i++){ 
+            for(j=0;j<imx;j++){
+        		printf("%d\t", img_lp[i*imx+j]);
+        	} 
+        	printf("\n");
+        }
+               
+            
+       ck_assert_msg( img_lp[8] == 113  && 
+                      img_lp[12] == 142 && 
+                      img_lp[16] == 113 ,
+         "\n Expected 113, 142, 113 \n  \
+         but found %d %d %d \n", img_lp[8], img_lp[12], img_lp[16] );
+}
+END_TEST
+
 Suite* fb_suite(void) {
     Suite *s = suite_create ("image_processing");
     TCase *tc = tcase_create ("image_processing_test");
@@ -249,6 +311,7 @@ Suite* fb_suite(void) {
     tcase_add_test(tc, test_lowpass_n);
     tcase_add_test(tc, test_alex_lowpass_3);
     tcase_add_test(tc, test_histogram);
+    tcase_add_test(tc, test_filter_3);
     suite_add_tcase (s, tc);   
     return s;
 }
