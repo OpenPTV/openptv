@@ -535,35 +535,6 @@ int zimx, int zimy, int imx){
 }
 
 
-/* obsolete function - used with the interlaced video images which were constructed
- * from odd or even lines. if the image was full frames, the function returned the 
- * original image
- */
- 	
-void split (unsigned char	*img, int field, int imx, int imy, int imgsize){
-	register int   		i, j;
-	register unsigned char	*ptr;
-	unsigned char	       	*end;
-
-	switch (field)
-	{
-		case 0:  /* frames */
-				return;	 break;
-
-		case 1:  /* odd lines */
-				for (i=0; i<imy/2; i++)  for (j=0; j<imx; j++)
-					*(img + imx*i + j) = *(img + 2*imx*i + j + imx);  break;
-
-		case 2:  /* even lines */
-				for (i=0; i<imy/2; i++)  for (j=0; j<imx; j++)
-					*(img + imx*i + j) = *(img + 2*imx*i + j);  break;
-	}
-	
-	end = img + imgsize;
-	for (ptr=img+imgsize/2; ptr<end; ptr++)  *ptr = 2;
-}
-
-
 
 void copy_images (unsigned char	*img1, unsigned char *img2, int imgsize){
 	register unsigned char 	*ptr1, *ptr2;
