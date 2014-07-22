@@ -410,7 +410,96 @@ START_TEST(test_filter_3)
                       img_lp[12] == 108 && 
                       img_lp[16] == 117 ,
          "\n Expected 117 108 117  \n  \
+         but found %d %d %d \n", img_lp[8], img_lp[12], img_lp[16] );
+         
+         
+         
+           /* low pass  */
+        m[0][0] = 1; m[0][1] = 1; m[0][2] = 1;
+	    m[1][0] = 1; m[1][1] = 1; m[1][2] = 1;
+	    m[2][0] = 1; m[2][1] = 1; m[2][2] = 1;
+	    sum = 9.0;
+	    
+	    
+	    /* write filter elements to the parameter file */
+	    fp = fopen ("filter.par","w");
+	    if (fp != NULL){ 
+	      for (i=0; i<3; i++){
+	          for(j=0; j<3; j++){
+		      	fprintf (fp, "%4.3f", m[i][j]/sum);
+		       }
+		    }
+	   fclose (fp); 
+	   } 
+       
+       filter_3 (img, img_lp, imgsize, imx);
+        
+        /* print the output */
+        printf("--------original ---------------\n"); 
+       for (i=0;i<imy;i++){ 
+            for(j=0;j<imx;j++){
+        		printf("%d\t", img[i*imx+j]);
+        	} 
+        	printf("\n");
+        } 
+        printf("--------passed filter_3---------------\n");        
+        for (i=0;i<imy;i++){ 
+            for(j=0;j<imx;j++){
+        		printf("%d\t", img_lp[i*imx+j]);
+        	} 
+        	printf("\n");
+        }
+               
+            
+       ck_assert_msg( img_lp[8] == 112  && 
+                      img_lp[12] == 140 && 
+                      img_lp[16] == 112 ,
+         "\n Expected 112 140 112  \n  \
          but found %d %d %d \n", img_lp[8], img_lp[12], img_lp[16] ); 
+         
+         
+          /* corrupted */
+        m[0][0] = 0; m[0][1] = 0; m[0][2] = 0;
+	    m[1][0] = 0; m[1][1] = 0; m[1][2] = 0;
+	    m[2][0] = 0; m[2][1] = 0; m[2][2] = 0;
+	    sum = 16.0;
+	    
+	    
+	    /* write filter elements to the parameter file */
+	    fp = fopen ("filter.par","w");
+	    if (fp != NULL){ 
+	      for (i=0; i<3; i++){
+	          for(j=0; j<3; j++){
+		      	fprintf (fp, "%4.3f", m[i][j]/sum);
+		       }
+		    }
+	   fclose (fp); 
+	   } 
+       
+       filter_3 (img, img_lp, imgsize, imx);
+        
+        /* print the output */
+        printf("--------original ---------------\n"); 
+       for (i=0;i<imy;i++){ 
+            for(j=0;j<imx;j++){
+        		printf("%d\t", img[i*imx+j]);
+        	} 
+        	printf("\n");
+        } 
+        printf("--------passed filter_3---------------\n");        
+        for (i=0;i<imy;i++){ 
+            for(j=0;j<imx;j++){
+        		printf("%d\t", img_lp[i*imx+j]);
+        	} 
+        	printf("\n");
+        }
+               
+            
+       ck_assert_msg( img_lp[8] == 112  && 
+                      img_lp[12] == 140 && 
+                      img_lp[16] == 112 ,
+         "\n Expected 112 140 112  \n  \
+         but found %d %d %d \n", img_lp[8], img_lp[12], img_lp[16] );
          
          
 }

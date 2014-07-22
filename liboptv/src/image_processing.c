@@ -60,11 +60,11 @@ void filter_3 (unsigned char *img, unsigned char *img_lp, int imgsize, int imx){
 	        }
 	    }
 	} else { 
-	       printf("filter.par was found, reading the values \n");  
+	      printf("filter.par was found, reading the values \n");  
 	      for (i=0, sum=0; i<3; i++){
 	          for(j=0; j<3; j++){
 		      	fscanf (fp, "%f", &m[i][j]);
-		      	printf("%f", m[i][j]);
+		      	// printf("%f", m[i][j]);
 		        sum += m[i][j];
 		       }
 		    }
