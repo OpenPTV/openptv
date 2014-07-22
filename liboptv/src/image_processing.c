@@ -131,20 +131,18 @@ void filter_3 (unsigned char *img, unsigned char *img_lp, int imgsize, int imx){
 }
 
 
-
-
-
 void enhance (unsigned char	*img, int imgsize, int imx ){
 	register unsigned char	*ptr;
 	unsigned char	       	*end, gmin = 255, gmax = 0, offs;
-	float		       	diff, gain;
-	int		       	i, sum, histo[256];
+	float		       	    diff, gain;
+	int		       	        i, sum, histo[256];
 	
 	//void histogram ();
 	
 	end = img + imgsize;
 
 	histogram (img, histo, imgsize);
+	
 	for (i=0, sum=0; (i<255)&&(sum<imx); sum += histo[i], i++)  gmin = i;	
 	for (i=255, sum=0; (i>0)&&(sum<512); sum+=histo[i], i--)  gmax = i;	
 	offs = gmin;  diff = gmax - gmin;  gain = 255 / diff;
@@ -156,6 +154,47 @@ void enhance (unsigned char	*img, int imgsize, int imx ){
 		if (*ptr < 8) *ptr = 8;		/* due monocomp colors */
 	}
 }
+
+
+
+/* Apparently enhance is the histogram equalization algorithm but with some
+*  constraints that are not clear - why sum is less then imx and then less then 512 
+* 
+*  New function histeq is an implementation from the 
+*  Image Processing in C, 2nd Ed. by Dwayne Phillips 
+*/
+void histeq (unsigned char	*img, int imgsize, int imx ){
+	register unsigned char	*ptr;
+	unsigned char	       	*end, gmin = 255, gmax = 0, offs;
+	float		       	    diff, gain;
+	int		       	        i, j, k, imy, histo[256];
+	unsigned long 			sum, sum_of_h[256];
+    double 					constant;
+	
+	//void histogram ();
+	
+	imy = imgsize/imx;
+
+	histogram (img, histo, imgsize);
+	
+
+   sum = 0;
+   for(i=0; i<256; i++){
+      sum += histo[i];
+      sum_of_h[i] = sum;
+   }
+    /* constant = new # of gray levels div by area */
+   constant = (float)(256)/(float)(imgsize);
+   for(i=0; i<imy; i++){
+      for(j=0; j<imx; j++){
+      
+         k  = *(img + i + (j)*imx );
+         *(img + i + (j)*imx ) = sum_of_h[k] * constant;
+		} 
+	}
+}  /* ends perform_histogram_equalization */
+	
+
 
 
 void histogram (unsigned char *img, int *hist, int imgsize){

@@ -242,6 +242,111 @@ START_TEST(test_histogram)
 }
 END_TEST
 
+START_TEST(test_enhance)
+{
+        unsigned char *img;
+        int imgsize, imx, imy, i, j;
+        int hist[256];
+        
+        imx = imy = 5;
+        imgsize = imx*imy;
+        
+        /* Allocate the image arrays */
+           	
+        img = (unsigned char *) calloc (imgsize, 1);
+
+    	if (! img) {
+        	printf ("calloc for img_lp --> error \n");
+        	exit (1);
+    	}
+        
+        /* Initialize the image arrays */
+        for (i=0;i<imy;i++){ 
+            for(j=0;j<imx;j++){
+        		img[i*imx+j] = (i+1)*(j+1)*10; 
+        	} 
+        } 
+        img[2+5*2] = 0;
+        img[1+5*1] = 181;
+        img[3+5*3] = 255;   
+        
+        /* print the output */
+        
+       printf("--------before enhance ---------------\n"); 
+       for (i=0;i<imy;i++){ 
+            for(j=0;j<imx;j++){
+        		printf("%d\t", img[i*imx+j]);
+        	} 
+        	printf("\n");
+        } 
+        
+        
+         
+        enhance(img, imgsize, imx);
+        
+        printf("--------after enhance ---------------\n");        
+        for (i=0;i<imy;i++){ 
+            for(j=0;j<imx;j++){
+        		printf("%d\t", img[i*imx+j]);
+        	} 
+        	printf("\n");
+        }
+        
+        // for (i=0; i<256; i++)  printf("i, hist[i] %d %d\n",i,hist[i]);
+            
+        ck_assert_msg(img[8] == 255  && 
+                      img[12] == 8 && 
+                      img[16] == 255 ,
+         "\n Expected 126 84 126 \n  \
+         but found %d %d %d \n", img[8], img[12], img[16] );
+         
+         
+         
+         /* Now let's try histeq */
+         /* Initialize the image arrays */
+        for (i=0;i<imy;i++){ 
+            for(j=0;j<imx;j++){
+        		img[i*imx+j] = (i+1)*(j+1)*10; 
+        	} 
+        } 
+        img[2+5*2] = 0;
+        img[1+5*1] = 181;
+        img[3+5*3] = 255;   
+        
+        /* print the output */
+        
+       printf("--------before histeq ---------------\n"); 
+       for (i=0;i<imy;i++){ 
+            for(j=0;j<imx;j++){
+        		printf("%d\t", img[i*imx+j]);
+        	} 
+        	printf("\n");
+        } 
+        
+        
+         
+        histeq(img, imgsize, imx);
+        
+        printf("--------after histeq ---------------\n");        
+        for (i=0;i<imy;i++){ 
+            for(j=0;j<imx;j++){
+        		printf("%d\t", img[i*imx+j]);
+        	} 
+        	printf("\n");
+        }
+        
+        // for (i=0; i<256; i++)  printf("i, hist[i] %d %d\n",i,hist[i]);
+            
+        ck_assert_msg(img[8] == 126  && 
+                      img[12] == 84 && 
+                      img[16] == 126 ,
+         "\n Expected 126 84 126 \n  \
+         but found %d %d %d \n", img[8], img[12], img[16] );
+         
+         
+}
+END_TEST
+
 START_TEST(test_filter_3)
 {
         unsigned char *img, *img_lp;
@@ -264,7 +369,7 @@ START_TEST(test_filter_3)
 	    if (fp != NULL){ 
 	      for (i=0; i<3; i++){
 	          for(j=0; j<3; j++){
-		      	fprintf (fp, "%4.3f", m[i][j]/sum);
+		      	fprintf (fp, "%4.3f\t", m[i][j]/sum);
 		       }
 		    }
 	   fclose (fp); 
@@ -338,7 +443,7 @@ START_TEST(test_filter_3)
 	    if (fp != NULL){ 
 	      for (i=0; i<3; i++){
 	          for(j=0; j<3; j++){
-		      	fprintf (fp, "%4.3f", m[i][j]/sum);
+		      	fprintf (fp, "%4.3f\t", m[i][j]/sum);
 		       }
 		    }
 	   fclose (fp); 
@@ -381,7 +486,7 @@ START_TEST(test_filter_3)
 	    if (fp != NULL){ 
 	      for (i=0; i<3; i++){
 	          for(j=0; j<3; j++){
-		      	fprintf (fp, "%4.3f", m[i][j]/sum);
+		      	fprintf (fp, "%4.3f\t", m[i][j]/sum);
 		       }
 		    }
 	   fclose (fp); 
@@ -426,7 +531,7 @@ START_TEST(test_filter_3)
 	    if (fp != NULL){ 
 	      for (i=0; i<3; i++){
 	          for(j=0; j<3; j++){
-		      	fprintf (fp, "%4.3f", m[i][j]/sum);
+		      	fprintf (fp,"%4.3f\t", m[i][j]/sum);
 		       }
 		    }
 	   fclose (fp); 
@@ -470,7 +575,7 @@ START_TEST(test_filter_3)
 	    if (fp != NULL){ 
 	      for (i=0; i<3; i++){
 	          for(j=0; j<3; j++){
-		      	fprintf (fp, "%4.3f", m[i][j]/sum);
+		      	fprintf (fp, "%4.3f\t", m[i][j]/sum);
 		       }
 		    }
 	   fclose (fp); 
@@ -564,6 +669,7 @@ Suite* fb_suite(void) {
     tcase_add_test(tc, test_alex_lowpass_3);
     tcase_add_test(tc, test_histogram);
     tcase_add_test(tc, test_filter_3);
+    tcase_add_test(tc, test_enhance);
     suite_add_tcase (s, tc);   
     return s;
 }
