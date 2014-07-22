@@ -194,10 +194,10 @@ START_TEST(test_alex_lowpass_3)
         }
                
             
-       ck_assert_msg( img_lp[8] == 142  && 
-                      img_lp[12] == 127 && 
-                      img_lp[16] == 99 ,
-         "\n Expected 142, 127, 99 \n  \
+       ck_assert_msg( img_lp[8] == 113  && 
+                      img_lp[12] == 142 && 
+                      img_lp[16] == 113 ,
+         "\n Expected 113, 142, 113 \n  \
          but found %d %d %d \n", img_lp[8], img_lp[12], img_lp[16] );
 }
 END_TEST

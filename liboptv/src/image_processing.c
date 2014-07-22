@@ -185,6 +185,10 @@ void alex_lowpass_3 (unsigned char *img, unsigned char *img_lp, int imgsize, int
 	F[1][0] = 1; F[1][1] = 1; F[1][2] = 1;
 	F[2][0] = 1; F[2][1] = 1; F[2][2] = 1;
 	
+	/* to ensure that the boundaries are original */
+	
+	copy_images (img, img_lp, imgsize);
+	
 	for(Y=0; Y<(imy-2); Y++)  
 	{
 		for(X=0; X<(imx-2); X++)  
