@@ -93,7 +93,7 @@ void enhance (unsigned char	*img, int imgsize, int imx ){
 	float		       	diff, gain;
 	int		       	i, sum, histo[256];
 	
-	void histogram ();
+	//void histogram ();
 	
 	end = img + imgsize;
 
@@ -260,6 +260,7 @@ void lowpass_n (int n, unsigned char *img, unsigned char *img_lp, \
 
 
 	free (buf1);
+	free (buf2);
 }
 
 
