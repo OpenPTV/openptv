@@ -247,6 +247,29 @@ START_TEST(test_filter_3)
         unsigned char *img, *img_lp;
         int imgsize, imx, imy, i, j;
         
+        int	       	    end;
+	    float	       	m[3][3], sum;
+	    FILE	       	*fp;
+	    
+	    
+
+	    m[0][0] = 0; m[0][1] = 1; m[0][2] = 0;
+	    m[1][0] = 1; m[1][1] = 2; m[1][2] = 1;
+	    m[2][0] = 0; m[2][1] = 1; m[2][2] = 0;
+	    sum = 6.0;
+	    
+	    
+	    /* write filter elements to the parameter file */
+	    fp = fopen ("filter.par","w");
+	    if (fp != NULL){ 
+	      for (i=0; i<3; i++){
+	          for(j=0; j<3; j++){
+		      	fprintf (fp, "%4.3f", m[i][j]/sum);
+		       }
+		    }
+	   fclose (fp); 
+	   } 
+        
         imx = imy = 5;
         imgsize = imx*imy;
         
@@ -296,11 +319,100 @@ START_TEST(test_filter_3)
         }
                
             
-       ck_assert_msg( img_lp[8] == 113  && 
-                      img_lp[12] == 142 && 
-                      img_lp[16] == 113 ,
-         "\n Expected 113, 142, 113 \n  \
+       ck_assert_msg( img_lp[8] == 126  && 
+                      img_lp[12] == 84 && 
+                      img_lp[16] == 126 ,
+         "\n Expected 126 84 126 \n  \
          but found %d %d %d \n", img_lp[8], img_lp[12], img_lp[16] );
+         
+         
+         /* another filter */
+        m[0][0] = 1; m[0][1] = 1; m[0][2] = 1;
+	    m[1][0] = 1; m[1][1] = 2; m[1][2] = 1;
+	    m[2][0] = 1; m[2][1] = 1; m[2][2] = 1;
+	    sum = 10.0;
+	    
+	    
+	    /* write filter elements to the parameter file */
+	    fp = fopen ("filter.par","w");
+	    if (fp != NULL){ 
+	      for (i=0; i<3; i++){
+	          for(j=0; j<3; j++){
+		      	fprintf (fp, "%4.3f", m[i][j]/sum);
+		       }
+		    }
+	   fclose (fp); 
+	   } 
+       
+       filter_3 (img, img_lp, imgsize, imx);
+        
+        /* print the output */
+        printf("--------original ---------------\n"); 
+       for (i=0;i<imy;i++){ 
+            for(j=0;j<imx;j++){
+        		printf("%d\t", img[i*imx+j]);
+        	} 
+        	printf("\n");
+        } 
+        printf("--------passed filter_3---------------\n");        
+        for (i=0;i<imy;i++){ 
+            for(j=0;j<imx;j++){
+        		printf("%d\t", img_lp[i*imx+j]);
+        	} 
+        	printf("\n");
+        }
+               
+            
+       ck_assert_msg( img_lp[8] == 109  && 
+                      img_lp[12] == 122 && 
+                      img_lp[16] == 109 ,
+         "\n Expected 109 122 109 \n  \
+         but found %d %d %d \n", img_lp[8], img_lp[12], img_lp[16] );
+         
+         /* another filter */
+        m[0][0] = 1; m[0][1] = 2; m[0][2] = 1;
+	    m[1][0] = 2; m[1][1] = 4; m[1][2] = 2;
+	    m[2][0] = 1; m[2][1] = 2; m[2][2] = 1;
+	    sum = 16.0;
+	    
+	    
+	    /* write filter elements to the parameter file */
+	    fp = fopen ("filter.par","w");
+	    if (fp != NULL){ 
+	      for (i=0; i<3; i++){
+	          for(j=0; j<3; j++){
+		      	fprintf (fp, "%4.3f", m[i][j]/sum);
+		       }
+		    }
+	   fclose (fp); 
+	   } 
+       
+       filter_3 (img, img_lp, imgsize, imx);
+        
+        /* print the output */
+        printf("--------original ---------------\n"); 
+       for (i=0;i<imy;i++){ 
+            for(j=0;j<imx;j++){
+        		printf("%d\t", img[i*imx+j]);
+        	} 
+        	printf("\n");
+        } 
+        printf("--------passed filter_3---------------\n");        
+        for (i=0;i<imy;i++){ 
+            for(j=0;j<imx;j++){
+        		printf("%d\t", img_lp[i*imx+j]);
+        	} 
+        	printf("\n");
+        }
+               
+            
+       ck_assert_msg( img_lp[8] == 117  && 
+                      img_lp[12] == 108 && 
+                      img_lp[16] == 117 ,
+         "\n Expected 117 108 117  \n  \
+         but found %d %d %d \n", img_lp[8], img_lp[12], img_lp[16] ); 
+         
+         
 }
 END_TEST
 

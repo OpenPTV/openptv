@@ -54,16 +54,17 @@ void filter_3 (unsigned char *img, unsigned char *img_lp, int imgsize, int imx){
 	fp = fopen ("filter.par","r");
 	if (fp == NULL){
 	    printf("filter.par was not found, fallback to default lowpass filter \n");
-	    sum = 9;
-	    for (i=0, sum=0; i<3; i++){
+	    for (i=0, sum=9; i<3; i++){
 	       for(j=0;j<3; j++){
-	          m[i][j] = 1.0; 
+	          m[i][j] = 1.0/sum; 
 	        }
 	    }
-	} else {    
+	} else { 
+	       printf("filter.par was found, reading the values \n");  
 	      for (i=0, sum=0; i<3; i++){
 	          for(j=0; j<3; j++){
 		      	fscanf (fp, "%f", &m[i][j]);
+		      	printf("%f", m[i][j]);
 		        sum += m[i][j];
 		       }
 		    }
@@ -71,10 +72,9 @@ void filter_3 (unsigned char *img, unsigned char *img_lp, int imgsize, int imx){
 	fclose (fp);  
 	if (sum == 0) {
 	    printf("filter.par is corrupted or empty, fallback to default lowpass filter \n");
-	    sum = 9;
-	    for (i=0, sum=0; i<3; i++){
+	    for (i=0, sum=9; i<3; i++){
 	        for (j=0; j<3; j++){
-	                m[i][j] = 1.0; 
+	                m[i][j] = 1.0/sum; 
 	        }
 	    } 
 	}
@@ -96,7 +96,7 @@ void filter_3 (unsigned char *img, unsigned char *img_lp, int imgsize, int imx){
 					buf += (int)( (*(img + X + I + (Y + J)*imx )) * m[I][J]); 
 				}
 			}
-	     buf/=9;
+	     // buf/=9;
 	     if(buf>255)  buf = 255;
 	     if(buf<0)    buf = 0;
 
