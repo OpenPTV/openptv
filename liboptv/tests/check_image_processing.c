@@ -306,7 +306,7 @@ START_TEST(test_enhance)
          /* Initialize the image arrays */
         for (i=0;i<imy;i++){ 
             for(j=0;j<imx;j++){
-        		img[i*imx+j] = (i+1)*(j+1)*10; 
+        		img[i*imx+j] = (i+1)*(j+1)*5; 
         	} 
         } 
         img[2+5*2] = 0;
@@ -337,11 +337,11 @@ START_TEST(test_enhance)
         
         // for (i=0; i<256; i++)  printf("i, hist[i] %d %d\n",i,hist[i]);
             
-        ck_assert_msg(img[8] == 126  && 
-                      img[12] == 84 && 
-                      img[16] == 126 ,
-         "\n Expected 126 84 126 \n  \
-         but found %d %d %d \n", img[8], img[12], img[16] );
+        ck_assert_msg(img[2] == 61  && 
+                      img[7] == 122 && 
+                      img[24] == 235 ,
+         "\n Expected 61 122 235 \n  \
+         but found %d %d %d \n", img[2], img[7], img[24] );
          
          
 }
