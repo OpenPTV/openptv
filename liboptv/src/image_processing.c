@@ -169,36 +169,41 @@ void lowpass_3 (unsigned char *img, unsigned char *img_lp, int imgsize, int imx)
 }
 
 
-void alex_lowpass_3 (unsigned char *img, unsigned char *img_lp, int imgsize, int imx){
+void alex_lowpass_3 (unsigned char *img, unsigned char *img_lp, int imgsize, int imx)
+{
 
-   unsigned int		X, Y;
-   int			    I, J;
-   long			    SUM;
-   int imy;
-   int F[3][3]; 
+	int		X, Y;
+	int		I, J;
+	long	SUM;
+	int		imy;
+	int		F[3][3]; 
 	
 	imy = imgsize/imx;
 	
-    /* 3  X 3 FILTER MASK */
-   F[0][0] = 1; F[0][1] = 1; F[0][2] = 1;
-   F[1][0] = 1; F[1][1] = 1; F[1][2] = 1;
-   F[2][0] = 1; F[2][1] = 1; F[2][2] = 1;
+	/* 3  X 3 FILTER MASK */
+	F[0][0] = 1; F[0][1] = 1; F[0][2] = 1;
+	F[1][0] = 1; F[1][1] = 1; F[1][2] = 1;
+	F[2][0] = 1; F[2][1] = 1; F[2][2] = 1;
 	
-for(Y=0; Y<imy; Y++)  {
-	for(X=0; X<imx; X++)  {
+	for(Y=0; Y<(imy-2); Y++)  
+	{
+		for(X=0; X<(imx-2); X++)  
+		{
 	     SUM = 0;
-	     for(I=0; I<=2; I++)  {
-		    for(J=0; J<=2; J++)  {
-		       SUM = SUM + (int)( (*(img + X + I + (Y + J)*imx )) * F[I][J]);
-		     }
-	     }
+			for(I=0; I<=2; I++)  
+			{
+				for(J=0; J<=2; J++)  
+				{
+					SUM += (int)( (*(img + X + I + (Y + J)*imx )) * F[I][J]); 
+				}
+			}
 	     SUM/=9;
 	     if(SUM>255)  SUM=255;
 	     if(SUM<0)    SUM=0;
 
-	     *(img_lp + X + Y*imx) = (unsigned char)(SUM);	
+	     *(img_lp + X+1 + (Y+1)*imx) = (unsigned char)(SUM);	
+		}
 	}
-   }
 }
 
 void lowpass_n (int n, unsigned char *img, unsigned char *img_lp, \
