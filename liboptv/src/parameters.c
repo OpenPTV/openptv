@@ -241,6 +241,12 @@ control_par* read_control_par(char *filename) {
         ret->cal_img_base_name[cam] = (char *) malloc(SEQ_FNAME_MAX_LEN);
         strncpy(ret->cal_img_base_name[cam], line, SEQ_FNAME_MAX_LEN);
     }
+    /* backward compatibility hack: Tcl/Tk version will look for 8 rows of strings */
+    for (cam = ret->num_cams; cam < 4; cam++){
+        if (fscanf(par_file, "%s\n", line) == 0) goto handle_error; 
+        if (fscanf(par_file, "%s\n", line) == 0) goto handle_error;
+    }
+    
     if(fscanf(par_file, "%d\n", &(ret->hp_flag)) == 0) goto handle_error;
     if(fscanf(par_file, "%d\n", &(ret->allCam_flag)) == 0) goto handle_error;
     if(fscanf(par_file, "%d\n", &(ret->tiff_flag)) == 0) goto handle_error;
@@ -254,8 +260,8 @@ control_par* read_control_par(char *filename) {
     if(fscanf(par_file, "%lf\n", &(ret->mm->n3)) == 0) goto handle_error;
     if(fscanf(par_file, "%lf\n", &(ret->mm->d[0])) == 0) goto handle_error; 
     
-    return ret;
     fclose(par_file);
+    return ret;
 
 handle_error:
     fclose(par_file);

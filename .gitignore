@@ -4,3 +4,7 @@ liboptv/config.h.in~
 liboptv/tests/check_fb.trs
 liboptv/build
 *~
+*.so
+tracking_framebuf.c
+py_bind/build
+image_processing.c
