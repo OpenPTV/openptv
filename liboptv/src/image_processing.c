@@ -158,14 +158,15 @@ void enhance (unsigned char	*img, int imgsize, int imx )
 	}
 }
 
-
-void histogram (unsigned char *img, int *hist, int imgsize){
-
+/* histogram computes a histogram from the image and returns it to hist
+*/
+void histogram (unsigned char *img, int *hist, int imgsize)
+{
 	int	       	i;
 	unsigned char  	*end;
 	register unsigned char	*ptr;
 
-	
+	//write defaults into histgramm array
 	for (i=0; i<256; i++)  hist[i] = 0;
 	
 	end = img + imgsize;
