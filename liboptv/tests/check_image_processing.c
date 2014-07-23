@@ -111,7 +111,7 @@ START_TEST(test_lowpass_n)
          
          
        
-        lowpass_n (1, img, img_lp, imgsize, imx, imy);
+        lowpass_n (1, img, img_lp, imgsize, imx);
         
          /* print the output */
         printf("--------original ---------------\n"); 

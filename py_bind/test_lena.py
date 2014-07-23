@@ -6,7 +6,12 @@ from optv.image_processing import py_lowpass_3, py_lowpass_n, py_copy_images
 from optv.image_processing import py_filter_3, py_highpass
 
 
+# use Lena image, but only grayscale (one channel)
+# and make it rectangular
 a = lena()[:,:,0].astype(np.uint8)
+a = a[:300,:].copy()
+
+
 b = py_lowpass_3(a) 
 imshow(np.c_[a,b],cmap='gray')
 title("lowpass_3 test")
@@ -28,10 +33,9 @@ show()
 
 
 # test copy_images
-a = lena()[:,:,0].astype(np.uint8)
 b = np.copy(a)
 c = py_copy_images(a)
-print all(b == c)
+assert all(b == c)
 
 
 # test filter_3
@@ -59,8 +63,7 @@ print e
 
 
 # test highpass
-a = lena()[:,:,0].astype(np.uint8)
-dim_lp = 1; filter_hp = 0
+dim_lp = 3; filter_hp = 1
 b = py_highpass(a, dim_lp, filter_hp)
 imshow(np.c_[a,b],cmap='gray'); 
 title("Highpass test")

@@ -25,7 +25,7 @@ void lowpass_3 (unsigned char *img, unsigned char *img_lp, \
 void alex_lowpass_3 (unsigned char *img, unsigned char *img_lp, \
                int imgsize, int imx);
 void lowpass_n (int n, unsigned char *img, unsigned char *img_lp,\
-                int imgsize, int imx, int imy);
+                int imgsize, int imx);
 void unsharp_mask (int n, unsigned char *img0, unsigned char *img_lp, \
                     int imgsize, int imx, int imy);
 

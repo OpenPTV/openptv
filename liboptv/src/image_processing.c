@@ -303,13 +303,16 @@ void alex_lowpass_3 (unsigned char *img, unsigned char *img_lp, int imgsize, int
 }
 
 void lowpass_n (int n, unsigned char *img, unsigned char *img_lp, \
-                int imgsize, int imx, int imy){
+                int imgsize, int imx){
 
 	register unsigned char	*ptrl, *ptrr, *ptrz;
 	short  		       	    *buf1, *buf2, buf, *end;
 	register short	       	*ptr, *ptr1, *ptr2, *ptr3;
 	int    		       	     k, n2, nq;
 	register int	       	i;
+	int                     imy;
+	
+	imy = imgsize/imx;
 	
 	n2 = 2*n + 1;  nq = n2 * n2;
 	

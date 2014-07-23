@@ -10,8 +10,8 @@ ctypedef np.uint8_t DTYPE_t
 
 cdef extern from "optv/image_processing.h":
     void lowpass_3  (unsigned char *img , unsigned char *img_lp,  int imgsize, int imx)
-    void lowpass_n (int n, unsigned char *img, unsigned char *img_lp, int imgsize, int imx, int imy)
-    void copy_images (unsigned char	*img1, unsigned char *img2, int imgsize, int imx)
+    void lowpass_n (int n, unsigned char *img, unsigned char *img_lp, int imgsize, int imx)
+    void copy_images (unsigned char	*img1, unsigned char *img2, int imgsize)
     #void filter_3 "filter_3" (unsigned char *img, unsigned char *img_lp, int imgsize, int imx)
     void filter_3 (unsigned char*, unsigned char*, int, int)
     void highpass (unsigned char *img, unsigned char *img_hp, int dim_lp, int filter_hp, int imgsize, int imx)
@@ -27,12 +27,12 @@ def py_lowpass_3(np.ndarray[DTYPE_t, ndim=2] img not None):
 # @cython.wraparound(False)
 def py_lowpass_n(n, np.ndarray[DTYPE_t, ndim=2] img not None):
     cdef np.ndarray[unsigned char, ndim=2,mode="c"] img_lp = np.empty((img.shape[0],img.shape[1]),dtype='uint8')
-    lowpass_n(<int>n, <unsigned char *>img.data, <unsigned char *>img_lp.data, img.shape[0]*img.shape[1], img.shape[1], img.shape[0])
+    lowpass_n(<int>n, <unsigned char *>img.data, <unsigned char *>img_lp.data, img.shape[0]*img.shape[1], img.shape[1])
     return img_lp
 
 def py_copy_images(np.ndarray[DTYPE_t, ndim=2] img not None):
     cdef np.ndarray[unsigned char, ndim=2,mode="c"] img_copy = np.empty((img.shape[0],img.shape[1]),dtype='uint8')
-    copy_images(<unsigned char *>img.data, <unsigned char *>img_copy.data, img.shape[0]*img.shape[1], img.shape[1])
+    copy_images(<unsigned char *>img.data, <unsigned char *>img_copy.data, img.shape[0]*img.shape[1])
     return img_copy
 
 def py_filter_3(np.ndarray[unsigned char, ndim=2, mode="c"] img):
