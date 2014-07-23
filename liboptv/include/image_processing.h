@@ -34,7 +34,6 @@ void zoom (unsigned char *img, unsigned char *zoomimg, int xm, int ym, int zf, \
 int imgsize, int imx, int imy);
 void zoom_new (unsigned char	*img, unsigned char	*zoomimg, int xm, int ym, int zf,\
 int zimx, int zimy, int imx);
-void split (unsigned char	*img, int field, int imx, int imy, int imgsize);
 void subtract_mask (unsigned char	* img, unsigned char	* img_mask, \
 unsigned char	* img_new, int imgsize);
 

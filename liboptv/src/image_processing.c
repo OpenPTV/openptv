@@ -547,42 +547,6 @@ int zimx, int zimy, int imx){
 
 
 /*
-* split is a function, that is able to copy only odd or even lines into the image
-*  Arguments:
-*   img is the unsigned char array pointer 
-*   imgsize is the imx * imy the total size of the image
-*	field is the switch to select the case
-*	Cases:
-*	0 - return full frame
-*	1 - return oddlines in the first half of the image, the second half is filled with defaul value (2)
-*	2 - return even in the first half of the image, the second half is filled with defaul value (2)
-*/	
-void split (unsigned char *img, int field, int imx, int imy, int imgsize)
-{
-	register int   		i, j;
-	register unsigned char	*ptr;
-	unsigned char	       	*end;
-
-	switch (field)
-	{
-		case 0:  /* frames */
-				return;	 break;
-
-		case 1:  /* odd lines */
-				for (i=0; i<imy/2; i++)  for (j=0; j<imx; j++)
-					*(img + imx*i + j) = *(img + 2*imx*i + j + imx);  break;
-
-		case 2:  /* even lines */
-				for (i=0; i<imy/2; i++)  for (j=0; j<imx; j++)
-					*(img + imx*i + j) = *(img + 2*imx*i + j);  break;
-	}
-	
-	end = img + imgsize;
-	for (ptr=img+imgsize/2; ptr<end; ptr++)  *ptr = 2;
-}
-
-
-/*
 * handle_imageborders8Bit  is a simple image arithmetic function that 
 * corrects the imageborders after filtering functions like lowpass_3 or filter_3 
 * it copies the outer pixel line(s) from img1 into img2
