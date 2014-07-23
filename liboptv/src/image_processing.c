@@ -167,33 +167,34 @@ void enhance (unsigned char	*img, int imgsize, int imx )
 *  New function histeq is an implementation from the 
 *  Image Processing in C, 2nd Ed. by Dwayne Phillips, Listing 4.2 
 */
-void histeq (unsigned char	*img, int imgsize, int imx ){
+void histeq (unsigned char	*img, int imgsize, int imx )
+{
 	int		       	        X,Y, i, k, imy, histo[256];
 	int 			        sum, sum_of_h[256];
     double 					constant;
-	
-	//void histogram ();
 	
 	imy = imgsize/imx;
 
 	histogram (img, histo, imgsize);
 	
-   sum = 0;
-   for(i=0; i<256; i++){
-      sum += histo[i];
-      sum_of_h[i] = sum;
-   }
+	sum = 0;
+	for(i=0; i<256; i++)
+	{
+		sum += histo[i];
+		sum_of_h[i] = sum;
+	}
     /* constant = new # of gray levels div by area */
-   constant = (float)(255.1)/(float)(imgsize);
-   for(Y=0; Y<imy; Y++){
-      for(X=0; X<imx; X++){
-         k  = *(img + X + Y*imx);
-         *(img + X + Y*imx ) = (unsigned char)(sum_of_h[k] * constant);
+	constant = (float)(255.1)/(float)(imgsize);
+	for(Y=0; Y<imy; Y++)
+	{
+		for(X=0; X<imx; X++)
+		{
+			k  = *(img + X + Y*imx);
+			*(img + X + Y*imx ) = (unsigned char)(sum_of_h[k] * constant);
 		} 
 	}
 }  /* ends histeq */
 	
-
 
 /* histogram computes a histogram from the image and returns it to hist
 */
@@ -260,7 +261,6 @@ void lowpass_3 (unsigned char *img, unsigned char *img_lp, int imgsize, int imx)
 *  alex_lowpass_3 version that is a copy of the lowpass from  
 *  Image Processing in C, 2nd Ed. by Dwayne Phillips, Listing 7.1 
 */
-
 void alex_lowpass_3 (unsigned char *img, unsigned char *img_lp, int imgsize, int imx)
 {
 
@@ -544,9 +544,6 @@ int zimx, int zimy, int imx){
 		if ((i%zf) == 0)	ptri++;
 	}
 }
-
-
-
 
 
 /*
