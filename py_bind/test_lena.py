@@ -2,59 +2,41 @@ from matplotlib.pylab import *
 from skimage.data import lena
 import numpy as np
 
-from optv.image_processing import py_lowpass_3, py_lowpass_n, py_copy_images, py_filter_3
+from optv.image_processing import py_lowpass_3, py_lowpass_n, py_copy_images
+from optv.image_processing import py_filter_3, py_highpass
 
 
 a = lena()[:,:,0].astype(np.uint8)
-b = np.zeros_like(a)
-imx,imy = a.shape
-py_lowpass_3(a,b,imx*imy,imx) 
-
-# imshow(np.c_[a,b],cmap='gray')
-# show()
+b = py_lowpass_3(a) 
+imshow(np.c_[a,b],cmap='gray')
+title("lowpass_3 test")
+show()
 
 # imshow(a-b,cmap='gray')
 # show()
 
-# a = lena()[:,:,0].astype(np.uint8)
-# b = np.copy(a)
-# imx,imy = a.shape
-b = np.zeros_like(a)
-py_lowpass_n(5, a, b, imx*imy, imx, imy) 
+b = py_lowpass_n(1, a) 
+imshow(np.c_[a,b],cmap='gray')
+title("lowpass_n test with n = 1")
+show()
 
-print b[150:155,150:155]	
-
-# imshow(np.c_[a,b],cmap='gray')
-# show()
-
-# imshow(a-b,cmap='gray')
-# show()
+b = py_lowpass_n(3, a) 
+imshow(np.c_[a,b],cmap='gray')
+title("lowpass_n test with n = 3")
+show()
 
 
-
-d = a[120:125,130:133]
-e = np.zeros_like(d)
-imx, imy = d.shape
-print imx, imy
-py_lowpass_n(1, d, e, imx*imy, imx, imy) 
-print e
 
 # test copy_images
 a = lena()[:,:,0].astype(np.uint8)
 b = np.copy(a)
-c = np.empty_like(a)
-imx,imy = a.shape
-imgsize = imx*imy
-py_copy_images(a,c,imgsize)
+c = py_copy_images(a)
 print all(b == c)
 
 
 # test filter_3
-# a = lena()[:,:,0].astype(np.uint8)
 kernel = [1./9]*9
 np.savetxt('filter.par',kernel)
-# b = py_filter_3(a)
-# imshow(np.c_[a,b],cmap='gray'); show()
 
 d = a[120:125,130:137].copy(order='C')
 # e = np.empty_like(d,order='F')
@@ -74,3 +56,12 @@ print "original"
 print d
 print "filtered"
 print e
+
+
+# test highpass
+a = lena()[:,:,0].astype(np.uint8)
+dim_lp = 1; filter_hp = 0
+b = py_highpass(a, dim_lp, filter_hp)
+imshow(np.c_[a,b],cmap='gray'); 
+title("Highpass test")
+show()

@@ -582,7 +582,7 @@ void handle_imageborders(unsigned char	*img1, unsigned char *img2, int imgsize, 
 *      img1, img2 are the unsigned char array pointers 
 *      imgsize is the imx * imy the total size of the image
 */
-void copy_images (unsigned char	*img1, unsigned char *img2, int imgsize, int imx)
+void copy_images (unsigned char	*img1, unsigned char *img2, int imgsize)
 {
 	register unsigned char 	*ptr1, *ptr2;
 	unsigned char	       	*end;

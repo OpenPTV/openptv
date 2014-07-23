@@ -14,7 +14,7 @@ image_processing.c, segmentation.c and peakfitting.c */
 
 /* I don't know why this has to be "unsigned" but I have no time to test
    dropping it */
-void copy_images (unsigned char	*img1, unsigned char *img2, int imgsize, int imx);
+void copy_images (unsigned char	*img1, unsigned char *img2, int imgsize);
 
 void filter_3 (unsigned char *img, unsigned char *img_lp, int imgsize, int imx);
 void enhance (unsigned char	*img, int imgsize, int imx );
