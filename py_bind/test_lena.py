@@ -4,6 +4,7 @@ import numpy as np
 
 from optv.image_processing import py_lowpass_3, py_lowpass_n, py_copy_images
 from optv.image_processing import py_filter_3, py_highpass, py_enhance, py_histeq
+from optv.image_processing import py_lowpass_3_cb
 
 
 # use Lena image, but only grayscale (one channel)
@@ -15,6 +16,16 @@ a = a[:300,:].copy()
 b = py_lowpass_3(a) 
 imshow(np.c_[a,b],cmap='gray')
 title("lowpass_3 test")
+show()
+
+c = py_lowpass_3_cb(a) 
+imshow(np.c_[a,c],cmap='gray')
+title("lowpass_3_cb test")
+show()
+
+
+imshow(np.abs(b-c),cmap='gray')
+title("lowpass_3 vs 3_cb test")
 show()
 
 # imshow(a-b,cmap='gray')

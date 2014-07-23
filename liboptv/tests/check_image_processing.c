@@ -140,7 +140,7 @@ END_TEST
 
 
 
-START_TEST(test_alex_lowpass_3)
+START_TEST(test_lowpass_3_cb)
 {
         unsigned char *img, *img_lp;
         int imgsize, imx, imy, i, j;
@@ -175,7 +175,7 @@ START_TEST(test_alex_lowpass_3)
         img[3+5*3] = 255;   
 
          
-        alex_lowpass_3 (img, img_lp, imgsize, imy);
+        lowpass_3_cb (img, img_lp, imgsize, imy);
         
         /* print the output */
         printf("--------original ---------------\n"); 
@@ -185,7 +185,7 @@ START_TEST(test_alex_lowpass_3)
         	} 
         	printf("\n");
         } 
-        printf("--------alex_low-passed ---------------\n");        
+        printf("--------low-passed_cb ---------------\n");        
         for (i=0;i<imy;i++){ 
             for(j=0;j<imx;j++){
         		printf("%d\t", img_lp[i*imx+j]);
@@ -745,7 +745,7 @@ Suite* fb_suite(void) {
     TCase *tc = tcase_create ("image_processing_test");
     tcase_add_test(tc, test_lowpass_3);
     tcase_add_test(tc, test_lowpass_n);
-    tcase_add_test(tc, test_alex_lowpass_3);
+    tcase_add_test(tc, test_lowpass_3_cb);
     tcase_add_test(tc, test_histogram);
     tcase_add_test(tc, test_filter_3);
     tcase_add_test(tc, test_enhance);

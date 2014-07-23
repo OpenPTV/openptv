@@ -22,7 +22,7 @@ void histeq (unsigned char	*img, int imgsize, int imx );
 void histogram (unsigned char *img, int *hist, int imgsize);
 void lowpass_3 (unsigned char *img, unsigned char *img_lp, \
                int imgsize, int imx);
-void alex_lowpass_3 (unsigned char *img, unsigned char *img_lp, \
+void lowpass_3_cb (unsigned char *img, unsigned char *img_lp, \
                int imgsize, int imx);
 void lowpass_n (int n, unsigned char *img, unsigned char *img_lp,\
                 int imgsize, int imx);

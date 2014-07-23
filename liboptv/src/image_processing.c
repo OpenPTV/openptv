@@ -259,10 +259,18 @@ void lowpass_3 (unsigned char *img, unsigned char *img_lp, int imgsize, int imx)
 /* Apparently lowpass_3 above is not used anymore, but it is the simplest function we can
 *  verify - it does low pass filtering as it was tested using test_lena.py from /py_bind
 *  but it has some inconsistency that was verified by comparing it with another
-*  alex_lowpass_3 version that is a copy of the lowpass from  
+*  owpass_3_cb version that is a copy of the lowpass from  
 *  Image Processing in C, 2nd Ed. by Dwayne Phillips, Listing 7.1 
+*  _cb stands for _center_borders which means that this lowpass filter places the 
+*  result at the center point (rather than the top left, as in lowpass_3) and it is
+*  this function also takes care fo the borders of the image to remain untouched. 
+*  Arguments:
+*      img, img_lp are the unsigned char array pointers to the original
+*      and the low passed images
+*      imgsize is the imx * imy the total size of the image
+*      imx is the horizontal size of the image
 */
-void alex_lowpass_3 (unsigned char *img, unsigned char *img_lp, int imgsize, int imx)
+void lowpass_3_cb (unsigned char *img, unsigned char *img_lp, int imgsize, int imx)
 {
 
 	int		X, Y;
