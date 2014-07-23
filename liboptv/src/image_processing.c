@@ -84,8 +84,8 @@ void filter_3 (unsigned char *img, unsigned char *img_lp, int imgsize, int imx){
 	imy = imgsize/imx;
 	
 	/* to ensure that the boundaries are original */
-	//copy_images8Bit (img, img_lp, imgsize);
-	handle_imageborders8Bit(img, img_lp, imgsize, imx);
+	//copy_images (img, img_lp, imgsize);
+	handle_imageborders(img, img_lp, imgsize, imx);
 	
 	for(Y=0; Y<(imy-2); Y++)  
 	{
@@ -278,8 +278,8 @@ void alex_lowpass_3 (unsigned char *img, unsigned char *img_lp, int imgsize, int
 	F[2][0] = 1; F[2][1] = 1; F[2][2] = 1;
 	
 	/* to ensure that the boundaries are original */
-	//copy_images8Bit (img, img_lp, imgsize);
-	handle_imageborders8Bit(img, img_lp, imgsize, imx);
+	//copy_images (img, img_lp, imgsize);
+	handle_imageborders(img, img_lp, imgsize, imx);
 	
 	for(Y=0; Y<(imy-2); Y++)  
 	{
@@ -547,14 +547,14 @@ int zimx, int zimy, int imx){
 
 
 /*
-* handle_imageborders8Bit  is a simple image arithmetic function that 
+* handle_imageborders  is a simple image arithmetic function that 
 * corrects the imageborders after filtering functions like lowpass_3 or filter_3 
 * it copies the outer pixel line(s) from img1 into img2
 *  Arguments:
 *      img1, img2 are the unsigned char array pointers 
 *      imgsize is the imx * imy the total size of the image
 */
-void handle_imageborders8Bit(unsigned char	*img1, unsigned char *img2, int imgsize, int imx)
+void handle_imageborders(unsigned char	*img1, unsigned char *img2, int imgsize, int imx)
 {
 	register unsigned char 	*ptr1, *ptr2; //do we really need to register?
 	int i,j;
@@ -577,12 +577,12 @@ void handle_imageborders8Bit(unsigned char	*img1, unsigned char *img2, int imgsi
 
 
 /*
-* copy_images8Bit  is a simple image arithmetic function that copies img1 into img2
+* copy_images  is a simple image arithmetic function that copies img1 into img2
 *  Arguments:
 *      img1, img2 are the unsigned char array pointers 
 *      imgsize is the imx * imy the total size of the image
 */
-void copy_images8Bit (unsigned char	*img1, unsigned char *img2, int imgsize, int imx)
+void copy_images (unsigned char	*img1, unsigned char *img2, int imgsize, int imx)
 {
 	register unsigned char 	*ptr1, *ptr2;
 	unsigned char	       	*end;
@@ -612,13 +612,13 @@ void subtract_mask (unsigned char *img, unsigned char *img_mask, unsigned char *
 
 
 /*
-* subtract_img8Bit  is a simple image arithmetic function that subtracts img2 from img1
+* subtract_img  is a simple image arithmetic function that subtracts img2 from img1
 *  Arguments:
 *      img1, img2 are the unsigned char array pointers to the original images
 *      img_new is the pointer to the unsigned char array for the resulting image
 *      imgsize is the imx * imy the total size of the image
 */
-void subtract_img8Bit (unsigned char *img1,unsigned char *img2,unsigned char *img_new, int imgsize) 
+void subtract_img (unsigned char *img1,unsigned char *img2,unsigned char *img_new, int imgsize) 
 {
 	register unsigned char 	*ptr1, *ptr2, *ptr3;
 	int i;
@@ -681,11 +681,7 @@ void highpass (char pic_name[], unsigned char *img, unsigned char *img_hp, int d
 	*/
 
 	/*  subtract lowpass from original  (=>   )  */
-	subtract_img8Bit (img, img_lp, img_hp, imgsize); 
-
-	/* consider field mode */
-	if (field == 1 || field == 2)  split (img_hp, field, imx, imy, imgsize);
-
+	subtract_img (img, img_lp, img_hp, imgsize); 
 
 	/* filter highpass image, if wanted */
 	switch (filter_hp)
