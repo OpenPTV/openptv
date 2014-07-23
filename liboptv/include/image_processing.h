@@ -12,8 +12,6 @@ image_processing.c, segmentation.c and peakfitting.c */
 #include "multimed.h"
 #include "epi.h"
 
-#define A(i,j) A[(i) + (j)*ld]	
-
 /* I don't know why this has to be "unsigned" but I have no time to test
    dropping it */
 void copy_images8Bit (unsigned char	*img1, unsigned char *img2, int imgsize);

@@ -254,6 +254,13 @@ void lowpass_3 (unsigned char *img, unsigned char *img_lp, int imgsize, int imx)
 }
 
 
+/* Apparently lowpass_3 above is not used anymore, but it is the simplest function we can
+*  verify - it does low pass filtering as it was tested using test_lena.py from /py_bind
+*  but it has some inconsistency that was verified by comparing it with another
+*  alex_lowpass_3 version that is a copy of the lowpass from  
+*  Image Processing in C, 2nd Ed. by Dwayne Phillips, Listing 7.1 
+*/
+
 void alex_lowpass_3 (unsigned char *img, unsigned char *img_lp, int imgsize, int imx)
 {
 
