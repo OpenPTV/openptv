@@ -14,9 +14,8 @@ image_processing.c, segmentation.c and peakfitting.c */
 
 /* I don't know why this has to be "unsigned" but I have no time to test
    dropping it */
-void copy_images (unsigned char	*img1, unsigned char *img2, int imgsize);
-void highpass(unsigned char *img, unsigned char *img_hp, int dim_lp,
-    int filter_hp, int field, int imgsize);
+void copy_images (unsigned char	*img1, unsigned char *img2, int imgsize, int imx);
+
 void filter_3 (unsigned char *img, unsigned char *img_lp, int imgsize, int imx);
 void enhance (unsigned char	*img, int imgsize, int imx );
 void histeq (unsigned char	*img, int imgsize, int imx );
@@ -38,7 +37,7 @@ void subtract_mask (unsigned char	* img, unsigned char	* img_mask, \
 unsigned char	* img_new, int imgsize);
 
 void subtract_img (unsigned char *img1,unsigned char *img2,unsigned char *img_new, int imgsize);
-void highpass (char pic_name[], unsigned char *img, unsigned char *img_hp, int dim_lp, int filter_hp, int field, int nr, int imgsize, int imx);
+void highpass (unsigned char *img, unsigned char *img_hp, int dim_lp, int filter_hp, int imgsize, int imx);
 void handle_imageborders(unsigned char	*img1, unsigned char *img2, int imgsize, int imx);
 #endif
 

@@ -631,8 +631,9 @@ void subtract_img (unsigned char *img1,unsigned char *img2,unsigned char *img_ne
 }
 
 
-/* initial commit with highpass from ehtz-ptv
-*	char	        pic_name[256];  image name
+/* highpass is moved here from segmentation.c and changed to be one of the high level
+*   image processing routines
+*   Arguments:
 *	unsigned char  *img;
 *	unsigned char  *img_hp;			highpass filtered image 
 *	int             dim_lp;	       	dimension of subtracted lowpass image 
@@ -640,23 +641,12 @@ void subtract_img (unsigned char *img1,unsigned char *img2,unsigned char *img_ne
 *	int    			field;	       	field to be used 
 *	int	      		nr;	       		image number for display 
 */
-void highpass (char pic_name[], unsigned char *img, unsigned char *img_hp, int dim_lp, int filter_hp, int field, int nr, int imgsize, int imx)
+void highpass (unsigned char *img, unsigned char *img_hp, int dim_lp, int filter_hp, int imgsize, int imx)
 {
-	register int			i;
-	FILE	       			*fp;
 	unsigned char			*img_lp;
-	char	       			lp_name[256], hp_name[256];
-	register unsigned char	*ptr1, *ptr2, *ptr3;
 	int		imy;
-	//temporary items: We need to discuss if we really need this write i/o here
-	int examine, tiff_flag;
-	examine = 0;
-	tiff_flag = 0;
-		
+			
 	imy = imgsize/imx;
-
-	sprintf (lp_name, "%s_lp", pic_name);
-	sprintf (hp_name, "%s_hp", pic_name);
 
 	/* allocate memory for lp image*/
 
@@ -666,20 +656,9 @@ void highpass (char pic_name[], unsigned char *img, unsigned char *img_hp, int d
 		puts ("calloc for img_lp --> error");
 		exit (1);
 	}
-
-	unsharp_mask (dim_lp, img, img_lp,imgsize,imx,imy);
-
-	/* disabled (psteinhoff)
-	if (examine == 3)
-	{
-		fp = fopen (lp_name, "w"); // save lowpass image 
-		if (tiff_flag) { write_tiff (lp_name, img_lp, imx, imy); }
-		else { fwrite (img_lp, 1, imgsize, fp); }
-		printf("low pass: %s will be deleted when quitting ptv\n", lp_name);
-		fclose (fp);
-	}
-	*/
-
+    /* create low-passed image using unsharp_mask */
+	unsharp_mask (dim_lp, img, img_lp, imgsize, imx, imy);
+	
 	/*  subtract lowpass from original  (=>   )  */
 	subtract_img (img, img_lp, img_hp, imgsize); 
 
@@ -691,16 +670,6 @@ void highpass (char pic_name[], unsigned char *img, unsigned char *img_hp, int d
 		case 2: filter_3 (img_hp, img_hp, imgsize, imx);	break;
 	}
 
-	/* save highpass image for later use */
-	/* disabled (psteinhoff)
-	if (examine == 3)
-	{  
-		fp = fopen (hp_name, "w");
-		if (tiff_flag) write_tiff (hp_name, img_hp, imx, imy);
-		else fwrite (img_hp, 1, imgsize, fp);
-		fclose (fp);
-	}
-	*/
   free (img_lp);
 }
 
