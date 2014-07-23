@@ -3,7 +3,7 @@ from skimage.data import lena
 import numpy as np
 
 from optv.image_processing import py_lowpass_3, py_lowpass_n, py_copy_images
-from optv.image_processing import py_filter_3, py_highpass
+from optv.image_processing import py_filter_3, py_highpass, py_enhance, py_histeq
 
 
 # use Lena image, but only grayscale (one channel)
@@ -53,6 +53,12 @@ print d
 print "filtered"
 print e
 
+
+b = py_filter_3(a) 
+imshow(np.c_[a,b],cmap='gray')
+title("filter_3 test with 1st filter")
+show()
+
 kernel = np.array([1,1,1,1,1,1,1,1,1])/9.
 np.savetxt('filter.par',kernel)
 e = py_filter_3(d) 
@@ -61,6 +67,30 @@ print d
 print "filtered"
 print e
 
+b = py_filter_3(a) 
+imshow(np.c_[a,b],cmap='gray')
+title("filter_3 test with the 2nd filter")
+show()
+
+kernel = np.zeros((9,1))
+np.savetxt('filter.par',kernel)
+b = py_filter_3(a) 
+imshow(np.c_[a,b],cmap='gray')
+title("filter_3 test with the corrupted filter")
+show()
+
+
+# test enhance
+b = py_enhance(a)
+imshow(np.c_[a,b],cmap='gray'); 
+title("Enhance test")
+show()
+
+# test enhance
+b = py_histeq(a)
+imshow(np.c_[a,b],cmap='gray'); 
+title("Histeq test")
+show()
 
 # test highpass
 dim_lp = 3; filter_hp = 1

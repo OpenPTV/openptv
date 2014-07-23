@@ -62,7 +62,7 @@ void filter_3 (unsigned char *img, unsigned char *img_lp, int imgsize, int imx){
 	        }
 	    }
 	} else { 
-	      printf("filter.par was found, reading the values \n");  
+	      printf("filter.par was found, reading the values: \n");  
 	      for (i=0, sum=0; i<3; i++){
 	          for(j=0; j<3; j++){
 		      	fscanf (fp, "%f", &m[i][j]);
@@ -71,7 +71,8 @@ void filter_3 (unsigned char *img, unsigned char *img_lp, int imgsize, int imx){
 		       }
 		    }
 	    }
-	fclose (fp);  
+	fclose (fp); 
+	// printf("\n"); 
 	if (sum == 0) {
 	    printf("filter.par is corrupted or empty, fallback to default lowpass filter \n");
 	    for (i=0, sum=9; i<3; i++){
