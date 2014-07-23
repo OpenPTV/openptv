@@ -34,11 +34,11 @@ void zoom (unsigned char *img, unsigned char *zoomimg, int xm, int ym, int zf, \
 int imgsize, int imx, int imy);
 void zoom_new (unsigned char	*img, unsigned char	*zoomimg, int xm, int ym, int zf,\
 int zimx, int zimy, int imx);
-void split (unsigned char	*img, int field, int imx, int imy, int imgsize);
 void subtract_mask (unsigned char	* img, unsigned char	* img_mask, \
 unsigned char	* img_new, int imgsize);
 
-void subtract_img8Bit (unsigned char *img1,unsigned char *img2,unsigned char *img_new, int imgsize);
-
+void subtract_img (unsigned char *img1,unsigned char *img2,unsigned char *img_new, int imgsize);
+void highpass (char pic_name[], unsigned char *img, unsigned char *img_hp, int dim_lp, int filter_hp, int field, int nr, int imgsize, int imx);
+void handle_imageborders(unsigned char	*img1, unsigned char *img2, int imgsize, int imx);
 #endif
 

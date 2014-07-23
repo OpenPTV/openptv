@@ -39,7 +39,6 @@ Routines contained:    	filter_3:	3*3 filter, reads matrix from filter.par
  * from the original image. the interior is filtered according to the filter.par
  * see ../tests/check_image_processing.c for a couple of useful filters.
  */
-
 void filter_3 (unsigned char *img, unsigned char *img_lp, int imgsize, int imx){
 
 	register unsigned char	*ptr, *ptr1, *ptr2, *ptr3,
@@ -85,7 +84,8 @@ void filter_3 (unsigned char *img, unsigned char *img_lp, int imgsize, int imx){
 	imy = imgsize/imx;
 	
 	/* to ensure that the boundaries are original */
-	copy_images (img, img_lp, imgsize);
+	//copy_images (img, img_lp, imgsize);
+	handle_imageborders(img, img_lp, imgsize, imx);
 	
 	for(Y=0; Y<(imy-2); Y++)  
 	{
@@ -130,23 +130,28 @@ void filter_3 (unsigned char *img, unsigned char *img_lp, int imgsize, int imx){
 	*/
 }
 
-
-void enhance (unsigned char	*img, int imgsize, int imx ){
+/* enhance stretches the image information into full 8 bit range if not yet used
+ * Arguments:
+ * 8-bit unsigned char image array by pointer *img is an in- and output
+ * int imgsize, imx are image size and number of columns (pixels)
+ * uses histogramm to calculate gain for enhancement
+ */
+void enhance (unsigned char	*img, int imgsize, int imx )
+{
 	register unsigned char	*ptr;
 	unsigned char	       	*end, gmin = 255, gmax = 0, offs;
-	float		       	    diff, gain;
-	int		       	        i, sum, histo[256];
-	
-	//void histogram ();
-	
+	float		       	diff, gain;
+	int		       	i, sum, histo[256];
 	end = img + imgsize;
-
+	//get histogramm
 	histogram (img, histo, imgsize);
-	
+	//find minimal and maximal values in image
 	for (i=0, sum=0; (i<255)&&(sum<imx); sum += histo[i], i++)  gmin = i;	
 	for (i=255, sum=0; (i>0)&&(sum<512); sum+=histo[i], i--)  gmax = i;	
+	//calculate gain for enhancement
 	offs = gmin;  diff = gmax - gmin;  gain = 255 / diff;
 	
+	//rescale image values
 	for (ptr=img; ptr<end; ptr++)
 	{
 		if (*ptr < gmin) *ptr = gmin;  else if (*ptr > gmax) *ptr = gmax;
@@ -156,49 +161,50 @@ void enhance (unsigned char	*img, int imgsize, int imx ){
 }
 
 
-
 /* Apparently enhance is the histogram equalization algorithm but with some
 *  constraints that are not clear - why sum is less then imx and then less then 512 
 * 
 *  New function histeq is an implementation from the 
 *  Image Processing in C, 2nd Ed. by Dwayne Phillips, Listing 4.2 
 */
-void histeq (unsigned char	*img, int imgsize, int imx ){
+void histeq (unsigned char	*img, int imgsize, int imx )
+{
 	int		       	        X,Y, i, k, imy, histo[256];
 	int 			        sum, sum_of_h[256];
     double 					constant;
-	
-	//void histogram ();
 	
 	imy = imgsize/imx;
 
 	histogram (img, histo, imgsize);
 	
-   sum = 0;
-   for(i=0; i<256; i++){
-      sum += histo[i];
-      sum_of_h[i] = sum;
-   }
+	sum = 0;
+	for(i=0; i<256; i++)
+	{
+		sum += histo[i];
+		sum_of_h[i] = sum;
+	}
     /* constant = new # of gray levels div by area */
-   constant = (float)(255.1)/(float)(imgsize);
-   for(Y=0; Y<imy; Y++){
-      for(X=0; X<imx; X++){
-         k  = *(img + X + Y*imx);
-         *(img + X + Y*imx ) = (unsigned char)(sum_of_h[k] * constant);
+	constant = (float)(255.1)/(float)(imgsize);
+	for(Y=0; Y<imy; Y++)
+	{
+		for(X=0; X<imx; X++)
+		{
+			k  = *(img + X + Y*imx);
+			*(img + X + Y*imx ) = (unsigned char)(sum_of_h[k] * constant);
 		} 
 	}
 }  /* ends histeq */
 	
 
-
-
+/* histogram computes a histogram from the image and returns it to hist
+*/
 void histogram (unsigned char *img, int *hist, int imgsize){
 
 	int	       	i;
 	unsigned char  	*end;
 	register unsigned char	*ptr;
 
-	
+	//write defaults into histgramm array
 	for (i=0; i<256; i++)  hist[i] = 0;
 	
 	end = img + imgsize;
@@ -220,7 +226,6 @@ void histogram (unsigned char *img, int *hist, int imgsize){
 *  See also the more developed version of lowpass_n
 * 
 */ 
-
 void lowpass_3 (unsigned char *img, unsigned char *img_lp, int imgsize, int imx){
 
 	register unsigned char	*ptr,*ptr1,*ptr2,*ptr3,*ptr4,
@@ -256,7 +261,6 @@ void lowpass_3 (unsigned char *img, unsigned char *img_lp, int imgsize, int imx)
 *  alex_lowpass_3 version that is a copy of the lowpass from  
 *  Image Processing in C, 2nd Ed. by Dwayne Phillips, Listing 7.1 
 */
-
 void alex_lowpass_3 (unsigned char *img, unsigned char *img_lp, int imgsize, int imx)
 {
 
@@ -274,8 +278,8 @@ void alex_lowpass_3 (unsigned char *img, unsigned char *img_lp, int imgsize, int
 	F[2][0] = 1; F[2][1] = 1; F[2][2] = 1;
 	
 	/* to ensure that the boundaries are original */
-	
-	copy_images (img, img_lp, imgsize);
+	//copy_images (img, img_lp, imgsize);
+	handle_imageborders(img, img_lp, imgsize, imx);
 	
 	for(Y=0; Y<(imy-2); Y++)  
 	{
@@ -542,23 +546,60 @@ int zimx, int zimy, int imx){
 }
 
 
+/*
+* handle_imageborders  is a simple image arithmetic function that 
+* corrects the imageborders after filtering functions like lowpass_3 or filter_3 
+* it copies the outer pixel line(s) from img1 into img2
+*  Arguments:
+*      img1, img2 are the unsigned char array pointers 
+*      imgsize is the imx * imy the total size of the image
+*/
+void handle_imageborders(unsigned char	*img1, unsigned char *img2, int imgsize, int imx)
+{
+	register unsigned char 	*ptr1, *ptr2; //do we really need to register?
+	int i,j;
+	int imy;
 
-void copy_images (unsigned char	*img1, unsigned char *img2, int imgsize){
+	imy = imgsize/imx;
+	ptr1 = img1;
+	ptr2 = img2;
+
+	for(i=0; i<imy; i++)
+		for(j=0; j<imx; j++)
+		{
+			if(i==0 || i==imy || j==0 || j==imx )
+			{
+				*(ptr2 +i*imx+j) = *(ptr1 +i*imx+j);
+			}
+
+		}
+}
+
+
+/*
+* copy_images  is a simple image arithmetic function that copies img1 into img2
+*  Arguments:
+*      img1, img2 are the unsigned char array pointers 
+*      imgsize is the imx * imy the total size of the image
+*/
+void copy_images (unsigned char	*img1, unsigned char *img2, int imgsize, int imx)
+{
 	register unsigned char 	*ptr1, *ptr2;
 	unsigned char	       	*end;
-
-
+	
 	for (end=img1+imgsize, ptr1=img1, ptr2=img2; ptr1<end; ptr1++, ptr2++)
 	*ptr2 = *ptr1;
 }
 
 
-
-/*------------------------------------------------------------------------
-	Subtract mask, Matthias Oswald, Juli 08
-  ------------------------------------------------------------------------*/
-void subtract_mask (unsigned char	* img, unsigned char	* img_mask, \
-unsigned char	* img_new, int imgsize){
+/*
+* Subtract_mask, by Matthias Oswald, Juli 08
+* subtrac_mask compares img with img_mask and creates a masked image img_new
+* pixels that are equal to zero in the img_mask
+* are overwritten with a default value (=0) in img_new
+*/
+void subtract_mask (unsigned char *img, unsigned char *img_mask, unsigned char *img_new, int imgsize)
+{
 	register unsigned char 	*ptr1, *ptr2, *ptr3;
 	int i;
 	
@@ -571,13 +612,13 @@ unsigned char	* img_new, int imgsize){
 
 
 /*
-* subtract_img8Bit  is a simple image arithmetic function that subtracts img2 from img1
+* subtract_img  is a simple image arithmetic function that subtracts img2 from img1
 *  Arguments:
 *      img1, img2 are the unsigned char array pointers to the original images
 *      img_new is the pointer to the unsigned char array for the resulting image
 *      imgsize is the imx * imy the total size of the image
 */
-void subtract_img8Bit (unsigned char *img1,unsigned char *img2,unsigned char *img_new, int imgsize) 
+void subtract_img (unsigned char *img1,unsigned char *img2,unsigned char *img_new, int imgsize) 
 {
 	register unsigned char 	*ptr1, *ptr2, *ptr3;
 	int i;
@@ -587,4 +628,79 @@ void subtract_img8Bit (unsigned char *img1,unsigned char *img2,unsigned char *im
 		if ((*ptr1 - *ptr2) < 0) *ptr3 = 0;
 		else  *ptr3 = *ptr1- *ptr2;
 	}
- }
+}
+
+
+/* initial commit with highpass from ehtz-ptv
+*	char	        pic_name[256];  image name
+*	unsigned char  *img;
+*	unsigned char  *img_hp;			highpass filtered image 
+*	int             dim_lp;	       	dimension of subtracted lowpass image 
+*	int				filter_hp;     	flag for additional filtering of _hp
+*	int    			field;	       	field to be used 
+*	int	      		nr;	       		image number for display 
+*/
+void highpass (char pic_name[], unsigned char *img, unsigned char *img_hp, int dim_lp, int filter_hp, int field, int nr, int imgsize, int imx)
+{
+	register int			i;
+	FILE	       			*fp;
+	unsigned char			*img_lp;
+	char	       			lp_name[256], hp_name[256];
+	register unsigned char	*ptr1, *ptr2, *ptr3;
+	int		imy;
+	//temporary items: We need to discuss if we really need this write i/o here
+	int examine, tiff_flag;
+	examine = 0;
+	tiff_flag = 0;
+		
+	imy = imgsize/imx;
+
+	sprintf (lp_name, "%s_lp", pic_name);
+	sprintf (hp_name, "%s_hp", pic_name);
+
+	/* allocate memory for lp image*/
+
+	img_lp = (unsigned char *) calloc (imgsize, 1);
+	if ( ! img_lp)
+	{
+		puts ("calloc for img_lp --> error");
+		exit (1);
+	}
+
+	unsharp_mask (dim_lp, img, img_lp,imgsize,imx,imy);
+
+	/* disabled (psteinhoff)
+	if (examine == 3)
+	{
+		fp = fopen (lp_name, "w"); // save lowpass image 
+		if (tiff_flag) { write_tiff (lp_name, img_lp, imx, imy); }
+		else { fwrite (img_lp, 1, imgsize, fp); }
+		printf("low pass: %s will be deleted when quitting ptv\n", lp_name);
+		fclose (fp);
+	}
+	*/
+
+	/*  subtract lowpass from original  (=>   )  */
+	subtract_img (img, img_lp, img_hp, imgsize); 
+
+	/* filter highpass image, if wanted */
+	switch (filter_hp)
+	{
+		case 0: break;
+		case 1: lowpass_3 (img_hp, img_hp, imgsize, imx);	break;
+		case 2: filter_3 (img_hp, img_hp, imgsize, imx);	break;
+	}
+
+	/* save highpass image for later use */
+	/* disabled (psteinhoff)
+	if (examine == 3)
+	{  
+		fp = fopen (hp_name, "w");
+		if (tiff_flag) write_tiff (hp_name, img_hp, imx, imy);
+		else fwrite (img_hp, 1, imgsize, fp);
+		fclose (fp);
+	}
+	*/
+  free (img_lp);
+}
+
