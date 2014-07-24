@@ -123,7 +123,7 @@ show()
 
 # test highpass
 dim_lp = 1; filter_hp = 0
-b = py_highpass(a, dim_lp, filter_hp)
+b = py_enhance(py_highpass(a, dim_lp, filter_hp))
 imshow(np.c_[a,b],cmap='gray'); 
 title("Highpass test")
 show()
