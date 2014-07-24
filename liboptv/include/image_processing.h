@@ -26,8 +26,7 @@ void lowpass_3_cb (unsigned char *img, unsigned char *img_lp, \
                int imgsize, int imx);
 void lowpass_n (int n, unsigned char *img, unsigned char *img_lp,\
                 int imgsize, int imx);
-void unsharp_mask (int n, unsigned char *img0, unsigned char *img_lp, \
-                    int imgsize, int imx, int imy);
+void unsharp_mask (int n, unsigned char *img0, unsigned char *img_lp, int imgsize, int imx);
 
 void zoom (unsigned char *img, unsigned char *zoomimg, int xm, int ym, int zf, \
 int imgsize, int imx, int imy);

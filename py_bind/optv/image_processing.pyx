@@ -18,6 +18,8 @@ cdef extern from "optv/image_processing.h":
     void highpass (unsigned char *img, unsigned char *img_hp, int dim_lp, int filter_hp, int imgsize, int imx)
     void enhance (unsigned char	*img, int imgsize, int imx )
     void histeq (unsigned char	*img, int imgsize, int imx )
+    void unsharp_mask (int n, unsigned char *img0, unsigned char *img_lp, int imgsize, int imx)
+    void subtract_img (unsigned char *img1,unsigned char *img2,unsigned char *img_new, int imgsize)
 
 
 # @cython.boundscheck(False)
@@ -65,6 +67,17 @@ def py_histeq(np.ndarray[unsigned char, ndim=2, mode="c"] img):
     img_hp = py_copy_images(img)
     histeq(<unsigned char *>img_hp.data, img.shape[0]*img.shape[1], img.shape[1])
     return img_hp
+
+def py_unsharp_mask(n, np.ndarray[DTYPE_t, ndim=2] img not None):
+    cdef np.ndarray[unsigned char, ndim=2,mode="c"] img_lp = np.empty((img.shape[0],img.shape[1]),dtype='uint8')
+    unsharp_mask(<int>n, <unsigned char *>img.data, <unsigned char *>img_lp.data, img.shape[0]*img.shape[1], img.shape[1])
+    return img_lp
+    
+def py_subtract_img(np.ndarray[DTYPE_t, ndim=2] img not None, np.ndarray[DTYPE_t, ndim=2] img2 not None):
+    cdef np.ndarray[unsigned char, ndim=2,mode="c"] img_new = np.empty((img.shape[0],img.shape[1]),dtype='uint8')
+    subtract_img(<unsigned char *>img.data, <unsigned char *>img2.data, <unsigned char *>img_new.data, img.shape[0]*img.shape[1] )
+    return img_new
+
 
 # def py_filter_3(np.ndarray[DTYPE_t, ndim=2] img1 not None, np.ndarray[DTYPE_t, ndim=2] img2 not None, imgsize, imx):
 #     filter_3(<unsigned char *>img1.data, <unsigned char *>img2.data, <int>imgsize, <int>imx)

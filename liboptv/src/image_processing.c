@@ -380,13 +380,16 @@ void lowpass_n (int n, unsigned char *img, unsigned char *img_lp, \
 
 
 void unsharp_mask (int n, unsigned char *img0, unsigned char *img_lp,\
-                   int imgsize, int imx, int imy){
+                   int imgsize, int imx){
                    
 	register unsigned char	*imgum, *ptrl, *ptrr, *ptrz;
 	int  		       	*buf1, *buf2, buf, *end;
 	register int	       	*ptr, *ptr1, *ptr2, *ptr3;
 	int    		       	ii, n2, nq, m;
 	register int	       	i;
+	int 				imy;
+	
+	imy = imgsize/imx;
 
 	n2 = 2*n + 1;  nq = n2 * n2;
 
@@ -669,7 +672,7 @@ void highpass (unsigned char *img, unsigned char *img_hp, int dim_lp, int filter
 		exit (1);
 	}
     /* create low-passed image using unsharp_mask */
-	unsharp_mask (dim_lp, img, img_lp, imgsize, imx, imy);
+	unsharp_mask (dim_lp, img, img_lp, imgsize, imx);
 	
 	/*  subtract lowpass from original  (=>   )  */
 	subtract_img (img, img_lp, img_hp, imgsize); 
