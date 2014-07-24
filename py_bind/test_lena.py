@@ -5,6 +5,7 @@ import numpy as np
 from optv.image_processing import py_lowpass_3, py_lowpass_n, py_copy_images
 from optv.image_processing import py_filter_3, py_highpass, py_enhance, py_histeq
 from optv.image_processing import py_lowpass_3_cb, py_unsharp_mask, py_subtract_img
+from optv.image_processing import py_subtract_mask
 
 
 # use Lena image, but only grayscale (one channel)
@@ -126,4 +127,14 @@ dim_lp = 1; filter_hp = 0
 b = py_enhance(py_highpass(a, dim_lp, filter_hp))
 imshow(np.c_[a,b],cmap='gray'); 
 title("Highpass test")
+show()
+
+
+# test subtract_mask
+dim_lp = 3; filter_hp = 1
+b = a.copy()
+b[:100,:100] = 0
+c = py_subtract_mask(a,b)
+imshow(np.c_[a,c],cmap='gray'); 
+title("Subtract Mask test")
 show()
