@@ -5,8 +5,7 @@
 
 #include <math.h>
 
-void intersect_rt (double X1, double Y1, double Z1, double a1, double b1, double c1,\
-				   double X2, double Y2, double Z2, double a2, double b2, double c2,\
+void intersect_rt (double pos1[3], double vec1[3], double pos2[3], double vec2[3],\
 				   double *X, double *Y, double *Z);
 
 

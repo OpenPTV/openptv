@@ -7,25 +7,41 @@
 #include "parameters.h"
 #include "calibration.h"
 #include "lsqadj.h"
+#include "intersect.h"
 
 #define EPS 1E-5
 
 
-START_TEST(test_empty)
+START_TEST(test_intersect_rt)
 {
+    /* First, test parallel case: */
+    double pos1[] = {0.0, 0.0, 0.0};
+    double pos2[] = {0.0, 0.0, 0.0};
+    double vec1[] = {0.0, 0.0, 1.0};
+    double vec2[] = {0.0, 0.0, 1.0};
+    
+    double X, Y, Z;
 
-    double n[3];
-
-    // test simple cross-product normalized to unity
-
-    double a[] = {1.0, 0.0, 0.0};
-    double b[] = {0.0, 2.0, 0.0};
-
-
-    ck_assert_msg( fabs(a[0] - 1.0) < EPS && 
-                   fabs(a[1] - 0.0) < EPS && 
-                   fabs(a[2] - 0.0)  < EPS,
-             "Was expecting a to be 0., 0., 0. but found %f %f %f\n", a[0],a[1],a[2]);
+    intersect_rt (pos1, vec1, pos2, vec2, &X,&Y,&Z);
+				   
+    ck_assert_msg( fabs(X - 1e6) < EPS && 
+                   fabs(Y - 1e6) < EPS && 
+                   fabs(Z - 1e6)  < EPS,
+             "Was expecting X,Y,Z to be 1e6 but found %f %f %f\n", X,Y,Z);
+     
+    /* Test some intersection */         
+    vec1[1] = -0.707;
+    vec2[1] = 0.707;
+    pos1[0] = 1.0;
+    pos2[1] = 1.0;
+      
+    intersect_rt (pos1, vec1, pos2, vec2, &X,&Y,&Z);
+				   
+    ck_assert_msg( fabs(X - 0.5) < EPS && 
+                   fabs(Y - 0.5) < EPS && 
+                   fabs(Z + 0.707214)  < EPS,
+             "Was expecting X,Y,Z to be 1e6 but found %f %f %f\n", X,Y,Z);
+    
 
 
 }
@@ -37,7 +53,7 @@ Suite* fb_suite(void) {
     Suite *s = suite_create ("intersect");
  
     TCase *tc = tcase_create ("intersect test");
-    tcase_add_test(tc, test_empty);
+    tcase_add_test(tc, test_intersect_rt);
     suite_add_tcase (s, tc);   
     return s;
 }

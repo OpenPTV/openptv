@@ -22,25 +22,26 @@ Routines contained: 	-
 /* 2 cameras */
 
 
-void intersect_rt (double X1, double Y1, double Z1, double a1, double b1, double c1,
-				   double X2, double Y2, double Z2, double a2, double b2, double c2,
+void intersect_rt (double pos1[3], double vec1[3],
+				   double pos2[3], double vec2[3],
 				   double *X, double *Y, double *Z)
 /* intersection, given two points with direction cosines */
 /* only valid, if Z1 = Z2 = 0 , which is the case after ray tracing */
 {
+
 	// ad holten, test first if lines are parallel
-	if (a1/c1 == a2/c2 && b1/c1 == b2/c2) {		// if parallel, return high values 
+	if (vec1[0]/vec1[2] == vec2[0]/vec2[2] && vec1[1]/vec1[2] == vec2[1]/vec2[2]) {		// if parallel, return high values 
 		*X = *Y = *Z = 1e6;						// ie, out of the measuring volume
 		return;
 	}
 
-	if (fabs(b1-b2) > fabs(a1-a2)) *Z = (Y2-Y1) / ((b1/c1) - (b2/c2));
-	else						   *Z = (X2-X1) / ((a1/c1) - (a2/c2));
+	if (fabs(vec1[1]-vec2[1]) > fabs(vec1[0]-vec2[0])) *Z = (pos2[1]-pos1[1]) / ((vec1[1]/vec1[2]) - (vec2[1]/vec2[2]));
+	else						   *Z = (pos2[0]-pos1[0]) / ((vec1[0]/vec1[2]) - (vec2[0]/vec2[2]));
 	
-	*X = (X1 + X2  +  *Z * (a1/c1 + a2/c2)) /2;
-	*Y = (Y1 + Y2  +  *Z * (b1/c1 + b2/c2)) /2;
+	*X = (pos1[0] + pos2[0] +  *Z * (vec1[0]/vec1[2] + vec2[0]/vec2[2])) /2;
+	*Y = (pos1[1] + pos2[1] +  *Z * (vec1[1]/vec1[2] + vec2[1]/vec2[2])) /2;
 }
 
 
-
+/* see the original intersect.c in the 3dptv repository for obsolete functions */
 
