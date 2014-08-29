@@ -16,10 +16,10 @@ cdef extern from "../liboptv/include/intersect.h":
 
 # @cython.boundscheck(False)
 # @cython.wraparound(False)
-def py_intersect(np.ndarray[np.double_t, ndim=1] pos1, np.ndarray[np.double_t, ndim=1] vec1,\
-np.ndarray[np.double_t, ndim=1] pos2, np.ndarray[np.double_t, ndim=1] vec2, \
-np.ndarray[np.double_t, ndim=1] X, np.ndarray[np.double_t, ndim=1] Y, \
-np.ndarray[np.double_t, ndim=1] Z):
-    intersect_rt(<double*>pos1.data, <double*>vec1.data, <double*>pos2.data, <double*>vec2.data, \
-    <double*>X.data,<double*>Y.data,<double*>Z.data)
+def py_intersect(np.ndarray[np.float_t, ndim=1] pos1, np.ndarray[np.float_t, ndim=1] vec1,\
+np.ndarray[np.float_t, ndim=1] pos2, np.ndarray[np.float_t, ndim=1] vec2):
+    cdef np.ndarray[np.float_t, ndim=1] X = np.empty(1,dtype=np.float)
+    cdef np.ndarray[np.float_t, ndim=1] Y = np.empty(1,dtype=np.float)
+    cdef np.ndarray[np.float_t, ndim=1] Z = np.empty(1,dtype=np.float)
+    intersect_rt(&pos1[0], &vec1[0], &pos2[0], &vec2[0], &X[0], &Y[0], &Z[0])
     return X,Y,Z
