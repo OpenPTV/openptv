@@ -18,20 +18,20 @@ class TestTargets(unittest.TestCase):
         vec1 = np.array([0.0,-0.707,1.0])
         pos2 = np.array([0.0,1.0,0.0])
         vec2 = np.array([0.0,0.707,1.0])
-        x,y,z = py_intersect(pos1,vec1,pos2,vec2)
+        x = py_intersect(pos1,vec1,pos2,vec2)
 
 
-        self.failUnlessEqual(x, 0.5)
-        self.failUnlessEqual(y, 0.5)
-        self.failUnlessEqual(round(z,3), -0.707)
+        self.failUnlessEqual(x[0], 0.5)
+        self.failUnlessEqual(x[1], 0.5)
+        self.failUnlessEqual(round(x[2],3), -0.707)
         
         pos1 = np.array([0,0,0],dtype=np.float)
         vec1 = np.array([0,0,1],dtype=np.float)
         pos2 = np.array([0,0,0],dtype=np.float)
         vec2 = np.array([0,0,1],dtype=np.float)
-        x,y,z = py_intersect(pos1,vec1,pos2,vec2)
+        x = py_intersect(pos1,vec1,pos2,vec2)
 
 
-        self.failUnlessEqual(x, 1000000.)
-        self.failUnlessEqual(y, 1000000.)
-        self.failUnlessEqual(z, 1000000.)
+        self.failUnlessEqual(x[0], 1000000.)
+        self.failUnlessEqual(x[1], 1000000.)
+        self.failUnlessEqual(x[2], 1000000.)

@@ -20,14 +20,14 @@ START_TEST(test_intersect_rt)
     double vec1[] = {0.0, 0.0, 1.0};
     double vec2[] = {0.0, 0.0, 1.0};
     
-    double X, Y, Z;
+    double X[3] = {0.0, 0.0, 0.0};
 
-    intersect_rt (pos1, vec1, pos2, vec2, &X,&Y,&Z);
+    intersect_rt (pos1, vec1, pos2, vec2, X);
 				   
-    ck_assert_msg( fabs(X - 1e6) < EPS && 
-                   fabs(Y - 1e6) < EPS && 
-                   fabs(Z - 1e6)  < EPS,
-             "Was expecting X,Y,Z to be 1e6 but found %f %f %f\n", X,Y,Z);
+    ck_assert_msg( fabs(X[0] - 1e6) < EPS && 
+                   fabs(X[1] - 1e6) < EPS && 
+                   fabs(X[2] - 1e6)  < EPS,
+             "Was expecting X,Y,Z to be 1e6 but found %f %f %f\n", X[0],X[1],X[2]);
      
     /* Test some intersection */         
     vec1[1] = -0.707;
@@ -35,12 +35,12 @@ START_TEST(test_intersect_rt)
     pos1[0] = 1.0;
     pos2[1] = 1.0;
       
-    intersect_rt (pos1, vec1, pos2, vec2, &X,&Y,&Z);
+    intersect_rt (pos1, vec1, pos2, vec2, X);
 				   
-    ck_assert_msg( fabs(X - 0.5) < EPS && 
-                   fabs(Y - 0.5) < EPS && 
-                   fabs(Z + 0.707214)  < EPS,
-             "Was expecting X,Y,Z to be 1e6 but found %f %f %f\n", X,Y,Z);
+    ck_assert_msg( fabs(X[0] - 0.5) < EPS && 
+                   fabs(X[1] - 0.5) < EPS && 
+                   fabs(X[2] + 0.707214)  < EPS,
+             "Was expecting X,Y,Z to be 1e6 but found %f %f %f\n", X[0],X[1],X[2]);
     
 
 
