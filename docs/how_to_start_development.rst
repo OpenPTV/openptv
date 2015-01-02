@@ -14,10 +14,9 @@ outlined below. Please inform me in the next few days that you intend to take
 it up.
 
 The small task we would like all of you to do is the same. The steps are
-simple:
+simple: <https://github.com/OpenPTV/openptv> is where our code is:
 
-1. https://github.com/OpenPTV/openptv is where our code is. Look at
-`liboptv/include/parameters.h <https://github.com/OpenPTV/openptv/blob/master/liboptv/include/parameters.h>`_ and 
+1.  Look at `liboptv/include/parameters.h <https://github.com/OpenPTV/openptv/blob/master/liboptv/include/parameters.h>`_ and 
 find the ``mm_np struct``.
 
 2. complete a ``compare_mm_np()`` function in `src/parameters.c <https://github.com/OpenPTV/openptv/blob/master/liboptv/src/parameters.c>`_ following the example of the other
