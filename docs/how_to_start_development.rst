@@ -1,20 +1,13 @@
-Dear applicant,
+Dear new OpenPTV developer,
 
-Thank you for applying to the position we offer in our laboratory. We are
-looking for help in advancing an open source academic software used by our
-field, and based on your C and Python skills we hope that you will be able to
-provide it. The chosen applicant will work with me on transforming the
-existing code to something we can be proud of.
+Thank you for starting with OpenPTV development. A lot of research groups, both in academy and industry, 
+would be grateful to use an open source software for 3D particle tracking. We will work with us on transforming the
+existing code to something we all can be proud of.
 
-After initial filtering, we still face a lot of applicants with the required
-skills. Since some you live quite far away we think it better for both sides
-to precede the customary interview with a small skills test that will also
-give you an impression of the nature of work we need done. The task is
-outlined below. Please inform me in the next few days that you intend to take
-it up.
+To allow us to get on the same page, we need to proceed with this small introductory test that will also
+give you an impression of the nature of work we need done. The task is outlined below: 
 
-The small task we would like all of you to do is the same. The steps are
-simple: <https://github.com/OpenPTV/openptv> is where our code is:
+The steps are simple: <https://github.com/OpenPTV/openptv> is where our code is:
 
 1.  Look at `liboptv/include/parameters.h <https://github.com/OpenPTV/openptv/blob/master/liboptv/include/parameters.h>`_ and 
 find the ``mm_np struct``.
