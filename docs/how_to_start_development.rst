@@ -17,10 +17,10 @@ find the ``mm_np struct``.
 2. complete a ``compare_mm_np()`` function in `src/parameters.c <https://github.com/OpenPTV/openptv/blob/master/liboptv/src/parameters.c>`_ following the example of the other
 parameters structures and use it in ``compare_control_par()``. Add documentation comments to the ``parameters.c`` following the examples of other functions.
 
-3. following the example in `py_bind/ <https://github.com/OpenPTV/openptv/tree/master/py_bind/optv>_`, write a Python wrapper for ``mm_np``, and add
-a test for it in ``tests/``. The wrapper includes API that interfaces C with Python, using `Cython <http://docs.cython.org/src/tutorial/clibraries.html>`_ 
+3. create a test function ``check_parameters.c`` in `liboptv/tests/ <https://github.com/OpenPTV/openptv/tree/master/liboptv/tests>`_ and update the ``CMakeLists.txt`` accordingly
 
-4. create a test function ``check_parameters.c`` in `liboptv/tests/ <https://github.com/OpenPTV/openptv/tree/master/liboptv/tests>`_ and update the ``CMakeLists.txt`` accordingly
+4. following the example in `py_bind/ <https://github.com/OpenPTV/openptv/tree/master/py_bind/optv>_`, write a Python wrapper for ``mm_np``, and add
+a test for it in ``tests/``. The wrapper includes API that interfaces C with Python, using `Cython <http://docs.cython.org/src/tutorial/clibraries.html>`_ 
 
 5. Write a function ``read_control_parameters.py`` that allows a Python user to read the parameters file from
 Python, using the Cython interface to the function read_control_parameters in the ``liboptv`` C library. 
