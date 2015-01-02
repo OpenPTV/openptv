@@ -17,7 +17,7 @@ The small task we would like all of you to do is the same. The steps are
 simple:
 
 1. https://github.com/OpenPTV/openptv is where our code is. Look at
-liboptv/include/parameters.h and find the mm_np struct.
+[liboptv/include/parameters.h](https://github.com/OpenPTV/openptv/blob/master/liboptv/include/parameters.h) and find the mm_np struct.
 
 2. complete a compare_mm_np() function following the example of the other
 parameters structures and use it in compare_control_par().
