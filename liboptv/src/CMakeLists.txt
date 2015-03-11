@@ -7,4 +7,4 @@ if(UNIX)
   target_link_libraries(optv m)
 endif(UNIX)
 
-install(TARGETS optv LIBRARY DESTINATION lib)
+install(TARGETS optv DESTINATION lib)
