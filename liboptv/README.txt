@@ -20,10 +20,11 @@ instructions for adding libraries; consult your IDE/compiler manual for the
 details.
 
 
-Installing on Linux/Mac
-=======================
-Installing directly from the source tree in Git is fast and simple, using 
-CMake. Before installation first we need to make sure that the dependencies are installed.
+Installing on Linux/Mac 
+======================= 
+Installing directly from the source tree in Git is fast and simple, using CMake. 
+Before installation first we need to make sure that the dependencies are 
+installed.
 
 1. The tests of liboptv depend on the Check framework. You can either get it 
    from your package manager (on Ubuntu, 'sudo apt-get install check'), or
@@ -73,30 +74,39 @@ The MSYS package provides the GCC compiler (MinGW), a Bash command-line shell
 and Unix build tools for Windows. It can be found here:
 http://www.mingw.org/wiki/MSYS
 
-After installing MSYS MinGW according to the instructions on the MSYS site, you will have a MinGW shell or MSYS shell in your start menu. Future instructions 
-assume that this shell is used.
+Use the mingw-get-setup method of instalation. During the installation you will
+be asked to choose subpackages. If you don't know what you're doing, choose
+everything. 
+
+After installing MSYS MinGW according to the instructions on the MSYS site, you 
+will have a MinGW shell or MSYS shell in your start menu. Future instructions 
+assume that this shell is used. the installation instructions on the MSYS page 
+given above list some more steps you can and should do, so follow that page 
+carefully. In particular, don't forget to create the fstab file as instructed 
+there.
 
 Installing Check
 ~~~~~~~~~~~~~~~~
 The tests of liboptv depend on the Check framework. You can get it from 
 check.sourceforge.net
 
-Note that version 0.9.9 has cause problems on Windows before, so that Check 
-0.9.8 is recommended.
+Some versions have problems with Windows. Version 0.9.8 is known to work. You can 
+get version 0.9.14 to work by editing lib/libcompat.h and commenting out or 
+removing lines 147-151.
 
 Installing Check is done roughly in the same way as on Linux, in the MSYS 
 shell:
 
-     $ ./configure
+     $ ./configure --prefix /usr
      $ make
      $ make install
 
-However, it is important to note where the install actually lands so that we 
-can help CMake find it. The Check library would be installed under the MSYS
-tree which was set up when installing MSYS. The default installation is in
-what MSYS refers to as /usr/local. If your MSYS is installed on C:\MinGW,
-then Check would then be in C:\MinGW\msys\1.0\local\ or a similar path.
-Make sure to verify this.
+However, it is important to note where the install actually lands so that we can 
+help CMake find it. The Check library would be installed under the MSYS tree 
+which was set up when installing MSYS. The above installation is in what MSYS 
+refers to as /usr. If your MSYS is installed on C:\MinGW, then Check would then 
+be in ``C:\MinGW\msys\1.0\lib\`` and ``C:\MinGW\msys\1.0\include`` or a similar 
+path. Make sure to verify this.
 
 Installing liboptv
 ~~~~~~~~~~~~~~~~~~
@@ -120,7 +130,7 @@ CMake caches values you set before.
 Now that CMake is initialized, a command to generate Makefiles with all
 paths told in advance, would be
 
-    $  cmake ../ -DCMAKE_INSTALL_PREFIX:PATH=/usr -DCMAKE_PREFIX_PATH=/c/MinGW/msys/1.0/local/
+    $  cmake ../ -DCMAKE_INSTALL_PREFIX:PATH=/usr -DCMAKE_PREFIX_PATH=/c/MinGW/msys/1.0/
 
 Note the path where Check was installed is specified, and be sure to adjust it
 if it is a different path in your system.
@@ -128,19 +138,22 @@ if it is a different path in your system.
 Now to build and install liboptv, type
 
     $ make
-    $ make verify
     $ make install
 
 This would install liboptv in what MSYS refers to as /usr, which is 
 C:\MinGW\msys\1.0\ on my system. Any further program that is built using MSYS
 looks for this path by default so no further adjustment is necessary for using
 liboptv in your program, other than adding the include and link directives
-specified above.
+specified above. 
 
 However, on run time it appears that the pyd file we just installed looks for
 the accompanying DLL that was installed alongside it. Windows wants this DLL
 to be in the PATH it searches for executables. So the last step of installing
 on Windows is to modify the PATH environment variable so that it lists the 
 place where the liboptv DLL is installed (in our example, this would be 
-C:\MinGW\msys\1.0\lib).
+C:\MinGW\msys\1.0\lib). This can be done by right-clicking Computer on the 
+start menu, choosing Properties -> Advanced system settings -> click Environment 
+Variables -> edit the PATH variable on the bottom list and add the DLL's location,
+separated by a semicolon (;) charachter from the directories already listed.
+ 
 
