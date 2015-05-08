@@ -8,7 +8,6 @@ cdef extern from "optv/parameters.h":
         double n3
         int lut
         
-cdef class Py_mm_np:
+cdef class MultimediaParams:
     cdef mm_np* _mm_np
-    cdef int _owns_data
-    cdef void set(Py_mm_np self, mm_np* m)
+    
