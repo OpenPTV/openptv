@@ -286,25 +286,25 @@ void free_control_par(control_par *cp) {
 /* compare_control_par() checks that two control_par objects are deeply-equal,
    i.e. the memorry allocations contain equal values, and other fields are
    directly equal.
-   
+
    Arguments:
    control_par *v1, *v2 - addresses of the objects for comparison.
-   
+
    Returns:
    True if equal, false otherwise.
 */
 int compare_control_par(control_par *c1, control_par *c2) {
     int cam;
-    
+
     if (c1->num_cams != c2->num_cams) return 0;
-    
+
     for (cam = 0; cam < c1->num_cams; cam++) {
         if (strncmp(c1->img_base_name[cam], c2->img_base_name[cam],
             SEQ_FNAME_MAX_LEN - 1) != 0) return 0;
         if (strncmp(c1->cal_img_base_name[cam], c2->cal_img_base_name[cam],
             SEQ_FNAME_MAX_LEN - 1) != 0) return 0;
     }
-    
+
     if (c1->hp_flag != c2->hp_flag) return 0;
     if (c1->allCam_flag != c2->allCam_flag) return 0;
     if (c1->tiff_flag != c2->tiff_flag) return 0;
@@ -313,49 +313,27 @@ int compare_control_par(control_par *c1, control_par *c2) {
     if (c1->pix_x != c2->pix_x) return 0;
     if (c1->pix_y != c2->pix_y) return 0;
     if (c1->chfield != c2->chfield) return 0;
-    if (c1->mm->n1 != c2->mm->n1) return 0;
-    if (c1->mm->n2[0] != c2->mm->n2[0]) return 0;
-    if (c1->mm->n3 != c2->mm->n3) return 0;
-    if (c1->mm->d[0] != c2->mm->d[0]) return 0;
+
+    if(compare_mm_np(c1->mm, c2->mm)==0) return 0;
 
     return 1;
 }
 
 /* Checks deep equality between two mm_np struct instances.
- * Returns 1 for equality, 0 otherwise. */
+ * Returns 1 for equality, 0 otherwise.
+ * PLEASE NOTE: only first elements in n2 and in d are checked.
+ */
 int compare_mm_np(mm_np *mm_np1, mm_np *mm_np2)
 {
-	/*comparing array-type members*/
-	int i;
-	for (i=0; i<3; i++)
-		if (	mm_np1->n2[i] != mm_np2->n2[i]
-			||	mm_np1->d[i]  != mm_np2->d[i] )
-			return 0;
-	/*comparing remaining basic-type members*/
+	//comparing first elements only of n2 and d
+	if (	mm_np1->n2[0] != mm_np2->n2[0]
+		|| 	mm_np1->d[0]  != mm_np2->d[0])
+		return 0;
+	//comparing primitive type variables
 	if (	mm_np1->nlay != mm_np2->nlay
 		||	mm_np1->n1 	 != mm_np2->n1
 		||	mm_np1->n3	 != mm_np2->n3
 		||	mm_np1->lut	 != mm_np2->lut )
-		return 0;
-	return 1;
-}
-
-/* Checks deep equality between two compare_control_par struct instances.
- * Returns 1 for equality, 0 otherwise. */
-int compare_control_par(control_par *c1, control_par *c2)
-{
-	if ( 	c1->num_cams	!= c2->num_cams
-		||	c1->hp_flag		!= c2->hp_flag
-		||	c1->allCam_flag	!= c2->allCam_flag
-		||	c1->tiff_flag	!= c2->tiff_flag
-		||	c1->imx			!= c2->imx
-		||	c1->imy			!= c2->imy
-		||	c1->pix_x		!= c2->pix_x
-		||	c1->pix_y		!= c2->pix_y
-		||	c1->chfield		!= c2->chfield
-		||	compare_mm_np(c1->mm, c2->mm)==0
-		||	strncmp(*(c1->img_base_name), *(c2->img_base_name))==0
-		||	strncmp(*(c1->cal_img_base_name), *(c2->cal_img_base_name))==0 )
 		return 0;
 	return 1;
 }
