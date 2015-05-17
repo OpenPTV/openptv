@@ -31,7 +31,7 @@ START_TEST(test_read_compare_mm_np_par)
 	mm2.n3=3.5;
 	mm2.lut=4;
 
-	fail_unless (compare_mm_np(&mm1,&mm2) == 1);
+	fail_if (compare_mm_np(&mm1,&mm2) == 1);
 }
 END_TEST
 
@@ -118,7 +118,7 @@ START_TEST(test_read_control_par)
     cpar_correct.mm->n1 = 1;
     cpar_correct.mm->n2[0] = 1.49;
     cpar_correct.mm->n3 = 1.33;
-    cpar_correct.mm->d[0] = 52;
+    cpar_correct.mm->d[0] = 5;
     cpar_correct.mm->n2[1] = 0;
     cpar_correct.mm->n2[2] = 0;
     cpar_correct.mm->d[1] = 0;

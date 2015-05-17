@@ -332,8 +332,7 @@ int compare_mm_np(mm_np *mm_np1, mm_np *mm_np2)
 	//comparing primitive type variables
 	if (	mm_np1->nlay != mm_np2->nlay
 		||	mm_np1->n1 	 != mm_np2->n1
-		||	mm_np1->n3	 != mm_np2->n3
-		||	mm_np1->lut	 != mm_np2->lut )
+		||	mm_np1->n3	 != mm_np2->n3 )
 		return 0;
 	return 1;
 }
