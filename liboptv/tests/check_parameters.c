@@ -5,6 +5,37 @@
 #include <stdio.h>
 #include "parameters.h"
 
+START_TEST(test_read_compare_mm_np_par)
+{
+	mm_np mm1,mm2;
+
+	mm1.nlay=2;
+	mm1.n1=3.1;
+	mm1.n2[0]=3.8;
+	mm1.n2[1]=3.8;
+	mm1.n2[2]=3.8;
+	mm1.d[0]=3.7;
+	mm1.d[1]=0;
+	mm1.d[2]=0;
+	mm1.n3=3.6;
+	mm1.lut=5;
+
+	mm2.nlay=3;
+	mm2.n1=3.2;
+	mm2.n2[0]=3.3;
+	mm2.n2[1]=3.3;
+	mm2.n2[2]=3.3;
+	mm2.d[0]=3.4;
+	mm2.d[1]=0;
+	mm2.d[2]=0;
+	mm2.n3=3.5;
+	mm2.lut=4;
+
+	fail_unless (compare_mm_np(&mm1,&mm2) == 1);
+}
+END_TEST
+
+
 START_TEST(test_read_sequence_par)
 {
     int cam;
@@ -87,7 +118,11 @@ START_TEST(test_read_control_par)
     cpar_correct.mm->n1 = 1;
     cpar_correct.mm->n2[0] = 1.49;
     cpar_correct.mm->n3 = 1.33;
-    cpar_correct.mm->d[0] = 5;
+    cpar_correct.mm->d[0] = 52;
+    cpar_correct.mm->n2[1] = 0;
+    cpar_correct.mm->n2[2] = 0;
+    cpar_correct.mm->d[1] = 0;
+    cpar_correct.mm->d[2] = 0;
     
   
     cpar = read_control_par("testing_fodder/parameters/ptv.par");
@@ -112,6 +147,10 @@ Suite* fb_suite(void) {
 
     tc = tcase_create ("Read control parameters");
     tcase_add_test(tc, test_read_control_par);
+    suite_add_tcase (s, tc);
+
+    tc = tcase_create ("Read compare mm_np parameters");
+    tcase_add_test(tc, test_read_compare_mm_np_par);
     suite_add_tcase (s, tc);
 
     return s;
