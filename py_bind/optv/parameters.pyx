@@ -1,5 +1,6 @@
 #Implementation of Python binding to parameters.h
 from libc.stdlib cimport malloc, free
+import numpy
 
 cdef class MultimediaParams:
 
@@ -26,23 +27,24 @@ cdef class MultimediaParams:
     def set_n1(self, n1):
         self._mm_np[0].n1 = n1
         
-    def get_n2(self):
-        list_size = sizeof(self._mm_np[0].n2) / sizeof(self._mm_np[0].n2[0])
-        n2_list = [None] * list_size
-        for i in range(list_size):
-            n2_list[i] = self._mm_np[0].n2[i]
-        return n2_list
+    def get_n2(self):#TODO return numpy
+        arr_size = sizeof(self._mm_np[0].n2) / sizeof(self._mm_np[0].n2[0])
+        n2_np_arr = numpy.empty(arr_size)
+        for i in range(len(n2_np_arr)):
+            n2_np_arr[i] = self._mm_np[0].n2[i]
+        return n2_np_arr
     
     def set_n2(self, n2):
         for i in range(len(n2)):
             self._mm_np[0].n2[i] = n2[i]
             
     def get_d(self):
-        list_size = sizeof(self._mm_np[0].d) / sizeof(self._mm_np[0].d[0])
-        d_list = [None] * list_size
-        for i in range(list_size):
-            d_list[i] = self._mm_np[0].d[i]
-        return d_list
+        arr_size = sizeof(self._mm_np[0].d) / sizeof(self._mm_np[0].d[0])
+        d_np_arr = numpy.empty(arr_size)
+        
+        for i in range(len(d_np_arr)):
+            d_np_arr[i] = self._mm_np[0].d[i]
+        return d_np_arr
         
     def set_d(self, d):
         for i in range(len(d)):
@@ -79,4 +81,7 @@ cdef class MultimediaParams:
                 d_str,
                 str(self._mm_np[0].n3),
                 str(self._mm_np[0].lut))
+        
+        def __dealloc__(self):
+            free(self._mm_np)
         
