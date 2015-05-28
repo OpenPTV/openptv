@@ -119,11 +119,7 @@ START_TEST(test_read_control_par)
     cpar_correct.mm->n2[0] = 1.49;
     cpar_correct.mm->n3 = 1.33;
     cpar_correct.mm->d[0] = 5;
-    cpar_correct.mm->n2[1] = 0;
-    cpar_correct.mm->n2[2] = 0;
-    cpar_correct.mm->d[1] = 0;
-    cpar_correct.mm->d[2] = 0;
-    
+    cpar_correct.mm->nlay = 1;
   
     cpar = read_control_par("testing_fodder/parameters/ptv.par");
     fail_unless(compare_control_par(cpar, &cpar_correct));
