@@ -2,6 +2,8 @@
 .project
 .pydevproject
 
+py_bind/optv/*.c
+
 *.pyc
 
 liboptv/config.h.in~

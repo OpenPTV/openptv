@@ -5,6 +5,17 @@
 #include <stdio.h>
 #include "parameters.h"
 
+START_TEST(test_read_shaking_par)
+{
+	shaking_par * sp_test;
+	shaking_par sp_correct={410000, 411055, 100, 3};	//according to current contents in shaking.par text file
+	sp_test = read_shaking_par("testing_fodder/parameters/shaking.par");
+
+	fail_unless(compare_shaking_par(sp_test, &sp_correct));
+
+}
+END_TEST
+
 START_TEST(test_read_sequence_par)
 {
     int cam;
@@ -97,8 +108,13 @@ END_TEST
 
 Suite* fb_suite(void) {
     Suite *s = suite_create ("Parameters handling");
+    TCase *tc;
 
-    TCase *tc = tcase_create ("Read sequence parameters");
+    tc=tcase_create ("Read shaking parameters");
+    tcase_add_test(tc, test_read_shaking_par);
+    suite_add_tcase (s, tc);
+
+    tc = tcase_create ("Read sequence parameters");
     tcase_add_test(tc, test_read_sequence_par);
     suite_add_tcase (s, tc);
     

@@ -2,18 +2,21 @@
 from libc.stdlib cimport malloc, free
 import numpy
 
+cdef extern from "optv/parameters.h":
+    shaking_par* c_read_shaking_par "read_shaking_par"(char* file_name)
+    
 cdef class MultimediaParams:
-
-    def __init__(self, **kwargs):
+    
+    def __init__(self, nlay, n1, n2, d, n3, lut):
         
         self._mm_np = <mm_np *>malloc(sizeof(mm_np))
         
-        self.set_nlay(kwargs['nlay'])
-        self.set_n1(kwargs['n1'])
-        self.set_n2(kwargs['n2'])
-        self.set_d(kwargs['d'])
-        self.set_n3(kwargs['n3'])
-        self.set_lut(kwargs['lut'])
+        self.set_nlay(nlay)
+        self.set_n1(n1)
+        self.set_n2(n2)
+        self.set_d(d)
+        self.set_n3(n3)
+        self.set_lut(lut)
     
     def get_nlay(self):
         return self._mm_np[0].nlay
@@ -82,6 +85,46 @@ cdef class MultimediaParams:
                 str(self._mm_np[0].n3),
                 str(self._mm_np[0].lut))
         
-        def __dealloc__(self):
-            free(self._mm_np)
+    def __dealloc__(self):
+        free(self._mm_np)
+            
+# Binding to shaking_par C struct for pythonic access
+cdef class ShakingParams:
+
+    def __init__(self, seq_first, seq_last, max_shaking_points, max_shaking_frames):
         
+        self._shaking_par = < shaking_par *> malloc(sizeof(shaking_par))
+        self.set_seq_first(seq_first)
+        self.set_seq_last(seq_last)
+        self.set_max_shaking_points(max_shaking_points)
+        self.set_max_shaking_frames(max_shaking_frames)
+
+    def py_read_shaking_par(self, file_name):
+        self._shaking_par = c_read_shaking_par(file_name)
+        
+    def get_seq_first(self):
+        return self._shaking_par[0].seq_first
+    
+    def set_seq_first(self, seq_first):
+        self._shaking_par[0].seq_first = seq_first
+        
+    def get_seq_last(self):
+        return self._shaking_par[0].seq_last
+    
+    def set_seq_last(self, seq_last):
+        self._shaking_par[0].seq_last = seq_last
+        
+    def get_max_shaking_points(self):
+        return self._shaking_par[0].max_shaking_points
+    
+    def set_max_shaking_points(self, max_shaking_points):
+        self._shaking_par[0].max_shaking_points = max_shaking_points
+        
+    def get_max_shaking_frames(self):
+        return self._shaking_par[0].max_shaking_frames
+    
+    def set_max_shaking_frames(self, max_shaking_frames):
+        self._shaking_par[0].max_shaking_frames = max_shaking_frames
+        
+    def __dealloc__(self):
+        free(self._shaking_par)
