@@ -1,6 +1,16 @@
+.settings/
+.project
+.pydevproject
+.pydevproject.bak
+
+py_bind/optv/*.c
+
+*.pyc
 
 liboptv/config.h.in~
 
 liboptv/tests/check_fb.trs
 liboptv/build
+py_bind/build
 *~
+
