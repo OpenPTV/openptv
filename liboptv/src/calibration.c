@@ -39,7 +39,9 @@ int write_ori (Exterior Ex, Interior I, Glass G, ap_52 ap, \
 				Ex.dm[i][0], Ex.dm[i][1], Ex.dm[i][2]);
   fprintf (fp,"\n    %8.4f %8.4f\n    %8.4f\n", I.xh, I.yh, I.cc);
   fprintf (fp,"\n    %20.15f %20.15f  %20.15f\n", G.vec_x, G.vec_y, G.vec_z);
+  
   fclose (fp);
+  fp = NULL;
   
   if (add_file == NULL) goto finalize;
   fp = fopen (add_file, "w");
@@ -49,9 +51,7 @@ int write_ori (Exterior Ex, Interior I, Glass G, ap_52 ap, \
   }
   fprintf (fp, "%f %f %f %f %f %f %f", ap.k1, ap.k2, ap.k3, ap.p1, ap.p2,
     ap.scx, ap.she);
-  fclose (fp);
   success = 1;
-  return success;
   
 finalize:
     if (fp != NULL) fclose (fp);

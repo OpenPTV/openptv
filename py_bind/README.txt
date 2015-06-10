@@ -13,8 +13,8 @@ The plan is to add more wrappers as other contributors of liboptv find them
 necessary and choose to add them here.
 
 
-Installation
-------------
+Installation on Linux / OS X
+----------------------------
 This package assumes that liboptv is already installed. If it is not, see the 
 instructions for installing it in the liboptv source code.
 
@@ -29,11 +29,40 @@ Nose test harness: https://nose.readthedocs.org/en/latest/#
 With the dependencies installed, the optv package is installed by typing the
 following command in a terminal:
 
-  python setup.py install
+  sudo python setup.py install
 
 Note that on many systems you will first need to obtain administrator 
-privileges. On Linux the 'sudo' command is recommended.
+privileges. On Linux the 'sudo' command is recommended, as shown above.
 
+Installation on Windows
+-----------------------
+Install liboptv as instructed in the Windows installation section of 
+liboptv/README.txt. This way you already have an MSYS environment,
+which you continue to use here.
+
+At this point, since we are building a Python module, you must have a 
+Python version installed. The Python(x,y) distribution, available from
+https://code.google.com/p/pythonxy/ contains all you need. During the
+installation you will be asked to choose packages. To the default 
+selection add the Cython package. For testing your installation later,
+make sure the ``nose`` package is also installed.
+
+The commands for installing the Python modules are a bit more elaborate 
+than the Linux instructions because Windows is evil. First one builds the
+package:
+
+  python setup.py build_ext -I/usr/include -L/usr/lib/ --compiler=mingw32
+
+Then installation is simply
+
+  python setup.py install
+
+Testing the installation
+------------------------
+Regardless of the system you installed on, the shell commands are the same:
+
+  cd tests/
+  nosetests .
 
 Usage example
 -------------
