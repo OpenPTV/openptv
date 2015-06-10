@@ -27,7 +27,7 @@ set(LIBS ${LIBS} ${CHECK_LIBRARIES} ${OPTV_LIBRARY})
 
 # Satysfy the new dynamic linker rules on Linux.
 if (UNIX)
-    set(LIBS ${LIBS} -lm -pthread -lrt)
+    set(LIBS ${LIBS} -lm -pthread)
 endif (UNIX)
 
 target_link_libraries(check_fb ${LIBS})
