@@ -11,6 +11,9 @@ ext_mods = [
     Extension("optv.tracking_framebuf", ["optv/tracking_framebuf.pyx"], 
         libraries=['optv'], include_dirs=inc_dirs,
         pyrex_include_dirs=['.']),
+    Extension("optv.parameters", ["optv/parameters.pyx"], 
+        libraries=['optv'], include_dirs=inc_dirs,
+        pyrex_include_dirs=['.']),
 ]
 
 setup(
