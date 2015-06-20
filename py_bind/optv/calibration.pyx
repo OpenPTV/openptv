@@ -26,9 +26,6 @@ cdef class Calibration:
                     self._calibration[0].added_par,
                     filename, add_file)
     
-#     def set_pos (numpy with three elements)
-#         set it inside exterior
-
     # Sets exterior position.
     # Parameter: x_y_z_np - numpy array of 3 elements for x, y, z
     def set_pos(self, x_y_z_np):
@@ -48,7 +45,7 @@ cdef class Calibration:
         return ret_x_y_z_np
         
     # Sets angles (omega, phi, kappa) and recalculates Dmatrix accordingly
-    #Parameter o_p_k_np - numpy of 3 elements
+    # Parameter o_p_k_np - numpy of 3 elements
     def set_angles(self, o_p_k_np):
         if len(o_p_k_np) != 3:
             raise ValueError("Illegal array argument " + o_p_k_np.__str__() + " for omega, phi, kappa. Expected array/list of 3 numbers")
