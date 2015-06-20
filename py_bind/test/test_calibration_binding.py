@@ -43,7 +43,7 @@ class Test_Calibration(unittest.TestCase):
         # test getting position and assert that position is equal to set position
         numpy.testing.assert_array_equal(new_np, calib_obj.get_pos())
         
-        # assert set_pos() raises ValueErro        dmatrix_before = calib_obj.get_dmatrix()  # dmatrix before setting anglesr exception when given more or less than 3 elements 
+        # assert set_pos() raises ValueError exception when given more or less than 3 elements 
         self.assertRaises(ValueError, calib_obj.set_pos, numpy.array([1, 2, 3, 4]))
         self.assertRaises(ValueError, calib_obj.set_pos, numpy.array([1, 2]))
         
@@ -57,6 +57,10 @@ class Test_Calibration(unittest.TestCase):
         
         # assert dmatrix was recalculated (before vs after)
         self.assertFalse(numpy.array_equal(dmatrix_before, dmatrix_after))
+        
+        # assert set_angles() raises ValueError exception when given more or less than 3 elements 
+        self.assertRaises(ValueError, calib_obj.set_angles, numpy.array([1, 2, 3, 4]))
+        self.assertRaises(ValueError, calib_obj.set_angles, numpy.array([1, 2]))
         
         # remove the testing output directory and its files
         shutil.rmtree(output_directory)
