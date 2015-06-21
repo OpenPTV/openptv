@@ -73,4 +73,7 @@ cdef class Calibration:
                 ret_dmatrix_np[i][j] = self._calibration[0].ext_par.dm[i][j]
         
         return ret_dmatrix_np
-            
+    
+    # Free memory
+    def __dealloc__(self):
+        free(self._calibration)  
