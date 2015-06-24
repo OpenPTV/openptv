@@ -5,7 +5,7 @@ enable_testing()
 add_subdirectory(src)
 add_subdirectory(tests)
 
-INSTALL(DIRECTORY include/ DESTINATION include/optv/)
+INSTALL(DIRECTORY include/ LIBRARY DESTINATION include/optv/)
 
 set(CPACK_PACKAGE_DESCRIPTION_FILE "${CMAKE_CURRENT_SOURCE_DIR}/README")
 set(CPACK_PACKAGE_VERSION_MAJOR "0")
