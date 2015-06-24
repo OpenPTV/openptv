@@ -66,7 +66,7 @@ cdef class Calibration:
         return ret_o_p_k_np
     
     # Returns a 3x3 numpy array that represents Exterior's Dmatrix 
-    def get_dmatrix(self):
+    def get_rotation_matrix(self):
         ret_dmatrix_np = numpy.empty(shape=(3, 3))
         for i in range(3):
             for j in range(3):

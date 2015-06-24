@@ -5,9 +5,9 @@ import numpy, os, filecmp, shutil
 class Test_Calibration(unittest.TestCase):
     def test_Calibration_instantiation(self):
         
-        input_ori_file_name = "testing_fodder/cal/cam1.tif.ori"
-        input_add_file_name = "testing_fodder/cal/cam2.tif.addpar"
-        output_directory = "testing_fodder/cal/testing_output/"
+        input_ori_file_name = "testing_fodder/calibration/cam1.tif.ori"
+        input_add_file_name = "testing_fodder/calibration/cam2.tif.addpar"
+        output_directory = "testing_fodder/calibration/testing_output/"
         
         test_output_ori_file_name = output_directory + "output_ori"
         test_output_add_file_name = output_directory + "output_add"
@@ -48,10 +48,10 @@ class Test_Calibration(unittest.TestCase):
         self.assertRaises(ValueError, calib_obj.set_pos, numpy.array([1, 2]))
         
         # set angles and assert the angles were set correctly
-        dmatrix_before = calib_obj.get_dmatrix()  # dmatrix before setting angles
+        dmatrix_before = calib_obj.get_rotation_matrix()  # dmatrix before setting angles
         angles_np = numpy.array([0.1111, 0.2222, 0.3333])
         calib_obj.set_angles(angles_np)
-        dmatrix_after = calib_obj.get_dmatrix()  # dmatrix after setting angles
+        dmatrix_after = calib_obj.get_rotation_matrix()  # dmatrix after setting angles
         # make sure the angles are as were set  
         numpy.testing.assert_array_equal(calib_obj.get_angles(), angles_np)
         
