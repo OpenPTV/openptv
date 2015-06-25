@@ -14,6 +14,9 @@ ext_mods = [
     Extension("optv.parameters", ["optv/parameters.pyx"], 
         libraries=['optv'], include_dirs=inc_dirs,
         pyrex_include_dirs=['.']),
+    Extension("optv.calibration", ["optv/calibration.pyx"], 
+        libraries=['optv'], include_dirs=inc_dirs,
+        pyrex_include_dirs=['.']),
 ]
 
 setup(
