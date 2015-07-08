@@ -410,7 +410,7 @@ void write_target_par(target_par *targ, char *filename) {
 	if (file == NULL)
 		printf("Can't create file: %s\n", filename);
 
-	printf("\n\n%d\n",fprintf(file, "%d\n%d\n%d\n%d\n%d\n%d\n%d\n%d\n%d\n%d\n%d\n%d\n%d",
+	fprintf(file, "%d\n%d\n%d\n%d\n%d\n%d\n%d\n%d\n%d\n%d\n%d\n%d\n%d",
 			targ->discont,
 			targ->gvthres[0],
 			targ->gvthres[1],
@@ -423,7 +423,7 @@ void write_target_par(target_par *targ, char *filename) {
 			targ->nymin,
 			targ->nymax,
 			targ->sumg_min,
-			targ->cr_sz));
+			targ->cr_sz);
 
 	fclose(file);
 }
