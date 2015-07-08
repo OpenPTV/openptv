@@ -338,8 +338,7 @@ int compare_mm_np(mm_np *mm_np1, mm_np *mm_np2)
 	return 1;
 }
 
-/*
- * Reads target recognition parameters from file.
+/* Reads target recognition parameters from file.
  * Parameter: filename - the absolute/relative path to file from which the parameters will be read.
  * Returns: pointer to a new target_par structure.
  */
