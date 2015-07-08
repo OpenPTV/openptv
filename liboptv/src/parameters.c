@@ -337,3 +337,94 @@ int compare_mm_np(mm_np *mm_np1, mm_np *mm_np2)
 		return 0;
 	return 1;
 }
+
+/*
+ * Reads target recognition parameters from file.
+ * Parameter: filename - the absolute/relative path to file from which the parameters will be read.
+ * Returns: pointer to a new target_par structure.
+ */
+target_par* read_target_par(char *filename) {
+	FILE * file=fopen(filename, "r");
+	if (file==NULL){
+		printf("Could not open target recognition parameters file %s.\n", filename);
+		return NULL;
+	}
+
+	target_par *ret;
+	ret = malloc(sizeof(target_par));
+
+	int discont;
+		int gvthres[4];
+		int nnmin, nnmax;
+		int nxmin, nxmax;
+		int nymin, nymax;
+		int sumg_min;
+		int cr_sz;
+
+	if (   !(fscanf(file, "%d", &ret->discont)==1) 		/* max discontinuity */
+		|| !(fscanf(file, "%d", &ret->gvthres[0])==1) 	/* threshold for binarization 1.image */
+		|| !(fscanf(file, "%d", &ret->gvthres[1])==1) 	/* threshold for binarization 2.image */
+		|| !(fscanf(file, "%d", &ret->gvthres[2])==1) 	/* threshold for binarization 3.image */
+		|| !(fscanf(file, "%d", &ret->gvthres[3])==1) 	/* threshold for binarization 4.image */
+		|| !(fscanf(file, "%d  %d", &ret->nnmin, &ret->nnmax)==2) /* min. and max. number of */
+		|| !(fscanf(file, "%d  %d", &ret->nxmin, &ret->nxmax)==2) /* pixels per target,  	*/
+		|| !(fscanf(file, "%d  %d", &ret->nymin, &ret->nymax)==2) /* abs, in x, in y    	*/
+		|| !(fscanf(file, "%d", &ret->sumg_min)==1) 				/* min. sumg */
+		|| !(fscanf(file, "%d", &ret->cr_sz))==1) 				/* size of crosses */
+	{
+		printf("Error reading target recognition parameters from %s\n", filename);
+		free(ret);
+		fclose(file);
+		return NULL;
+	}
+
+	fclose(file);
+	return ret;
+}
+
+/* Checks deep equality between two target_par structure variables.
+ * Returns 1 for equality, 0 otherwise.
+ */
+int compare_target_par(target_par *targ1, target_par *targ2) {
+	return (   targ1->discont == 	targ2->discont
+			&& targ1->gvthres[0] == targ2->gvthres[0]
+			&& targ1->gvthres[1] == targ2->gvthres[1]
+			&& targ1->gvthres[2] == targ2->gvthres[2]
+			&& targ1->gvthres[3] == targ2->gvthres[3]
+			&& targ1->nnmin ==		targ2->nnmin
+			&& targ1->nnmax ==		targ2->nnmax
+			&& targ1->nxmin == 		targ2->nxmin
+			&& targ1->nxmax == 		targ2->nxmax
+			&& targ1->nymin == 		targ2->nymin
+			&& targ1->nymax == 		targ2->nymax
+			&& targ1->sumg_min == 	targ2->sumg_min
+			&& targ1->cr_sz == 		targ2->cr_sz);
+}
+/* Writes target_par structure contents to a file.
+ * Parameters:
+ * targ - a pointer to target_par structure that will be written to file
+ * filename - pointer to char array representing the absolute/relative file name
+ */
+void write_target_par(target_par *targ, char *filename) {
+	FILE *file = fopen(filename, "w");
+
+	if (file == NULL)
+		printf("Can't create file: %s\n", filename);
+
+	printf("\n\n%d\n",fprintf(file, "%d\n%d\n%d\n%d\n%d\n%d\n%d\n%d\n%d\n%d\n%d\n%d\n%d",
+			targ->discont,
+			targ->gvthres[0],
+			targ->gvthres[1],
+			targ->gvthres[2],
+			targ->gvthres[3],
+			targ->nnmin,
+			targ->nnmax,
+			targ->nxmin,
+			targ->nxmax,
+			targ->nymin,
+			targ->nymax,
+			targ->sumg_min,
+			targ->cr_sz));
+
+	fclose(file);
+}

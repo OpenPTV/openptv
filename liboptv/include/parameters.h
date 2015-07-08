@@ -66,6 +66,22 @@ typedef struct {
 control_par * read_control_par(char *filename);
 void free_control_par(control_par *cp);
 
+/* Parameters for target recognition */
+typedef struct {
+	int discont;
+	int gvthres[4];
+	int nnmin, nnmax;
+	int nxmin, nxmax;
+	int nymin, nymax;
+	int sumg_min;
+	int cr_sz;
+} target_par;
+
+/*TODO: declarations of read, write, compare
+ *
+ */
+
+
 /* Checks deep equality between two mm_np struct instances.
  * Returns 1 for equality, 0 otherwise. */
 int compare_mm_np(mm_np *mm_np1, mm_np *mm_np2);
