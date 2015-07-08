@@ -168,10 +168,9 @@ Suite* fb_suite(void) {
     tcase_add_test(tc, test_read_compare_mm_np_par);
     suite_add_tcase (s, tc);
 
-	tc = tcase_create("Read and compare target recognition parameters");
+	tc = tcase_create("Read write compare target recognition parameters");
 	tcase_add_test(tc, test_read_write_compare_targ_rec_par);
 	suite_add_tcase(s, tc);
-
 
     return s;
 }
