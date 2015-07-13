@@ -53,51 +53,6 @@ START_TEST(test_norm_cross)
 }
 END_TEST
 
-
-START_TEST(test_dot)
-{
-
-    double d;
-
-    // test simple cross-product normalized to unity
-
-    double a[] = {1.0, 0.0, 0.0};
-    double b[] = {0.0, 2.0, 0.0};
-
-    dot(a,b,&d);
-
-    //fail_unless( d == 0.0 );
-    ck_assert_msg( fabs(d - 0.0) < EPS,
-             "Was expecting d to be 0.0 but found %f \n", d);
-
-    b[0] = 2.0;
-    b[1] = 2.0;
-    b[2] = 0.0;
-
-    dot(b,a,&d);
-    // fail_unless( d == 2.0 );
-    ck_assert_msg( fabs(d - 2.0) < EPS,
-             "Was expecting d to be 2.0 but found %f \n", d);
-
-}
-END_TEST
-
-
-START_TEST(test_modu)
-{
-    double a[]= {10.0, 0.0, 0.0};
-    double m;
-
-    modu(a,&m);
-
-    // fail_unless( m == 10.0);
-    ck_assert_msg( fabs(m - 10.0) < EPS,
-             "Was expecting m to be 10.0 but found %f \n", m);
-
-}
-END_TEST
-
-
 START_TEST(test_matmul)
 {
 
@@ -220,8 +175,6 @@ Suite* fb_suite(void) {
  
     TCase *tc = tcase_create ("lsadj test");
     tcase_add_test(tc, test_norm_cross);
-    tcase_add_test(tc, test_dot);
-    tcase_add_test(tc, test_modu);
     tcase_add_test(tc, test_matmul);
     tcase_add_test(tc, test_ata);
     tcase_add_test(tc, test_atl);

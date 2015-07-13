@@ -1,4 +1,6 @@
 #include "lsqadj.h"
+#include "vec_utils.h"
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -163,43 +165,22 @@ for (i=0; i<k; i++) {
 
 void norm_cross(double a[3], double b[3], double n[3]) {
 
-    double  res[3], dummy, norm;
+    double dummy, rnorm;
+    vec3d res;
 
     res[0]=a[1]*b[2]-a[2]*b[1];
     res[1]=a[2]*b[0]-a[0]*b[2];
     res[2]=a[0]*b[1]-a[1]*b[0];
     
-    modu(res,&norm);
+    rnorm = vec_norm(res);
     
-    
-    if (norm == 0.0){ // avoids zero length vector bug
+    if (rnorm == 0.0){ // avoids zero length vector bug
         n[0] = res[0];
         n[1] = res[0];
         n[2] = res[0];
     } else {    
-    n[0]=res[0]/norm;
-    n[1]=res[1]/norm;
-    n[2]=res[2]/norm;
+    n[0]=res[0]/rnorm;
+    n[1]=res[1]/rnorm;
+    n[2]=res[2]/rnorm;
     }
 }
-
-/* Dot product of two vectors 
-* TODO: use ready subroutines from vec_utils.h
-*
-*/
-
-void dot(double a[3], double b[3], double *d) {
-
-    *d = a[0]*b[0] + a[1]*b[1] + a[2]*b[2];
-}
-
-
-/* Modulus of a vector
-* TODO: use ready subroutine called norm in vec_utils.h
-*/
-void modu(double a[3], double *m) {
-
-    *m = sqrt(a[0]*a[0] + a[1]*a[1] + a[2]*a[2]);
-}
-
-
