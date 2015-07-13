@@ -7,12 +7,14 @@ doubles.
 
 #include <math.h>
 
-# define EMPTY_CELL 0.0/0.0
-# define norm(x,y,z) sqrt((x)*(x) + (y)*(y) + (z)*(z))
+#define EMPTY_CELL 0.0/0.0
+#define is_empty(x) isnan(x)
+#define norm(x,y,z) sqrt((x)*(x) + (y)*(y) + (z)*(z))
 
 typedef double vec3d[3];
 
 void vec_init(vec3d init);
+void vec_set(vec3d dest, double x, double y, double z);
 void vec_copy(vec3d dest, vec3d src);
 void vec_subt(vec3d from, vec3d sub, vec3d output);
 void vec_scalar_mul(vec3d vec, double scalar, vec3d output);
