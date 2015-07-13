@@ -55,6 +55,15 @@ START_TEST(test_vec_cmp)
 }
 END_TEST
 
+START_TEST(test_vec_approx_cmp)
+{
+    vec3d v1 = {1., 2., 3.}, v2 = {1.00001, 2.00001, 3.00001};
+    
+    fail_unless(vec_approx_cmp(v1, v2, 1e-4));
+    fail_if(vec_approx_cmp(v1, v2, 1e-5));
+}
+END_TEST
+
 START_TEST(test_vec_copy)
 {
     vec3d src = {1., 2., 3.}, dst;
@@ -89,6 +98,15 @@ START_TEST(test_vec_set)
 }
 END_TEST
 
+START_TEST(test_scalar_mul)
+{
+    vec3d v1 = {1., 2., 3.}, v2 = {4., 8., 12.}, out;
+    vec_scalar_mul(v1, 4., out);
+
+    fail_unless(vec_cmp(out, v2));
+}
+END_TEST
+
 Suite* fb_suite(void) {
     Suite *s = suite_create ("lsqadj");
  
@@ -110,6 +128,18 @@ Suite* fb_suite(void) {
 
     tc = tcase_create("Compare vec3d");
     tcase_add_test(tc, test_vec_cmp);
+    suite_add_tcase (s, tc);
+
+    tc = tcase_create("Approx. compare vec3d");
+    tcase_add_test(tc, test_vec_approx_cmp);
+    suite_add_tcase (s, tc);
+    
+    tc = tcase_create("Set vec3d");
+    tcase_add_test(tc, test_vec_set);
+    suite_add_tcase (s, tc);
+
+    tc = tcase_create("Multiply vec3d by scalar");
+    tcase_add_test(tc, test_scalar_mul);
     suite_add_tcase (s, tc);
 
     return s;

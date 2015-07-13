@@ -22,7 +22,7 @@ double vec_norm(vec3d vec);
 double vec_diff_norm(vec3d vec1, vec3d vec2);
 double vec_dot(vec3d vec1, vec3d vec2);
 int vec_cmp(vec3d vec1, vec3d vec2);
-int vec_iapprox_cmp(vec3d vec1, vec3d vec2, double eps);
+int vec_approx_cmp(vec3d vec1, vec3d vec2, double eps);
 
 #endif
 
