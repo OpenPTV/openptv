@@ -386,18 +386,18 @@ target_par* read_target_par(char *filename) {
  */
 int compare_target_par(target_par *targ1, target_par *targ2) {
     return (   targ1->discont ==    targ2->discont
-	    && targ1->gvthres[0] == targ2->gvthres[0]
+            && targ1->gvthres[0] == targ2->gvthres[0]
             && targ1->gvthres[1] == targ2->gvthres[1]
             && targ1->gvthres[2] == targ2->gvthres[2]
             && targ1->gvthres[3] == targ2->gvthres[3]
-            && targ1->nnmin ==	    targ2->nnmin
-            && targ1->nnmax ==	    targ2->nnmax
-            && targ1->nxmin == 	    targ2->nxmin
+            && targ1->nnmin ==      targ2->nnmin
+            && targ1->nnmax ==      targ2->nnmax
+            && targ1->nxmin ==      targ2->nxmin
             && targ1->nxmax ==      targ2->nxmax
-            && targ1->nymin == 	    targ2->nymin
-            && targ1->nymax == 	    targ2->nymax
+            && targ1->nymin ==      targ2->nymin
+            && targ1->nymax ==      targ2->nymax
             && targ1->sumg_min ==   targ2->sumg_min
-            && targ1->cr_sz == 	    targ2->cr_sz);
+            && targ1->cr_sz ==      targ2->cr_sz);
 }
 /* Writes target_par structure contents to a file.
  * Parameters:
