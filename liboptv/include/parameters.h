@@ -68,13 +68,13 @@ void free_control_par(control_par *cp);
 
 /* Parameters for target recognition */
 typedef struct {
-	int discont;
-	int gvthres[4];
-	int nnmin, nnmax;
-	int nxmin, nxmax;
-	int nymin, nymax;
-	int sumg_min;
-	int cr_sz;
+    int discont;
+    int gvthres[4];
+    int nnmin, nnmax;
+    int nxmin, nxmax;
+    int nymin, nymax;
+    int sumg_min;
+    int cr_sz;
 } target_par;
 
 /* Reads target recognition parameters from file.

@@ -7,20 +7,20 @@
 
 START_TEST(test_read_write_compare_targ_rec_par)
 {
-	char
-	filename_read[]  = "testing_fodder/parameters/targ_rec_all_different_fields.par",
-	filename_write[] = "testing_fodder/parameters/targ_out_read.par";
+    char
+    filename_read[]  = "testing_fodder/parameters/targ_rec_all_different_fields.par",
+    filename_write[] = "testing_fodder/parameters/targ_out_read.par";
 
-	target_par targ_correct= { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13 };
-	target_par *targ_read = read_target_par(filename_read);
+    target_par targ_correct= { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13 };
+    target_par *targ_read = read_target_par(filename_read);
 
-	fail_unless(compare_target_par(&targ_correct, targ_read));
+    fail_unless(compare_target_par(&targ_correct, targ_read));
 
-	write_target_par(targ_read, filename_write);
+    write_target_par(targ_read, filename_write);
 
-	fail_unless(compare_target_par(&targ_correct, read_target_par(filename_write)));
+    fail_unless(compare_target_par(&targ_correct, read_target_par(filename_write)));
 
-	remove(filename_write);
+    remove(filename_write);
 }
 END_TEST
 
@@ -168,9 +168,9 @@ Suite* fb_suite(void) {
     tcase_add_test(tc, test_read_compare_mm_np_par);
     suite_add_tcase (s, tc);
 
-	tc = tcase_create("Read write compare target recognition parameters");
-	tcase_add_test(tc, test_read_write_compare_targ_rec_par);
-	suite_add_tcase(s, tc);
+    tc = tcase_create("Read write compare target recognition parameters");
+    tcase_add_test(tc, test_read_write_compare_targ_rec_par);
+    suite_add_tcase(s, tc);
 
     return s;
 }
