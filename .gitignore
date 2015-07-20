@@ -1,6 +1,9 @@
 .settings/
 .project
 .pydevproject
+.pydevproject.bak
+
+py_bind/optv/*.c
 
 *.pyc
 
