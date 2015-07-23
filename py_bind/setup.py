@@ -24,6 +24,7 @@ setup(
     cmdclass = {'build_ext': build_ext},
     packages=['optv'],
     ext_modules = ext_mods,
+    package_data = {'optv': ['*.pxd']}
 )
 
 
