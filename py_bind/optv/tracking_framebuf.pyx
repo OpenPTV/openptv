@@ -52,8 +52,23 @@ cdef class Target:
     def tnr(self):
         return self._targ[0].tnr
     
+    def pnr(self):
+        return self._targ[0].pnr
+    
     def pos(self):
+        """
+        Get target position - a tuple (x,y)
+        """
         return self._targ[0].x, self._targ[0].y
+    
+    def count_pixels(self):
+        """
+        Get the pixel counts associated with this target.
+        
+        Returns:
+        n, nx, ny - number of pixels in target (total, width, height)
+        """
+        return self._targ.n, self._targ.nx, self._targ.ny
 
 cdef class TargetArray:
     # Assumed to not own the data.
