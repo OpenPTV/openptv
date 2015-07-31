@@ -9,6 +9,26 @@
 
 #include "image_processing.h"
 
+/*  This would be a function, only the original writer of these filters put a 
+    lot of emphasis on speed and used 'register' variables. this probably does 
+    nothing on a modern compiler, esp. in 32 bit where there are simply not 
+    enough registers, but I honor the intent by inlining this function. */
+#define setup_filter_pointers(line) \
+    ptr  = img_lp + (line) + 1;\
+\
+    ptr1 = img;\
+    ptr2 = img + 1;\
+    ptr3 = img + 2;\
+\
+    ptr4 = img + (line);\
+    ptr5 = ptr4 + 1;\
+    ptr6 = ptr4 + 2;\
+\
+    ptr7 = img + 2*(line);\
+    ptr8 = ptr7 + 1;\
+    ptr9 = ptr7 + 2;\
+
+
 /*  filter_3() performs a 3x3 filtering over an image. The first and last 
     lines are not processed at all, the rest uses wrap-around on the image
     edges. Minimal brightness output in processed pixels is 8.
@@ -41,19 +61,7 @@ int filter_3(unsigned char *img, unsigned char *img_lp, filter_t filt,
     /* start, end etc skip first/last lines and wrap around the edges. */
     end = image_size - cpar->imx - 1;
     
-    ptr  = img_lp + cpar->imx + 1;
-    ptr1 = img;
-    ptr2 = img + 1;
-    ptr3 = img + 2;
-    
-    ptr4 = img + cpar->imx;
-    ptr5 = ptr4 + 1;
-    ptr6 = ptr4 + 2;
-    
-    ptr7 = img + 2*cpar->imx;
-    ptr8 = ptr7 + 1;
-    ptr9 = ptr7 + 2;
-
+    setup_filter_pointers(cpar->imx)
     for (i = cpar->imx + 1; i < end; i++) {
         buf = filt[0][0] * *ptr1++ + filt[0][1] * *ptr2++ + filt[0][2] * *ptr3++
             + filt[1][0] * *ptr4++ + filt[1][1] * *ptr5++ + filt[1][2] * *ptr6++
@@ -89,19 +97,7 @@ void lowpass_3(unsigned char *img, unsigned char *img_lp, control_par *cpar) {
     /* start, end etc skip first/last lines and wrap around the edges. */
     end = image_size - cpar->imx - 1;
     
-    ptr  = img_lp + cpar->imx + 1;
-    ptr1 = img;
-    ptr2 = img + 1;
-    ptr3 = img + 2;
-    
-    ptr4 = img + cpar->imx;
-    ptr5 = ptr4 + 1;
-    ptr6 = ptr4 + 2;
-    
-    ptr7 = img + 2*cpar->imx;
-    ptr8 = ptr7 + 1;
-    ptr9 = ptr7 + 2;
-
+    setup_filter_pointers(cpar->imx)
     for (i = cpar->imx + 1; i < end; i++) {
         buf = *ptr5++ + *ptr1++ + *ptr2++ + *ptr3++ + *ptr4++
                       + *ptr6++ + *ptr7++ + *ptr8++ + *ptr9++;
