@@ -55,11 +55,45 @@ START_TEST(test_general_filter)
 }
 END_TEST
 
+START_TEST(test_mean_filter)
+{
+    filter_t mean_filt = {{1, 1, 1}, {1, 1, 1}, {1, 1, 1}};
+    unsigned char img[5][5] = {
+        { 0,   0,   0,   0, 0},
+        { 0, 255, 255, 255, 0},
+        { 0, 255, 255, 255, 0},
+        { 0, 255, 255, 255, 0},
+        { 0,   0,   0,   0, 0}
+    };
+
+    control_par cpar = {
+        .imx = 5,
+        .imy = 5,
+    };
+    
+    unsigned char *img_filt = (unsigned char *) malloc(cpar.imx*cpar.imy* \
+        sizeof(unsigned char));
+    unsigned char *img_mean = (unsigned char *) malloc(cpar.imx*cpar.imy* \
+        sizeof(unsigned char));
+    
+    filter_3(img, img_filt, mean_filt, &cpar);
+    lowpass_3(img, img_mean, &cpar);
+    fail_unless(images_equal(img_filt, img_mean, 5, 5));
+    
+    free(img_filt);
+    free(img_mean);
+}
+END_TEST
+
 Suite* fb_suite(void) {
     Suite *s = suite_create ("Image processing");
 
     TCase *tc = tcase_create ("General filter");
     tcase_add_test(tc, test_general_filter);
+    suite_add_tcase (s, tc);
+
+    tc = tcase_create ("Mean (lowpass) filter");
+    tcase_add_test(tc, test_mean_filter);
     suite_add_tcase (s, tc);
 
     return s;

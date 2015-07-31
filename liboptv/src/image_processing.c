@@ -69,3 +69,43 @@ int filter_3(unsigned char *img, unsigned char *img_lp, filter_t filt,
     }
 }
 
+
+/*  This is a reduced version with a constant meadian filter (average of all 9
+    pixels in filter range). It also does not enforce minimal brightness.
+    
+    Arguments:
+    unsigned char *img - original image.
+    unsigned char *img_lp - results buffer, same size as original image.
+    control_par *cpar - contains image size parameters.
+*/
+void lowpass_3(unsigned char *img, unsigned char *img_lp, control_par *cpar) {
+    register unsigned char  *ptr, *ptr1, *ptr2, *ptr3, *ptr4, *ptr5, *ptr6,
+        *ptr7, *ptr8, *ptr9;
+    int end;
+    short buf;
+    register int i;
+    int image_size = cpar->imx * cpar->imy;
+    
+    /* start, end etc skip first/last lines and wrap around the edges. */
+    end = image_size - cpar->imx - 1;
+    
+    ptr  = img_lp + cpar->imx + 1;
+    ptr1 = img;
+    ptr2 = img + 1;
+    ptr3 = img + 2;
+    
+    ptr4 = img + cpar->imx;
+    ptr5 = ptr4 + 1;
+    ptr6 = ptr4 + 2;
+    
+    ptr7 = img + 2*cpar->imx;
+    ptr8 = ptr7 + 1;
+    ptr9 = ptr7 + 2;
+
+    for (i = cpar->imx + 1; i < end; i++) {
+        buf = *ptr5++ + *ptr1++ + *ptr2++ + *ptr3++ + *ptr4++
+                      + *ptr6++ + *ptr7++ + *ptr8++ + *ptr9++;
+        *ptr++ = buf/9;
+    }
+}
+

@@ -10,6 +10,7 @@ typedef double filter_t[3][3];
 
 int filter_3(unsigned char *img, unsigned char *img_lp, filter_t filt,
     control_par *cpar);
+void lowpass_3(unsigned char *img, unsigned char *img_lp, control_par *cpar);
 
 #endif
 
