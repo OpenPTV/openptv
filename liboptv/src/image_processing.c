@@ -246,3 +246,32 @@ int fast_box_blur(int filt_span, unsigned char *src, unsigned char *dest,
 }
 
 
+/*  split() crams into the first half of a given image either its even or odd 
+    lines. Used with interlaced cameras, a mostly obsolete device.
+    The lower half of the image is set to the number 2.
+    
+    Arguments:
+    unsigned char *img - the image to modify. Both input and output.
+    int half_selector - 0 to do nothing, 1 to take odd rows, 2 for even rows
+    control_par *cpar - contains image size parameters.
+*/
+void split(unsigned char *img, int half_selector, control_par *cpar) {
+    register int row, col;
+    register unsigned char *ptr;
+    unsigned char *end;
+    int image_size = cpar->imx * cpar->imy;
+    int cond_offs = (half_selector % 2) ? (cpar->imx) : (0);
+    
+    if (half_selector == 0)
+        return;
+    
+    for (row = 0; row < cpar->imy/2; row++)
+        for (col = 0; col < cpar->imx; col++)
+            img[row*cpar->imx + col] = img[2*row*cpar->imx + cond_offs + col];
+    
+    /* Erase lower half with magic 2 */
+    end = img + image_size;
+    for (ptr = img + image_size/2; ptr < end; ptr++)
+        *ptr = 2;
+}
+
