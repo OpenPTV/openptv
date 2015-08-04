@@ -216,8 +216,9 @@ int fast_box_blur(int filt_span, unsigned char *src, unsigned char *dest,
     }
     
     /* Middle lines with filter-size lines around them */
-    for (i = n+1, ptr1 = row_accum, ptrz = dest + cpar->imx*(n + 1), 
-        ptr2 = row_accum + cpar->imx*n; i < cpar->imy - n; i++)
+    for (i = filt_span + 1, ptr1 = row_accum, 
+        ptrz = dest + cpar->imx*(filt_span + 1),
+        ptr2 = row_accum + cpar->imx*n; i < cpar->imy - filt_span; i++)
     {
         for (ptr3 = col_accum; ptr3 < end; ptr3++, ptr1++, ptrz++, ptr2++) {
            *ptr3 += (*ptr2 - *ptr1);
@@ -226,7 +227,7 @@ int fast_box_blur(int filt_span, unsigned char *src, unsigned char *dest,
     }
     
     /* Last lines, similarly to first lines */
-    for (i = n; i > 0; i--) {
+    for (i = filt_span; i > 0; i--) {
         ptr1 = row_accum + (cpar->imy - 2*i - 1)*cpar->imx;
         ptr2 = ptr1 + cpar->imx;
         ptrz = dest + (cpar->imy-i)*cpar->imx;
