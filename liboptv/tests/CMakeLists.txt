@@ -32,6 +32,10 @@ if (UNIX)
     set(LIBS ${LIBS} -lm -pthread)
 endif (UNIX)
 
+if (APPLE)
+    set(LIBS ${LIBS} -L/usr/local/lib)
+endif (APPLE)
+
 target_link_libraries(check_fb ${LIBS})
 add_test(check_fb ${CMAKE_CURRENT_BINARY_DIR}/check_fb)
 
