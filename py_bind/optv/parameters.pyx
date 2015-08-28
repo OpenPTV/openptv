@@ -1,12 +1,16 @@
-#Implementation of Python binding to parameters.h
+# Implementation of Python binding to parameters.h
 from libc.stdlib cimport malloc, free
 import numpy
+
+cdef extern from "optv/parameters.h":
+    track_par * c_read_track_par "read_track_par"(char * file_name)
+    int c_compare_track_par "compare_track_par"(track_par * t1, track_par * t2)
 
 cdef class MultimediaParams:
 
     def __init__(self, **kwargs):
         
-        self._mm_np = <mm_np *>malloc(sizeof(mm_np))
+        self._mm_np = < mm_np *> malloc(sizeof(mm_np))
         
         self.set_nlay(kwargs['nlay'])
         self.set_n1(kwargs['n1'])
@@ -27,7 +31,7 @@ cdef class MultimediaParams:
     def set_n1(self, n1):
         self._mm_np[0].n1 = n1
         
-    def get_n2(self):#TODO return numpy
+    def get_n2(self):  # TODO return numpy
         arr_size = sizeof(self._mm_np[0].n2) / sizeof(self._mm_np[0].n2[0])
         n2_np_arr = numpy.empty(arr_size)
         for i in range(len(n2_np_arr)):
@@ -63,16 +67,16 @@ cdef class MultimediaParams:
         self._mm_np[0].lut = lut
         
     def __str__(self):
-        n2_str="{"
-        for i in range(sizeof(self._mm_np[0].n2) / sizeof(self._mm_np[0].n2[0]) -1 ):
-            n2_str = n2_str+ str(self._mm_np[0].n2[i]) + ", "
-        n2_str += str(self._mm_np[0].n2[i+1]) + "}"
+        n2_str = "{"
+        for i in range(sizeof(self._mm_np[0].n2) / sizeof(self._mm_np[0].n2[0]) - 1):
+            n2_str = n2_str + str(self._mm_np[0].n2[i]) + ", "
+        n2_str += str(self._mm_np[0].n2[i + 1]) + "}"
         
-        d_str="{"
-        for i in range(sizeof(self._mm_np[0].d) / sizeof(self._mm_np[0].d[0]) -1 ) :
+        d_str = "{"
+        for i in range(sizeof(self._mm_np[0].d) / sizeof(self._mm_np[0].d[0]) - 1) :
             d_str += str(self._mm_np[0].d[i]) + ", "
             
-        d_str += str(self._mm_np[0].d[i+1]) + "}"
+        d_str += str(self._mm_np[0].d[i + 1]) + "}"
         
         return "nlay=\t{} \nn1=\t{} \nn2=\t{} \nd=\t{} \nn3=\t{} \nlut=\t{} ".format(
                 str(self._mm_np[0].nlay),
@@ -84,4 +88,142 @@ cdef class MultimediaParams:
         
         def __dealloc__(self):
             free(self._mm_np)
+
+# Wrapping the track_par C struct for pythonic access
+# Binding the read_track_par C function
+# Objects of this type can be checked for equality using "==" and "!=" operators
+
+cdef class TrackingParams:   
+    def __init__(self, dacc, dangle, dvxmax, dvxmin,
+                 dvymax, dvymin, dvzmax, dvzmin,
+                 dsumg, dn, dnx, dny, add):
         
+        self._track_par = < track_par *> malloc(sizeof(track_par))
+
+        self.set_dacc(dacc)
+        self.set_dangle(dangle)
+        self.set_dvxmax(dvxmax)
+        self.set_dvxmin(dvxmin)
+        
+        self.set_dvymax(dvymax)
+        self.set_dvymin(dvymin)
+        self.set_dvzmax(dvzmax)
+        self.set_dvzmin(dvzmin)
+        
+        self.set_dsumg(dsumg)
+        self.set_dn(dn)
+        self.set_dnx(dnx)
+        self.set_dny(dny)
+        self.set_add(add)
+        
+    # Reads tracking parameters from a config file with the 
+    # following format: each line is a value, in this order:
+    # 1. dvxmin
+    # 2. dvxmax
+    # 3. dvymin
+    # 4. dvymax
+    # 5. dvzmin
+    # 6. dvzmax
+    # 7. dangle
+    # 8. dacc
+    # 9. add
+    #
+    # Argument: 
+    # file_name - path to the text file containing the parameters.
+      
+    def read_track_par(self, file_name):
+        self._track_par = c_read_track_par(file_name)
+    
+    # Checks for equality between this and other trackParams objects
+    # Gives the ability to use "==" and "!=" operators on two trackParams objects
+    def __richcmp__(TrackingParams self, TrackingParams other, operator):
+        c_compare_result = c_compare_track_par(self._track_par, other._track_par)
+        if (operator == 2):  # "==" action was performed
+            return (c_compare_result != 0)
+        elif(operator == 3):  # "!=" action was performed
+                return (c_compare_result == 0)
+        else: raise TypeError("Unhandled comparison operand " + operator)
+             
+    # Getters and setters    
+    def get_dacc(self):
+        return self._track_par[0].dacc
+    
+    def set_dacc(self, dacc):
+        self._track_par[0].dacc = dacc
+
+    def get_dangle(self):
+        return self._track_par[0].dangle
+    
+    def set_dangle(self, dangle):
+        self._track_par[0].dangle = dangle
+        
+    def get_dvxmax(self):
+        return self._track_par[0].dvxmax
+    
+    def set_dvxmax(self, dvxmax):
+        self._track_par[0].dvxmax = dvxmax
+    
+    def get_dvxmin(self):
+        return self._track_par[0].dvxmin
+    
+    def set_dvxmin(self, dvxmin):
+        self._track_par[0].dvxmin = dvxmin
+        
+    def get_dvymax(self):
+        return self._track_par[0].dvymax
+    
+    def set_dvymax(self, dvymax):
+        self._track_par[0].dvymax = dvymax
+        
+    def get_dvymin(self):
+        return self._track_par[0].dvymin
+    
+    def set_dvymin(self, dvymin):
+        self._track_par[0].dvymin = dvymin
+        
+    def get_dvzmax(self):
+        return self._track_par[0].dvzmax
+    
+    def set_dvzmax(self, dvzmax):
+        self._track_par[0].dvzmax = dvzmax
+        
+    def get_dvzmin(self):
+        return self._track_par[0].dvzmin
+    
+    def set_dvzmin(self, dvzmin):
+        self._track_par[0].dvzmin = dvzmin
+        
+    def get_dsumg(self):
+        return self._track_par[0].dsumg
+    
+    def set_dsumg(self, dsumg):
+        self._track_par[0].dsumg = dsumg
+        
+    def get_dn(self):
+        return self._track_par[0].dn
+    
+    def set_dn(self, dn):
+        self._track_par[0].dn = dn
+        
+    def get_dnx(self):
+        return self._track_par[0].dnx
+    
+    def set_dnx(self, dnx):
+        self._track_par[0].dnx = dnx
+        
+    def get_dny(self):
+        return self._track_par[0].dny
+    
+    def set_dny(self, dny):
+        self._track_par[0].dny = dny
+        
+    def get_add(self):
+        return self._track_par[0].add
+    
+    def set_add(self, add):
+        self._track_par[0].add = add
+        
+    # Memory freeing
+    def __dealloc__(self):
+        free(self._track_par)
+

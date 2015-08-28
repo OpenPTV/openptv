@@ -7,7 +7,16 @@ cdef extern from "optv/parameters.h":
         double d[3]
         double n3
         int lut
+    
+    ctypedef struct track_par:
+        double dacc, dangle, dvxmax, dvxmin
+        double dvymax, dvymin, dvzmax, dvzmin
+        int dsumg, dn, dnx, dny, add
         
 cdef class MultimediaParams:
     cdef mm_np* _mm_np
     
+cdef class TrackingParams:
+    cdef track_par* _track_par
+  
+
