@@ -88,52 +88,10 @@ class Test_TrackingParams(unittest.TestCase):
         self.failUnless(self.track_obj2 != self.track_obj3)
         self.failIf(self.track_obj2 == self.track_obj3)
         
-#         get_dacc()
-#         get_dangle()
-#         get_dvxmax():
-#         get_dvxmin():
-#         get_dvymax():
-#         get_dvymin():
-#         get_dvzmax():
-#         get_dvzmin():
-#         get_dsumg():
-#         get_dn():
-#         get_dnx():
-#         get_dny():
-#         get_add():
-#         
-#     def test_set_pos(self):
-#         """Set exterior position, only for admissible values"""
-#         # test set_pos() by passing a numpy array of 3 elements
-#         new_np = numpy.array([111.1111, 222.2222, 333.3333])
-#         self.cal.set_pos(new_np)
-# 
-#         # test getting position and assert that position is equal to set position
-#         numpy.testing.assert_array_equal(new_np, self.cal.get_pos())
-#         
-#         # assert set_pos() raises ValueError exception when given more or less than 3 elements 
-#         self.assertRaises(ValueError, self.cal.set_pos, numpy.array([1, 2, 3, 4]))
-#         self.assertRaises(ValueError, self.cal.set_pos, numpy.array([1, 2]))
-#     
-#     def test_set_angles(self):
-#         # set angles and assert the angles were set correctly
-#         dmatrix_before = self.cal.get_rotation_matrix()  # dmatrix before setting angles
-#         angles_np = numpy.array([0.1111, 0.2222, 0.3333])
-#         self.cal.set_angles(angles_np)
-#         dmatrix_after = self.cal.get_rotation_matrix()  # dmatrix after setting angles
-#         # make sure the angles are as were set  
-#         numpy.testing.assert_array_equal(self.cal.get_angles(), angles_np)
-#         
-#         # assert dmatrix was recalculated (before vs after)
-#         self.assertFalse(numpy.array_equal(dmatrix_before, dmatrix_after))
-#         
-#         # assert set_angles() raises ValueError exception when given more or less than 3 elements 
-#         self.assertRaises(ValueError, self.cal.set_angles, numpy.array([1, 2, 3, 4]))
-#         self.assertRaises(ValueError, self.cal.set_angles, numpy.array([1, 2]))
-#     
-#     def tearDown(self):
-#         # remove the testing output directory and its files
-#         shutil.rmtree(self.output_directory)
+
+    def tearDown(self):
+        # remove the testing output directory and its files
+        shutil.rmtree(self.output_directory)
         
 if __name__ == "__main__":
     unittest.main()
