@@ -50,7 +50,7 @@ int filter_3(unsigned char *img, unsigned char *img_lp, filter_t filt,
         *ptr7, *ptr8, *ptr9;
 	int end;
 	double sum = 0;
-	short buf;
+	unsigned short buf;
 	register int i, j;
     int image_size = cpar->imx * cpar->imy;
 
@@ -74,8 +74,9 @@ int filter_3(unsigned char *img, unsigned char *img_lp, filter_t filt,
         if (buf < 8)
             buf = 8;
         
-        *ptr++ = buf;
+        *ptr++ = (unsigned char) buf;
     }
+    return 1;
 }
 
 
