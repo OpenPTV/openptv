@@ -1,4 +1,4 @@
-# Implementation of Python binding to parameters.h
+#Implementation of Python binding to parameters.h
 from libc.stdlib cimport malloc, free
 from libc.string cimport strncpy
 
@@ -16,7 +16,7 @@ cdef class MultimediaParams:
 
     def __init__(self, **kwargs):
         
-        self._mm_np = < mm_np *> malloc(sizeof(mm_np))
+        self._mm_np = <mm_np *>malloc(sizeof(mm_np))
         
         self.set_nlay(kwargs['nlay'])
         self.set_n1(kwargs['n1'])
@@ -37,7 +37,7 @@ cdef class MultimediaParams:
     def set_n1(self, n1):
         self._mm_np[0].n1 = n1
         
-    def get_n2(self):  # TODO return numpy
+    def get_n2(self):#TODO return numpy
         arr_size = sizeof(self._mm_np[0].n2) / sizeof(self._mm_np[0].n2[0])
         n2_np_arr = numpy.empty(arr_size)
         for i in range(len(n2_np_arr)):
@@ -73,16 +73,16 @@ cdef class MultimediaParams:
         self._mm_np[0].lut = lut
         
     def __str__(self):
-        n2_str = "{"
-        for i in range(sizeof(self._mm_np[0].n2) / sizeof(self._mm_np[0].n2[0]) - 1):
-            n2_str = n2_str + str(self._mm_np[0].n2[i]) + ", "
-        n2_str += str(self._mm_np[0].n2[i + 1]) + "}"
+        n2_str="{"
+        for i in range(sizeof(self._mm_np[0].n2) / sizeof(self._mm_np[0].n2[0]) -1 ):
+            n2_str = n2_str+ str(self._mm_np[0].n2[i]) + ", "
+        n2_str += str(self._mm_np[0].n2[i+1]) + "}"
         
-        d_str = "{"
-        for i in range(sizeof(self._mm_np[0].d) / sizeof(self._mm_np[0].d[0]) - 1) :
+        d_str="{"
+        for i in range(sizeof(self._mm_np[0].d) / sizeof(self._mm_np[0].d[0]) -1 ) :
             d_str += str(self._mm_np[0].d[i]) + ", "
             
-        d_str += str(self._mm_np[0].d[i + 1]) + "}"
+        d_str += str(self._mm_np[0].d[i+1]) + "}"
         
         return "nlay=\t{} \nn1=\t{} \nn2=\t{} \nd=\t{} \nn3=\t{} \nlut=\t{} ".format(
                 str(self._mm_np[0].nlay),
@@ -280,22 +280,7 @@ cdef class SequenceParams:
      
     def __dealloc__(self):
         c_free_sequence_par(self._sequence_par)
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
+
+  
         
         

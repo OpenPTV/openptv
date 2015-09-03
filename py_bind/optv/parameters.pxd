@@ -18,7 +18,7 @@ cdef extern from "optv/parameters.h":
         int first, last
         
 cdef class MultimediaParams:
-    cdef mm_np * _mm_np
+    cdef mm_np* _mm_np
     
 cdef class TrackingParams:
     cdef track_par * _track_par
