@@ -57,6 +57,37 @@ handle_error:
     return NULL;
 }
 
+/* Creates a new sequence_par struct and allocates memory for its inner pointers */
+sequence_par * get_new_sequence_par() {
+    int cam;
+    sequence_par *ret;
+
+    ret = (sequence_par *) malloc(sizeof(sequence_par));
+    ret->img_base_name = (char **) calloc(4, sizeof(char *));
+
+    /* Note the assumption of 4 cameras. */
+    for (cam = 0; cam < 4; cam++) {
+        ret->img_base_name[cam] = (char *) malloc(SEQ_FNAME_MAX_LEN);
+    }
+    return ret;
+}
+
+/* Frees the memory allocated for sequence_par struct pointed to by sp and its inner pointers
+ * Setting freed pointers to NULL */
+void free_sequence_par(sequence_par * sp) {
+    int cam;
+
+    for (cam = 0; cam < 4; cam++) {
+        free(sp->img_base_name[cam]);
+        sp->img_base_name[cam] = NULL;
+    }
+    free(sp->img_base_name);
+    sp->img_base_name = NULL;
+
+    free(sp);
+    sp = NULL;
+}
+
 /* read_track_par() reads tracking parameters from a config file with the
    following format: each line is a value, in this order:
    1. dvxmin

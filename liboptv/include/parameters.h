@@ -14,7 +14,9 @@ typedef struct {
     int first, last;
 } sequence_par;
 
-sequence_par* read_sequence_par(char *filename);
+sequence_par * read_sequence_par(char *filename);
+sequence_par * get_new_sequence_par();
+void free_sequence_par(sequence_par * sp);
 
 typedef struct
 {

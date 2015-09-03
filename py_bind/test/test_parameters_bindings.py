@@ -93,5 +93,50 @@ class Test_TrackingParams(unittest.TestCase):
         # remove the testing output directory and its files
         shutil.rmtree(self.output_directory)
         
+class Test_SequenceParams(unittest.TestCase):
+    def setUp(self):
+        
+        self.input_sequence_par_file_name = "testing_fodder/sequence_parameters/sequence.par"
+        self.temp_output_directory = "testing_fodder/sequence_parameters/testing_output"
+        
+        # create a temporary output directory (will be deleted by the end of test)
+        if not os.path.exists(self.temp_output_directory):
+            os.makedirs(self.temp_output_directory)
+            
+        # create an instance of SequencParams class
+        self.seq_obj = SequenceParams()
+        
+    def test_read_sequence(self):
+        # Fill the SequenceParams object with parameters from test file
+        self.seq_obj.read_sequence_par(self.input_sequence_par_file_name)
+        
+        # check that all parameters are equal to the contents of test file
+        self.failUnless(self.seq_obj.get_img_base_name(0) == "dumbbell/cam1_Scene77_") 
+        self.failUnless(self.seq_obj.get_img_base_name(1) == "dumbbell/cam2_Scene77_")
+        self.failUnless(self.seq_obj.get_img_base_name(2) == "dumbbell/cam3_Scene77_")
+        self.failUnless(self.seq_obj.get_img_base_name(3) == "dumbbell/cam4_Scene77_")
+        self.failUnless(self.seq_obj.get_first() == 497)
+        self.failUnless(self.seq_obj.get_last() == 597)
+    
+    def test_getters_setters(self):
+        cams_num = 4
+        for cam in range(cams_num):
+            newStr = str(cam) + "some string" + str(cam)
+            # print "going to set in imgname for cam#" +str(cam)+":\t\t"+newStr
+            self.seq_obj.set_img_base_name(cam, newStr)
+            # print "got from get_img_name for cam#"+str(cam) +":\t\t"+self.seq_obj.get_img_base_name(cam)
+            self.failUnless(self.seq_obj.get_img_base_name(cam) == newStr)
+        
+        self.seq_obj.set_first(1234)
+        self.failUnless(self.seq_obj.get_first() == 1234)
+        self.seq_obj.set_last(5678)
+        self.failUnless(self.seq_obj.get_last() == 5678)
+        
+    
+    def tearDown(self):
+       
+        # remove the testing output directory and its files
+        shutil.rmtree(self.temp_output_directory)
+        
 if __name__ == "__main__":
     unittest.main()
