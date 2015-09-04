@@ -17,6 +17,7 @@ typedef struct {
 sequence_par* read_sequence_par(char *filename);
 sequence_par * get_new_sequence_par();
 void free_sequence_par(sequence_par * sp);
+int compare_sequence_par(sequence_par *sp1, sequence_par *sp2);
 
 typedef struct
 {

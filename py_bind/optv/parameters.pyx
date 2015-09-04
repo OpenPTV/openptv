@@ -3,14 +3,15 @@ from libc.stdlib cimport malloc, free
 from libc.string cimport strncpy
 
 import numpy
-from libxml2mod import last
 
 cdef extern from "optv/parameters.h":
     track_par * c_read_track_par "read_track_par"(char * file_name)
     int c_compare_track_par "compare_track_par"(track_par * t1, track_par * t2)
+    
     sequence_par * c_read_sequence_par "read_sequence_par"(char * filename)
     sequence_par * c_get_new_sequence_par "get_new_sequence_par"()
     void c_free_sequence_par "free_sequence_par"(sequence_par * sp)
+    int c_compare_sequence_par "compare_sequence_par"(sequence_par * sp1, sequence_par * sp2)
     
 cdef class MultimediaParams:
 
@@ -148,7 +149,7 @@ cdef class TrackingParams:
             return (c_compare_result != 0)
         elif(operator == 3):  # "!=" action was performed
                 return (c_compare_result == 0)
-        else: raise TypeError("Unhandled comparison operand " + operator)
+        else: raise TypeError("Unhandled comparison operator " + operator)
              
     # Getters and setters    
     def get_dacc(self):
@@ -277,10 +278,17 @@ cdef class SequenceParams:
         py_byte_string = new_img_name.encode('UTF-8')
         cdef char* c_string = py_byte_string
         strncpy(self._sequence_par[0].img_base_name[cam], c_string, len(new_img_name)+1)
-     
-    def __dealloc__(self):
-        c_free_sequence_par(self._sequence_par)
-
-  
+    
+    # Checks for equality between this and other SequenceParams objects
+    # Gives the ability to use "==" and "!=" operators on two SequenceParams objects
+    def __richcmp__(SequenceParams self, SequenceParams other, operator):
+        c_compare_result = c_compare_sequence_par(self._sequence_par, other._sequence_par)
+        if (operator == 2):  # "==" action was performed
+            return (c_compare_result != 0)
+        elif(operator == 3):  # "!=" action was performed
+                return (c_compare_result == 0)
+        else: raise TypeError("Unhandled comparison operator " + operator)
         
+    def __dealloc__(self):
+        c_free_sequence_par(self._sequence_par)  
         

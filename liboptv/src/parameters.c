@@ -71,6 +71,25 @@ sequence_par * get_new_sequence_par() {
     }
     return ret;
 }
+/* compare_sequence_par() checks that all fields of two sequence_par objects are
+   equal.
+
+   Arguments:
+   sequence_par *sp1, track_par *sp2- addresses of the objects for comparison.
+
+   Returns:
+   True if equal, false otherwise. */
+int compare_sequence_par(sequence_par *sp1, sequence_par *sp2) {
+    if (sp1->first != sp2->first || sp1->last != sp2->last)
+        return 0; /*not equal*/
+    int cam;
+    for (cam = 0; cam < 4; cam++) {
+        if (strcmp(sp1->img_base_name[cam],sp1->img_base_name[cam]) !=0){
+            return 0; /*not equal*/
+        }
+    }
+    return 1; /*equal*/
+}
 
 /* Frees the memory allocated for sequence_par struct pointed to by sp and its inner pointers
  * Setting freed pointers to NULL */
