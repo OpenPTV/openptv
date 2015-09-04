@@ -29,8 +29,9 @@ sequence_par* read_sequence_par(char *filename) {
         return NULL;
     }
     
-    ret = (sequence_par *) malloc(sizeof(sequence_par));
-    ret->img_base_name = (char **) calloc(4, sizeof(char *));
+    /* creat new sequence_par struct with memory allocated to all its inner pointers*/
+    ret = get_new_sequence_par();
+
     
     /* Note the assumption of 4 cameras. Fixing this requires changing the
        file format. */
@@ -38,7 +39,6 @@ sequence_par* read_sequence_par(char *filename) {
         read_ok = fscanf(par_file, "%s\n", line);
         if (read_ok == 0) goto handle_error;
         
-        ret->img_base_name[cam] = (char *) malloc(SEQ_FNAME_MAX_LEN);
         strncpy(ret->img_base_name[cam], line, SEQ_FNAME_MAX_LEN);
     }
     
@@ -52,7 +52,7 @@ sequence_par* read_sequence_par(char *filename) {
     
 handle_error:
     printf("Error reading sequence parameters from %s\n", filename);
-    free(ret);
+    free_sequence_par(ret);
     fclose(par_file);
     return NULL;
 }
