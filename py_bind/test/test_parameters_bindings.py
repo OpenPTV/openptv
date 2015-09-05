@@ -152,5 +152,84 @@ class Test_SequenceParams(unittest.TestCase):
         # remove the testing output directory and its files
         shutil.rmtree(self.temp_output_directory)
         
+class Test_VolumeParams(unittest.TestCase):
+    def setUp(self):
+        self.input_volume_par_file_name = "testing_fodder/volume_parameters/volume.par"
+        self.temp_output_directory = "testing_fodder/volume_parameters/testing_output"
+        
+        # create a temporary output directory (will be deleted by the end of test)
+        if not os.path.exists(self.temp_output_directory):
+            os.makedirs(self.temp_output_directory)
+            
+        # create an instance of VolumeParams class
+        self.vol_obj = VolumeParams()
+        
+    def test_read_volume(self):
+        # Fill the VolumeParams object with parameters from test file
+        self.vol_obj.read_volume_par(self.input_volume_par_file_name)
+        
+        # check that all parameters are equal to the contents of test file
+        numpy.testing.assert_array_equal(numpy.array([111.111, 222.222]), self.vol_obj.get_X_lay())
+        numpy.testing.assert_array_equal(numpy.array([333.333, 444.444]), self.vol_obj.get_Zmin_lay())
+        numpy.testing.assert_array_equal(numpy.array([555.555, 666.666]), self.vol_obj.get_Zmax_lay())
+         
+        self.failUnless(self.vol_obj.get_cnx() == 777.777)
+        self.failUnless(self.vol_obj.get_cny() == 888.888)
+        self.failUnless(self.vol_obj.get_cn() == 999.999)
+        self.failUnless(self.vol_obj.get_csumg() == 1010.1010)
+        self.failUnless(self.vol_obj.get_corrmin() == 1111.1111)
+        self.failUnless(self.vol_obj.get_eps0() == 1212.1212)
+        
+    def test_setters(self):
+        xlay = numpy.array([111.1, 222.2])
+        self.vol_obj.set_X_lay(xlay)
+        numpy.testing.assert_array_equal(xlay, self.vol_obj.get_X_lay())
+        
+        zmin = numpy.array([333.3, 444.4])
+        self.vol_obj.set_Zmin_lay(zmin)
+        numpy.testing.assert_array_equal(zmin, self.vol_obj.get_Zmin_lay())
+        
+        zmax = numpy.array([555.5, 666.6])
+        self.vol_obj.set_Zmax_lay(zmax)
+        numpy.testing.assert_array_equal(zmax, self.vol_obj.get_Zmax_lay())
+        
+        self.vol_obj.set_cn(1)
+        self.failUnless(self.vol_obj.get_cn() == 1)
+        
+        self.vol_obj.set_cnx(2)
+        self.failUnless(self.vol_obj.get_cnx() == 2)
+        
+        self.vol_obj.set_cny(3)
+        self.failUnless(self.vol_obj.get_cny() == 3)
+        
+        self.vol_obj.set_csumg(4)
+        self.failUnless(self.vol_obj.get_csumg() == 4)
+        
+        self.vol_obj.set_eps0(5)
+        self.failUnless(self.vol_obj.get_eps0() == 5)
+        
+        self.vol_obj.set_corrmin(6)
+        self.failUnless(self.vol_obj.get_corrmin() == 6)
+     
+    # testing __richcmp__ comparison method of VolumeParams class
+    def test_rich_compare(self):
+        self.vol_obj2 = VolumeParams()
+        self.vol_obj2.read_volume_par(self.input_volume_par_file_name)
+        self.vol_obj3 = VolumeParams()
+        self.vol_obj3.read_volume_par(self.input_volume_par_file_name)
+        self.failUnless(self.vol_obj2 == self.vol_obj3)
+        self.failIf(self.vol_obj2 != self.vol_obj3)
+        
+        self.vol_obj2.set_cn(-999)
+        self.failUnless(self.vol_obj2 != self.vol_obj3)
+        self.failIf(self.vol_obj2 == self.vol_obj3)
+        
+        with self.assertRaises(TypeError):
+            var = (self.vol_obj2 < self.vol_obj3)
+    
+    def tearDown(self):
+        # remove the testing output directory and its files
+        shutil.rmtree(self.temp_output_directory)
+        
 if __name__ == "__main__":
     unittest.main()

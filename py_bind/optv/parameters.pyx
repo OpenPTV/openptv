@@ -13,6 +13,9 @@ cdef extern from "optv/parameters.h":
     void c_free_sequence_par "free_sequence_par"(sequence_par * sp)
     int c_compare_sequence_par "compare_sequence_par"(sequence_par * sp1, sequence_par * sp2)
     
+    volume_par * c_read_volume_par "read_volume_par"(char * filename);
+    int c_compare_volume_par "compare_volume_par"(volume_par * v1, volume_par * v2);
+    
 cdef class MultimediaParams:
 
     def __init__(self, **kwargs):
@@ -290,5 +293,118 @@ cdef class SequenceParams:
         else: raise TypeError("Unhandled comparison operator " + operator)
         
     def __dealloc__(self):
-        c_free_sequence_par(self._sequence_par)  
+        c_free_sequence_par(self._sequence_par)
         
+# Wrapping the volume_par C struct (declared in liboptv/paramethers.h) for pythonic access
+# Objects of this type can be checked for equality using "==" and "!=" operators
+cdef class VolumeParams:
+    def __init__(self):
+        self._volume_par = <volume_par*>malloc(sizeof(volume_par))
+    
+    # Getters and setters
+    def get_X_lay(self):
+        arr_size = sizeof(self._volume_par[0].X_lay) / sizeof(self._volume_par[0].X_lay[0])
+        ret_np_arr = numpy.empty(arr_size)
+        for i in range(arr_size):
+            ret_np_arr[i] = self._volume_par[0].X_lay[i]
+        return ret_np_arr
+    
+    def set_X_lay(self, X_lay):
+        for i in range(len(X_lay)):
+            self._volume_par[0].X_lay[i] = X_lay[i]
+            
+    def get_Zmin_lay(self):
+        arr_size = sizeof(self._volume_par[0].Zmin_lay) / sizeof(self._volume_par[0].Zmin_lay[0])
+        ret_np_arr = numpy.empty(arr_size)
+        for i in range(arr_size):
+            ret_np_arr[i] = self._volume_par[0].Zmin_lay[i]
+        return ret_np_arr
+    
+    def set_Zmin_lay(self, Zmin_lay):
+        for i in range(len(Zmin_lay)):
+            self._volume_par[0].Zmin_lay[i] = Zmin_lay[i]
+            
+    def get_Zmax_lay(self):
+        arr_size = sizeof(self._volume_par[0].Zmax_lay) / sizeof(self._volume_par[0].Zmax_lay[0])
+        ret_np_arr = numpy.empty(arr_size)
+        for i in range(arr_size):
+            ret_np_arr[i] = self._volume_par[0].Zmax_lay[i]
+        return ret_np_arr
+    
+    def set_Zmax_lay(self, Zmax_lay):
+        for i in range(len(Zmax_lay)):
+            self._volume_par[0].Zmax_lay[i] = Zmax_lay[i]
+            
+    def get_cn(self):
+        return self._volume_par[0].cn
+    
+    def set_cn(self, cn):
+        self._volume_par[0].cn = cn
+    
+    def get_cnx(self):
+        return self._volume_par[0].cnx
+    
+    def set_cnx(self, cnx):
+        self._volume_par[0].cnx = cnx
+        
+    def get_cny(self):
+        return self._volume_par[0].cny
+    
+    def set_cny(self, cny):
+        self._volume_par[0].cny = cny
+        
+    def get_csumg(self):
+        return self._volume_par[0].csumg
+    
+    def set_csumg(self, csumg):
+        self._volume_par[0].csumg = csumg
+        
+    def get_eps0(self):
+        return self._volume_par[0].eps0
+    
+    def set_eps0(self, eps0):
+        self._volume_par[0].eps0 = eps0
+        
+    def get_corrmin(self):
+        return self._volume_par[0].corrmin
+    
+    def set_corrmin(self, corrmin):
+        self._volume_par[0].corrmin = corrmin
+        
+    # read_volume_par() reads parameters of illuminated volume from a config file
+    # with the following format: each line is a value, in this order:
+    # 1. X_lay[0]
+    # 2. Zmin_lay[0]
+    # 3. Zmax_lay[0]
+    # 4. X_lay[1]
+    # 5. Zmin_lay[1]
+    # 6. Zmax_lay[1]
+    # 7. cnx
+    # 8. cny
+    # 9. cn
+    # 10.csumg
+    # 11.corrmin
+    # 12.eps0
+    #
+    # Argument:
+    # filename - path to the text file containing the parameters.
+    def read_volume_par(self, filename):
+        # free the memory of previous C struct 
+        free(self._volume_par)
+        # read parameters from file to a new volume_par C struct
+        self._volume_par = c_read_volume_par(filename)
+    
+    # Checks for equality between self and other VolumeParams objects
+    # Gives the ability to use "==" and "!=" operators on two VolumeParams objects
+    def __richcmp__(VolumeParams self, VolumeParams other, operator):
+        c_compare_result = c_compare_volume_par(self._volume_par, other._volume_par)
+        if (operator == 2):  # "==" action was performed
+            return (c_compare_result != 0)
+        elif(operator == 3):  # "!=" action was performed
+                return (c_compare_result == 0)
+        else: raise TypeError("Unhandled comparison operator " + operator)
+        
+    def __dealloc__(self):
+        free(self._volume_par)  
+        
+

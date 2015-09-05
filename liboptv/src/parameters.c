@@ -29,7 +29,7 @@ sequence_par* read_sequence_par(char *filename) {
         return NULL;
     }
     
-    /* creat new sequence_par struct with memory allocated to all its inner pointers*/
+    /* create new sequence_par struct with memory allocated to all its inner pointers*/
     ret = get_new_sequence_par();
 
     
@@ -177,6 +177,11 @@ int compare_track_par(track_par *t1, track_par *t2) {
    4. X_lay[1]
    5. Zmin_lay[1]
    6. Zmax_lay[1]
+   7. cnx
+   8. cny
+   9. cn
+   10.csumg
+   11.corrmin
    
    Arguments:
    char *filename - path to the text file containing the parameters.

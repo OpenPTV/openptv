@@ -17,6 +17,12 @@ cdef extern from "optv/parameters.h":
         char ** img_base_name
         int first, last
         
+    ctypedef struct volume_par:
+        double X_lay[2]
+        double Zmin_lay[2]
+        double Zmax_lay[2]
+        double cn, cnx, cny, csumg, eps0, corrmin
+        
 cdef class MultimediaParams:
     cdef mm_np* _mm_np
     
@@ -25,5 +31,8 @@ cdef class TrackingParams:
   
 cdef class SequenceParams:
     cdef sequence_par * _sequence_par
+
+cdef class VolumeParams:
+    cdef volume_par * _volume_par
 
 
