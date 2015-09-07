@@ -33,7 +33,7 @@ int write_ori (Exterior Ex, Interior I, Glass G, ap_52 ap, \
         goto finalize;
   }
     
-  fprintf (fp, "%11.4f %11.4f %11.4f\n    %10.7f  %10.7f  %10.7f\n\n",
+  fprintf (fp, "%11.8f %11.8f %11.8f\n    %10.8f  %10.8f  %10.8f\n\n",
 	   Ex.x0, Ex.y0, Ex.z0, Ex.omega, Ex.phi, Ex.kappa);
   for (i=0; i<3; i++)  fprintf (fp, "    %10.7f %10.7f %10.7f\n",
 				Ex.dm[i][0], Ex.dm[i][1], Ex.dm[i][2]);
@@ -49,7 +49,7 @@ int write_ori (Exterior Ex, Interior I, Glass G, ap_52 ap, \
         printf("Can't open ascii file: %s\n", add_file);
         goto finalize;
   }
-  fprintf (fp, "%f %f %f %f %f %f %f", ap.k1, ap.k2, ap.k3, ap.p1, ap.p2,
+  fprintf (fp, "%.8f %.8f %.8f %.8f %.8f %.8f %.8f", ap.k1, ap.k2, ap.k3, ap.p1, ap.p2,
     ap.scx, ap.she);
   success = 1;
   
