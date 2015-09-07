@@ -24,6 +24,9 @@ add_dependencies(check_trafo optv)
 add_executable(check_vec_utils EXCLUDE_FROM_ALL check_vec_utils.c)
 add_dependencies(check_vec_utils optv)
 
+add_executable(check_image_proc EXCLUDE_FROM_ALL check_image_proc.c)
+add_dependencies(check_image_proc optv)
+
 get_property(OPTV_LIBRARY TARGET optv PROPERTY LOCATION)
 set(LIBS ${LIBS} ${CHECK_LIBRARIES} ${OPTV_LIBRARY})
 
@@ -83,6 +86,9 @@ add_custom_command(TARGET check_trafo PRE_BUILD
     COMMAND ${CMAKE_COMMAND} -E copy_directory
     ${CMAKE_CURRENT_SOURCE_DIR}/testing_fodder $<TARGET_FILE_DIR:check_trafo>/testing_fodder)    
 
+target_link_libraries(check_image_proc ${LIBS})
+add_test(check_image_proc ${CMAKE_CURRENT_BINARY_DIR}/check_image_proc)
+    
 add_custom_target(verify COMMAND ${CMAKE_CTEST_COMMAND})
-add_dependencies(verify check_fb check_calibration check_parameters check_lsqadj check_ray_tracing check_trafo check_vec_utils)
+add_dependencies(verify check_fb check_calibration check_parameters check_lsqadj check_ray_tracing check_trafo check_vec_utils check_image_proc)
 
