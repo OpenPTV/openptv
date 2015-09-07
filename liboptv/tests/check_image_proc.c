@@ -17,17 +17,18 @@
     Arguments:
     unsigned char *img1, *img2 - images to compare.
     int w, h - width and height of images in pixels
-    offset - start comparing after this many elements.
+    int offset - start comparing after this many elements.
+    int discard - don't compare this many elements from the end.
     
     Returns:
     1 if equal, 0 if not.
 */
 int images_equal(unsigned char *img1, unsigned char *img2, 
-    int w, int h, int offset) 
+    int w, int h, int offset, int discard) 
 {
     int pix;
     
-    for (pix = offset; pix < w*h; pix++)
+    for (pix = offset; pix < w*h - discard; pix++)
         if (img1[pix] != img2[pix])
             return 0; 
     return 1;
@@ -61,7 +62,7 @@ START_TEST(test_general_filter)
         sizeof(unsigned char));
     
     filter_3(img, img_filt, blur_filt, &cpar);
-    fail_unless(images_equal(img_filt, img_correct, 5, 5, 5));
+    fail_unless(images_equal(img_filt, img_correct, 5, 5, 6, 6));
     free(img_filt);
 }
 END_TEST
@@ -89,7 +90,7 @@ START_TEST(test_mean_filter)
     
     filter_3(img, img_filt, mean_filt, &cpar);
     lowpass_3(img, img_mean, &cpar);
-    fail_unless(images_equal(img_filt, img_mean, 5, 5, 5));
+    fail_unless(images_equal(img_filt, img_mean, 5, 5, 6, 6));
     
     free(img_filt);
     free(img_mean);
@@ -131,7 +132,7 @@ START_TEST(test_box_blur)
         img_mean[5*elem + 4] = 0;
     }
     
-    fail_unless(images_equal(img_filt, img_mean, 5, 5, 5));
+    fail_unless(images_equal(img_filt, img_mean, 5, 5, 6, 6));
     
     free(img_filt);
     free(img_mean);
@@ -177,13 +178,15 @@ START_TEST(test_split)
     memcpy(img1, img, 25);
     memcpy(img2, img, 25);
     
+    /* Note: first line of erased half is only erased from the middle, 
+       for historic reasons. */
     split(img1, 1, &cpar);
-    fail_unless(images_equal(img1, img_odd, 5, 2, 0));
-    fail_unless(images_equal(&(img1[2]), erased_half, 5, 3, 2));
+    fail_unless(images_equal(img1, img_odd, 5, 2, 0, 0));
+    fail_unless(images_equal(&(img1[2]), erased_half, 5, 3, 2, 0));
     
     split(img2, 2, &cpar);
-    fail_unless(images_equal(img2, img_even, 5, 2, 0));
-    fail_unless(images_equal(&(img2[2]), erased_half, 5, 3, 2));
+    fail_unless(images_equal(img2, img_even, 5, 2, 0, 0));
+    fail_unless(images_equal(&(img2[2]), erased_half, 5, 3, 2, 0));
 }
 END_TEST
 
