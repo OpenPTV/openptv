@@ -337,3 +337,61 @@ void copy_images (unsigned char	*img1, unsigned char *img2, control_par *cpar)
 	for (end=img1+image_size, ptr1=img1, ptr2=img2; ptr1<end; ptr1++, ptr2++)
 	*ptr2 = *ptr1;
 }
+
+/* histogram computes a histogram from the image and returns it to hist
+*  Arguments:
+*      img  is the unsigned char array pointer to the image array, 8 bit 
+*      control_par *cpar - contains image size parameters.
+*/
+void histogram (unsigned char *img, int *hist, control_par *cpar){
+
+	int	       	i;
+	unsigned char  	*end;
+	register unsigned char	*ptr;
+	int imgsize = cpar->imx * cpar->imy;
+
+	//write defaults into histgramm array
+	for (i=0; i<256; i++)  hist[i] = 0;
+	
+	end = img + imgsize;
+	for (ptr=img; ptr<end; ptr++)
+	{
+		hist[*ptr]++;
+	}
+}
+
+/* Apparently enhance is the histogram equalization algorithm but with some
+*  constraints that are not clear - why sum is less then imx and then less then 512 
+* 
+*  New function histeq is an implementation from the 
+*  Image Processing in C, 2nd Ed. by Dwayne Phillips, Listing 4.2 
+*  Arguments:
+*      img  is the unsigned char array pointer to the image array, 8 bit 
+*      control_par *cpar - contains image size parameters.
+*/
+void histeq (unsigned char	*img, control_par *cpar)
+{
+	int		       	        i, j, k, histo[256];
+	int 			        sum, sum_of_h[256];
+    double 					constant;
+    int imgsize = cpar->imx * cpar->imy;
+	
+	histogram (img, histo, cpar);
+	
+	sum = 0;
+	for(i=0; i<256; i++)
+	{
+		sum += histo[i];
+		sum_of_h[i] = sum;
+	}
+    /* constant = new # of gray levels div by area */
+	constant = (float)(255.1)/(float)(imgsize);
+	for(j=0; j<cpar->imy; j++)
+	{
+		for(i=0; i<cpar->imx; i++)
+		{
+			k  = *(img + i + j*cpar->imx);
+			*(img + i + j*cpar->imx ) = (unsigned char)(sum_of_h[k] * constant);
+		} 
+	}
+} 

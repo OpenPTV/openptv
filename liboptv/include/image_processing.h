@@ -19,6 +19,9 @@ void subtract_img(unsigned char *img1, unsigned char *img2, unsigned char *img_n
 void subtract_mask(unsigned char *img1, unsigned char *img_mask, unsigned char *img_new, 
     control_par *cpar);
 void copy_images(unsigned char	*img1, unsigned char *img2, control_par *cpar);
+void histogram (unsigned char *img, int *hist, control_par *cpar);
+void histeq (unsigned char	*img, control_par *cpar);
+
 
 #endif
 
