@@ -2,6 +2,7 @@ enable_testing()
 find_package(Check REQUIRED)
 include_directories(${CHECK_INCLUDE_DIRS})
 include_directories(. ../src ../include/)
+link_directories(${CHECK_LIBRARY_DIRS})
 
 add_executable(check_fb EXCLUDE_FROM_ALL check_fb.c)
 add_dependencies(check_fb optv)
