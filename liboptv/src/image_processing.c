@@ -395,3 +395,185 @@ void histeq (unsigned char	*img, control_par *cpar)
 		} 
 	}
 } 
+
+/*  unsharp_mask() performs a some low pass filtering of an image using a given    kernel size (n)
+    Seems to be very similar to the new subroutine fast_box_blur()
+    
+    Arguments:
+    int n -  how many pixels to take for the average on each side. The
+        equivalent filter kernel is of side 2*n + 1.
+    unsigned char *img0 - pointer to the source image.
+    unsigned char *img_lp - pointer to same-size memory block allocated for the 
+        result.
+    control_par *cpar - contains image size parameters.
+    
+    Returns:
+    0 on failure (due to memory allocation error), 1 on success.
+*/
+int unsharp_mask (int n, unsigned char *img0, unsigned char *img_lp,\
+                   control_par *cpar)
+{                   
+	register unsigned char	*imgum, *ptrl, *ptrr, *ptrz;
+	int  		       	*buf1, *buf2, buf, *end;
+	register int	     *ptr, *ptr1, *ptr2, *ptr3;
+	int    		       	ii, n2, nq, m;
+	register int	       	i;
+	int  imy = cpar->imy;
+	int  imx = cpar->imx;
+	int imgsize = imx * imy; 
+	
+	n2 = 2*n + 1;  nq = n2 * n2;
+	
+	imgum = (unsigned char *) calloc (imgsize, sizeof(unsigned char));
+	if (imgum == NULL) return 0;
+
+	
+	buf1 = (int *) calloc (imgsize, sizeof(int));
+	if (buf1 == NULL) return 0;
+
+	buf2 = (int *) calloc (imx, sizeof(int));
+	if (buf2 == NULL) return 0;
+
+	/* set imgum = img0 (so there cannot be written to the original image) */
+	for (ptrl=imgum, ptrr=img0; ptrl<(imgum+imgsize); ptrl++, ptrr++)
+	{
+		*ptrl = *ptrr;
+	}	
+
+	/* cut off high gray values (not in general use !)
+	for (ptrz=imgum; ptrz<(imgum+imgsize); ptrz++) if (*ptrz > 160) *ptrz = 160; */
+
+	/* --------------  average over lines  --------------- */
+
+	for (i=0; i<imy; i++)
+	{
+		ii = i * imx;
+		/* first element */
+		buf = *(imgum+ii);  *(buf1+ii) = buf * n2;
+		
+		/* elements 1 ... n */
+		for (ptr=buf1+ii+1, ptrr=imgum+ii+2, ptrl=ptrr-1, m=3;
+			 ptr<buf1+ii+n+1; ptr++, ptrl+=2, ptrr+=2, m+=2)
+		{
+			buf += (*ptrl + *ptrr);
+			*ptr = buf * n2 / m;
+		}
+		
+		/* elements n+1 ... imx-n */
+		for (ptrl=imgum+ii, ptr=buf1+ii+n+1, ptrr=imgum+ii+n2;
+			 ptrr<imgum+ii+imx; ptrl++, ptr++, ptrr++)
+		{
+			buf += (*ptrr - *ptrl);
+			*ptr = buf;
+		}
+		
+		/* elements imx-n ... imx */
+		for (ptrl=imgum+ii+imx-n2, ptrr=ptrl+1, ptr=buf1+ii+imx-n, m=n2-2;
+			 ptr<buf1+ii+imx; ptrl+=2, ptrr+=2, ptr++, m-=2)
+		{
+			buf -= (*ptrl + *ptrr);
+			*ptr = buf * n2 / m;
+		}
+	}
+	
+
+
+	/* -------------  average over columns  -------------- */
+
+	end = buf2 + imx;
+
+	/* first line */
+	for (ptr1=buf1, ptr2=buf2, ptrz=img_lp; ptr2<end; ptr1++, ptr2++, ptrz++)
+	{
+		*ptr2 = *ptr1;
+		*ptrz = *ptr2/n2;
+	}
+	
+	/* lines 1 ... n */
+	for (i=1; i<n+1; i++)
+	{
+		ptr1 = buf1 + (2*i-1)*imx;
+		ptr2 = ptr1 + imx;
+		ptrz = img_lp + i*imx;
+		for (ptr3=buf2; ptr3<end; ptr1++, ptr2++, ptr3++, ptrz++)
+		{
+			*ptr3 += (*ptr1 + *ptr2);
+			*ptrz = n2 * (*ptr3) / nq / (2*i+1);
+		}
+	}
+	
+	/* lines n+1 ... imy-n-1 */
+	for (i=n+1, ptr1=buf1, ptrz=img_lp+imx*(n+1), ptr2=buf1+imx*n2;
+		 i<imy-n; i++)
+	{
+		for (ptr3=buf2; ptr3<end; ptr3++, ptr1++, ptrz++, ptr2++)
+		{
+			*ptr3 += (*ptr2 - *ptr1);
+			*ptrz = *ptr3/nq;
+		}
+	}
+	
+	/* lines imy-n ... imy */
+	for (i=n; i>0; i--)
+	{
+		ptr1 = buf1 + (imy-2*i-1)*imx;
+		ptr2 = ptr1 + imx;
+		ptrz = img_lp + (imy-i)*imx;
+		for (ptr3=buf2; ptr3<end; ptr1++, ptr2++, ptr3++, ptrz++)
+		{
+			*ptr3 -= (*ptr1 + *ptr2);
+			*ptrz = n2 * (*ptr3) / nq / (2*i+1);
+		}
+	}
+	
+	free (buf1);
+	free (buf2);
+	free (imgum);
+	return 1;
+
+}
+
+/* highpass() is the high pass filter, subtracting the low-passed image by n-size kernel 
+*  from the  original one. In addition, the final result can be blurred by one of the 
+%   low pass filters of 3 x 3.
+*   Arguments:
+*	unsigned char  *img;
+*	unsigned char  *img_hp;			highpass filtered image 
+*	int             n;	       	    filter size  
+*	int				filter_hp;     	flag for additional filtering of _hp with lowpass_3
+*               default=0 (no filter), 1 = lowpass_3 
+*	control_par *cpar - contains image size parameters.
+*/
+int highpass (unsigned char *img, unsigned char *img_hp, int n, int filter_hp, 
+    control_par *cpar)
+{
+	unsigned char			*img_lp;
+	int  imy = cpar->imy;
+	int  imx = cpar->imx;
+	int imgsize = imx * imy; 			
+
+	/* allocate memory for lp image*/
+
+	img_lp = (unsigned char *) calloc (imgsize, sizeof(unsigned char));
+	if (img_lp == NULL) return 0;
+
+    /* create low-passed image using unsharp_mask */
+	unsharp_mask (n, img, img_lp, cpar);
+	
+	/* Compare using create low-passed image by fast_box_blur
+	    fast_box_blur (n, img, img_lp, cpar);
+	*/
+	
+	/*  subtract lowpass from original  (=>   )  */
+	subtract_img (img, img_lp, img_hp, cpar); 
+
+	/* filter highpass image, if wanted */
+	switch (filter_hp)
+	{
+		case 0: break;
+		case 1: lowpass_3 (img_hp, img_hp, cpar);	break;
+	}
+
+  free (img_lp);
+  return 1;
+}

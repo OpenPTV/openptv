@@ -373,6 +373,45 @@ START_TEST(test_histogram)
 }
 END_TEST
 
+START_TEST(test_highpass)
+{
+    /*  A 3x3 box-blur is equivalent to lowpass_3, so that's the comparison
+        we'll make here. Only difference is highpass_3 wraps around rows so
+        it has different values at the edges. */
+    int elem;
+    
+    unsigned char img[5][5] = {
+        { 0,   0,   0,   0, 0},
+        { 0, 255, 255, 255, 0},
+        { 0, 255, 255, 255, 0},
+        { 0, 255, 255, 255, 0},
+        { 0,   0,   0,   0, 0}
+    };
+    
+    unsigned char img_correct[5][5] = {
+        { 0,   0,   0,   0, 0},
+        { 0, 142, 85, 142, 0},
+        { 0, 85, 0, 85, 0},
+        { 0, 142, 85, 142, 0},
+        { 0,   0,   0,   0, 0}
+    };
+
+    control_par cpar = {
+        .imx = 5,
+        .imy = 5,
+    };
+    
+    unsigned char *img_hp = (unsigned char *) malloc(cpar.imx*cpar.imy* \
+        sizeof(unsigned char));
+    
+    highpass(img, img_hp, 1, 0, &cpar); 
+       
+    fail_unless(images_equal(img_hp, img_correct, 5, 5, 6, 6));
+
+    free(img_hp);
+}
+END_TEST
+
 
 
 Suite* fb_suite(void) {
@@ -409,6 +448,10 @@ Suite* fb_suite(void) {
     tc = tcase_create ("Histogram");
     tcase_add_test(tc, test_histogram);
     suite_add_tcase (s, tc); 
+
+    tc = tcase_create ("High-pass");
+    tcase_add_test(tc, test_highpass);
+    suite_add_tcase (s, tc);
 
     return s;
 }

@@ -21,7 +21,10 @@ void subtract_mask(unsigned char *img1, unsigned char *img_mask, unsigned char *
 void copy_images(unsigned char	*img1, unsigned char *img2, control_par *cpar);
 void histogram (unsigned char *img, int *hist, control_par *cpar);
 void histeq (unsigned char	*img, control_par *cpar);
-
+int highpass (unsigned char *img, unsigned char *img_hp, int n, int filter_hp, 
+    control_par *cpar);
+int unsharp_mask (int n, unsigned char *img0, unsigned char *img_lp, 
+    control_par *cpar);
 
 #endif
 
