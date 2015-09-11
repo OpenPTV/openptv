@@ -276,3 +276,23 @@ void split(unsigned char *img, int half_selector, control_par *cpar) {
         *ptr = 2;
 }
 
+
+/*
+* subtract_img  is a simple image arithmetic function that subtracts img2 from img1
+*  Arguments:
+*      img1, img2 are the unsigned char array pointers to the original images
+*      img_new is the pointer to the unsigned char array for the resulting image
+*      control_par *cpar - contains image size parameters.
+*/
+void subtract_img (unsigned char *img1,unsigned char *img2,unsigned char *img_new, control_par *cpar) 
+{
+	register unsigned char 	*ptr1, *ptr2, *ptr3;
+	int i;
+	int image_size = cpar->imx * cpar->imy;
+	
+	for (i=0, ptr1=img1, ptr2=img2, ptr3=img_new; i<image_size; ptr1++, ptr2++, ptr3++, i++)
+	{
+		if ((*ptr1 - *ptr2) < 0) *ptr3 = 0;
+		else  *ptr3 = *ptr1- *ptr2;
+	}
+}

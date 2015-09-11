@@ -141,9 +141,7 @@ END_TEST
 
 START_TEST(test_split)
 {
-    /*  A 3x3 box-blur is equivalent to lowpass_3, so that's the comparison
-        we'll make here. Only difference is highpass_3 wraps around rows so
-        it has different values at the edges. */
+
     int elem;
     
     unsigned char img[5][5] = {
@@ -190,6 +188,49 @@ START_TEST(test_split)
 }
 END_TEST
 
+START_TEST(test_subtract_img)
+{
+
+    int elem;
+    
+    unsigned char img[5][5] = {
+        { 0,   0,   0,   0, 0},
+        { 0, 255, 255, 255, 0},
+        { 0, 255, 255, 255, 0},
+        { 0, 255, 255, 255, 0},
+        { 0,   0,   0,   0, 0}
+    };
+    
+    unsigned char img_zero[5][5] = {
+        { 0,   0,   0,   0, 0},
+        { 0,   0,   0,   0, 0},
+        { 0,   0,   0,   0, 0},
+        { 0,   0,   0,   0, 0},
+        { 0,   0,   0,   0, 0}
+    };
+
+    control_par cpar = {
+        .imx = 5,
+        .imy = 5,
+    };
+    
+    unsigned char *img1 = (unsigned char *) malloc(cpar.imx*cpar.imy* \
+        sizeof(unsigned char));
+    // memcpy(img1, img, 25);
+    
+    subtract_img(img, img_zero, img1, &cpar);
+    fail_unless(images_equal(img1, img, 5, 5, 0, 0));
+    
+    unsigned char *img2 = (unsigned char *) malloc(cpar.imx*cpar.imy* \
+        sizeof(unsigned char));
+    subtract_img(img, img1, img2, &cpar);
+    fail_unless(images_equal(img2, img_zero, 5, 5, 0, 0));
+    
+    free(img1);
+    free(img2);
+}
+END_TEST
+
 Suite* fb_suite(void) {
     Suite *s = suite_create ("Image processing");
 
@@ -208,6 +249,11 @@ Suite* fb_suite(void) {
     tc = tcase_create ("Split image");
     tcase_add_test(tc, test_split);
     suite_add_tcase (s, tc);
+    
+    tc = tcase_create ("Subtract image");
+    tcase_add_test(tc, test_subtract_img);
+    suite_add_tcase (s, tc);
+    
 
     return s;
 }
