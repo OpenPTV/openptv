@@ -303,6 +303,11 @@ void subtract_img (unsigned char *img1,unsigned char *img2,unsigned char *img_ne
 * subtract_mask compares img with img_mask and creates a masked image img_new
 * pixels that are equal to zero in the img_mask
 * are overwritten with a default value (=0) in img_new
+*  Arguments:
+*      img  is the unsigned char array pointers to the original image
+%      img  is the unsigned char array pointers to the mask (0 == mask out)
+*      img_new is the pointer to the unsigned char array for the resulting image
+*      control_par *cpar - contains image size parameters.
 */
 void subtract_mask (unsigned char *img, unsigned char *img_mask, unsigned char *img_new, control_par *cpar)
 {
@@ -316,3 +321,19 @@ void subtract_mask (unsigned char *img, unsigned char *img_mask, unsigned char *
       else  *ptr3 = *ptr1;
     }
  }
+ 
+/*
+*  copy_images  is a simple image arithmetic function that copies img1 into img2
+*  Arguments:
+*      img1, img2 are the unsigned char array pointers 
+*      control_par *cpar - contains image size parameters.
+*/
+void copy_images (unsigned char	*img1, unsigned char *img2, control_par *cpar)
+{
+	register unsigned char 	*ptr1, *ptr2;
+	unsigned char	       	*end;
+	int image_size = cpar->imx * cpar->imy;
+	
+	for (end=img1+image_size, ptr1=img1, ptr2=img2; ptr1<end; ptr1++, ptr2++)
+	*ptr2 = *ptr1;
+}

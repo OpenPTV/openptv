@@ -287,6 +287,41 @@ START_TEST(test_subtract_mask)
 }
 END_TEST
 
+START_TEST(test_copy_img)
+{
+
+    int elem;
+    
+    unsigned char img[6][5] = {
+        { 0,   0,   0,   0, 0},
+        { 0, 255, 255, 255, 0},
+        { 0, 255, 255, 255, 0},
+        { 0, 255, 255, 255, 0},
+        { 0,   0,   0,   0, 0},
+        { 1,   1,   1,   1, 1}
+    };
+
+    control_par cpar = {
+        .imx = 6,
+        .imy = 5,
+    };
+    
+    unsigned char *img_new = (unsigned char *) malloc(cpar.imx*cpar.imy* \
+        sizeof(unsigned char));
+    unsigned char *img1 = (unsigned char *) malloc(cpar.imx*cpar.imy* \
+        sizeof(unsigned char));
+            
+    copy_images(img, img_new, &cpar);
+    fail_unless(images_equal(img_new, img, cpar.imx, cpar.imy, 0, 0));
+    
+    memcpy(img1,img,cpar.imx*cpar.imy);
+    fail_unless(images_equal(img_new, img1, cpar.imx, cpar.imy, 0, 0));
+        
+    free(img_new);
+}
+END_TEST
+
+
 Suite* fb_suite(void) {
     Suite *s = suite_create ("Image processing");
 
@@ -312,7 +347,11 @@ Suite* fb_suite(void) {
  
     tc = tcase_create ("Subtract mask");
     tcase_add_test(tc, test_subtract_mask);
-    suite_add_tcase (s, tc);   
+    suite_add_tcase (s, tc);  
+    
+    tc = tcase_create ("Copy images");
+    tcase_add_test(tc, test_copy_img);
+    suite_add_tcase (s, tc);  
 
     return s;
 }
