@@ -16,6 +16,8 @@ int fast_box_blur(int filt_span, unsigned char *src, unsigned char *dest,
 void split(unsigned char *img, int half_selector, control_par *cpar);
 void subtract_img(unsigned char *img1, unsigned char *img2, unsigned char *img_new, 
     control_par *cpar);
+void subtract_mask(unsigned char *img1, unsigned char *img_mask, unsigned char *img_new, 
+    control_par *cpar);
 
 #endif
 

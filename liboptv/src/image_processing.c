@@ -296,3 +296,23 @@ void subtract_img (unsigned char *img1,unsigned char *img2,unsigned char *img_ne
 		else  *ptr3 = *ptr1- *ptr2;
 	}
 }
+
+
+/*
+* Subtract_mask, by Matthias Oswald, Juli 08
+* subtract_mask compares img with img_mask and creates a masked image img_new
+* pixels that are equal to zero in the img_mask
+* are overwritten with a default value (=0) in img_new
+*/
+void subtract_mask (unsigned char *img, unsigned char *img_mask, unsigned char *img_new, control_par *cpar)
+{
+	register unsigned char 	*ptr1, *ptr2, *ptr3;
+	int i;
+	int image_size = cpar->imx * cpar->imy;
+	
+	for (i=0, ptr1=img, ptr2=img_mask, ptr3=img_new; i<image_size; ptr1++, ptr2++, ptr3++, i++)
+    {
+      if (*ptr2 == 0)  *ptr3 = 0;
+      else  *ptr3 = *ptr1;
+    }
+ }

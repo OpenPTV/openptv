@@ -231,6 +231,62 @@ START_TEST(test_subtract_img)
 }
 END_TEST
 
+START_TEST(test_subtract_mask)
+{
+
+    int elem;
+    
+    unsigned char img[5][5] = {
+        { 0,   0,   0,   0, 0},
+        { 0, 255, 255, 255, 0},
+        { 0, 255, 255, 255, 0},
+        { 0, 255, 255, 255, 0},
+        { 0,   0,   0,   0, 0}
+    };
+    
+    unsigned char img_mask1[5][5] = {
+        { 1,   1,   1,   1,  1},
+        { 1,   1,   1,   1,  1},
+        { 1,   1,   1,   1,  1},
+        { 1,   1,   1,   1,  1},
+        { 1,   1,   1,   1,  1}
+    };
+    
+    unsigned char img_mask2[5][5] = {
+        { 1,   1,   1,   1,  1},
+        { 1,   1,   1,   1,  1},
+        { 1,   1,   0,   1,  1},
+        { 1,   1,   1,   1,  1},
+        { 1,   1,   1,   1,  1}
+    };
+
+    unsigned char img_correct[5][5] = {
+        { 0,   0,   0,   0, 0},
+        { 0, 255, 255, 255, 0},
+        { 0, 255,  0,  255, 0},
+        { 0, 255, 255, 255, 0},
+        { 0,   0,   0,   0, 0}
+    };
+
+
+    control_par cpar = {
+        .imx = 5,
+        .imy = 5,
+    };
+    
+    unsigned char *img_new = (unsigned char *) malloc(cpar.imx*cpar.imy* \
+        sizeof(unsigned char));
+    
+    subtract_mask(img, img_mask1, img_new, &cpar);
+    fail_unless(images_equal(img_new, img, 5, 5, 0, 0));
+    
+    subtract_mask(img, img_mask2, img_new, &cpar);
+    fail_unless(images_equal(img_new, img_correct, 5, 5, 0, 0));
+    
+    free(img_new);
+}
+END_TEST
+
 Suite* fb_suite(void) {
     Suite *s = suite_create ("Image processing");
 
@@ -253,7 +309,10 @@ Suite* fb_suite(void) {
     tc = tcase_create ("Subtract image");
     tcase_add_test(tc, test_subtract_img);
     suite_add_tcase (s, tc);
-    
+ 
+    tc = tcase_create ("Subtract mask");
+    tcase_add_test(tc, test_subtract_mask);
+    suite_add_tcase (s, tc);   
 
     return s;
 }
