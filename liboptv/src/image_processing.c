@@ -276,3 +276,113 @@ void split(unsigned char *img, int half_selector, control_par *cpar) {
         *ptr = 2;
 }
 
+
+/*
+    subtract_img  is a simple image arithmetic function that subtracts img2 from img1
+    Arguments:
+    img1, img2 are the unsigned char array pointers to the original images
+    img_new is the pointer to the unsigned char array for the resulting image
+    control_par *cpar - contains image size parameters.
+*/
+void subtract_img (unsigned char *img1,unsigned char *img2,unsigned char *img_new, 
+    control_par *cpar) 
+{
+	register unsigned char 	*ptr1, *ptr2, *ptr3;
+	int i;
+	int image_size = cpar->imx * cpar->imy;
+	
+	for (i=0, ptr1=img1, ptr2=img2, ptr3=img_new; i<image_size; ptr1++, ptr2++, 
+	            ptr3++, i++)
+	{
+		if ((*ptr1 - *ptr2) < 0) *ptr3 = 0;
+		else  *ptr3 = *ptr1- *ptr2;
+	}
+}
+
+
+/*
+    subtract_mask(), by Matthias Oswald, Juli 08
+    subtract_mask compares img with img_mask and creates a masked image img_new
+    pixels that are equal to zero in the img_mask
+    are overwritten with a default value (=0) in img_new
+    Arguments:
+    img  is the unsigned char array pointers to the original image
+    img  is the unsigned char array pointers to the mask (0 == mask out)
+    img_new is the pointer to the unsigned char array for the resulting image
+    control_par *cpar - contains image size parameters.
+*/
+void subtract_mask (unsigned char *img, unsigned char *img_mask, unsigned char *img_new, 
+    control_par *cpar)
+{
+	register unsigned char 	*ptr1, *ptr2, *ptr3;
+	int i;
+	int image_size = cpar->imx * cpar->imy;
+	
+	for (i=0, ptr1=img, ptr2=img_mask, ptr3=img_new; i<image_size; ptr1++, ptr2++, 
+	        ptr3++, i++)
+    {
+      if (*ptr2 == 0)  *ptr3 = 0;
+      else  *ptr3 = *ptr1;
+    }
+ }
+ 
+/*
+    copy_images()  is a simple image arithmetic function that copies img1 into img2
+    Arguments:
+    img1, img2 are the unsigned char array pointers 
+    control_par *cpar - contains image size parameters.
+*/
+void copy_images (unsigned char	*img1, unsigned char *img2, control_par *cpar)
+{
+	register unsigned char 	*ptr1, *ptr2;
+	unsigned char	       	*end;
+	int image_size = cpar->imx * cpar->imy;
+	
+	for (end=img1+image_size, ptr1=img1, ptr2=img2; ptr1<end; ptr1++, ptr2++)
+	*ptr2 = *ptr1;
+}
+
+/* highpass() is the high pass filter, subtracting the low-passed image by n-size kernel 
+    from the  original one. In addition, the final result can be blurred by one of the 
+    low pass filters of 3 x 3.
+    Arguments:
+    unsigned char  *img;
+    unsigned char  *img_hp;			highpass filtered image 
+    int             n;	       	    filter size  
+    int				filter_hp;     	flag for additional filtering of _hp with lowpass_3
+        default=0 (no filter), 1 = lowpass_3 
+    control_par *cpar - contains image size parameters.
+*/
+int highpass (unsigned char *img, unsigned char *img_hp, int n, int filter_hp, 
+    control_par *cpar)
+{
+	unsigned char			*img_lp;
+	int  imy = cpar->imy;
+	int  imx = cpar->imx;
+	int imgsize = imx * imy; 			
+
+	/* allocate memory for lp image*/
+
+	img_lp = (unsigned char *) calloc (imgsize, sizeof(unsigned char));
+	if (img_lp == NULL) return 0;
+
+	
+	/* Compare using create low-passed image by fast_box_blur
+	   in the past it was 
+	   unsharp_mask (n, img, img_lp, cpar);
+	*/
+	fast_box_blur (n, img, img_lp, cpar);
+	
+	/*  subtract lowpass from original  (=>   )  */
+	subtract_img (img, img_lp, img_hp, cpar); 
+
+	/* filter highpass image, if wanted */
+	switch (filter_hp)
+	{
+		case 0: break;
+		case 1: lowpass_3 (img_hp, img_hp, cpar);	break;
+	}
+
+  free (img_lp);
+  return 1;
+}

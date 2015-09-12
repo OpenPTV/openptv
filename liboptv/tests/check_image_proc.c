@@ -141,9 +141,7 @@ END_TEST
 
 START_TEST(test_split)
 {
-    /*  A 3x3 box-blur is equivalent to lowpass_3, so that's the comparison
-        we'll make here. Only difference is highpass_3 wraps around rows so
-        it has different values at the edges. */
+
     int elem;
     
     unsigned char img[5][5] = {
@@ -190,6 +188,180 @@ START_TEST(test_split)
 }
 END_TEST
 
+START_TEST(test_subtract_img)
+{
+
+    int elem;
+    
+    unsigned char img[5][5] = {
+        { 0,   0,   0,   0, 0},
+        { 0, 255, 255, 255, 0},
+        { 0, 255, 255, 255, 0},
+        { 0, 255, 255, 255, 0},
+        { 0,   0,   0,   0, 0}
+    };
+    
+    unsigned char img_zero[5][5] = {
+        { 0,   0,   0,   0, 0},
+        { 0,   0,   0,   0, 0},
+        { 0,   0,   0,   0, 0},
+        { 0,   0,   0,   0, 0},
+        { 0,   0,   0,   0, 0}
+    };
+
+    control_par cpar = {
+        .imx = 5,
+        .imy = 5,
+    };
+    
+    unsigned char *img1 = (unsigned char *) malloc(cpar.imx*cpar.imy* \
+        sizeof(unsigned char));
+    // memcpy(img1, img, 25);
+    
+    subtract_img(img, img_zero, img1, &cpar);
+    fail_unless(images_equal(img1, img, 5, 5, 0, 0));
+    
+    unsigned char *img2 = (unsigned char *) malloc(cpar.imx*cpar.imy* \
+        sizeof(unsigned char));
+    subtract_img(img, img1, img2, &cpar);
+    fail_unless(images_equal(img2, img_zero, 5, 5, 0, 0));
+    
+    free(img1);
+    free(img2);
+}
+END_TEST
+
+START_TEST(test_subtract_mask)
+{
+
+    int elem;
+    
+    unsigned char img[5][5] = {
+        { 0,   0,   0,   0, 0},
+        { 0, 255, 255, 255, 0},
+        { 0, 255, 255, 255, 0},
+        { 0, 255, 255, 255, 0},
+        { 0,   0,   0,   0, 0}
+    };
+    
+    unsigned char img_mask1[5][5] = {
+        { 1,   1,   1,   1,  1},
+        { 1,   1,   1,   1,  1},
+        { 1,   1,   1,   1,  1},
+        { 1,   1,   1,   1,  1},
+        { 1,   1,   1,   1,  1}
+    };
+    
+    unsigned char img_mask2[5][5] = {
+        { 1,   1,   1,   1,  1},
+        { 1,   1,   1,   1,  1},
+        { 1,   1,   0,   1,  1},
+        { 1,   1,   1,   1,  1},
+        { 1,   1,   1,   1,  1}
+    };
+
+    unsigned char img_correct[5][5] = {
+        { 0,   0,   0,   0, 0},
+        { 0, 255, 255, 255, 0},
+        { 0, 255,  0,  255, 0},
+        { 0, 255, 255, 255, 0},
+        { 0,   0,   0,   0, 0}
+    };
+
+
+    control_par cpar = {
+        .imx = 5,
+        .imy = 5,
+    };
+    
+    unsigned char *img_new = (unsigned char *) malloc(cpar.imx*cpar.imy* \
+        sizeof(unsigned char));
+    
+    subtract_mask(img, img_mask1, img_new, &cpar);
+    fail_unless(images_equal(img_new, img, 5, 5, 0, 0));
+    
+    subtract_mask(img, img_mask2, img_new, &cpar);
+    fail_unless(images_equal(img_new, img_correct, 5, 5, 0, 0));
+    
+    free(img_new);
+}
+END_TEST
+
+START_TEST(test_copy_img)
+{
+
+    int elem;
+    
+    unsigned char img[6][5] = {
+        { 0,   0,   0,   0, 0},
+        { 0, 255, 255, 255, 0},
+        { 0, 255, 255, 255, 0},
+        { 0, 255, 255, 255, 0},
+        { 0,   0,   0,   0, 0},
+        { 1,   1,   1,   1, 1}
+    };
+
+    control_par cpar = {
+        .imx = 6,
+        .imy = 5,
+    };
+    
+    unsigned char *img_new = (unsigned char *) malloc(cpar.imx*cpar.imy* \
+        sizeof(unsigned char));
+    unsigned char *img1 = (unsigned char *) malloc(cpar.imx*cpar.imy* \
+        sizeof(unsigned char));
+            
+    copy_images(img, img_new, &cpar);
+    fail_unless(images_equal(img_new, img, cpar.imx, cpar.imy, 0, 0));
+    
+    memcpy(img1,img,cpar.imx*cpar.imy);
+    fail_unless(images_equal(img_new, img1, cpar.imx, cpar.imy, 0, 0));
+        
+    free(img_new);
+}
+END_TEST
+
+
+START_TEST(test_highpass)
+{
+    /*  A 3x3 box-blur is equivalent to lowpass_3, so that's the comparison
+        we'll make here. Only difference is highpass_3 wraps around rows so
+        it has different values at the edges. */
+    int elem;
+    
+    unsigned char img[5][5] = {
+        { 0,   0,   0,   0, 0},
+        { 0, 255, 255, 255, 0},
+        { 0, 255, 255, 255, 0},
+        { 0, 255, 255, 255, 0},
+        { 0,   0,   0,   0, 0}
+    };
+    
+    unsigned char img_correct[5][5] = {
+        { 0,   0,   0,   0, 0},
+        { 0, 142, 85, 142, 0},
+        { 0, 85, 0, 85, 0},
+        { 0, 142, 85, 142, 0},
+        { 0,   0,   0,   0, 0}
+    };
+
+    control_par cpar = {
+        .imx = 5,
+        .imy = 5,
+    };
+    
+    unsigned char *img_hp = (unsigned char *) malloc(cpar.imx*cpar.imy* \
+        sizeof(unsigned char));
+    
+    highpass(img, img_hp, 1, 0, &cpar); 
+       
+    fail_unless(images_equal(img_hp, img_correct, 5, 5, 6, 6));
+
+    free(img_hp);
+}
+END_TEST
+
+
 Suite* fb_suite(void) {
     Suite *s = suite_create ("Image processing");
 
@@ -208,7 +380,23 @@ Suite* fb_suite(void) {
     tc = tcase_create ("Split image");
     tcase_add_test(tc, test_split);
     suite_add_tcase (s, tc);
+    
+    tc = tcase_create ("Subtract image");
+    tcase_add_test(tc, test_subtract_img);
+    suite_add_tcase (s, tc);
+ 
+    tc = tcase_create ("Subtract mask");
+    tcase_add_test(tc, test_subtract_mask);
+    suite_add_tcase (s, tc);  
+    
+    tc = tcase_create ("Copy images");
+    tcase_add_test(tc, test_copy_img);
+    suite_add_tcase (s, tc);  
 
+    tc = tcase_create ("High-pass");
+    tcase_add_test(tc, test_highpass);
+    suite_add_tcase (s, tc);
+    
     return s;
 }
 
