@@ -278,19 +278,21 @@ void split(unsigned char *img, int half_selector, control_par *cpar) {
 
 
 /*
-* subtract_img  is a simple image arithmetic function that subtracts img2 from img1
-*  Arguments:
-*      img1, img2 are the unsigned char array pointers to the original images
-*      img_new is the pointer to the unsigned char array for the resulting image
-*      control_par *cpar - contains image size parameters.
+    subtract_img  is a simple image arithmetic function that subtracts img2 from img1
+    Arguments:
+    img1, img2 are the unsigned char array pointers to the original images
+    img_new is the pointer to the unsigned char array for the resulting image
+    control_par *cpar - contains image size parameters.
 */
-void subtract_img (unsigned char *img1,unsigned char *img2,unsigned char *img_new, control_par *cpar) 
+void subtract_img (unsigned char *img1,unsigned char *img2,unsigned char *img_new, 
+    control_par *cpar) 
 {
 	register unsigned char 	*ptr1, *ptr2, *ptr3;
 	int i;
 	int image_size = cpar->imx * cpar->imy;
 	
-	for (i=0, ptr1=img1, ptr2=img2, ptr3=img_new; i<image_size; ptr1++, ptr2++, ptr3++, i++)
+	for (i=0, ptr1=img1, ptr2=img2, ptr3=img_new; i<image_size; ptr1++, ptr2++, 
+	            ptr3++, i++)
 	{
 		if ((*ptr1 - *ptr2) < 0) *ptr3 = 0;
 		else  *ptr3 = *ptr1- *ptr2;
@@ -299,23 +301,25 @@ void subtract_img (unsigned char *img1,unsigned char *img2,unsigned char *img_ne
 
 
 /*
-* Subtract_mask, by Matthias Oswald, Juli 08
-* subtract_mask compares img with img_mask and creates a masked image img_new
-* pixels that are equal to zero in the img_mask
-* are overwritten with a default value (=0) in img_new
-*  Arguments:
-*      img  is the unsigned char array pointers to the original image
-%      img  is the unsigned char array pointers to the mask (0 == mask out)
-*      img_new is the pointer to the unsigned char array for the resulting image
-*      control_par *cpar - contains image size parameters.
+    subtract_mask(), by Matthias Oswald, Juli 08
+    subtract_mask compares img with img_mask and creates a masked image img_new
+    pixels that are equal to zero in the img_mask
+    are overwritten with a default value (=0) in img_new
+    Arguments:
+    img  is the unsigned char array pointers to the original image
+    img  is the unsigned char array pointers to the mask (0 == mask out)
+    img_new is the pointer to the unsigned char array for the resulting image
+    control_par *cpar - contains image size parameters.
 */
-void subtract_mask (unsigned char *img, unsigned char *img_mask, unsigned char *img_new, control_par *cpar)
+void subtract_mask (unsigned char *img, unsigned char *img_mask, unsigned char *img_new, 
+    control_par *cpar)
 {
 	register unsigned char 	*ptr1, *ptr2, *ptr3;
 	int i;
 	int image_size = cpar->imx * cpar->imy;
 	
-	for (i=0, ptr1=img, ptr2=img_mask, ptr3=img_new; i<image_size; ptr1++, ptr2++, ptr3++, i++)
+	for (i=0, ptr1=img, ptr2=img_mask, ptr3=img_new; i<image_size; ptr1++, ptr2++, 
+	        ptr3++, i++)
     {
       if (*ptr2 == 0)  *ptr3 = 0;
       else  *ptr3 = *ptr1;
@@ -323,10 +327,10 @@ void subtract_mask (unsigned char *img, unsigned char *img_mask, unsigned char *
  }
  
 /*
-*  copy_images  is a simple image arithmetic function that copies img1 into img2
-*  Arguments:
-*      img1, img2 are the unsigned char array pointers 
-*      control_par *cpar - contains image size parameters.
+    copy_images()  is a simple image arithmetic function that copies img1 into img2
+    Arguments:
+    img1, img2 are the unsigned char array pointers 
+    control_par *cpar - contains image size parameters.
 */
 void copy_images (unsigned char	*img1, unsigned char *img2, control_par *cpar)
 {
@@ -338,10 +342,12 @@ void copy_images (unsigned char	*img1, unsigned char *img2, control_par *cpar)
 	*ptr2 = *ptr1;
 }
 
-/* histogram computes a histogram from the image and returns it to hist
-*  Arguments:
-*      img  is the unsigned char array pointer to the image array, 8 bit 
-*      control_par *cpar - contains image size parameters.
+/* histogram() computes a histogram from the image and returns it to hist
+    Arguments:
+    img  is the unsigned char array pointer to the image array, 8 bit 
+    control_par *cpar - contains image size parameters.
+    Returns:
+    hist is an array of 256 integers
 */
 void histogram (unsigned char *img, int *hist, control_par *cpar){
 
@@ -360,14 +366,13 @@ void histogram (unsigned char *img, int *hist, control_par *cpar){
 	}
 }
 
-/* Apparently enhance is the histogram equalization algorithm but with some
-*  constraints that are not clear - why sum is less then imx and then less then 512 
-* 
-*  New function histeq is an implementation from the 
-*  Image Processing in C, 2nd Ed. by Dwayne Phillips, Listing 4.2 
-*  Arguments:
-*      img  is the unsigned char array pointer to the image array, 8 bit 
-*      control_par *cpar - contains image size parameters.
+/*  
+    histeq () replaces the enhance() by an implementation from the 
+    Image Processing in C, 2nd Ed. by Dwayne Phillips, Listing 4.2 
+    Arguments:
+    img  is the unsigned char array pointer to the image array, 8 bit 
+    control_par *cpar - contains image size parameters.
+    The original image is modified in the function.
 */
 void histeq (unsigned char	*img, control_par *cpar)
 {
@@ -397,15 +402,15 @@ void histeq (unsigned char	*img, control_par *cpar)
 } 
 
 /* highpass() is the high pass filter, subtracting the low-passed image by n-size kernel 
-*  from the  original one. In addition, the final result can be blurred by one of the 
-%   low pass filters of 3 x 3.
-*   Arguments:
-*	unsigned char  *img;
-*	unsigned char  *img_hp;			highpass filtered image 
-*	int             n;	       	    filter size  
-*	int				filter_hp;     	flag for additional filtering of _hp with lowpass_3
-*               default=0 (no filter), 1 = lowpass_3 
-*	control_par *cpar - contains image size parameters.
+    from the  original one. In addition, the final result can be blurred by one of the 
+    low pass filters of 3 x 3.
+    Arguments:
+    unsigned char  *img;
+    unsigned char  *img_hp;			highpass filtered image 
+    int             n;	       	    filter size  
+    int				filter_hp;     	flag for additional filtering of _hp with lowpass_3
+        default=0 (no filter), 1 = lowpass_3 
+    control_par *cpar - contains image size parameters.
 */
 int highpass (unsigned char *img, unsigned char *img_hp, int n, int filter_hp, 
     control_par *cpar)
