@@ -321,57 +321,6 @@ START_TEST(test_copy_img)
 }
 END_TEST
 
-START_TEST(test_histogram)
-{
-    unsigned char img[6][5] = {
-        { 0,   0,   0,   0, 0},
-        { 0, 255, 255, 255, 0},
-        { 0, 255, 255, 255, 0},
-        { 0, 255, 255, 255, 0},
-        { 0,   0,   0,   0, 0},
-        { 1,   1,   1,   1, 1}
-    };
-    
-    unsigned char img_correct[6][5] = {
-        { 136, 136, 136, 136, 136},
-        { 136, 255, 255, 255, 136},
-        { 136, 255, 255, 255, 136},
-        { 136, 255, 255, 255, 136},
-        { 136, 136, 136, 136, 136},
-        { 178, 178, 178, 178, 178}
-    };
-
-
-    control_par cpar = {
-        .imx = 6,
-        .imy = 5,   
-    };
-    
-        int hist[256];
-
-        histogram (img, hist, &cpar);
-                    
-        ck_assert_msg( hist[0]   == 16  && 
-                      hist[1]   == 5 && 
-                      hist[255] == 9 ,
-         "\n Expected 16, 5, 9 \n  \
-         but found %d %d %d \n", hist[0], hist[1], hist[255]);
-         
-        /* test also histogram equalization */
-        
-         histeq (img, &cpar);
-         histogram (img, hist, &cpar);
-         
-        ck_assert_msg(hist[178]  == 5  && 
-                      hist[136]  == 16 && 
-                      hist[255] == 9 ,
-         "\n Expected 5, 16, 9 \n  \
-         but found %d %d %d \n", hist[178], hist[136], hist[255]);
-                  
-         
-        fail_unless(images_equal(img, img_correct, cpar.imx, cpar.imy, 0, 0));
-}
-END_TEST
 
 START_TEST(test_highpass)
 {
@@ -413,7 +362,6 @@ START_TEST(test_highpass)
 END_TEST
 
 
-
 Suite* fb_suite(void) {
     Suite *s = suite_create ("Image processing");
 
@@ -445,14 +393,10 @@ Suite* fb_suite(void) {
     tcase_add_test(tc, test_copy_img);
     suite_add_tcase (s, tc);  
 
-    tc = tcase_create ("Histogram");
-    tcase_add_test(tc, test_histogram);
-    suite_add_tcase (s, tc); 
-
     tc = tcase_create ("High-pass");
     tcase_add_test(tc, test_highpass);
     suite_add_tcase (s, tc);
-
+    
     return s;
 }
 
