@@ -276,3 +276,122 @@ void split(unsigned char *img, int half_selector, control_par *cpar) {
         *ptr = 2;
 }
 
+
+/*
+* subtract_img  is a simple image arithmetic function that subtracts img2 from img1
+*  Arguments:
+*      img1, img2 are the unsigned char array pointers to the original images
+*      img_new is the pointer to the unsigned char array for the resulting image
+*      control_par *cpar - contains image size parameters.
+*/
+void subtract_img (unsigned char *img1,unsigned char *img2,unsigned char *img_new, control_par *cpar) 
+{
+	register unsigned char 	*ptr1, *ptr2, *ptr3;
+	int i;
+	int image_size = cpar->imx * cpar->imy;
+	
+	for (i=0, ptr1=img1, ptr2=img2, ptr3=img_new; i<image_size; ptr1++, ptr2++, ptr3++, i++)
+	{
+		if ((*ptr1 - *ptr2) < 0) *ptr3 = 0;
+		else  *ptr3 = *ptr1- *ptr2;
+	}
+}
+
+
+/*
+* Subtract_mask, by Matthias Oswald, Juli 08
+* subtract_mask compares img with img_mask and creates a masked image img_new
+* pixels that are equal to zero in the img_mask
+* are overwritten with a default value (=0) in img_new
+*  Arguments:
+*      img  is the unsigned char array pointers to the original image
+%      img  is the unsigned char array pointers to the mask (0 == mask out)
+*      img_new is the pointer to the unsigned char array for the resulting image
+*      control_par *cpar - contains image size parameters.
+*/
+void subtract_mask (unsigned char *img, unsigned char *img_mask, unsigned char *img_new, control_par *cpar)
+{
+	register unsigned char 	*ptr1, *ptr2, *ptr3;
+	int i;
+	int image_size = cpar->imx * cpar->imy;
+	
+	for (i=0, ptr1=img, ptr2=img_mask, ptr3=img_new; i<image_size; ptr1++, ptr2++, ptr3++, i++)
+    {
+      if (*ptr2 == 0)  *ptr3 = 0;
+      else  *ptr3 = *ptr1;
+    }
+ }
+ 
+/*
+*  copy_images  is a simple image arithmetic function that copies img1 into img2
+*  Arguments:
+*      img1, img2 are the unsigned char array pointers 
+*      control_par *cpar - contains image size parameters.
+*/
+void copy_images (unsigned char	*img1, unsigned char *img2, control_par *cpar)
+{
+	register unsigned char 	*ptr1, *ptr2;
+	unsigned char	       	*end;
+	int image_size = cpar->imx * cpar->imy;
+	
+	for (end=img1+image_size, ptr1=img1, ptr2=img2; ptr1<end; ptr1++, ptr2++)
+	*ptr2 = *ptr1;
+}
+
+/* histogram computes a histogram from the image and returns it to hist
+*  Arguments:
+*      img  is the unsigned char array pointer to the image array, 8 bit 
+*      control_par *cpar - contains image size parameters.
+*/
+void histogram (unsigned char *img, int *hist, control_par *cpar){
+
+	int	       	i;
+	unsigned char  	*end;
+	register unsigned char	*ptr;
+	int imgsize = cpar->imx * cpar->imy;
+
+	//write defaults into histgramm array
+	for (i=0; i<256; i++)  hist[i] = 0;
+	
+	end = img + imgsize;
+	for (ptr=img; ptr<end; ptr++)
+	{
+		hist[*ptr]++;
+	}
+}
+
+/* Apparently enhance is the histogram equalization algorithm but with some
+*  constraints that are not clear - why sum is less then imx and then less then 512 
+* 
+*  New function histeq is an implementation from the 
+*  Image Processing in C, 2nd Ed. by Dwayne Phillips, Listing 4.2 
+*  Arguments:
+*      img  is the unsigned char array pointer to the image array, 8 bit 
+*      control_par *cpar - contains image size parameters.
+*/
+void histeq (unsigned char	*img, control_par *cpar)
+{
+	int		       	        i, j, k, histo[256];
+	int 			        sum, sum_of_h[256];
+    double 					constant;
+    int imgsize = cpar->imx * cpar->imy;
+	
+	histogram (img, histo, cpar);
+	
+	sum = 0;
+	for(i=0; i<256; i++)
+	{
+		sum += histo[i];
+		sum_of_h[i] = sum;
+	}
+    /* constant = new # of gray levels div by area */
+	constant = (float)(255.1)/(float)(imgsize);
+	for(j=0; j<cpar->imy; j++)
+	{
+		for(i=0; i<cpar->imx; i++)
+		{
+			k  = *(img + i + j*cpar->imx);
+			*(img + i + j*cpar->imx ) = (unsigned char)(sum_of_h[k] * constant);
+		} 
+	}
+} 
