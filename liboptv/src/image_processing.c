@@ -338,10 +338,10 @@ void subtract_mask (unsigned char *img, unsigned char *img_mask,
         destination of copy, respectively.
     control_par *cpar - contains image size parameters.
 */
-void copy_images (unsigned char	*src, unsigned char *dest, control_par *cpar)
+void copy_images (unsigned char *src, unsigned char *dest, control_par *cpar)
 {
     register unsigned char *ptr1, *ptr2;
-	unsigned char *end;
+    unsigned char *end;
     int image_size = cpar->imx * cpar->imy;
 	
     for (end = src + image_size, ptr1 = src, ptr2 = dest; ptr1 < end;
