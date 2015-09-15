@@ -32,7 +32,6 @@ sequence_par* read_sequence_par(char *filename) {
     /* create new sequence_par struct with memory allocated to all its inner pointers*/
     ret = get_new_sequence_par();
 
-    
     /* Note the assumption of 4 cameras. Fixing this requires changing the
        file format. */
     for (cam = 0; cam < 4; cam++) {
@@ -240,6 +239,26 @@ int compare_volume_par(volume_par *v1, volume_par *v2) {
         (v1->corrmin == v2->corrmin) && (v1->eps0 == v2->eps0) );
 }
 
+control_par * get_new_control_par(int cams) {
+
+    int cam;
+    control_par *ret = (control_par *) malloc(sizeof(control_par));
+
+    ret->num_cams = cams;
+
+    ret->img_base_name = (char **) calloc(ret->num_cams, sizeof(char*));
+    ret->cal_img_base_name = (char **) calloc(ret->num_cams, sizeof(char *));
+
+    for (cam = 0; cam < ret->num_cams; cam++) {
+        ret->img_base_name[cam] = (char *) malloc(SEQ_FNAME_MAX_LEN);
+        ret->cal_img_base_name[cam] = (char *) malloc(SEQ_FNAME_MAX_LEN);
+    }
+
+    ret->mm = (mm_np *) malloc(sizeof(mm_np));
+
+    return ret;
+}
+
 /*  read_control_par() reads general control parameters that are not present in
     other config files but are needed generally. The arguments are read in
     this order:
@@ -277,23 +296,24 @@ control_par* read_control_par(char *filename) {
     char line[SEQ_FNAME_MAX_LEN];
     FILE* par_file;
     int cam;
-    control_par *ret = (control_par *) malloc(sizeof(control_par));
-    
-    par_file = fopen(filename, "r");
-    if(fscanf(par_file, "%d\n", &(ret->num_cams)) == 0) goto handle_error;
-    
-    ret->img_base_name = (char **) calloc(ret->num_cams, sizeof(char*));
-    ret->cal_img_base_name = (char **) calloc(ret->num_cams, sizeof(char *));
-    ret->mm = (mm_np *) malloc(sizeof(mm_np));
-    
-    
+    int num_cams;
+    control_par *ret;
+
+    if ((par_file = fopen(filename, "r")) == NULL) {
+        printf("Could not open file %s", filename);
+        return NULL;
+    }
+
+    if (fscanf(par_file, "%d\n", &num_cams) != 1) {
+        printf("Could not read number of cameras from %s", filename);
+        return NULL;
+    }
+    ret = get_new_control_par(num_cams);
     for (cam = 0; cam < ret->num_cams; cam++) {
         if (fscanf(par_file, "%s\n", line) == 0) goto handle_error;
-        ret->img_base_name[cam] = (char *) malloc(SEQ_FNAME_MAX_LEN);
         strncpy(ret->img_base_name[cam], line, SEQ_FNAME_MAX_LEN);
         
         if (fscanf(par_file, "%s\n", line) == 0) goto handle_error;
-        ret->cal_img_base_name[cam] = (char *) malloc(SEQ_FNAME_MAX_LEN);
         strncpy(ret->cal_img_base_name[cam], line, SEQ_FNAME_MAX_LEN);
     }
     if(fscanf(par_file, "%d\n", &(ret->hp_flag)) == 0) goto handle_error;
@@ -320,23 +340,30 @@ handle_error:
 }
 
 /*  free_control_par() frees a control_par pointer and the memory allocated
-    under it fro image namew etc.
+    under it for image namew etc.
     
     Arguments:
     control_par *cp - pointer to the control_par object to destroy.
 */
 void free_control_par(control_par *cp) {
-    
     int cam;
-    
     for (cam = 0; cam < cp->num_cams; cam++) {
-        if (cp->img_base_name[cam] == NULL) break;
         free(cp->img_base_name[cam]);
-        
-        if (cp->cal_img_base_name[cam] == NULL) break;
+        cp->img_base_name[cam] = NULL;
         free(cp->cal_img_base_name[cam]);
+        cp->cal_img_base_name[cam] = NULL;
     }
+    free(cp->img_base_name);
+    cp->img_base_name = NULL;
+
+    free(cp->cal_img_base_name);
+    cp->cal_img_base_name = NULL;
+
+    free(cp->mm);
+    cp->mm = NULL;
+
     free(cp);
+    cp = NULL;
 }
 
 /* compare_control_par() checks that two control_par objects are deeply-equal,

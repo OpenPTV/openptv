@@ -66,6 +66,7 @@ typedef struct {
     mm_np *mm;
 } control_par;
 
+control_par * get_new_control_par(int cams);
 control_par * read_control_par(char *filename);
 void free_control_par(control_par *cp);
 

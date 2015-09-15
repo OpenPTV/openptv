@@ -22,17 +22,32 @@ cdef extern from "optv/parameters.h":
         double Zmin_lay[2]
         double Zmax_lay[2]
         double cn, cnx, cny, csumg, eps0, corrmin
+    ctypedef struct control_par:
+        int num_cams
+        char **img_base_name
+        char **cal_img_base_name
+        int hp_flag
+        int allCam_flag
+        int tiff_flag
+        int imx
+        int imy
+        double pix_x
+        double pix_y
+        int chfield
+        mm_np *mm
         
 cdef class MultimediaParams:
     cdef mm_np* _mm_np
     
 cdef class TrackingParams:
     cdef track_par * _track_par
-  
+
 cdef class SequenceParams:
     cdef sequence_par * _sequence_par
 
 cdef class VolumeParams:
     cdef volume_par * _volume_par
 
-
+cdef class ControlParams:
+    cdef control_par * _control_par
+    cdef MultimediaParams multimedia_params

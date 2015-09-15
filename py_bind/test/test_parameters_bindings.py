@@ -9,12 +9,10 @@ class Test_MultimediaParams(unittest.TestCase):
         d_np = numpy.array([55, 66, 77])
         
         m = MultimediaParams(nlay=3, n1=2, n2=n2_np, d=d_np, n3=4, lut=1)
-        
         self.failUnlessEqual(m.get_nlay(), 3)
         self.failUnlessEqual(m.get_n1(), 2)
         self.failUnlessEqual(m.get_n3(), 4)
         self.failUnlessEqual(m.get_lut(), 1)
-        
         numpy.testing.assert_array_equal(m.get_d(), d_np)
         numpy.testing.assert_array_equal(m.get_n2(), n2_np)
         
@@ -230,6 +228,83 @@ class Test_VolumeParams(unittest.TestCase):
     def tearDown(self):
         # remove the testing output directory and its files
         shutil.rmtree(self.temp_output_directory)
+
+class Test_ControlParams(unittest.TestCase):
+    def setUp(self):
+        self.input_control_par_file_name = "testing_fodder/control_parameters/control.par"
+        self.temp_output_directory = "testing_fodder/control_parameters/testing_output"
         
+        # create a temporary output directory (will be deleted by the end of test)
+        if not os.path.exists(self.temp_output_directory):
+            os.makedirs(self.temp_output_directory)
+        # create an instance of ControlParams class
+        self.cp_obj = ControlParams(4)
+        
+    def test_read_control(self):
+        # Fill the ControlParams object with parameters from test file
+        self.cp_obj.read_control_par(self.input_control_par_file_name)
+        # check if all parameters are equal to the contents of test file
+        self.failUnless(self.cp_obj.get_img_base_name(0) == "dumbbell/cam1_Scene77_4085") 
+        self.failUnless(self.cp_obj.get_img_base_name(1) == "dumbbell/cam2_Scene77_4085")
+        self.failUnless(self.cp_obj.get_img_base_name(2) == "dumbbell/cam3_Scene77_4085")
+        self.failUnless(self.cp_obj.get_img_base_name(3) == "dumbbell/cam4_Scene77_4085")
+        
+        self.failUnless(self.cp_obj.get_cal_img_base_name(0) == "cal/cam1.tif")
+        self.failUnless(self.cp_obj.get_cal_img_base_name(1) == "cal/cam2.tif")
+        self.failUnless(self.cp_obj.get_cal_img_base_name(2) == "cal/cam3.tif")
+        self.failUnless(self.cp_obj.get_cal_img_base_name(3) == "cal/cam4.tif")
+        
+        self.failUnless(self.cp_obj.get_num_cams()==4)
+        self.failUnless(self.cp_obj.get_hp_flag()==10)
+        self.failUnless(self.cp_obj.get_allCam_flag()==11)
+        self.failUnless(self.cp_obj.get_tiff_flag()==12)
+        self.failUnless(self.cp_obj.get_imx()==1280)
+        self.failUnless(self.cp_obj.get_imy()==1024)
+        self.failUnless(self.cp_obj.get_pix_x()==15.15)
+        self.failUnless(self.cp_obj.get_pix_y()==16.16)
+        self.failUnless(self.cp_obj.get_chfield()==17)
+        
+        self.failUnless(self.cp_obj.get_multimedia_params().get_n1()==18)
+        self.failUnless(self.cp_obj.get_multimedia_params().get_n2()[0]==19.19)
+        self.failUnless(self.cp_obj.get_multimedia_params().get_n3()==20.20)
+        self.failUnless(self.cp_obj.get_multimedia_params().get_d()[0]==21.21)
+        
+#         self.failUnless(self.cp_obj.get_first() == 497)
+#         self.failUnless(self.cp_obj.get_last() == 597)
+#     
+#     def test_getters_setters(self):
+#         cams_num = 4
+#         for cam in range(cams_num):
+#             newStr = str(cam) + "some string" + str(cam)
+#             self.cp_obj.set_img_base_name(cam, newStr)
+#             self.failUnless(self.cp_obj.get_img_base_name(cam) == newStr)
+#         
+#         self.cp_obj.set_first(1234)
+#         self.failUnless(self.cp_obj.get_first() == 1234)
+#         self.cp_obj.set_last(5678)
+#         self.failUnless(self.cp_obj.get_last() == 5678)
+#     
+#     # testing __richcmp__ comparison method of ControlPar class
+#     def test_rich_compare(self):
+#         self.cp_obj2 = ControlParams()
+#         self.cp_obj2.read_control_par(self.input_control_par_file_name)
+#         
+#         self.cp_obj3 = ControlParams()
+#         self.cp_obj3.read_control_par(self.input_control_par_file_name)
+#         
+#         self.failUnless(self.cp_obj2 == self.cp_obj3)
+#         self.failIf(self.cp_obj2 != self.cp_obj3)
+#         
+#         self.cp_obj2.set_first(-999)
+#         self.failUnless(self.cp_obj2 != self.cp_obj3)
+#         self.failIf(self.cp_obj2 == self.cp_obj3)
+#         
+#         with self.assertRaises(TypeError):
+#             var = (self.cp_obj2 > self.cp_obj3)
+#     
+    def tearDown(self):
+        # remove the testing output directory and its files
+        shutil.rmtree(self.temp_output_directory)        
+
 if __name__ == "__main__":
     unittest.main()

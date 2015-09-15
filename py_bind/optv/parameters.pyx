@@ -1,10 +1,12 @@
-#Implementation of Python binding to parameters.h
+# Implementation of Python binding to parameters.h
 from libc.stdlib cimport malloc, free
 from libc.string cimport strncpy
 
 import numpy
 
 cdef extern from "optv/parameters.h":
+    int c_compare_mm_np "compare_mm_np"(mm_np * mm_np1, mm_np * mm_np2)
+    
     track_par * c_read_track_par "read_track_par"(char * file_name)
     int c_compare_track_par "compare_track_par"(track_par * t1, track_par * t2)
     
@@ -16,19 +18,29 @@ cdef extern from "optv/parameters.h":
     volume_par * c_read_volume_par "read_volume_par"(char * filename);
     int c_compare_volume_par "compare_volume_par"(volume_par * v1, volume_par * v2);
     
+    control_par * c_read_control_par "read_control_par"(char * filename);
+    control_par * c_get_new_control_par "get_new_control_par"(int cams);
+    void c_free_control_par "free_control_par"(control_par * cp);
+    int c_compare_control_par "compare_control_par"(control_par * c1, control_par * c2);
+
 cdef class MultimediaParams:
 
     def __init__(self, **kwargs):
         
-        self._mm_np = <mm_np *>malloc(sizeof(mm_np))
-        
-        self.set_nlay(kwargs['nlay'])
-        self.set_n1(kwargs['n1'])
-        self.set_n2(kwargs['n2'])
-        self.set_d(kwargs['d'])
-        self.set_n3(kwargs['n3'])
-        self.set_lut(kwargs['lut'])
-    
+        self._mm_np = < mm_np *> malloc(sizeof(mm_np))
+        if kwargs.has_key('nlay'): 
+            self.set_nlay(kwargs['nlay'])
+        if kwargs.has_key('n1'):
+            self.set_n1(kwargs['n1'])
+        if kwargs.has_key('n2'):
+            self.set_n2(kwargs['n2'])
+        if kwargs.has_key('d'):
+            self.set_d(kwargs['d'])
+        if kwargs.has_key('n3'):
+            self.set_n3(kwargs['n3'])
+        if kwargs.has_key('lut'):
+            self.set_lut(kwargs['lut'])
+                
     def get_nlay(self):
         return self._mm_np[0].nlay
     
@@ -41,7 +53,7 @@ cdef class MultimediaParams:
     def set_n1(self, n1):
         self._mm_np[0].n1 = n1
         
-    def get_n2(self):#TODO return numpy
+    def get_n2(self):
         arr_size = sizeof(self._mm_np[0].n2) / sizeof(self._mm_np[0].n2[0])
         n2_np_arr = numpy.empty(arr_size)
         for i in range(len(n2_np_arr)):
@@ -75,18 +87,34 @@ cdef class MultimediaParams:
     
     def set_lut(self, lut):
         self._mm_np[0].lut = lut
+    
+#     # sets the _mm_np variable to other_mm_np
+#     # parameter: other_mm_np - pointer to other mm_np C struct
+#     def set_mm_np(self, other_mm_np):
+#         free(self._mm_np)
+#         
+#         self._mm_np = < mm_np *> other_mm_np
+    
+    def __richcmp__(MultimediaParams self, MultimediaParams other, operator):
+        c_compare_result = c_compare_mm_np(self._mm_np, other._mm_np)
+        if (operator == 2):  # "==" action was performed
+            return (c_compare_result != 0)
+        elif(operator == 3):  # "!=" action was performed
+                return (c_compare_result == 0)
+        else: raise TypeError("Unhandled comparison operator " + operator)
+        
         
     def __str__(self):
-        n2_str="{"
-        for i in range(sizeof(self._mm_np[0].n2) / sizeof(self._mm_np[0].n2[0]) -1 ):
-            n2_str = n2_str+ str(self._mm_np[0].n2[i]) + ", "
-        n2_str += str(self._mm_np[0].n2[i+1]) + "}"
+        n2_str = "{"
+        for i in range(sizeof(self._mm_np[0].n2) / sizeof(self._mm_np[0].n2[0]) - 1):
+            n2_str = n2_str + str(self._mm_np[0].n2[i]) + ", "
+        n2_str += str(self._mm_np[0].n2[i + 1]) + "}"
         
-        d_str="{"
-        for i in range(sizeof(self._mm_np[0].d) / sizeof(self._mm_np[0].d[0]) -1 ) :
+        d_str = "{"
+        for i in range(sizeof(self._mm_np[0].d) / sizeof(self._mm_np[0].d[0]) - 1) :
             d_str += str(self._mm_np[0].d[i]) + ", "
             
-        d_str += str(self._mm_np[0].d[i+1]) + "}"
+        d_str += str(self._mm_np[0].d[i + 1]) + "}"
         
         return "nlay=\t{} \nn1=\t{} \nn2=\t{} \nd=\t{} \nn3=\t{} \nlut=\t{} ".format(
                 str(self._mm_np[0].nlay),
@@ -96,8 +124,8 @@ cdef class MultimediaParams:
                 str(self._mm_np[0].n3),
                 str(self._mm_np[0].lut))
         
-        def __dealloc__(self):
-            free(self._mm_np)
+    def __dealloc__(self):
+        free(self._mm_np)
 
 # Wrapping the track_par C struct for pythonic access
 # Binding the read_track_par C function
@@ -279,8 +307,8 @@ cdef class SequenceParams:
     # Set image base name for camera #cam
     def set_img_base_name(self, cam, str new_img_name):
         py_byte_string = new_img_name.encode('UTF-8')
-        cdef char* c_string = py_byte_string
-        strncpy(self._sequence_par[0].img_base_name[cam], c_string, len(new_img_name)+1)
+        cdef char * c_string = py_byte_string
+        strncpy(self._sequence_par[0].img_base_name[cam], c_string, len(new_img_name) + 1)
     
     # Checks for equality between this and other SequenceParams objects
     # Gives the ability to use "==" and "!=" operators on two SequenceParams objects
@@ -299,7 +327,7 @@ cdef class SequenceParams:
 # Objects of this type can be checked for equality using "==" and "!=" operators
 cdef class VolumeParams:
     def __init__(self):
-        self._volume_par = <volume_par*>malloc(sizeof(volume_par))
+        self._volume_par = < volume_par *> malloc(sizeof(volume_par))
     
     # Getters and setters
     def get_X_lay(self):
@@ -405,6 +433,150 @@ cdef class VolumeParams:
         else: raise TypeError("Unhandled comparison operator " + operator)
         
     def __dealloc__(self):
-        free(self._volume_par)  
+        free(self._volume_par)
         
+# Wrapping the control_par C struct (declared in liboptv/paramethers.h) for pythonic access
+# Objects of this type can be checked for equality using "==" and "!=" operators
+cdef class ControlParams:
+    def __init__(self, cams_num):
+        self._control_par = c_get_new_control_par(cams_num)
+        self.multimedia_params = MultimediaParams()
+        free(self.multimedia_params._mm_np)
+        self.multimedia_params._mm_np = self._control_par[0].mm
+        
+    # Getters and setters 
+    def get_num_cams(self):
+        return self._control_par[0].num_cams
+    
+    def set_num_cams(self, num_cams):
+        self._control_par[0].num_cams = num_cams
+        
+    def get_hp_flag(self):
+        return self._control_par[0].hp_flag
+    
+    def set_hp_flag(self, hp_flag):
+        self._control_par[0].hp_flag = hp_flag
+        
+    def get_allCam_flag(self):
+        return self._control_par[0].allCam_flag
+    
+    def set_allCam_flag(self, allCam_flag):
+        self._control_par[0].allCam_flag = allCam_flag
+        
+    def get_tiff_flag(self):
+        return self._control_par[0].tiff_flag
+    
+    def set_tiff_flag(self, tiff_flag):
+        self._control_par[0].tiff_flag = tiff_flag
+    
+    def get_imx(self):
+        return self._control_par[0].imx
+    
+    def set_imx(self, imx):
+        self._control_par[0].imx = imx
+        
+    def get_imy(self):
+        return self._control_par[0].imy
+    
+    def set_imy(self, imy):
+        self._control_par[0].imy = imy
+        
+    def get_pix_x(self):
+        return self._control_par[0].pix_x
+    
+    def set_pix_x(self, pix_x):
+        self._control_par[0].pix_x = pix_x
+    
+    def get_pix_y(self):
+        return self._control_par[0].pix_y
+    
+    def set_pix_y(self, pix_y):
+        self._control_par[0].pix_y = pix_y
+    
+    def get_chfield(self):
+        return self._control_par[0].chfield
+    
+    def set_chfield(self, chfield):
+        self._control_par[0].chfield = chfield
+        
+    # calls read_control_par() C function that reads general control parameters that are not present in
+    # other config files but are needed generally. The arguments are read in
+    # this order:
+    #   
+    # 1. num_cams - number of cameras in a frame.
+    # 2n (n = 1..num_cams). img_base_name
+    # 2n+1. cal_img_base_name
+    # 2n+2. hp_flag - high pass filter flag (0/1)
+    # 2n+3. allCam_flag - flag using the particles that are matched in all cameras
+    # +4. tiff_flag, use TIFF headers or not (if RAW images) 0/1
+    # +5. imx - horizontal size of the image/sensor in pixels, e.g. 1280
+    # +6. imy - vertical size in pixels, e.g. 1024
+    # +7. pix_x
+    # +8. pix_y - pixel size of the sensor (one value per experiment means 
+    # that all cameras are identical. TODO: allow for different cameras), in [mm], 
+    # e.g. 0.010 = 10 micron pixel
+    # +9. chfield - 
+    # +10. mmp.n1 - index of refraction of the first media (air = 1)
+    # +11. mmp.n2[0] - index of refraction of the second media - glass windows, can
+    # be different?
+    # +12. mmp.n3 - index of refraction of the flowing media (air, liquid)
+    # 2n+13. mmp.d[0] - thickness of the glass/perspex windows (second media), can be
+    # different ?
+    #   
+    # (if n = 4, then 21 lines)
+    #   
+    # Arguments:
+    # filename - path to text file containing the parameters.
+    def read_control_par(self, filename):
+        # free the memory of previous C struct and its inner strings before creating a new one
+        c_free_control_par(self._control_par)
+        # read parameters from file to a new control_par C struct
+        self._control_par = c_read_control_par(filename)
+        
+    # Get image base name of camera #cam
+    def get_img_base_name(self, cam):
+        cdef char * c_str = self._control_par[0].img_base_name[cam]
+        cdef py_str = c_str
+        return py_str
+    
+    # Set image base name for camera #cam
+    def set_img_base_name(self, cam, str new_img_name):
+        py_byte_string = new_img_name.encode('UTF-8')
+        cdef char * c_string = py_byte_string
+        strncpy(self._control_par[0].img_base_name[cam], c_string, len(new_img_name) + 1)
+    
+    # Get calibration image base name of camera #cam
+    def get_cal_img_base_name(self, cam):
+        cdef char * c_str = self._control_par[0].cal_img_base_name[cam]
+        cdef py_str = c_str
+        return py_str
+    
+    # Set calibration image base name for camera #cam
+    def set_cal_img_base_name(self, cam, str new_img_name):
+        py_byte_string = new_img_name.encode('UTF-8')
+        cdef char * c_string = py_byte_string
+        strncpy(self._control_par[0].cal_img_base_name[cam], c_string, len(new_img_name) + 1)
+    
+    def get_multimedia_params(self):
+        return self.multimedia_params
+    
+    # Checks for equality between this and other ControlParams objects
+    # Gives the ability to use "==" and "!=" operators on two ControlParams objects
+    def __richcmp__(ControlParams self, ControlParams other, operator):
+        c_compare_result = c_compare_control_par(self._control_par, other._control_par)
+        if (operator == 2):  # "==" action was performed
+            return (c_compare_result != 0)
+        elif(operator == 3):  # "!=" action was performed
+                return (c_compare_result == 0)
+        else: raise TypeError("Unhandled comparison operator " + operator)
+        
+    def __dealloc__(self):
+        # free memory of control_par c struct and all memory allocated under its pointers 
+        # please note that the memory of mm_np c struct (that is referred to by the 
+        # instance variable _mm_np of multimedia_params python object) will ALSO be freed 
+        c_free_control_par(self._control_par)
+        # ( __dealloc__ method of multimedia_params will be called automatically to dispose the object)
+        # so now:
+        # set multimeia_params's C struct to null in order to avoid double free corruption
+        self.multimedia_params._mm_np = NULL
 
