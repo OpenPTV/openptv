@@ -21,9 +21,17 @@ Routines contained:     -
 #include "multimed.h"
 
 
-/* using radial shift from the multimedia model 
- * creates the Xq,Yq points for each X,Y point in the image space
- */
+/* multimed_nlay() creates the Xq,Yq points for each X,Y point in the image space
+    using radial shift from the multimedia model. 
+    Arguments:
+        ex - pointer to Exterior parameters
+        mm - pointer to multimedia parameters
+        X,Y,Z - three doubles of the particle position in the world coordinate system
+        Xq,Yq - two dimensional position (double pointer) on the glass surface, separating
+        the water from air
+        i_cam - integer number of the camera (0 - num_cams)
+        mmLUT pointer to the multimedia look-up table  
+*/
 void  multimed_nlay (Exterior *ex
                    , mm_np *mm
                    , double X
@@ -48,14 +56,14 @@ void  multimed_nlay (Exterior *ex
 }
 
 
-/* calculates and returns the radial shift
- * Arguments:
- * pointer to Exterior 
- * pointer to mm_np 
- * 3D position in terms of X,Y,Z
- * pointer to the multimedia look-up table 
- * Outputs:
- * double radial_shift: default is 1.0 if no solution is found
+/* multimedia_r_nlay() calculates and returns the radial shift
+    Arguments:
+    pointer to Exterior 
+    pointer to mm_np 
+    3D position in terms of X,Y,Z
+    pointer to the multimedia look-up table 
+    Outputs:
+    double radial_shift: default is 1.0 if no solution is found
  */
 double multimed_r_nlay (Exterior *ex
                       , mm_np *mm
@@ -123,9 +131,11 @@ double multimed_r_nlay (Exterior *ex
 
 
 
-/* Using Exterior and Interior parameters and the Glass vector of the variable
- * window position creates the shifted points X_t,Y_t,Z_t for each position X,Y,Z
- * and the two vectors that point to the crossing point
+/* trans_Cam_Point() creates the shifted points X_t,Y_t,Z_t for each position X,Y,Z 
+    Using Exterior and Interior parameters and the Glass vector of the variable
+    window position and the two vectors that point to the crossing point
+    Arguments: 
+    
  */ 
 void trans_Cam_Point(Exterior ex
                    , mm_np mm
@@ -140,7 +150,7 @@ void trans_Cam_Point(Exterior ex
                    , double cross_p[3]
                    , double cross_c[3]){
 
-    /* --Beat Luethi June 07: I change the stuff to a system perpendicular to the interface */
+/* Beat Luethi June 07: I change the stuff to a system perpendicular to the interface */
     double dist_cam_glas,dist_point_glas,dist_o_glas; //glas inside at water 
     int row, col;
 
@@ -214,14 +224,13 @@ double cross_p[], double cross_c[], double *X, double *Y, double *Z){
 
 
 
-/* init_mmLUT prepares the multimedia Look-Up Table
-Arguments: 
+/* init_mmLUT() prepares the multimedia Look-Up Table
+    Arguments: 
     Pointer to volume parameters *vpar
     pointer to the control parameters *cpar
     pointer to the calibraiton parameters *cal
-Output:
+    Output:
     pointer to the multi-media look-up table mmLUT structure
-
 */ 
 void init_mmLUT (volume_par *vpar
                , control_par *cpar
@@ -405,7 +414,13 @@ void init_mmLUT (volume_par *vpar
 }
 
 
-
+/* get_mmf_from_mmLUT() returns the value of mmf (double) for the space point X,Y,Z
+    using the multimedia look up table
+    Arguments:
+    integer number of the cameras i_cam
+    double position in 3D space, X,Y,Z
+    multimedia look-up table mmLUT
+*/
 double get_mmf_from_mmLUT (int i_cam
                          , double X
                          , double Y
@@ -510,7 +525,14 @@ double get_mmf_from_mmLUT (int i_cam
 }
 
 
-
+/*  volumedimension() finds the limits of the measurement volume in 3D space
+    Arguments:
+    double pointers to the limits of the volume in x (xmin,xmax), y (ymin, ymax) and
+    z (zmin, zmax) directions
+    pointer to the volume parameters vpar
+    pointer to the control parameters cpar
+    pointer to the Calibration parameters cal
+*/  
 void volumedimension (double *xmax
                     , double *xmin
                     , double *ymax
