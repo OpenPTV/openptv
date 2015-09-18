@@ -28,6 +28,9 @@ add_dependencies(check_vec_utils optv)
 add_executable(check_image_proc EXCLUDE_FROM_ALL check_image_proc.c)
 add_dependencies(check_image_proc optv)
 
+add_executable(check_multimed EXCLUDE_FROM_ALL check_multimed.c)
+add_dependencies(check_multimed optv)
+
 get_property(OPTV_LIBRARY TARGET optv PROPERTY LOCATION)
 set(LIBS ${LIBS} ${CHECK_LIBRARIES} ${OPTV_LIBRARY})
 
@@ -85,7 +88,15 @@ add_test(check_trafo ${CMAKE_CURRENT_BINARY_DIR}/check_trafo)
     
 add_custom_command(TARGET check_trafo PRE_BUILD
     COMMAND ${CMAKE_COMMAND} -E copy_directory
-    ${CMAKE_CURRENT_SOURCE_DIR}/testing_fodder $<TARGET_FILE_DIR:check_trafo>/testing_fodder)    
+    ${CMAKE_CURRENT_SOURCE_DIR}/testing_fodder $<TARGET_FILE_DIR:check_trafo>/testing_fodder)   
+    
+target_link_libraries(check_multimed ${LIBS})
+add_test(check_multimed ${CMAKE_CURRENT_BINARY_DIR}/check_multimed)
+    
+add_custom_command(TARGET check_multimed PRE_BUILD
+    COMMAND ${CMAKE_COMMAND} -E copy_directory
+    ${CMAKE_CURRENT_SOURCE_DIR}/testing_fodder $<TARGET_FILE_DIR:check_multimed>/testing_fodder)
+ 
 
 target_link_libraries(check_image_proc ${LIBS})
 add_test(check_image_proc ${CMAKE_CURRENT_BINARY_DIR}/check_image_proc)
