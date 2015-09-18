@@ -30,7 +30,7 @@ sequence_par* read_sequence_par(char *filename) {
     }
     
     /* create new sequence_par struct with memory allocated to all its inner pointers*/
-    ret = get_new_sequence_par();
+    ret = new_sequence_par();
 
     /* Note the assumption of 4 cameras. Fixing this requires changing the
        file format. */
@@ -57,7 +57,7 @@ handle_error:
 }
 
 /* Creates a new sequence_par struct and allocates memory for its inner pointers */
-sequence_par * get_new_sequence_par() {
+sequence_par * new_sequence_par() {
     int cam;
     sequence_par *ret;
 
@@ -239,7 +239,7 @@ int compare_volume_par(volume_par *v1, volume_par *v2) {
         (v1->corrmin == v2->corrmin) && (v1->eps0 == v2->eps0) );
 }
 
-control_par * get_new_control_par(int cams) {
+control_par * new_control_par(int cams) {
 
     int cam;
     control_par *ret = (control_par *) malloc(sizeof(control_par));
@@ -308,7 +308,7 @@ control_par* read_control_par(char *filename) {
         printf("Could not read number of cameras from %s", filename);
         return NULL;
     }
-    ret = get_new_control_par(num_cams);
+    ret = new_control_par(num_cams);
     for (cam = 0; cam < ret->num_cams; cam++) {
         if (fscanf(par_file, "%s\n", line) == 0) goto handle_error;
         strncpy(ret->img_base_name[cam], line, SEQ_FNAME_MAX_LEN);

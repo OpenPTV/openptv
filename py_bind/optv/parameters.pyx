@@ -11,7 +11,7 @@ cdef extern from "optv/parameters.h":
     int c_compare_track_par "compare_track_par"(track_par * t1, track_par * t2)
     
     sequence_par * c_read_sequence_par "read_sequence_par"(char * filename)
-    sequence_par * c_get_new_sequence_par "get_new_sequence_par"()
+    sequence_par * c_new_sequence_par "new_sequence_par"()
     void c_free_sequence_par "free_sequence_par"(sequence_par * sp)
     int c_compare_sequence_par "compare_sequence_par"(sequence_par * sp1, sequence_par * sp2)
     
@@ -19,7 +19,7 @@ cdef extern from "optv/parameters.h":
     int c_compare_volume_par "compare_volume_par"(volume_par * v1, volume_par * v2);
     
     control_par * c_read_control_par "read_control_par"(char * filename);
-    control_par * c_get_new_control_par "get_new_control_par"(int cams);
+    control_par * c_new_control_par "new_control_par"(int cams);
     void c_free_control_par "free_control_par"(control_par * cp);
     int c_compare_control_par "compare_control_par"(control_par * c1, control_par * c2);
 
@@ -40,6 +40,10 @@ cdef class MultimediaParams:
             self.set_n3(kwargs['n3'])
         if kwargs.has_key('lut'):
             self.set_lut(kwargs['lut'])
+                
+    cdef void set_mm_np(self, mm_np * other_mm_np_c_struct):
+        free(self._mm_np)
+        self._mm_np = other_mm_np_c_struct
                 
     def get_nlay(self):
         return self._mm_np[0].nlay
@@ -271,7 +275,7 @@ cdef class TrackingParams:
 
 cdef class SequenceParams:
     def __init__(self):
-        self._sequence_par = c_get_new_sequence_par()
+        self._sequence_par = c_new_sequence_par()
         
     def get_first(self):
         return self._sequence_par[0].first
@@ -439,10 +443,10 @@ cdef class VolumeParams:
 # Objects of this type can be checked for equality using "==" and "!=" operators
 cdef class ControlParams:
     def __init__(self, cams_num):
-        self._control_par = c_get_new_control_par(cams_num)
-        self.multimedia_params = MultimediaParams()
-        free(self.multimedia_params._mm_np)
-        self.multimedia_params._mm_np = self._control_par[0].mm
+        self._control_par = c_new_control_par(cams_num)
+        
+        self._multimedia_params = MultimediaParams()
+        self._multimedia_params.set_mm_np(self._control_par[0].mm)
         
     # Getters and setters 
     def get_num_cams(self):
@@ -530,8 +534,13 @@ cdef class ControlParams:
     def read_control_par(self, filename):
         # free the memory of previous C struct and its inner strings before creating a new one
         c_free_control_par(self._control_par)
+        # memory for _multimedia_params' mm_np struct was just freed,
+        # so set _multimedia params' mm_np pointer to NULL to avoid double free corruption 
+        self._multimedia_params._mm_np = NULL
         # read parameters from file to a new control_par C struct
         self._control_par = c_read_control_par(filename)
+        # set _multimedia_params's _mm_np to the new mm_np that just allocated and read into _control_par
+        self._multimedia_params.set_mm_np(self._control_par[0].mm)
         
     # Get image base name of camera #cam
     def get_img_base_name(self, cam):
@@ -558,7 +567,7 @@ cdef class ControlParams:
         strncpy(self._control_par[0].cal_img_base_name[cam], c_string, len(new_img_name) + 1)
     
     def get_multimedia_params(self):
-        return self.multimedia_params
+        return self._multimedia_params
     
     # Checks for equality between this and other ControlParams objects
     # Gives the ability to use "==" and "!=" operators on two ControlParams objects
@@ -573,10 +582,10 @@ cdef class ControlParams:
     def __dealloc__(self):
         # free memory of control_par c struct and all memory allocated under its pointers 
         # please note that the memory of mm_np c struct (that is referred to by the 
-        # instance variable _mm_np of multimedia_params python object) will ALSO be freed 
+        # instance variable _mm_np of _multimedia_params python object) will ALSO be freed 
         c_free_control_par(self._control_par)
-        # ( __dealloc__ method of multimedia_params will be called automatically to dispose the object)
+        # ( __dealloc__ method of _multimedia_params will be called automatically to dispose the object)
         # so now:
         # set multimeia_params's C struct to null in order to avoid double free corruption
-        self.multimedia_params._mm_np = NULL
+        self._multimedia_params._mm_np = NULL
 

@@ -22,6 +22,7 @@ cdef extern from "optv/parameters.h":
         double Zmin_lay[2]
         double Zmax_lay[2]
         double cn, cnx, cny, csumg, eps0, corrmin
+        
     ctypedef struct control_par:
         int num_cams
         char **img_base_name
@@ -38,6 +39,7 @@ cdef extern from "optv/parameters.h":
         
 cdef class MultimediaParams:
     cdef mm_np* _mm_np
+    cdef void set_mm_np(MultimediaParams self, mm_np * other_mm_np_c_struct)
     
 cdef class TrackingParams:
     cdef track_par * _track_par
@@ -50,4 +52,4 @@ cdef class VolumeParams:
 
 cdef class ControlParams:
     cdef control_par * _control_par
-    cdef MultimediaParams multimedia_params
+    cdef MultimediaParams _multimedia_params

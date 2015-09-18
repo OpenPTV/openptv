@@ -254,54 +254,74 @@ class Test_ControlParams(unittest.TestCase):
         self.failUnless(self.cp_obj.get_cal_img_base_name(2) == "cal/cam3.tif")
         self.failUnless(self.cp_obj.get_cal_img_base_name(3) == "cal/cam4.tif")
         
-        self.failUnless(self.cp_obj.get_num_cams()==4)
-        self.failUnless(self.cp_obj.get_hp_flag()==10)
-        self.failUnless(self.cp_obj.get_allCam_flag()==11)
-        self.failUnless(self.cp_obj.get_tiff_flag()==12)
-        self.failUnless(self.cp_obj.get_imx()==1280)
-        self.failUnless(self.cp_obj.get_imy()==1024)
-        self.failUnless(self.cp_obj.get_pix_x()==15.15)
-        self.failUnless(self.cp_obj.get_pix_y()==16.16)
-        self.failUnless(self.cp_obj.get_chfield()==17)
+        self.failUnless(self.cp_obj.get_num_cams() == 4)
+        self.failUnless(self.cp_obj.get_hp_flag() == 10)
+        self.failUnless(self.cp_obj.get_allCam_flag() == 11)
+        self.failUnless(self.cp_obj.get_tiff_flag() == 12)
+        self.failUnless(self.cp_obj.get_imx() == 1280)
+        self.failUnless(self.cp_obj.get_imy() == 1024)
+        self.failUnless(self.cp_obj.get_pix_x() == 15.15)
+        self.failUnless(self.cp_obj.get_pix_y() == 16.16)
+        self.failUnless(self.cp_obj.get_chfield() == 17)
         
-        self.failUnless(self.cp_obj.get_multimedia_params().get_n1()==18)
-        self.failUnless(self.cp_obj.get_multimedia_params().get_n2()[0]==19.19)
-        self.failUnless(self.cp_obj.get_multimedia_params().get_n3()==20.20)
-        self.failUnless(self.cp_obj.get_multimedia_params().get_d()[0]==21.21)
+        self.failUnless(self.cp_obj.get_multimedia_params().get_n1() == 18)
+        self.failUnless(self.cp_obj.get_multimedia_params().get_n2()[0] == 19.19)
+        self.failUnless(self.cp_obj.get_multimedia_params().get_n3() == 20.20)
+        self.failUnless(self.cp_obj.get_multimedia_params().get_d()[0] == 21.21)
+     
+    def test_getters_setters(self):
+        cams_num = 4
+        for cam in range(cams_num):
+            new_str = str(cam) + "some string" + str(cam)
+            
+            self.cp_obj.set_img_base_name(cam, new_str)
+            self.failUnless(self.cp_obj.get_img_base_name(cam) == new_str)
+            
+            self.cp_obj.set_cal_img_base_name(cam, new_str)
+            self.failUnless(self.cp_obj.get_cal_img_base_name(cam) == new_str)
         
-#         self.failUnless(self.cp_obj.get_first() == 497)
-#         self.failUnless(self.cp_obj.get_last() == 597)
-#     
-#     def test_getters_setters(self):
-#         cams_num = 4
-#         for cam in range(cams_num):
-#             newStr = str(cam) + "some string" + str(cam)
-#             self.cp_obj.set_img_base_name(cam, newStr)
-#             self.failUnless(self.cp_obj.get_img_base_name(cam) == newStr)
-#         
-#         self.cp_obj.set_first(1234)
-#         self.failUnless(self.cp_obj.get_first() == 1234)
-#         self.cp_obj.set_last(5678)
-#         self.failUnless(self.cp_obj.get_last() == 5678)
-#     
-#     # testing __richcmp__ comparison method of ControlPar class
-#     def test_rich_compare(self):
-#         self.cp_obj2 = ControlParams()
-#         self.cp_obj2.read_control_par(self.input_control_par_file_name)
-#         
-#         self.cp_obj3 = ControlParams()
-#         self.cp_obj3.read_control_par(self.input_control_par_file_name)
-#         
-#         self.failUnless(self.cp_obj2 == self.cp_obj3)
-#         self.failIf(self.cp_obj2 != self.cp_obj3)
-#         
-#         self.cp_obj2.set_first(-999)
-#         self.failUnless(self.cp_obj2 != self.cp_obj3)
-#         self.failIf(self.cp_obj2 == self.cp_obj3)
-#         
-#         with self.assertRaises(TypeError):
-#             var = (self.cp_obj2 > self.cp_obj3)
-#     
+        self.cp_obj.set_hp_flag(1)
+        self.failUnless(self.cp_obj.get_hp_flag() == 1)
+        
+        self.cp_obj.set_allCam_flag(2)
+        self.failUnless(self.cp_obj.get_allCam_flag() == 2)
+        
+        self.cp_obj.set_tiff_flag(3)
+        self.failUnless(self.cp_obj.get_tiff_flag() == 3)
+        
+        self.cp_obj.set_imx(4)
+        self.failUnless(self.cp_obj.get_imx() == 4)
+        
+        self.cp_obj.set_imy(5)
+        self.failUnless(self.cp_obj.get_imy() == 5)
+        
+        self.cp_obj.set_pix_x(6)
+        self.failUnless(self.cp_obj.get_pix_x() == 6)
+        
+        self.cp_obj.set_pix_y(7)
+        self.failUnless(self.cp_obj.get_pix_y() == 7)
+        
+        self.cp_obj.set_chfield(8)
+        self.failUnless(self.cp_obj.get_chfield() == 8)
+         
+    # testing __richcmp__ comparison method of ControlParams class
+    def test_rich_compare(self):
+        self.cp_obj2 = ControlParams(4)
+        self.cp_obj2.read_control_par(self.input_control_par_file_name)
+        
+        self.cp_obj3 = ControlParams(4)
+        self.cp_obj3.read_control_par(self.input_control_par_file_name)
+           
+        self.failUnless(self.cp_obj2 == self.cp_obj3)
+        self.failIf(self.cp_obj2 != self.cp_obj3)
+           
+        self.cp_obj2.set_hp_flag(-999)
+        self.failUnless(self.cp_obj2 != self.cp_obj3)
+        self.failIf(self.cp_obj2 == self.cp_obj3)
+        
+        with self.assertRaises(TypeError):
+            var = (self.cp_obj2 > self.cp_obj3)  # unhandled operator > 
+      
     def tearDown(self):
         # remove the testing output directory and its files
         shutil.rmtree(self.temp_output_directory)        
