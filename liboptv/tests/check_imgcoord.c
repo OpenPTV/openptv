@@ -15,28 +15,10 @@
 
 
 
-START_TEST(test_img_coord)
-{
-
-  fail_if(1);    
-    
-}
-END_TEST
-
-
-START_TEST(test_img_xy)
-{
-  
-      
-    
-}
-END_TEST
-
-
 START_TEST(test_img_xy_mm_geo)
 {
 
-
+    fail_if(1);   
       
     
 }
@@ -59,15 +41,16 @@ END_TEST
 
 
 Suite* fb_suite(void) {
-    Suite *s = suite_create ("imgcoord");
+    Suite *s = suite_create ("Imgcoord");
  
-    TCase *tc = tcase_create ("imgcoord_test");
-
-    tcase_add_test(tc, test_img_coord);
-    tcase_add_test(tc, test_img_xy);    
+    TCase *tc = tcase_create ("test_img_xy_mm_geo");
     tcase_add_test(tc, test_img_xy_mm_geo);
+    suite_add_tcase (s, tc);
+    
+    tc = tcase_create ("test_imgcoord");
     tcase_add_test(tc, test_imgcoord);     
-    suite_add_tcase (s, tc);   
+    suite_add_tcase (s, tc); 
+      
     return s;
 }
 
