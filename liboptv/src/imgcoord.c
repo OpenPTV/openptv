@@ -89,7 +89,6 @@ void img_coord (double X, double Y, double Z, Calibration *cal, mm_np *mm,
     double x,y in pixel coordinates in the image space
  */
  
-*/
 void img_xy_mm_geo (double X, double Y, double Z, Calibration *cal, mm_np *mm, int i_cam, 
     mmlut *mmLUT, double *x, double *y)
 {
