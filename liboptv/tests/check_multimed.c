@@ -9,12 +9,98 @@
 #include "lsqadj.h"
 #include "ray_tracing.h"
 #include "multimed.h"
+#include <unistd.h>
 
-#define EPS 1E-4
+
+
+#define EPS 1E-5
 
 void print_Exterior(Exterior Ex_t);
 int compare_exterior_diff(Exterior *e1, Exterior *e2);
+int file_exists(char *filename);
 
+START_TEST(test_init_mmLUT)
+{
+    double xmax, xmin, ymax, ymin, zmax, zmin;
+    int i; 
+    
+    Calibration *cal;
+
+    
+    char ori_file[] = "testing_fodder/cal/cam3.tif.ori";
+    char add_file[] = "testing_fodder/cal/cam3.tif.addpar";    
+    cal = read_calibration(ori_file, add_file, NULL);
+    
+    if (cal == NULL) 
+    {
+        printf("\n cannot read calibration file \n");
+    }
+    else 
+    {
+        printf("\n Read calibration file successfully \n");
+    }
+    
+         
+    volume_par *vpar;
+    
+    char vol_file[] = "testing_fodder/parameters/criteri2a.par";
+    
+    ck_assert_msg (file_exists(vol_file) == 1, "\n File %s does not exist\n", vol_file);
+    
+    vpar = read_volume_par(vol_file);
+    
+    printf("%d\n",vpar);
+
+    fail_if (vpar == NULL, "volume parameter file reading failed");
+    
+    
+    
+//     control_par *cpar;
+//     char filename[] = "testing_fodder/parameters/ptv.par";
+//     cpar = read_control_par(filename);
+//     
+//     printf("\n Read control parameters file successfully \n");
+//     printf("cpar->mm->lut = %d \n",cpar->mm->lut);
+//     
+//      /* two default values which are not in the parameter file */
+//     cpar->mm->lut = 0;
+//     // cpar->mm->nlay = 1;
+//         
+// 
+// 
+// 
+//      mmlut test_mmlut[4], correct_mmlut[4];  
+//      
+//      correct_mmlut[0].origin.x = 0.0;
+//      correct_mmlut[0].origin.y = 0.0;
+//      correct_mmlut[0].origin.z = -20.0;
+//      correct_mmlut[0].nr = 13;
+//      correct_mmlut[0].nz = 22;
+//      correct_mmlut[0].rw = 2;
+//              
+//      init_mmLUT (vpar
+//                , cpar
+//                , cal
+//                , test_mmlut);
+                             
+//      for (i=0; i<cpar->num_cams; i++){
+//        ck_assert_msg( 
+//                     fabs(test_mmlut[i].origin.x - correct_mmlut[0].origin.x) < EPS && 
+//                     fabs(test_mmlut[i].origin.y - correct_mmlut[0].origin.y) < EPS && 
+//                     fabs(test_mmlut[i].origin.z - correct_mmlut[0].origin.z)  < EPS &&
+//                     test_mmlut[i].nr == correct_mmlut[i].nr &&
+//                     test_mmlut[i].nz == correct_mmlut[i].nz &&
+//                     test_mmlut[i].rw ==  correct_mmlut[i].rw &&
+//                     fabs(test_mmlut[i].data[35] - 1.000) < EPS &&
+//                     fabs(test_mmlut[i].data[82] - 1.016549) < EPS,
+//          "\n Expected different correct_mmlut values but found: \n \
+//          x,y,z = %8.6f %8.6f %8.6f \n nr,nz,rw = %d %d %d \n data = %8.6f %8.6f in camera %d \n", \
+//          test_mmlut[i].origin.x, test_mmlut[i].origin.y, test_mmlut[i].origin.z, \
+//          test_mmlut[i].nr, test_mmlut[i].nz, test_mmlut[i].rw, test_mmlut[i].data[35], test_mmlut[i].data[82], i);
+//           
+//        }    
+}
+END_TEST
 
 
 START_TEST(test_back_trans_Point)
@@ -109,73 +195,7 @@ END_TEST
 // 
 // 
 // 
-START_TEST(test_init_mmLUT)
-{
-    double xmax, xmin, ymax, ymin, zmax, zmin;
-    int i; 
-    
-    Calibration *cal;
 
-    
-    char ori_file[] = "testing_fodder/cal/cam3.tif.ori";
-    char add_file[] = "testing_fodder/cal/cam3.tif.addpar";    
-    cal = read_calibration(ori_file, add_file, NULL);
-    
-    printf("\n Read calibration file successfully \n");
-    
-        
-    volume_par *vpar;
-    vpar = read_volume_par("testing_fodder/parameters/criteria_2.par");
-    printf("\n Read volume parameters file successfully \n");
-    
-    
-    
-    control_par *cpar;
-    char filename[] = "testing_fodder/parameters/ptv.par";
-    cpar = read_control_par(filename);
-    
-    printf("\n Read control parameters file successfully \n");
-    printf("cpar->mm->lut = %d \n",cpar->mm->lut);
-    
-     /* two default values which are not in the parameter file */
-    cpar->mm->lut = 0;
-    // cpar->mm->nlay = 1;
-        
-
-
-
-     mmlut test_mmlut[4], correct_mmlut[4];  
-     
-     correct_mmlut[0].origin.x = 0.0;
-     correct_mmlut[0].origin.y = 0.0;
-     correct_mmlut[0].origin.z = -70.0;
-     correct_mmlut[0].nr = 12;
-     correct_mmlut[0].nz = 47;
-     correct_mmlut[0].rw = 2;
-             
-     init_mmLUT (vpar
-               , cpar
-               , cal
-               , test_mmlut);
-                             
-     for (i=0; i<cpar->num_cams; i++){
-       ck_assert_msg( 
-                    fabs(test_mmlut[i].origin.x - correct_mmlut[0].origin.x) < EPS && 
-                    fabs(test_mmlut[i].origin.y - correct_mmlut[0].origin.y) < EPS && 
-                    fabs(test_mmlut[i].origin.z - correct_mmlut[0].origin.z)  < EPS &&
-                    test_mmlut[i].nr == correct_mmlut[i].nr &&
-                    test_mmlut[i].nz == correct_mmlut[i].nz &&
-                    test_mmlut[i].rw ==  correct_mmlut[i].rw &&
-                    fabs(test_mmlut[i].data[35] - 1.000) < EPS &&
-                    fabs(test_mmlut[i].data[82] - 1.0165) < EPS,
-         "\n Expected different correct_mmlut values but found: \n \
-         x,y,z = %8.6f %8.6f %8.6f \n nr,nz,rw = %d %d %d \n data = %8.6f %8.6f in camera %d \n", \
-         test_mmlut[i].origin.x, test_mmlut[i].origin.y, test_mmlut[i].origin.z, \
-         test_mmlut[i].nr, test_mmlut[i].nz, test_mmlut[i].rw, test_mmlut[i].data[35], test_mmlut[i].data[82], i);
-          
-       }    
-}
-END_TEST
 
 
 // START_TEST(test_get_mmf_mmLUT)
@@ -425,16 +445,30 @@ END_TEST
 Suite* fb_suite(void) {
     Suite *s = suite_create ("Multimedia model");
  
-    TCase *tc = tcase_create ("multimed_test");
+    TCase *tc = tcase_create ("Test init_mmLUT");
+    tcase_add_test(tc, test_init_mmLUT);
+    suite_add_tcase (s, tc);
+    
+//     tc = tcase_create ("Test trans_Cam_Point");
+//     tcase_add_test(tc, test_trans_Cam_Point);
+//     suite_add_tcase (s, tc);
 
-//     tcase_add_test(tc, test_multimed_nlay);
-//     tcase_add_test(tc, test_volumedimension);
-       tcase_add_test(tc, test_init_mmLUT);
-//     tcase_add_test(tc, test_get_mmf_mmLUT);       
-       tcase_add_test(tc, test_trans_Cam_Point);
-       tcase_add_test(tc, test_back_trans_Point);     
+//     tc = tcase_create ("Test back_trans_Point");
+//     tcase_add_test(tc, test_back_trans_Point);
+//     suite_add_tcase (s, tc);    
+    
+//   tc = tcase_create ("Test multimed_nlay");
+//   tcase_add_test(tc, test_multimed_nlay);
+//   suite_add_tcase (s, tc);    
 
-    suite_add_tcase (s, tc);   
+//   tc = tcase_create ("Test get_mmf_mmLUT");
+//   tcase_add_test(tc, test_get_mmf_mmLUT);
+//   suite_add_tcase (s, tc);    
+
+//   tc = tcase_create ("Test test_volumedimension");
+//   tcase_add_test(tc, test_volumedimension);
+//   suite_add_tcase (s, tc);    
+          
     return s;
 }
 
@@ -470,3 +504,14 @@ int compare_exterior_diff(Exterior *e1, Exterior *e2) {
         && (fabs(e1->omega - e2->omega) < EPS) && (fabs(e1->phi - e2->phi) < EPS)\
         && (fabs(e1->kappa - e2->kappa) < EPS));
 }
+
+
+int file_exists(char *filename){
+    if( access(filename, F_OK ) != -1 ) {
+        return 1;
+    } else {
+        printf("File %s does not exist\n",filename);
+        return NULL;
+    }
+}
+
