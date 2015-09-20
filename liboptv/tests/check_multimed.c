@@ -10,6 +10,7 @@
 #include "ray_tracing.h"
 #include "multimed.h"
 #include <unistd.h>
+#include "vec_utils.h"
 
 
 
@@ -70,10 +71,7 @@ START_TEST(test_init_mmLUT)
      i = 0;
      cpar->num_cams = 1;
               
-     init_mmLUT (vpar
-               , cpar
-               , cal
-               , test_mmlut);
+     init_mmLUT (test_mmlut, vpar, cpar, cal);
                              
    
      ck_assert_msg( 
@@ -98,7 +96,8 @@ END_TEST
 
 START_TEST(test_back_trans_Point)
 {
-    double x = 100.0, y = 100.0, z =  0.0, X1,Y1,Z1;
+    vec3d pos1, pos_t, pos = {100.0, 100.0, 0.0};
+    
         
     Exterior test_Ex = {
         0.0, 0.0, 100.0,
@@ -131,15 +130,16 @@ START_TEST(test_back_trans_Point)
     double X_t, Y_t, Z_t;
     double cross_p[3], cross_c[3]; 
 
-     trans_Cam_Point(test_Ex, test_mm, test_G, x, y, z, &Ex_t, &X_t, &Y_t, &Z_t, \
+     trans_Cam_Point(test_Ex, test_mm, test_G, pos, &Ex_t, pos_t, \
      cross_p, cross_c);
     
-     back_trans_Point(X_t, Y_t, Z_t, test_mm, test_G, cross_p, cross_c, &X1, &Y1, &Z1);
+     back_trans_Point(pos_t, test_mm, test_G, cross_p, cross_c, pos1);
     
-     ck_assert_msg( fabs(x - X1) < EPS && 
-                    fabs(y - Y1) < EPS && 
-                    fabs(z - Z1)  < EPS,
-         "Expected %f, %f, %f  but found %f %f %f\n", x,y,z, X1, Y1, Z1);
+     ck_assert_msg( fabs(pos1[0] - pos[0]) < EPS && 
+                    fabs(pos1[1] - pos[1]) < EPS && 
+                    fabs(pos1[2] - pos[2])  < EPS,
+         "Expected %f, %f, %f  but found %f %f %f\n", pos[0],pos[1],pos[2], pos1[0], 
+            pos1[1], pos1[2]);
       
     
 }
@@ -247,10 +247,7 @@ START_TEST(test_get_mmf_mmLUT)
      correct_mmlut[0].nz = 177;
      correct_mmlut[0].rw = 2;
              
-     init_mmLUT (vpar
-               , cpar
-               , cal
-               , test_mmlut);
+     init_mmLUT (test_mmlut, vpar, cpar, cal);
                
               
      for (i=0; i<cpar->num_cams; i++){
@@ -272,10 +269,10 @@ START_TEST(test_get_mmf_mmLUT)
         }
         
                
-         
+         vec3d pos = {1.0, 1.0, 1.0}; 
          for (i_cam = 0; i_cam < cpar->num_cams; i_cam++){          
          
-         	mmf = get_mmf_from_mmLUT (i_cam, 1.0, 1.0, 1.0, (mmlut *) test_mmlut);
+         	mmf = get_mmf_from_mmLUT ((mmlut *) test_mmlut, i_cam, pos );
         
         	ck_assert_msg( 
                     fabs(mmf - 1.003924) < EPS,
@@ -331,10 +328,7 @@ START_TEST(test_multimed_nlay)
      correct_mmlut[0].nz = 177;
      correct_mmlut[0].rw = 2;
              
-     init_mmLUT (vpar
-               , cpar
-               , cal
-               , test_mmlut);
+     init_mmLUT (test_mmlut, vpar, cpar, cal);
      
                
      for (i=0; i<cpar->num_cams; i++){
@@ -355,23 +349,15 @@ START_TEST(test_multimed_nlay)
           
         }
                                 
-     double X,Y,Z;
-     X = Y = Z = 1.23;
+     
+     vec3d pos = {1.23, 1.23, 1.23};
      double correct_Xq,correct_Yq, Xq, Yq;
      correct_Xq = 0.74811917;
      correct_Yq = 0.75977975;   
      
      i_cam = 0;
                  
-     multimed_nlay ( &cal[0].ext_par
-                   , cpar->mm
-                   , X
-                   , Y
-                   , Z
-                   , &Xq
-                   , &Yq
-                   , i_cam 
-                   , (mmlut *) test_mmlut);
+     multimed_nlay((mmlut *) test_mmlut, &cal[0].ext_par, cpar->mm, pos, &Xq, &Yq, i_cam);
         
     for (i=0; i<cpar->num_cams; i++){
        ck_assert_msg( 
@@ -386,10 +372,8 @@ END_TEST
 
 START_TEST(test_trans_Cam_Point)
 {
-    /* input */
-    double x = 100.0;
-    double y = 100.0;
-    double z =  0.0;        
+    /* input */  
+    vec3d pos = {100.0, 100.0, 0.0};     
         
     Exterior test_Ex = {
         0.0, 0.0, 100.0,
@@ -420,18 +404,17 @@ START_TEST(test_trans_Cam_Point)
     
     /* output */
     Exterior Ex_t; 
-    double X_t, Y_t, Z_t;
+    vec3d pos_t;
     double cross_p[3], cross_c[3]; 
 
-     trans_Cam_Point(test_Ex, test_mm, test_G, x, y, z, &Ex_t, &X_t, &Y_t, &Z_t, \
-     cross_p, cross_c);
+     trans_Cam_Point(test_Ex, test_mm, test_G, pos, &Ex_t, pos_t, cross_p, cross_c);
     
     
-     ck_assert_msg( fabs(X_t - 141.421356) < EPS && 
-                    fabs(Y_t - 0.0) < EPS && 
-                    fabs(Z_t + 50.000000)  < EPS,
+     ck_assert_msg( fabs(pos_t[0] - 141.421356) < EPS && 
+                    fabs(pos_t[1] - 0.0) < EPS && 
+                    fabs(pos_t[2] + 50.000000)  < EPS,
          "Expected 141.421356 0.000000 -50.000000  but found %10.8f %10.8f %10.8f\n", 
-         X_t, Y_t, Z_t);
+         pos_t[0],pos_t[1],pos_t[2]);
       
       
          

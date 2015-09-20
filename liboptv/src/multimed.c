@@ -24,105 +24,95 @@ Routines contained:     -
 /* multimed_nlay() creates the Xq,Yq points for each X,Y point in the image space
     using radial shift from the multimedia model. 
     Arguments:
-        ex - pointer to Exterior parameters
-        mm - pointer to multimedia parameters
-        X,Y,Z - three doubles of the particle position in the world coordinate system
+        mmLUT pointer to the multimedia look-up table  
+        Calibration *cal pointer to calibration parameters
+        vec3d pos (was X,Y,Z) - three doubles of the particle position in the 3D space
         Xq,Yq - two dimensional position (double pointer) on the glass surface, separating
         the water from air
         i_cam - integer number of the camera (0 - num_cams)
-        mmLUT pointer to the multimedia look-up table  
 */
-void  multimed_nlay (Exterior *ex
-                   , mm_np *mm
-                   , double X
-                   , double Y
-                   , double Z
-                   , double *Xq
-                   , double *Yq
-                   , int i_cam
-                   , mmlut *mmLUT){
+void  multimed_nlay (mmlut *mmLUT, Exterior *ex, mm_np *mm, vec3d pos, double *Xq, 
+    double *Yq, int i_cam){
   
     double  radial_shift; 
       
-    radial_shift = multimed_r_nlay (ex, mm, X, Y, Z, i_cam, (mmlut *)mmLUT); 
+    radial_shift = multimed_r_nlay (mmLUT, ex, mm, pos, i_cam); 
 
      /* 
       * if radial_shift == 1.0, then
       * Xq = X; Yq = Y;
       */
-     *Xq = ex->x0 + (X - ex->x0) * radial_shift;
-     *Yq = ex->y0 + (Y - ex->y0) * radial_shift;
+     *Xq = ex->x0 + (pos[0] - ex->x0) * radial_shift;
+     *Yq = ex->y0 + (pos[1] - ex->y0) * radial_shift;
   
 }
 
 
 /* multimedia_r_nlay() calculates and returns the radial shift
     Arguments:
+    pointer to the multimedia look-up table 
     pointer to Exterior 
     pointer to mm_np 
-    3D position in terms of X,Y,Z
-    pointer to the multimedia look-up table 
+    vec3d 3D position in terms of X,Y,Z
+    number of the camera i_cam
     Outputs:
     double radial_shift: default is 1.0 if no solution is found
  */
-double multimed_r_nlay (Exterior *ex
-                      , mm_np *mm
-                      , double X
-                      , double Y
-                      , double Z
-                      , int i_cam
-                      , mmlut *mmLUT){
- 
- 
- 
-  int   i, it = 0;
-  double beta1, beta2[32], beta3, r, rbeta, rdiff, rq, mmf=1.0;
-  /* ocf  over compensation factor for faster convergence
-   * is removed as it is never been used 
-   double ocf = 1.0;  
-   */
 
-  int n_iter = 40;
+double multimed_r_nlay (mmlut *mmLUT, Exterior *ex, mm_np *mm, vec3d pos, int i_cam){
+ 
+    int   i, it = 0;
+    double beta1, beta2[32], beta3, r, rbeta, rdiff, rq, mmf=1.0;
+    double X,Y,Z;
+    
+    X = pos[0]; Y = pos[1]; Z = pos[2];
+    
+    /* ocf  over compensation factor for faster convergence
+    is removed as it is never been used 
+    double ocf = 1.0;  
+    */
+
+    int n_iter = 40;
  
 
-  /* 1-medium case */
-  if (mm->n1 == 1 && mm->nlay == 1 && mm->n2[0]== 1 && mm->n3 == 1) return (1.0);
+    /* 1-medium case */
+    if (mm->n1 == 1 && mm->nlay == 1 && mm->n2[0]== 1 && mm->n3 == 1) return (1.0);
   
   
-  /* interpolation using the existing mmLUT */
-  if (mm->lut) {
-    mmf = get_mmf_from_mmLUT (i_cam, X,Y,Z, mmLUT);
-    if (mmf > 0) return (mmf);
-  }
+    /* interpolation using the existing mmLUT */
+    if (mm->lut) {
+        mmf = get_mmf_from_mmLUT (mmLUT, i_cam, pos);
+        if (mmf > 0) return (mmf);
+    }
   
-  /* iterative procedure */
-  r = sqrt ((X - ex->x0) * (X - ex->x0) + (Y - ex->y0) * (Y - ex->y0));
-  rq = r;
+    /* iterative procedure */
+    r = sqrt ((X - ex->x0) * (X - ex->x0) + (Y - ex->y0) * (Y - ex->y0));
+    rq = r;
   
-  do
+    do
     {
-      beta1 = atan (rq/(ex->z0 - Z));
-      for (i=0; i < mm->nlay; i++) beta2[i] = asin (sin(beta1) * mm->n1/mm->n2[i]);
-      beta3 = asin (sin(beta1) * mm->n1/mm->n3);
-      
-      rbeta = (ex->z0 - mm->d[0]) * tan(beta1) - Z * tan(beta3);
-      for (i = 0; i < mm->nlay; i++) rbeta += (mm->d[i] * tan(beta2[i]));
-      rdiff = r - rbeta;
-      /* rdiff *= ocf; */ 
-      rq += rdiff;
-      it++;
+        beta1 = atan (rq/(ex->z0 - Z));
+        for (i=0; i < mm->nlay; i++) beta2[i] = asin (sin(beta1) * mm->n1/mm->n2[i]);
+        beta3 = asin (sin(beta1) * mm->n1/mm->n3);
+
+        rbeta = (ex->z0 - mm->d[0]) * tan(beta1) - Z * tan(beta3);
+        for (i = 0; i < mm->nlay; i++) rbeta += (mm->d[i] * tan(beta2[i]));
+        rdiff = r - rbeta;
+        /* rdiff *= ocf; */ 
+        rq += rdiff;
+        it++;
     }
-  while (((rdiff > 0.001) || (rdiff < -0.001))  &&  it < n_iter);
+    while (((rdiff > 0.001) || (rdiff < -0.001))  &&  it < n_iter);
   
 
   
-  if (it >= n_iter) {
-      printf ("multimed_r_nlay stopped after %d iterations\n", n_iter);  
-      return (1.0);
+    if (it >= n_iter) {
+        printf ("multimed_r_nlay stopped after %d iterations\n", n_iter);  
+        return (1.0);
     }
-  
+
     if (r != 0){ 
-      return (rq/r);
+        return (rq/r);
     }  
     else {
         return (1.0);
@@ -140,19 +130,19 @@ double multimed_r_nlay (Exterior *ex
 void trans_Cam_Point(Exterior ex
                    , mm_np mm
                    , Glass gl
-                   , double X
-                   , double Y
-                   , double Z
+                   , vec3d pos
                    , Exterior *ex_t
-                   , double *X_t
-                   , double *Y_t
-                   , double *Z_t
+                   , vec3d pos_t
                    , double cross_p[3]
                    , double cross_c[3]){
 
 /* Beat Luethi June 07: I change the stuff to a system perpendicular to the interface */
     double dist_cam_glas,dist_point_glas,dist_o_glas; //glas inside at water 
     int row, col;
+    double X,Y,Z;
+    
+    X = pos[0]; Y = pos[1]; Z = pos[2];
+    
 
     dist_o_glas = sqrt( gl.vec_x * gl.vec_x + gl.vec_y * gl.vec_y + gl.vec_z * gl.vec_z);
 
@@ -186,20 +176,23 @@ void trans_Cam_Point(Exterior ex
     ex_t->y0 = 0.;
     ex_t->z0 = dist_cam_glas + mm.d[0];
 
-    *X_t=sqrt( pow(cross_p[0] - (cross_c[0] - mm.d[0] * gl.vec_x / dist_o_glas ) ,2.)
+    pos_t[0]=sqrt( pow(cross_p[0] - (cross_c[0] - mm.d[0] * gl.vec_x / dist_o_glas ) ,2.)
             +pow(cross_p[1] - (cross_c[1] - mm.d[0] * gl.vec_y / dist_o_glas ), 2.)
             +pow(cross_p[2] - (cross_c[2] - mm.d[0] * gl.vec_z / dist_o_glas ), 2.));
-    *Y_t = 0;
-    *Z_t = dist_point_glas;
-      
+    pos_t[1] = 0;
+    pos_t[2] = dist_point_glas;
+          
 }
 
 /* the opposite direction transfer from X_t,Y_t,Z_t to the X,Y,Z in 3D space */
 
-void back_trans_Point(double X_t, double Y_t, double Z_t, mm_np mm, Glass G, \
-double cross_p[], double cross_c[], double *X, double *Y, double *Z){
+void back_trans_Point(vec3d pos_t, mm_np mm, Glass G, double cross_p[], 
+    double cross_c[], vec3d pos){
     
     double nVe, nGl;
+    double X_t,Y_t,Z_t;
+    X_t = pos_t[0]; Y_t = pos_t[1]; Z_t = pos_t[2];
+
     
     nGl = sqrt( pow ( G.vec_x, 2. ) + pow( G.vec_y, 2.) + pow( G.vec_z ,2.) );
     
@@ -207,18 +200,18 @@ double cross_p[], double cross_c[], double *X, double *Y, double *Z){
               + pow ( cross_p[1] - (cross_c[1] - mm.d[0] * G.vec_y / nGl ), 2.)
               + pow ( cross_p[2] - (cross_c[2] - mm.d[0] * G.vec_z / nGl ), 2.));
 
-    *X = cross_c[0] - mm.d[0] * G.vec_x / nGl + Z_t * G.vec_x / nGl;
-    *Y = cross_c[1] - mm.d[0] * G.vec_y / nGl + Z_t * G.vec_y / nGl;
-    *Z = cross_c[2] - mm.d[0] * G.vec_z / nGl + Z_t * G.vec_z / nGl;
+    pos[0] = cross_c[0] - mm.d[0] * G.vec_x / nGl + Z_t * G.vec_x / nGl;
+    pos[1] = cross_c[1] - mm.d[0] * G.vec_y / nGl + Z_t * G.vec_y / nGl;
+    pos[2] = cross_c[2] - mm.d[0] * G.vec_z / nGl + Z_t * G.vec_z / nGl;
 
     if (nVe > 0) {  
         /* We need this for when the cam-point line is exactly perp. to glass.
          The degenerate case will have nVe == 0 and produce NaNs on the
          following calculations.
         */
-        *X += X_t * (cross_p[0] - (cross_c[0] - mm.d[0] * G.vec_x / nGl)) / nVe;
-        *Y += X_t * (cross_p[1] - (cross_c[1] - mm.d[0] * G.vec_y / nGl)) / nVe;
-        *Z += X_t * (cross_p[2] - (cross_c[2] - mm.d[0] * G.vec_z / nGl)) / nVe;
+        pos[0] += X_t * (cross_p[0] - (cross_c[0] - mm.d[0] * G.vec_x / nGl)) / nVe;
+        pos[1] += X_t * (cross_p[1] - (cross_c[1] - mm.d[0] * G.vec_y / nGl)) / nVe;
+        pos[2] += X_t * (cross_p[2] - (cross_c[2] - mm.d[0] * G.vec_z / nGl)) / nVe;
     }
 }
 
@@ -232,15 +225,12 @@ double cross_p[], double cross_c[], double *X, double *Y, double *Z){
     Output:
     pointer to the multi-media look-up table mmLUT structure
 */ 
-void init_mmLUT (volume_par *vpar
-               , control_par *cpar
-               , Calibration *cal
-               , mmlut *mmLUT){
+void init_mmLUT (mmlut *mmLUT, volume_par *vpar, control_par *cpar, Calibration *cal){
 
   register int  i,j, nr, nz;
   int           i_cam;
   double        X,Y,Z, R, Zmin, Rmax=0, Zmax;
-  double        pos[3], a[3]; 
+  vec3d         pos, a, xyz, xyz_t; 
   double        x,y, *Ri,*Zi;
   double        rw = 2.0; 
   Exterior      Ex_t[4];
@@ -258,10 +248,8 @@ void init_mmLUT (volume_par *vpar
 
 
   for (i_cam = 0; i_cam < cpar->num_cams; i_cam++){
-  // for (i_cam = 0; i_cam < 1; i_cam++){
   
-      /* find extrema of imaged object volume */
-      
+      /* find extrema of imaged object volume */      
       Zmin = vpar->Zmin_lay[0];
       Zmax = vpar->Zmax_lay[0];
          
@@ -278,14 +266,9 @@ void init_mmLUT (volume_par *vpar
           pixel_to_metric (&x, &y, xc[i], yc[j], cpar);
           
         
-          /* x = x - I[i_cam].xh;
-             y = y - I[i_cam].yh;
-          */
           x = x - cal[i_cam].int_par.xh;
           y = y - cal[i_cam].int_par.yh;
           
-          
-  
           correct_brown_affin (x, y, cal[i_cam].added_par, &x,&y);
                     
       
@@ -299,12 +282,13 @@ void init_mmLUT (volume_par *vpar
           X = pos[0] + (Z - pos[2]) * a[0]/a[2];   
           Y = pos[1] + (Z - pos[2]) * a[1]/a[2];
                     
+          xyz[0] = X; xyz[1] = Y; xyz[2] = Z;
           
-          /* trans */
           /* trans_Cam_Point(Ex[i_cam],mmp,G[i_cam],X,Y,Z,&Ex_t[i_cam],&X_t,&Y_t,&Z_t,&cross_p,&cross_c); */
-          trans_Cam_Point(cal[i_cam].ext_par, *(cpar->mm), cal[i_cam].glass_par, X, Y, Z, \
-          &Ex_t[i_cam], &X_t, &Y_t, &Z_t, (double *)cross_p, (double *)cross_c);
+          trans_Cam_Point(cal[i_cam].ext_par, *(cpar->mm), cal[i_cam].glass_par, xyz, \
+          &Ex_t[i_cam], xyz_t, (double *)cross_p, (double *)cross_c);
 
+          X_t = xyz_t[0]; Y_t = xyz_t[1]; Z_t = xyz_t[2];      
                 
           if( Z_t < Zmin_t ) Zmin_t = Z_t;
           if( Z_t > Zmax_t ) Zmax_t = Z_t;
@@ -321,11 +305,14 @@ void init_mmLUT (volume_par *vpar
           Z = Zmax;   
           X = pos[0] + (Z - pos[2]) * a[0]/a[2];   
           Y = pos[1] + (Z - pos[2]) * a[1]/a[2];
+          
+          xyz[0] = X; xyz[1] = Y; xyz[2] = Z;
       
-          /* trans */
           /* trans_Cam_Point(Ex[i_cam],mmp,G[i_cam],X,Y,Z,&Ex_t[i_cam],&X_t,&Y_t,&Z_t,&cross_p,&cross_c); */
-          trans_Cam_Point(cal[i_cam].ext_par, *(cpar->mm), cal[i_cam].glass_par, X, Y, Z,\
-          &Ex_t[i_cam], &X_t, &Y_t, &Z_t, (double *)cross_p, (double *)cross_c);
+          trans_Cam_Point(cal[i_cam].ext_par, *(cpar->mm), cal[i_cam].glass_par, xyz,\
+          &Ex_t[i_cam], xyz_t, (double *)cross_p, (double *)cross_c);
+          
+          X_t = xyz_t[0]; Y_t = xyz_t[1]; Z_t = xyz_t[2];
           
       
           if( Z_t < Zmin_t ) Zmin_t = Z_t;
@@ -359,9 +346,12 @@ void init_mmLUT (volume_par *vpar
       
       
       /* create two dimensional mmLUT structure */
+      xyz[0] = X; xyz[1] = Y; xyz[2] = Z;
       
-      trans_Cam_Point(cal[i_cam].ext_par, *(cpar->mm), cal[i_cam].glass_par, X, Y, Z,\
-          &Ex_t[i_cam], &X_t, &Y_t, &Z_t, (double *)cross_p, (double *)cross_c);
+      trans_Cam_Point(cal[i_cam].ext_par, *(cpar->mm), cal[i_cam].glass_par, xyz,\
+          &Ex_t[i_cam], xyz_t, (double *)cross_p, (double *)cross_c);
+          
+      X_t = xyz_t[0]; Y_t = xyz_t[1]; Z_t = xyz_t[2];
        
       mmLUT[i_cam].origin.x = Ex_t[i_cam].x0;
       mmLUT[i_cam].origin.y = Ex_t[i_cam].y0;
@@ -377,9 +367,7 @@ void init_mmLUT (volume_par *vpar
       
 
    
-      /* fill mmLUT structure */
-      /* ==================== */
-  
+      /* fill mmLUT structure */  
       Ri = (double *) malloc (nr * sizeof (double));
       for (i=0; i<nr; i++)  Ri[i] = i*rw;
       
@@ -398,11 +386,11 @@ void init_mmLUT (volume_par *vpar
           trans_Cam_Point(cal[i_cam].ext_par, *(cpar->mm), cal[i_cam].glass_par, X, Y, Z,\
           &Ex_t[i_cam], &X_t, &Y_t, &Z_t, (double *)cross_p, (double *)cross_c);
         */ 
+        
+        xyz[0] = Ri[i] + Ex_t[i_cam].x0; xyz[1] = Ex_t[i_cam].y0; xyz[2] = Zi[j];
             
-        mmLUT[i_cam].data[i*nz + j] = multimed_r_nlay (&Ex_t[i_cam], cpar->mm, \
-                              Ri[i] + Ex_t[i_cam].x0, Ex_t[i_cam].y0, Zi[j], i_cam, mmLUT);
-        	                
-                              
+        mmLUT[i_cam].data[i*nz + j] = multimed_r_nlay (mmLUT, &Ex_t[i_cam], cpar->mm, 
+            xyz, i_cam);                              
         } /* nr */
     free (Ri);	// preventing memory leaks, Ad Holten, 04-2013
 	free (Zi);
@@ -421,14 +409,13 @@ void init_mmLUT (volume_par *vpar
     double position in 3D space, X,Y,Z
     multimedia look-up table mmLUT
 */
-double get_mmf_from_mmLUT (int i_cam
-                         , double X
-                         , double Y
-                         , double Z
-                         , mmlut *mmLUT){
+double get_mmf_from_mmLUT (mmlut *mmLUT, int i_cam, vec3d pos){
 
   int       i, ir,iz, nr,nz, rw, v4[4];
   double    R, sr, sz, mmf = 1.0;
+  double    X,Y,Z;
+  
+  X = pos[0]; Y = pos[1]; Z = pos[2];
   
   rw =  mmLUT[i_cam].rw;
   
@@ -545,7 +532,7 @@ void volumedimension (double *xmax
 
   int   i_cam, i, j;
   double X, Y, Z, R, Rmax=0, Zmin, Zmax;
-  double pos[3], a[3];
+  vec3d pos, a, xyz, xyz_t;
   double x,y;  
   double xc[2], yc[2];  /* image corners */
   Exterior Ex_t[4];
@@ -613,9 +600,15 @@ void volumedimension (double *xmax
         /* old version, not clear why Beat didn't introduce trans_Cam into volumedimension 
         R = sqrt (( X - cal[i_cam].ext_par.x0 ) * ( X - cal[i_cam].ext_par.x0 )
                   + ( Y - cal[i_cam].ext_par.y0 ) * ( Y - cal[i_cam].ext_par.y0 )); 
-        */ 
-        trans_Cam_Point(cal[i_cam].ext_par, *(cpar->mm), cal[i_cam].glass_par, X, Y, Z,\
-          &Ex_t[i_cam], &X_t, &Y_t, &Z_t, (double *)cross_p, (double *)cross_c);
+        */
+        
+        xyz[0] = X; xyz[1] = Y; xyz[2] = Z;
+
+        trans_Cam_Point(cal[i_cam].ext_par, *(cpar->mm), cal[i_cam].glass_par, xyz,\
+          &Ex_t[i_cam], xyz_t, (double *)cross_p, (double *)cross_c);
+  
+        X_t = xyz_t[0]; Y_t = xyz_t[1]; Z_t = xyz_t[2];
+      
           
           R = sqrt (( X_t - Ex_t[i_cam].x0 ) * ( X_t - Ex_t[i_cam].x0 )
                   + ( Y_t - Ex_t[i_cam].y0 ) * ( Y_t - Ex_t[i_cam].y0 )); 
@@ -644,8 +637,15 @@ void volumedimension (double *xmax
         R = sqrt (( X - cal[i_cam].ext_par.x0 ) * ( X - cal[i_cam].ext_par.x0 )
                   + ( Y - cal[i_cam].ext_par.y0 ) * ( Y - cal[i_cam].ext_par.y0 )); 
         */ 
-        trans_Cam_Point(cal[i_cam].ext_par, *(cpar->mm), cal[i_cam].glass_par, X, Y, Z,\
-          &Ex_t[i_cam], &X_t, &Y_t, &Z_t, (double *)cross_p, (double *)cross_c);
+        
+        
+        xyz[0] = X; xyz[1] = Y; xyz[2] = Z;
+
+        trans_Cam_Point(cal[i_cam].ext_par, *(cpar->mm), cal[i_cam].glass_par, xyz,\
+            &Ex_t[i_cam], xyz_t, (double *)cross_p, (double *)cross_c);
+
+        X_t = xyz_t[0]; Y_t = xyz_t[1]; Z_t = xyz_t[2];
+        
           
           R = sqrt (( X_t - Ex_t[i_cam].x0 ) * ( X_t - Ex_t[i_cam].x0 )
                   + ( Y_t - Ex_t[i_cam].y0 ) * ( Y_t - Ex_t[i_cam].y0 )); 
