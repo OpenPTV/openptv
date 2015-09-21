@@ -24,34 +24,33 @@ Routines contained:     -
 /* multimed_nlay() creates the Xq,Yq points for each X,Y point in the image space
     using radial shift from the multimedia model. 
     Arguments:
-        mmLUT pointer to the multimedia look-up table  
         Calibration *cal pointer to calibration parameters
+        mm_np structure pointer mm (number of layers, thickness of layers)
         vec3d pos (was X,Y,Z) - three doubles of the particle position in the 3D space
         Xq,Yq - two dimensional position (double pointer) on the glass surface, separating
         the water from air
         i_cam - integer number of the camera (0 - num_cams)
 */
-void  multimed_nlay (mmlut *mmLUT, Exterior *ex, mm_np *mm, vec3d pos, double *Xq, 
-    double *Yq, int i_cam){
+void  multimed_nlay (Calibration *cal, mm_np *mm, vec3d pos, double *Xq, double *Yq){
   
-    double  radial_shift; 
+    double  radial_shift;
+     
       
-    radial_shift = multimed_r_nlay (mmLUT, ex, mm, pos, i_cam); 
+    radial_shift = multimed_r_nlay (cal, mm, pos); 
 
      /* 
       * if radial_shift == 1.0, then
       * Xq = X; Yq = Y;
       */
-     *Xq = ex->x0 + (pos[0] - ex->x0) * radial_shift;
-     *Yq = ex->y0 + (pos[1] - ex->y0) * radial_shift;
+     *Xq = cal->ext_par.x0 + (pos[0] - cal->ext_par.x0) * radial_shift;
+     *Yq = cal->ext_par.y0 + (pos[1] - cal->ext_par.y0) * radial_shift;
   
 }
 
 
 /* multimedia_r_nlay() calculates and returns the radial shift
     Arguments:
-    pointer to the multimedia look-up table 
-    pointer to Exterior 
+    pointer to Calibration parameters structure cal
     pointer to mm_np 
     vec3d 3D position in terms of X,Y,Z
     number of the camera i_cam
@@ -59,7 +58,7 @@ void  multimed_nlay (mmlut *mmLUT, Exterior *ex, mm_np *mm, vec3d pos, double *X
     double radial_shift: default is 1.0 if no solution is found
  */
 
-double multimed_r_nlay (mmlut *mmLUT, Exterior *ex, mm_np *mm, vec3d pos, int i_cam){
+double multimed_r_nlay (Calibration *cal, mm_np *mm, vec3d pos){
  
     int   i, it = 0;
     double beta1, beta2[32], beta3, r, rbeta, rdiff, rq, mmf=1.0;
@@ -79,23 +78,24 @@ double multimed_r_nlay (mmlut *mmLUT, Exterior *ex, mm_np *mm, vec3d pos, int i_
     if (mm->n1 == 1 && mm->nlay == 1 && mm->n2[0]== 1 && mm->n3 == 1) return (1.0);
   
   
-    /* interpolation using the existing mmLUT */
+    /* interpolation using the existing mmlut */
     if (mm->lut) {
-        mmf = get_mmf_from_mmLUT (mmLUT, i_cam, pos);
+        mmf = get_mmf_from_mmlut (cal, pos);
         if (mmf > 0) return (mmf);
     }
   
     /* iterative procedure */
-    r = sqrt ((X - ex->x0) * (X - ex->x0) + (Y - ex->y0) * (Y - ex->y0));
+    r = sqrt ((X - cal->ext_par.x0) * (X - cal->ext_par.x0) + (Y - cal->ext_par.y0) * \
+        (Y - cal->ext_par.y0));
     rq = r;
   
     do
     {
-        beta1 = atan (rq/(ex->z0 - Z));
+        beta1 = atan (rq/(cal->ext_par.z0 - Z));
         for (i=0; i < mm->nlay; i++) beta2[i] = asin (sin(beta1) * mm->n1/mm->n2[i]);
         beta3 = asin (sin(beta1) * mm->n1/mm->n3);
 
-        rbeta = (ex->z0 - mm->d[0]) * tan(beta1) - Z * tan(beta3);
+        rbeta = (cal->ext_par.z0 - mm->d[0]) * tan(beta1) - Z * tan(beta3);
         for (i = 0; i < mm->nlay; i++) rbeta += (mm->d[i] * tan(beta2[i]));
         rdiff = r - rbeta;
         /* rdiff *= ocf; */ 
@@ -217,15 +217,15 @@ void back_trans_Point(vec3d pos_t, mm_np mm, Glass G, double cross_p[],
 
 
 
-/* init_mmLUT() prepares the multimedia Look-Up Table
+/* init_mmlut() prepares the multimedia Look-Up Table for a single camera
     Arguments: 
     Pointer to volume parameters *vpar
     pointer to the control parameters *cpar
     pointer to the calibraiton parameters *cal
     Output:
-    pointer to the multi-media look-up table mmLUT structure
+    initializes data in cal->mmlut->data
 */ 
-void init_mmLUT (volume_par *vpar, control_par *cpar, Calibration *cal){
+void init_mmlut (volume_par *vpar, control_par *cpar, Calibration *cal){
 
   register int  i,j, nr, nz;
   int           i_cam;
@@ -233,7 +233,7 @@ void init_mmLUT (volume_par *vpar, control_par *cpar, Calibration *cal){
   vec3d         pos, a, xyz, xyz_t; 
   double        x,y, *Ri,*Zi;
   double        rw = 2.0; 
-  Exterior      Ex_t[4];
+  Exterior      Ex_t;
   double        X_t,Y_t,Z_t, Zmin_t,Zmax_t;
   double        cross_p[3],cross_c[3]; 
   FILE          *fpp;
@@ -247,169 +247,167 @@ void init_mmLUT (volume_par *vpar, control_par *cpar, Calibration *cal){
   yc[1] = (double) cpar->imy;
 
 
-  for (i_cam = 0; i_cam < cpar->num_cams; i_cam++){
-  
-      /* find extrema of imaged object volume */      
-      Zmin = vpar->Zmin_lay[0];
-      Zmax = vpar->Zmax_lay[0];
-         
-      Zmin -= fmod (Zmin, rw);
-      Zmax += (rw - fmod (Zmax, rw));
-      Zmin_t=Zmin;
-      Zmax_t=Zmax;
-        
-      /* intersect with image vertices rays */
-      
-      for (i = 0; i < 2; i ++) {
-         for (j = 0; j < 2; j++) {
-          
-          pixel_to_metric (&x, &y, xc[i], yc[j], cpar);
-          
-        
-          x = x - cal[i_cam].int_par.xh;
-          y = y - cal[i_cam].int_par.yh;
-          
-          correct_brown_affin (x, y, cal[i_cam].added_par, &x,&y);
-                    
-      
-          /* ray_tracing(x,y, Ex[i_cam], I[i_cam], G[i_cam], mmp, &X1, &Y1, &Z1, &a, &b, &c); */
-          ray_tracing(x,y, &cal[i_cam], *(cpar->mm), pos, a);
-          
-                     
-          
-          /* Z = Zmin;   X = X1 + (Z-Z1) * a/c;   Y = Y1 + (Z-Z1) * b/c; */
-          Z = Zmin;   
-          X = pos[0] + (Z - pos[2]) * a[0]/a[2];   
-          Y = pos[1] + (Z - pos[2]) * a[1]/a[2];
-                    
-          xyz[0] = X; xyz[1] = Y; xyz[2] = Z;
-          
-          /* trans_Cam_Point(Ex[i_cam],mmp,G[i_cam],X,Y,Z,&Ex_t[i_cam],&X_t,&Y_t,&Z_t,&cross_p,&cross_c); */
-          trans_Cam_Point(cal[i_cam].ext_par, *(cpar->mm), cal[i_cam].glass_par, xyz, \
-          &Ex_t[i_cam], xyz_t, (double *)cross_p, (double *)cross_c);
 
-          X_t = xyz_t[0]; Y_t = xyz_t[1]; Z_t = xyz_t[2];      
-                
-          if( Z_t < Zmin_t ) Zmin_t = Z_t;
-          if( Z_t > Zmax_t ) Zmax_t = Z_t;
-                
-      
-          R = sqrt (( X_t - Ex_t[i_cam].x0 ) * ( X_t - Ex_t[i_cam].x0 )
-                  + ( Y_t - Ex_t[i_cam].y0 ) * ( Y_t - Ex_t[i_cam].y0 )); 
-                  
-        
-  
-          if (R > Rmax) Rmax = R;
-                          
-          /* Z = Zmax;   X = X1 + (Z-Z1) * a/c;   Y = Y1 + (Z-Z1) * b/c; */
-          Z = Zmax;   
-          X = pos[0] + (Z - pos[2]) * a[0]/a[2];   
-          Y = pos[1] + (Z - pos[2]) * a[1]/a[2];
-          
-          xyz[0] = X; xyz[1] = Y; xyz[2] = Z;
-      
-          /* trans_Cam_Point(Ex[i_cam],mmp,G[i_cam],X,Y,Z,&Ex_t[i_cam],&X_t,&Y_t,&Z_t,&cross_p,&cross_c); */
-          trans_Cam_Point(cal[i_cam].ext_par, *(cpar->mm), cal[i_cam].glass_par, xyz,\
-          &Ex_t[i_cam], xyz_t, (double *)cross_p, (double *)cross_c);
-          
-          X_t = xyz_t[0]; Y_t = xyz_t[1]; Z_t = xyz_t[2];
-          
-      
-          if( Z_t < Zmin_t ) Zmin_t = Z_t;
-          if( Z_t > Zmax_t ) Zmax_t = Z_t;
-      
-      
-          R = sqrt (( X_t - Ex_t[i_cam].x0 ) * ( X_t - Ex_t[i_cam].x0 )
-                  + ( Y_t - Ex_t[i_cam].y0 ) * ( Y_t - Ex_t[i_cam].y0 )); 
-  
-      
-          if (R > Rmax) Rmax = R;
-          
-        }
-      }
-      
+  /* find extrema of imaged object volume */      
+  Zmin = vpar->Zmin_lay[0];
+  Zmax = vpar->Zmax_lay[0];
+ 
+  Zmin -= fmod (Zmin, rw);
+  Zmax += (rw - fmod (Zmax, rw));
+  Zmin_t=Zmin;
+  Zmax_t=Zmax;
 
+  /* intersect with image vertices rays */
+
+  for (i = 0; i < 2; i ++) {
+     for (j = 0; j < 2; j++) {
   
-      /* round values (-> enlarge) */
-      Rmax += (rw - fmod (Rmax, rw));
-      
-    
-      /* get # of rasterlines in r,z */
-      // BUG: fixed by Ad Holten 
-      // nr = Rmax/rw + 1;
-      // nz = (Zmax_t - Zmin_t)/rw + 1;
-      
-      
-      /* get # of rasterlines in r,z */
-	  nr = (int)(Rmax/rw + 1);
-	  nz = (int)((Zmax_t-Zmin_t)/rw + 1);
-      
-      
-      /* create two dimensional mmLUT structure */
+      pixel_to_metric (&x, &y, xc[i], yc[j], cpar);
+  
+
+      x = x - cal->int_par.xh;
+      y = y - cal->int_par.yh;
+  
+      correct_brown_affin (x, y, cal->added_par, &x,&y);
+            
+
+      /* ray_tracing(x,y, Ex, I, G, mmp, &X1, &Y1, &Z1, &a, &b, &c); */
+      ray_tracing(x,y, cal, *(cpar->mm), pos, a);
+  
+             
+  
+      /* Z = Zmin;   X = X1 + (Z-Z1) * a/c;   Y = Y1 + (Z-Z1) * b/c; */
+      Z = Zmin;   
+      X = pos[0] + (Z - pos[2]) * a[0]/a[2];   
+      Y = pos[1] + (Z - pos[2]) * a[1]/a[2];
+            
       xyz[0] = X; xyz[1] = Y; xyz[2] = Z;
-      
-      trans_Cam_Point(cal[i_cam].ext_par, *(cpar->mm), cal[i_cam].glass_par, xyz,\
-          &Ex_t[i_cam], xyz_t, (double *)cross_p, (double *)cross_c);
-          
-      X_t = xyz_t[0]; Y_t = xyz_t[1]; Z_t = xyz_t[2];
-       
-      cal[i_cam].mmLUT.origin.x = Ex_t[i_cam].x0;
-      cal[i_cam].mmLUT.origin.y = Ex_t[i_cam].y0;
-      cal[i_cam].mmLUT.origin.z = Zmin_t;
-      cal[i_cam].mmLUT.nr = nr;
-      cal[i_cam].mmLUT.nz = nz;
-      cal[i_cam].mmLUT.rw = rw;
-      // if (mmLUT[i_cam].data != NULL)			// preventing memory leaks, ad holten, 04-2013
-	  //	free (mmLUT[i_cam].data);
-      cal[i_cam].mmLUT.data = (double *) malloc (nr*nz * sizeof (double));
-      
-      
-      
-
-   
-      /* fill mmLUT structure */  
-      Ri = (double *) malloc (nr * sizeof (double));
-      for (i=0; i<nr; i++)  Ri[i] = i*rw;
-      
-      Zi = (double *) malloc (nz * sizeof (double));
-      for (i=0; i<nz; i++)  Zi[i] = Zmin_t + i*rw;
-      
-
   
-      for (i=0; i<nr; i++) for (j=0; j<nz; j++) {
+      /* trans_Cam_Point(Ex,mmp,G,X,Y,Z,&Ex_t,&X_t,&Y_t,&Z_t,&cross_p,&cross_c); */
+      trans_Cam_Point(cal->ext_par, *(cpar->mm), cal->glass_par, xyz, \
+      &Ex_t, xyz_t, (double *)cross_p, (double *)cross_c);
+
+      X_t = xyz_t[0]; Y_t = xyz_t[1]; Z_t = xyz_t[2];      
         
-        /* old mmLUT[i_cam].data[i*nz + j]= multimed_r_nlay (Ex[i_cam], mmp, 
-                                                          Ri[i]+Ex[i_cam].x0, Ex[i_cam].y0, Zi[j]);
+      if( Z_t < Zmin_t ) Zmin_t = Z_t;
+      if( Z_t > Zmax_t ) Zmax_t = Z_t;
+        
+
+      R = sqrt (( X_t - Ex_t.x0 ) * ( X_t - Ex_t.x0 )
+              + ( Y_t - Ex_t.y0 ) * ( Y_t - Ex_t.y0 )); 
+          
+
+
+      if (R > Rmax) Rmax = R;
+                  
+      /* Z = Zmax;   X = X1 + (Z-Z1) * a/c;   Y = Y1 + (Z-Z1) * b/c; */
+      Z = Zmax;   
+      X = pos[0] + (Z - pos[2]) * a[0]/a[2];   
+      Y = pos[1] + (Z - pos[2]) * a[1]/a[2];
+  
+      xyz[0] = X; xyz[1] = Y; xyz[2] = Z;
+
+      /* trans_Cam_Point(Ex,mmp,G,X,Y,Z,&Ex_t,&X_t,&Y_t,&Z_t,&cross_p,&cross_c); */
+      trans_Cam_Point(cal->ext_par, *(cpar->mm), cal->glass_par, xyz,\
+      &Ex_t, xyz_t, (double *)cross_p, (double *)cross_c);
+  
+      X_t = xyz_t[0]; Y_t = xyz_t[1]; Z_t = xyz_t[2];
+  
+
+      if( Z_t < Zmin_t ) Zmin_t = Z_t;
+      if( Z_t > Zmax_t ) Zmax_t = Z_t;
+
+
+      R = sqrt (( X_t - Ex_t.x0 ) * ( X_t - Ex_t.x0 )
+              + ( Y_t - Ex_t.y0 ) * ( Y_t - Ex_t.y0 )); 
+
+
+      if (R > Rmax) Rmax = R;
+  
+    }
+  }
+
+
+
+  /* round values (-> enlarge) */
+  Rmax += (rw - fmod (Rmax, rw));
+
+
+  /* get # of rasterlines in r,z */
+  // BUG: fixed by Ad Holten 
+  // nr = Rmax/rw + 1;
+  // nz = (Zmax_t - Zmin_t)/rw + 1;
+
+
+  /* get # of rasterlines in r,z */
+  nr = (int)(Rmax/rw + 1);
+  nz = (int)((Zmax_t-Zmin_t)/rw + 1);
+
+
+  /* create two dimensional mmlut structure */
+  xyz[0] = X; xyz[1] = Y; xyz[2] = Z;
+
+  trans_Cam_Point(cal->ext_par, *(cpar->mm), cal->glass_par, xyz,\
+      &Ex_t, xyz_t, (double *)cross_p, (double *)cross_c);
+  
+  X_t = xyz_t[0]; Y_t = xyz_t[1]; Z_t = xyz_t[2];
+
+  cal->mmlut.origin.x = Ex_t.x0;
+  cal->mmlut.origin.y = Ex_t.y0;
+  cal->mmlut.origin.z = Zmin_t;
+  cal->mmlut.nr = nr;
+  cal->mmlut.nz = nz;
+  cal->mmlut.rw = rw;
+  // if (cal.mmlut.data != NULL)			// preventing memory leaks, ad holten, 04-2013
+  //	free (cal.mmlut.data);
+  cal->mmlut.data = (double *) malloc (nr*nz * sizeof (double));
+
+
+
+
+
+  /* fill mmlut structure */  
+  Ri = (double *) malloc (nr * sizeof (double));
+  for (i=0; i<nr; i++)  Ri[i] = i*rw;
+
+  Zi = (double *) malloc (nz * sizeof (double));
+  for (i=0; i<nz; i++)  Zi[i] = Zmin_t + i*rw;
+
+
+
+    for (i=0; i<nr; i++) for (j=0; j<nz; j++) {
+
+        /* old cal.mmlut.data[i*nz + j]= multimed_r_nlay (Ex, mmp, 
+                                                          Ri[i]+Ex.x0, Ex.y0, Zi[j]);
         */
 
         /* there is no reason for multiple trans_Cam_Point inside the loop, Alex.
-          trans_Cam_Point(cal[i_cam].ext_par, *(cpar->mm), cal[i_cam].glass_par, X, Y, Z,\
-          &Ex_t[i_cam], &X_t, &Y_t, &Z_t, (double *)cross_p, (double *)cross_c);
+          trans_Cam_Point(cal.ext_par, *(cpar->mm), cal.glass_par, X, Y, Z,\
+          &Ex_t, &X_t, &Y_t, &Z_t, (double *)cross_p, (double *)cross_c);
         */ 
-        
-        xyz[0] = Ri[i] + Ex_t[i_cam].x0; xyz[1] = Ex_t[i_cam].y0; xyz[2] = Zi[j];
-            
-        cal[i_cam].mmLUT.data[i*nz + j] = multimed_r_nlay (cal, &Ex_t[i_cam], cpar->mm, 
-            xyz);                              
-        } /* nr */
+
+        xyz[0] = Ri[i] + Ex_t.x0; xyz[1] = Ex_t.y0; xyz[2] = Zi[j];
+    
+        cal->mmlut.data[i*nz + j] = multimed_r_nlay (cal, cpar->mm, xyz);                              
+    } /* nr */
+    
     free (Ri);	// preventing memory leaks, Ad Holten, 04-2013
-	free (Zi);
-    } /* for n_cams */
-  
-  /* when finished initalization, change the setting of the LUT flag */
-  cpar->mm->lut = 1;
+    free (Zi);
+
+    /* when finished initalization, change the setting of the LUT flag */
+    cpar->mm->lut = 1;
 
 }
 
 
-/* get_mmf_from_mmLUT() returns the value of mmf (double) for the space point X,Y,Z
+/* get_mmf_from_mmlut() returns the value of mmf (double) for the space point X,Y,Z
     using the multimedia look up table
     Arguments:
     integer number of the cameras i_cam
     double position in 3D space, X,Y,Z
-    multimedia look-up table mmLUT
+    multimedia look-up table mmlut
 */
-double get_mmf_from_mmLUT (Calibration *cal, int i_cam, vec3d pos){
+double get_mmf_from_mmlut (Calibration *cal, vec3d pos){
 
   int       i, ir,iz, nr,nz, rw, v4[4];
   double    R, sr, sz, mmf = 1.0;
@@ -417,30 +415,30 @@ double get_mmf_from_mmLUT (Calibration *cal, int i_cam, vec3d pos){
   
   X = pos[0]; Y = pos[1]; Z = pos[2];
   
-  rw =  cal[i_cam].mmLUT.rw;
+  rw =  cal->mmlut.rw;
   
   
   if (X == 1.0 && Y == 1.0 && Z == 1.0){
   /* 
     printf("entered mmlut with zeros and %d \n", i_cam);
-    printf("origin.z = %f \n", mmLUT[i_cam].origin.z);
-    printf("and rw is %d \n", mmLUT[i_cam].rw);
+    printf("origin.z = %f \n", cal.mmlut.origin.z);
+    printf("and rw is %d \n", cal.mmlut.rw);
   */
-    Z -= cal[i_cam].mmLUT.origin.z; 
+    Z -= cal->mmlut.origin.z; 
     sz = Z/rw; 
     iz = (int) sz; 
     sz -= iz;
     
-    X -= cal[i_cam].mmLUT.origin.x;
-    Y -= cal[i_cam].mmLUT.origin.y;
+    X -= cal->mmlut.origin.x;
+    Y -= cal->mmlut.origin.y;
     R = sqrt (X*X + Y*Y); 
     sr = R/rw; 
     ir = (int) sr; 
     sr -= ir;
         
     
-    nz =  cal[i_cam].mmLUT.nz;
-    nr =  cal[i_cam].mmLUT.nr;
+    nz =  cal->mmlut.nz;
+    nr =  cal->mmlut.nr;
     
     
   /* check whether point is inside camera's object volume */
@@ -464,22 +462,22 @@ double get_mmf_from_mmLUT (Calibration *cal, int i_cam, vec3d pos){
   
   
   /* interpolate */
-  mmf = cal[i_cam].mmLUT.data[v4[0]] * (1-sr)*(1-sz)
-    + cal[i_cam].mmLUT.data[v4[1]] * (1-sr)*sz
-    + cal[i_cam].mmLUT.data[v4[2]] * sr*(1-sz)
-    + cal[i_cam].mmLUT.data[v4[3]] * sr*sz;
+  mmf = cal->mmlut.data[v4[0]] * (1-sr)*(1-sz)
+    + cal->mmlut.data[v4[1]] * (1-sr)*sz
+    + cal->mmlut.data[v4[2]] * sr*(1-sz)
+    + cal->mmlut.data[v4[3]] * sr*sz;
   
   return (mmf);     
   }
   else {
-  Z -= mmLUT[i_cam].origin.z; sz = Z/rw; iz = (int) sz; sz -= iz;
-  X -= mmLUT[i_cam].origin.x;
-  Y -= mmLUT[i_cam].origin.y;
+  Z -= cal->mmlut.origin.z; sz = Z/rw; iz = (int) sz; sz -= iz;
+  X -= cal->mmlut.origin.x;
+  Y -= cal->mmlut.origin.y;
   R = sqrt (X*X + Y*Y); sr = R/rw; ir = (int) sr; sr -= ir;
   
   
-  nz =  mmLUT[i_cam].nz;
-  nr =  mmLUT[i_cam].nr;
+  nz =  cal->mmlut.nz;
+  nr =  cal->mmlut.nr;
     
   /* check whether point is inside camera's object volume */
   if (ir > nr)              return (0);
@@ -500,10 +498,10 @@ double get_mmf_from_mmLUT (Calibration *cal, int i_cam, vec3d pos){
     if (v4[i] < 0  ||  v4[i] > nr*nz)   return (0);
   
   /* interpolate */
-  mmf = mmLUT[i_cam].data[v4[0]] * (1-sr)*(1-sz)
-    + mmLUT[i_cam].data[v4[1]] * (1-sr)*sz
-    + mmLUT[i_cam].data[v4[2]] * sr*(1-sz)
-    + mmLUT[i_cam].data[v4[3]] * sr*sz;
+  mmf = cal->mmlut.data[v4[0]] * (1-sr)*(1-sz)
+    + cal->mmlut.data[v4[1]] * (1-sr)*sz
+    + cal->mmlut.data[v4[2]] * sr*(1-sz)
+    + cal->mmlut.data[v4[3]] * sr*sz;
   
   return (mmf);
   
@@ -535,7 +533,7 @@ void volumedimension (double *xmax
   vec3d pos, a, xyz, xyz_t;
   double x,y;  
   double xc[2], yc[2];  /* image corners */
-  Exterior Ex_t[4];
+  Exterior Ex_t;
   double X_t, Y_t, Z_t, Zmin_t,Zmax_t;
   double        cross_p[3],cross_c[3];
   
@@ -568,22 +566,22 @@ void volumedimension (double *xmax
       /* intersect with image vertices rays */
 /*
           pixel_to_metric (0.0, 0.0, imx,imy, pix_x,pix_y, &x,&y, chfield);
-          x = x - I[i_cam].xh;
-          y = y - I[i_cam].yh;
-          correct_brown_affin (x, y, ap[i_cam], &x,&y);
-          ray_tracing(x,y, Ex[i_cam], I[i_cam], G[i_cam], mmp, &X1, &Y1, &Z1, &a, &b, &c);
+          x = x - I.xh;
+          y = y - I.yh;
+          correct_brown_affin (x, y, ap, &x,&y);
+          ray_tracing(x,y, Ex, I, G, mmp, &X1, &Y1, &Z1, &a, &b, &c);
           Z = Zmin;   X = X1 + (Z-Z1) * a/c;   Y = Y1 + (Z-Z1) * b/c;
-          R = sqrt (  (X-Ex[i_cam].x0)*(X-Ex[i_cam].x0)
-              + (Y-Ex[i_cam].y0)*(Y-Ex[i_cam].y0)); 
+          R = sqrt (  (X-Ex.x0)*(X-Ex.x0)
+              + (Y-Ex.y0)*(Y-Ex.y0)); 
 
 */ 
           pixel_to_metric (&x, &y, xc[i], yc[j], cpar);
-          x = x - cal[i_cam].int_par.xh;
-          y = y - cal[i_cam].int_par.yh;
-          correct_brown_affin (x, y, cal[i_cam].added_par, &x, &y);
+          x = x - cal->int_par.xh;
+          y = y - cal->int_par.yh;
+          correct_brown_affin (x, y, cal->added_par, &x, &y);
           
           
-          ray_tracing(x, y, &cal[i_cam], *(cpar->mm), pos, a);
+          ray_tracing(x, y, cal, *(cpar->mm), pos, a);
           
           
           Z = Zmin;   
@@ -598,28 +596,28 @@ void volumedimension (double *xmax
           
           
         /* old version, not clear why Beat didn't introduce trans_Cam into volumedimension 
-        R = sqrt (( X - cal[i_cam].ext_par.x0 ) * ( X - cal[i_cam].ext_par.x0 )
-                  + ( Y - cal[i_cam].ext_par.y0 ) * ( Y - cal[i_cam].ext_par.y0 )); 
+        R = sqrt (( X - cal.ext_par.x0 ) * ( X - cal.ext_par.x0 )
+                  + ( Y - cal.ext_par.y0 ) * ( Y - cal.ext_par.y0 )); 
         */
         
         xyz[0] = X; xyz[1] = Y; xyz[2] = Z;
 
-        trans_Cam_Point(cal[i_cam].ext_par, *(cpar->mm), cal[i_cam].glass_par, xyz,\
-          &Ex_t[i_cam], xyz_t, (double *)cross_p, (double *)cross_c);
+        trans_Cam_Point(cal->ext_par, *(cpar->mm), cal->glass_par, xyz,\
+          &Ex_t, xyz_t, (double *)cross_p, (double *)cross_c);
   
         X_t = xyz_t[0]; Y_t = xyz_t[1]; Z_t = xyz_t[2];
       
           
-          R = sqrt (( X_t - Ex_t[i_cam].x0 ) * ( X_t - Ex_t[i_cam].x0 )
-                  + ( Y_t - Ex_t[i_cam].y0 ) * ( Y_t - Ex_t[i_cam].y0 )); 
+          R = sqrt (( X_t - Ex_t.x0 ) * ( X_t - Ex_t.x0 )
+                  + ( Y_t - Ex_t.y0 ) * ( Y_t - Ex_t.y0 )); 
 
           if (R > Rmax) Rmax = R;
               
 /* 
       
       Z = Zmax;   X = X1 + (Z-Z1) * a/c;   Y = Y1 + (Z-Z1) * b/c;
-      R = sqrt (  (X-Ex[i_cam].x0)*(X-Ex[i_cam].x0)
-          + (Y-Ex[i_cam].y0)*(Y-Ex[i_cam].y0));
+      R = sqrt (  (X-Ex.x0)*(X-Ex.x0)
+          + (Y-Ex.y0)*(Y-Ex.y0));
 */
         
         Z = Zmax;
@@ -634,21 +632,21 @@ void volumedimension (double *xmax
         
         
         /* old version, not clear why Beat didn't introduce trans_Cam into volumedimension 
-        R = sqrt (( X - cal[i_cam].ext_par.x0 ) * ( X - cal[i_cam].ext_par.x0 )
-                  + ( Y - cal[i_cam].ext_par.y0 ) * ( Y - cal[i_cam].ext_par.y0 )); 
+        R = sqrt (( X - cal.ext_par.x0 ) * ( X - cal.ext_par.x0 )
+                  + ( Y - cal.ext_par.y0 ) * ( Y - cal.ext_par.y0 )); 
         */ 
         
         
         xyz[0] = X; xyz[1] = Y; xyz[2] = Z;
 
-        trans_Cam_Point(cal[i_cam].ext_par, *(cpar->mm), cal[i_cam].glass_par, xyz,\
-            &Ex_t[i_cam], xyz_t, (double *)cross_p, (double *)cross_c);
+        trans_Cam_Point(cal->ext_par, *(cpar->mm), cal->glass_par, xyz,\
+            &Ex_t, xyz_t, (double *)cross_p, (double *)cross_c);
 
         X_t = xyz_t[0]; Y_t = xyz_t[1]; Z_t = xyz_t[2];
         
           
-          R = sqrt (( X_t - Ex_t[i_cam].x0 ) * ( X_t - Ex_t[i_cam].x0 )
-                  + ( Y_t - Ex_t[i_cam].y0 ) * ( Y_t - Ex_t[i_cam].y0 )); 
+          R = sqrt (( X_t - Ex_t.x0 ) * ( X_t - Ex_t.x0 )
+                  + ( Y_t - Ex_t.y0 ) * ( Y_t - Ex_t.y0 )); 
 
       
       if (R > Rmax) Rmax = R;

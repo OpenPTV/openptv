@@ -71,24 +71,24 @@ START_TEST(test_init_mmLUT)
      i = 0;
      cpar->num_cams = 1;
               
-     init_mmLUT (test_mmlut, vpar, cpar, cal);
+     init_mmlut (vpar, cpar, cal);
                              
    
      ck_assert_msg( 
-                    fabs(test_mmlut[i].origin.x - correct_mmlut[0].origin.x) < EPS && 
-                    fabs(test_mmlut[i].origin.y - correct_mmlut[0].origin.y) < EPS && 
-                    fabs(test_mmlut[i].origin.z - correct_mmlut[0].origin.z)  < EPS &&
-                    test_mmlut[i].nr == correct_mmlut[i].nr &&
-                    test_mmlut[i].nz == correct_mmlut[i].nz &&
-                    test_mmlut[i].rw ==  correct_mmlut[i].rw &&
-                    fabs(test_mmlut[i].data[0] - 1.000) < EPS &&
-                    fabs(test_mmlut[i].data[200] - 1.12670908) < EPS,
+                    fabs(cal->mmlut.origin.x - correct_mmlut[0].origin.x) < EPS && 
+                    fabs(cal->mmlut.origin.y - correct_mmlut[0].origin.y) < EPS && 
+                    fabs(cal->mmlut.origin.z - correct_mmlut[0].origin.z)  < EPS &&
+                    cal->mmlut.nr == correct_mmlut[i].nr &&
+                    cal->mmlut.nz == correct_mmlut[i].nz &&
+                    cal->mmlut.rw ==  correct_mmlut[i].rw &&
+                    fabs(cal->mmlut.data[0] - 1.11089711) < EPS &&
+                    fabs(cal->mmlut.data[200] - 1.09709147) < EPS,
          "\n Expected different correct_mmlut values but found: \n \
          x,y,z = %10.8f %10.8f %10.8f \n nr,nz,rw = %d %d %d \n data = %10.8f %10.8f \
           in camera %d \n", 
-         test_mmlut[i].origin.x, test_mmlut[i].origin.y, test_mmlut[i].origin.z, \
-         test_mmlut[i].nr, test_mmlut[i].nz, test_mmlut[i].rw, test_mmlut[i].data[0], 
-        test_mmlut[i].data[200], i);
+         cal->mmlut.origin.x, cal->mmlut.origin.y, cal->mmlut.origin.z, \
+         cal->mmlut.nr, cal->mmlut.nz, cal->mmlut.rw, cal->mmlut.data[0], 
+         cal->mmlut.data[200], i);
    
 }
 END_TEST
@@ -205,13 +205,13 @@ START_TEST(test_get_mmf_mmLUT)
     double xmax, xmin, ymax, ymin, zmax, zmin;
     int i, i_cam; 
     
-    double mmf;
+    double mmf; 
     
     Calibration *cal;
 
     
-    char ori_file[] = "testing_fodder/cal/cam1.tif.ori";
-    char add_file[] = "testing_fodder/cal/cam1.tif.addpar";
+    char ori_file[] = "testing_fodder/cal/cam2.tif.ori";
+    char add_file[] = "testing_fodder/cal/cam2.tif.addpar";
     
     ck_assert_msg (file_exists(ori_file) == 1, "\n File %s does not exist\n", ori_file);
     ck_assert_msg (file_exists(add_file) == 1, "\n File %s does not exist\n", add_file);
@@ -233,51 +233,49 @@ START_TEST(test_get_mmf_mmLUT)
     ck_assert_msg (file_exists(filename) == 1, "\n File %s does not exist\n", filename);
     cpar = read_control_par(filename);
     fail_if (cpar == NULL, "\n control parameter file reading failed\n ");
-    
-    /* parameter which is not in the parameter file */
-    cpar->mm->lut = 0;  // to get mmLUT initialized
-    cpar->num_cams = 1; // to test only one camera       
 
-     mmlut test_mmlut[4], correct_mmlut[4];  
+     /* lut value is no in the parameter file */
+     cpar->mm->lut = 1;
+
+     mmlut correct_mmlut[4]; 
+     
+     
+     
      
      correct_mmlut[0].origin.x = 0.0;
      correct_mmlut[0].origin.y = 0.0;
-     correct_mmlut[0].origin.z = -250.00003540;
-     correct_mmlut[0].nr = 114;
+     correct_mmlut[0].origin.z = -250.00001105;
+     correct_mmlut[0].nr = 130;
      correct_mmlut[0].nz = 177;
      correct_mmlut[0].rw = 2;
-             
-     init_mmLUT (test_mmlut, vpar, cpar, cal);
-               
-              
-     for (i=0; i<cpar->num_cams; i++){
-       ck_assert_msg( 
-                    fabs(test_mmlut[i].origin.x - correct_mmlut[0].origin.x) < EPS && 
-                    fabs(test_mmlut[i].origin.y - correct_mmlut[0].origin.y) < EPS && 
-                    fabs(test_mmlut[i].origin.z - correct_mmlut[0].origin.z)  < EPS &&
-                    test_mmlut[i].nr == correct_mmlut[i].nr &&
-                    test_mmlut[i].nz == correct_mmlut[i].nz &&
-                    test_mmlut[i].rw ==  correct_mmlut[i].rw &&
-                    fabs(test_mmlut[i].data[35] - 1.000000) < EPS &&
-                    fabs(test_mmlut[i].data[82] - 1.000000) < EPS,
-         "\n Expected different correct_mmlut values \n  \
-         but found %10.8f %10.8f %10.8f %d %d %d %10.8f %10.8f in camera %d\n", \
-         test_mmlut[i].origin.x, test_mmlut[i].origin.y, test_mmlut[i].origin.z, \
-         test_mmlut[i].nr, test_mmlut[i].nz, test_mmlut[i].rw,test_mmlut[i].data[35], \
-         test_mmlut[i].data[82], i);
-          
-        }
-        
+     
+     init_mmlut (vpar, cpar, cal);
+                             
+   
+     ck_assert_msg( 
+                    fabs(cal->mmlut.origin.x - correct_mmlut[0].origin.x) < EPS && 
+                    fabs(cal->mmlut.origin.y - correct_mmlut[0].origin.y) < EPS && 
+                    fabs(cal->mmlut.origin.z - correct_mmlut[0].origin.z)  < EPS &&
+                    cal->mmlut.nr == correct_mmlut[i].nr &&
+                    cal->mmlut.nz == correct_mmlut[i].nz &&
+                    cal->mmlut.rw ==  correct_mmlut[i].rw &&
+                    fabs(cal->mmlut.data[0] - 1.11089711) < EPS &&
+                    fabs(cal->mmlut.data[200] - 1.09709147) < EPS,
+         "\n Expected different correct_mmlut values but found: \n \
+         x,y,z = %10.8f %10.8f %10.8f \n nr,nz,rw = %d %d %d \n data = %10.8f %10.8f \
+          in camera %d \n", 
+         cal->mmlut.origin.x, cal->mmlut.origin.y, cal->mmlut.origin.z, \
+         cal->mmlut.nr, cal->mmlut.nz, cal->mmlut.rw, cal->mmlut.data[0], 
+         cal->mmlut.data[200], i);     
                
          vec3d pos = {1.0, 1.0, 1.0}; 
          for (i_cam = 0; i_cam < cpar->num_cams; i_cam++){          
          
-         	mmf = get_mmf_from_mmLUT ((mmlut *) test_mmlut, i_cam, pos );
+         	mmf = get_mmf_from_mmlut (cal, pos );
         
         	ck_assert_msg( 
-                    fabs(mmf - 1.003924) < EPS,
-         	"\n Expected mmf  1.003924 but found %10.8f in camera %d\n", \
-         	mmf, i_cam);
+                    fabs(mmf - 1.00363015) < EPS,
+         	"\n Expected mmf  1.00363015 but found %10.8f\n", mmf);
          }
 }
 END_TEST
@@ -319,7 +317,7 @@ START_TEST(test_multimed_nlay)
     cpar->num_cams = 1; // only one camera test
             
 
-     mmlut test_mmlut[4], correct_mmlut[4];  
+     mmlut correct_mmlut[4];  
      
      correct_mmlut[0].origin.x = 0.0;
      correct_mmlut[0].origin.y = 0.0;
@@ -328,36 +326,17 @@ START_TEST(test_multimed_nlay)
      correct_mmlut[0].nz = 177;
      correct_mmlut[0].rw = 2;
              
-     init_mmLUT (test_mmlut, vpar, cpar, cal);
-     
-               
-     for (i=0; i<cpar->num_cams; i++){
-       ck_assert_msg( 
-                    fabs(test_mmlut[i].origin.x - correct_mmlut[0].origin.x) < EPS && 
-                    fabs(test_mmlut[i].origin.y - correct_mmlut[0].origin.y) < EPS && 
-                    fabs(test_mmlut[i].origin.z - correct_mmlut[0].origin.z)  < EPS &&
-                    test_mmlut[i].nr == correct_mmlut[i].nr &&
-                    test_mmlut[i].nz == correct_mmlut[i].nz &&
-                    test_mmlut[i].rw ==  correct_mmlut[i].rw &&
-                    fabs(test_mmlut[i].data[35] - 1.000000) < EPS &&
-                    fabs(test_mmlut[i].data[200] - 1.12882187) < EPS,
-         "\n Expected different correct_mmlut values \n  \
-         but found %10.8f %10.8f %10.8f %d %d %d %10.8f %10.8f in camera %d\n", \
-         test_mmlut[i].origin.x, test_mmlut[i].origin.y, test_mmlut[i].origin.z, \
-         test_mmlut[i].nr, test_mmlut[i].nz, test_mmlut[i].rw, test_mmlut[i].data[35], \
-         test_mmlut[i].data[200], i);
-          
-        }
-                                
+     init_mmlut (vpar, cpar, cal);
+                                     
      
      vec3d pos = {1.23, 1.23, 1.23};
      double correct_Xq,correct_Yq, Xq, Yq;
-     correct_Xq = 0.74811917;
-     correct_Yq = 0.75977975;   
+     correct_Xq = 0.85954957; 
+     correct_Yq = 0.86851375;   
      
      i_cam = 0;
                  
-     multimed_nlay((mmlut *) test_mmlut, &cal[0].ext_par, cpar->mm, pos, &Xq, &Yq, i_cam);
+     multimed_nlay(cal, cpar->mm, pos, &Xq, &Yq);
         
     for (i=0; i<cpar->num_cams; i++){
        ck_assert_msg( 
@@ -516,7 +495,7 @@ int file_exists(char *filename){
         return 1;
     } else {
         printf("File %s does not exist\n",filename);
-        return NULL;
+        return 0;
     }
 }
 

@@ -39,6 +39,11 @@ typedef struct
 }
 ap_52;
 
+typedef struct {
+    double x, y, z;
+} Origin; 
+
+
 /* mmLUT structure */
 typedef struct {
     Origin origin;
@@ -51,7 +56,7 @@ typedef struct {
     Interior int_par;
     Glass glass_par;
     ap_52 added_par;
-    mmlut mmlut
+    mmlut mmlut;
 } Calibration;
 
 

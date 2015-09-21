@@ -13,21 +13,18 @@
 #include "vec_utils.h"
 
 
-typedef struct {
-    double x, y, z;
-} Origin; 
 
 
-double get_mmf_from_mmLUT (Calibration *cal, vec3d pos);
+double get_mmf_from_mmlut (Calibration *cal, vec3d pos);
 
 /* Note that multimed_nlay_v2 is renamted to _nlay) */
 void  multimed_nlay (Calibration *cal, mm_np *mm, vec3d pos, double *Xq, 
-    double *Yq, int i_cam);
+    double *Yq);
 
 /* Note that multimed_r_nlay_v2 is renamed */
-double multimed_r_nlay (Calibration *cal, mm_np *mm, vec3d pos, int i_cam);
+double multimed_r_nlay (Calibration *cal, mm_np *mm, vec3d pos);
 
-void init_mmLUT (volume_par *vpar, control_par *cpar, Calibration *cal);
+void init_mmlut (volume_par *vpar, control_par *cpar, Calibration *cal);
 
 void volumedimension (double *xmax
 					, double *xmin
