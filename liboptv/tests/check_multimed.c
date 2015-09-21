@@ -183,12 +183,8 @@ END_TEST
 START_TEST(test_get_mmf_mmLUT)
 {
     double xmax, xmin, ymax, ymin, zmax, zmin;
-    int i, i_cam; 
-    
     double mmf; 
-    
     Calibration *cal;
-
     
     char ori_file[] = "testing_fodder/cal/cam2.tif.ori";
     char add_file[] = "testing_fodder/cal/cam2.tif.addpar";
@@ -228,25 +224,21 @@ START_TEST(test_get_mmf_mmLUT)
         fabs(cal->mmlut.origin.x - correct_mmlut[0].origin.x) < EPS && 
         fabs(cal->mmlut.origin.y - correct_mmlut[0].origin.y) < EPS && 
         fabs(cal->mmlut.origin.z - correct_mmlut[0].origin.z)  < EPS &&
-        cal->mmlut.nr == correct_mmlut[i].nr &&
-        cal->mmlut.nz == correct_mmlut[i].nz &&
-        cal->mmlut.rw ==  correct_mmlut[i].rw &&
+        cal->mmlut.nr == correct_mmlut[0].nr &&
+        cal->mmlut.nz == correct_mmlut[0].nz &&
+        cal->mmlut.rw ==  correct_mmlut[0].rw &&
         fabs(cal->mmlut.data[0] - 1.11089711) < EPS &&
         fabs(cal->mmlut.data[200] - 1.09709147) < EPS,
         "\n Expected different correct_mmlut values but found: \n \
-        x,y,z = %10.8f %10.8f %10.8f \n nr,nz,rw = %d %d %d \n data = %10.8f %10.8f \
-         in camera %d \n",
+        x,y,z = %10.8f %10.8f %10.8f \n nr,nz,rw = %d %d %d \n data = %10.8f %10.8f\n",
         cal->mmlut.origin.x, cal->mmlut.origin.y, cal->mmlut.origin.z, \
         cal->mmlut.nr, cal->mmlut.nz, cal->mmlut.rw, cal->mmlut.data[0], 
-        cal->mmlut.data[200], i);     
-               
+        cal->mmlut.data[200]); 
+    
     vec3d pos = {1.0, 1.0, 1.0}; 
-    for (i_cam = 0; i_cam < cpar->num_cams; i_cam++) {          
-         	mmf = get_mmf_from_mmlut (cal, pos);
-        
-            ck_assert_msg(fabs(mmf - 1.00363015) < EPS,
-                "\n Expected mmf  1.00363015 but found %10.8f\n", mmf);
-    }
+    mmf = get_mmf_from_mmlut (cal, pos);
+    ck_assert_msg(fabs(mmf - 1.00363015) < EPS,
+        "\n Expected mmf  1.00363015 but found %10.8f\n", mmf);
 }
 END_TEST
 
