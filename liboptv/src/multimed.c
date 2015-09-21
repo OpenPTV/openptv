@@ -236,7 +236,7 @@ void init_mmlut (volume_par *vpar, control_par *cpar, Calibration *cal) {
   vec3d pos, a, xyz, xyz_t; 
   double x,y, *Ri,*Zi;
   double rw = 2.0; 
-  Exterior Ex_t;
+  Exterior Ex_t; /* A frame representing a point outside tank, middle of glass*/
   double X_t,Y_t,Z_t, Zmin_t,Zmax_t;
   double cross_p[3],cross_c[3]; 
   double xc[2], yc[2];  /* image corners */
@@ -300,23 +300,14 @@ void init_mmlut (volume_par *vpar, control_par *cpar, Calibration *cal) {
   nz = (int)((Zmax_t-Zmin_t)/rw + 1);
 
   /* create two dimensional mmlut structure */
-  xyz[0] = X;
-  xyz[1] = Y;
-  xyz[2] = Z;
-
-  trans_Cam_Point(cal->ext_par, *(cpar->mm), cal->glass_par, xyz,\
-      &Ex_t, xyz_t, (double *)cross_p, (double *)cross_c);
-  
-  X_t = xyz_t[0]; 
-  Y_t = xyz_t[1];
-  Z_t = xyz_t[2];
-
   cal->mmlut.origin.x = Ex_t.x0;
   cal->mmlut.origin.y = Ex_t.y0;
   cal->mmlut.origin.z = Zmin_t;
+  
   cal->mmlut.nr = nr;
   cal->mmlut.nz = nz;
   cal->mmlut.rw = rw;
+  
   // if (cal.mmlut.data != NULL)			// preventing memory leaks, ad holten, 04-2013
   //	free (cal.mmlut.data);
   cal->mmlut.data = (double *) malloc (nr*nz * sizeof (double));
