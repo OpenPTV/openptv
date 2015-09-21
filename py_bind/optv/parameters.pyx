@@ -451,9 +451,6 @@ cdef class ControlParams:
     # Getters and setters 
     def get_num_cams(self):
         return self._control_par[0].num_cams
-    
-    def set_num_cams(self, num_cams):
-        self._control_par[0].num_cams = num_cams
         
     def get_hp_flag(self):
         return self._control_par[0].hp_flag
