@@ -360,7 +360,22 @@ START_TEST(test_trans_Cam_Point)
         "Expected 0.000000 0.000000 55.000000 but found %10.8f %10.8f %10.8f\n", \
         cross_c[0],cross_c[1],cross_c[2]);
         
-      fail_unless(compare_exterior_diff(&correct_Ex_t, &Ex_t));
+    fail_unless(compare_exterior_diff(&correct_Ex_t, &Ex_t));
+}
+END_TEST
+
+
+START_TEST(test_move_along_ray)
+{
+    double glob_Z = 2;
+    vec3d vertex = {1, 1, 1};
+    vec3d direct = {1, 1, 1};
+    vec3d correct = {2, 2, 2};
+    vec3d res;
+    
+    move_along_ray(glob_Z, vertex, direct, res);
+    printf("%g %g %g\n", res[0], res[1], res[2]);
+    fail_unless(vec_cmp(res, correct));
 }
 END_TEST
 
@@ -392,6 +407,10 @@ Suite* fb_suite(void) {
     tcase_add_test(tc, test_volumedimension);
     suite_add_tcase (s, tc);    
           
+    tc = tcase_create ("Test move_along_ray()");
+    tcase_add_test(tc, test_move_along_ray);
+    suite_add_tcase (s, tc);
+    
     return s;
 }
 

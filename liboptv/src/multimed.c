@@ -201,6 +201,21 @@ void back_trans_Point(vec3d pos_t, mm_np mm, Glass G, double cross_p[],
     }
 }
 
+/*  move_along_ray() calculates the position of a point in a global Z value
+    along a ray whose vertex and direction are given.
+    
+    Arguments:
+    double glob_Z - the Z value of the result point in the global
+        coordinate system.
+    vec3d vertex - the ray vertex.
+    vec3d direct - the ray direction, a unit vector.
+    vec3d out - result buffer.
+*/
+void move_along_ray(double glob_Z, vec3d vertex, vec3d direct, vec3d out) {
+    out[0] = vertex[0] + (glob_Z - vertex[2]) * direct[0]/direct[2];   
+    out[1] = vertex[1] + (glob_Z - vertex[2]) * direct[1]/direct[2];
+    out[2] = glob_Z;
+}
 
 /*  init_mmlut() prepares the multimedia Look-Up Table for a single camera
     Arguments: 
@@ -252,46 +267,26 @@ void init_mmlut (volume_par *vpar, control_par *cpar, Calibration *cal) {
   
           correct_brown_affin (x, y, cal->added_par, &x,&y);  
           ray_tracing(x,y, cal, *(cpar->mm), pos, a);
-  
-          Z = Zmin;   
-          X = pos[0] + (Z - pos[2]) * a[0]/a[2];   
-          Y = pos[1] + (Z - pos[2]) * a[1]/a[2];
           
-          xyz[0] = X; 
-          xyz[1] = Y; 
-          xyz[2] = Z;
-  
+          move_along_ray(Zmin, pos, a, xyz);
           trans_Cam_Point(cal->ext_par, *(cpar->mm), cal->glass_par, xyz, \
             &Ex_t, xyz_t, (double *)cross_p, (double *)cross_c);
 
-          X_t = xyz_t[0];
-          Y_t = xyz_t[1];
-          Z_t = xyz_t[2];      
-        
-          if( Z_t < Zmin_t ) Zmin_t = Z_t;
-          if( Z_t > Zmax_t ) Zmax_t = Z_t;
+          if( xyz_t[2] < Zmin_t ) Zmin_t = xyz_t[2];
+          if( xyz_t[2] > Zmax_t ) Zmax_t = xyz_t[2];
 
-          R = norm((X_t - Ex_t.x0), (Y_t - Ex_t.y0), 0); 
-
+          R = norm((xyz_t[0] - Ex_t.x0), (xyz_t[1] - Ex_t.y0), 0);
           if (R > Rmax)
               Rmax = R;
-                  
-          Z = Zmax;   
-          X = pos[0] + (Z - pos[2]) * a[0]/a[2];   
-          Y = pos[1] + (Z - pos[2]) * a[1]/a[2];
-  
-          xyz[0] = X; xyz[1] = Y; xyz[2] = Z;
-
+           
+          move_along_ray(Zmax, pos, a, xyz);
           trans_Cam_Point(cal->ext_par, *(cpar->mm), cal->glass_par, xyz,\
               &Ex_t, xyz_t, (double *)cross_p, (double *)cross_c);
   
-          X_t = xyz_t[0]; Y_t = xyz_t[1]; Z_t = xyz_t[2];
-  
-          if( Z_t < Zmin_t ) Zmin_t = Z_t;
-          if( Z_t > Zmax_t ) Zmax_t = Z_t;
+          if( xyz_t[2] < Zmin_t ) Zmin_t = xyz_t[2];
+          if( xyz_t[2] > Zmax_t ) Zmax_t = xyz_t[2];
 
-          R = norm((X_t - Ex_t.x0), (Y_t - Ex_t.y0), 0); 
-
+          R = norm((xyz_t[0] - Ex_t.x0), (xyz_t[1] - Ex_t.y0), 0);
           if (R > Rmax)
               Rmax = R;
       }
