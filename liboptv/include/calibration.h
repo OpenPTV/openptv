@@ -39,11 +39,19 @@ typedef struct
 }
 ap_52;
 
+/* mmLUT structure */
+typedef struct {
+    Origin origin;
+    int    nr, nz, rw;
+    double *data; 
+} mmlut;
+
 typedef struct {
     Exterior ext_par;
     Interior int_par;
     Glass glass_par;
     ap_52 added_par;
+    mmlut mmlut
 } Calibration;
 
 

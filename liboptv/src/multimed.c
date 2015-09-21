@@ -225,7 +225,7 @@ void back_trans_Point(vec3d pos_t, mm_np mm, Glass G, double cross_p[],
     Output:
     pointer to the multi-media look-up table mmLUT structure
 */ 
-void init_mmLUT (mmlut *mmLUT, volume_par *vpar, control_par *cpar, Calibration *cal){
+void init_mmLUT (volume_par *vpar, control_par *cpar, Calibration *cal){
 
   register int  i,j, nr, nz;
   int           i_cam;
@@ -353,15 +353,15 @@ void init_mmLUT (mmlut *mmLUT, volume_par *vpar, control_par *cpar, Calibration 
           
       X_t = xyz_t[0]; Y_t = xyz_t[1]; Z_t = xyz_t[2];
        
-      mmLUT[i_cam].origin.x = Ex_t[i_cam].x0;
-      mmLUT[i_cam].origin.y = Ex_t[i_cam].y0;
-      mmLUT[i_cam].origin.z = Zmin_t;
-      mmLUT[i_cam].nr = nr;
-      mmLUT[i_cam].nz = nz;
-      mmLUT[i_cam].rw = rw;
+      cal[i_cam].mmLUT.origin.x = Ex_t[i_cam].x0;
+      cal[i_cam].mmLUT.origin.y = Ex_t[i_cam].y0;
+      cal[i_cam].mmLUT.origin.z = Zmin_t;
+      cal[i_cam].mmLUT.nr = nr;
+      cal[i_cam].mmLUT.nz = nz;
+      cal[i_cam].mmLUT.rw = rw;
       // if (mmLUT[i_cam].data != NULL)			// preventing memory leaks, ad holten, 04-2013
 	  //	free (mmLUT[i_cam].data);
-      mmLUT[i_cam].data = (double *) malloc (nr*nz * sizeof (double));
+      cal[i_cam].mmLUT.data = (double *) malloc (nr*nz * sizeof (double));
       
       
       
@@ -389,8 +389,8 @@ void init_mmLUT (mmlut *mmLUT, volume_par *vpar, control_par *cpar, Calibration 
         
         xyz[0] = Ri[i] + Ex_t[i_cam].x0; xyz[1] = Ex_t[i_cam].y0; xyz[2] = Zi[j];
             
-        mmLUT[i_cam].data[i*nz + j] = multimed_r_nlay (mmLUT, &Ex_t[i_cam], cpar->mm, 
-            xyz, i_cam);                              
+        cal[i_cam].mmLUT.data[i*nz + j] = multimed_r_nlay (cal, &Ex_t[i_cam], cpar->mm, 
+            xyz);                              
         } /* nr */
     free (Ri);	// preventing memory leaks, Ad Holten, 04-2013
 	free (Zi);
@@ -409,7 +409,7 @@ void init_mmLUT (mmlut *mmLUT, volume_par *vpar, control_par *cpar, Calibration 
     double position in 3D space, X,Y,Z
     multimedia look-up table mmLUT
 */
-double get_mmf_from_mmLUT (mmlut *mmLUT, int i_cam, vec3d pos){
+double get_mmf_from_mmLUT (Calibration *cal, int i_cam, vec3d pos){
 
   int       i, ir,iz, nr,nz, rw, v4[4];
   double    R, sr, sz, mmf = 1.0;
@@ -417,7 +417,7 @@ double get_mmf_from_mmLUT (mmlut *mmLUT, int i_cam, vec3d pos){
   
   X = pos[0]; Y = pos[1]; Z = pos[2];
   
-  rw =  mmLUT[i_cam].rw;
+  rw =  cal[i_cam].mmLUT.rw;
   
   
   if (X == 1.0 && Y == 1.0 && Z == 1.0){
@@ -426,21 +426,21 @@ double get_mmf_from_mmLUT (mmlut *mmLUT, int i_cam, vec3d pos){
     printf("origin.z = %f \n", mmLUT[i_cam].origin.z);
     printf("and rw is %d \n", mmLUT[i_cam].rw);
   */
-    Z -= mmLUT[i_cam].origin.z; 
+    Z -= cal[i_cam].mmLUT.origin.z; 
     sz = Z/rw; 
     iz = (int) sz; 
     sz -= iz;
     
-    X -= mmLUT[i_cam].origin.x;
-    Y -= mmLUT[i_cam].origin.y;
+    X -= cal[i_cam].mmLUT.origin.x;
+    Y -= cal[i_cam].mmLUT.origin.y;
     R = sqrt (X*X + Y*Y); 
     sr = R/rw; 
     ir = (int) sr; 
     sr -= ir;
         
     
-    nz =  mmLUT[i_cam].nz;
-    nr =  mmLUT[i_cam].nr;
+    nz =  cal[i_cam].mmLUT.nz;
+    nr =  cal[i_cam].mmLUT.nr;
     
     
   /* check whether point is inside camera's object volume */
@@ -464,10 +464,10 @@ double get_mmf_from_mmLUT (mmlut *mmLUT, int i_cam, vec3d pos){
   
   
   /* interpolate */
-  mmf = mmLUT[i_cam].data[v4[0]] * (1-sr)*(1-sz)
-    + mmLUT[i_cam].data[v4[1]] * (1-sr)*sz
-    + mmLUT[i_cam].data[v4[2]] * sr*(1-sz)
-    + mmLUT[i_cam].data[v4[3]] * sr*sz;
+  mmf = cal[i_cam].mmLUT.data[v4[0]] * (1-sr)*(1-sz)
+    + cal[i_cam].mmLUT.data[v4[1]] * (1-sr)*sz
+    + cal[i_cam].mmLUT.data[v4[2]] * sr*(1-sz)
+    + cal[i_cam].mmLUT.data[v4[3]] * sr*sz;
   
   return (mmf);     
   }

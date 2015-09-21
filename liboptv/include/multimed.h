@@ -17,25 +17,17 @@ typedef struct {
     double x, y, z;
 } Origin; 
 
-/* mmLUT structure */
-typedef struct {
-    Origin origin;
-    int    nr, nz, rw;
-    double *data; 
-} mmlut;
 
-
-
-double get_mmf_from_mmLUT (mmlut *mmLUT, int i_cam, vec3d pos);
+double get_mmf_from_mmLUT (Calibration *cal, vec3d pos);
 
 /* Note that multimed_nlay_v2 is renamted to _nlay) */
-void  multimed_nlay (mmlut *mmLUT, Exterior *ex, mm_np *mm, vec3d pos, double *Xq, 
+void  multimed_nlay (Calibration *cal, mm_np *mm, vec3d pos, double *Xq, 
     double *Yq, int i_cam);
 
 /* Note that multimed_r_nlay_v2 is renamed */
-double multimed_r_nlay (mmlut *mmLUT, Exterior *ex, mm_np *mm, vec3d pos, int i_cam);
+double multimed_r_nlay (Calibration *cal, mm_np *mm, vec3d pos, int i_cam);
 
-void init_mmLUT (mmlut *mmLUT, volume_par *vpar, control_par *cpar, Calibration *cal);
+void init_mmLUT (volume_par *vpar, control_par *cpar, Calibration *cal);
 
 void volumedimension (double *xmax
 					, double *xmin
