@@ -182,7 +182,6 @@ END_TEST
 
 START_TEST(test_get_mmf_mmLUT)
 {
-    double xmax, xmin, ymax, ymin, zmax, zmin;
     double mmf; 
     Calibration *cal;
     

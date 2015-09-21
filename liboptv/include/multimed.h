@@ -13,15 +13,11 @@
 #include "vec_utils.h"
 
 
-
-
 double get_mmf_from_mmlut (Calibration *cal, vec3d pos);
 
-/* Note that multimed_nlay_v2 is renamted to _nlay) */
 void  multimed_nlay (Calibration *cal, mm_np *mm, vec3d pos, double *Xq, 
     double *Yq);
 
-/* Note that multimed_r_nlay_v2 is renamed */
 double multimed_r_nlay (Calibration *cal, mm_np *mm, vec3d pos);
 
 void init_mmlut (volume_par *vpar, control_par *cpar, Calibration *cal);
