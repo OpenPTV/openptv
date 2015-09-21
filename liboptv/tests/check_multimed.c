@@ -26,7 +26,6 @@ START_TEST(test_init_mmLUT)
     int i; 
     
     Calibration *cal;
-
     
     char ori_file[] = "testing_fodder/cal/cam2.tif.ori";
     char add_file[] = "testing_fodder/cal/cam2.tif.addpar";
@@ -35,8 +34,6 @@ START_TEST(test_init_mmLUT)
     ck_assert_msg (file_exists(add_file) == 1, "\n File %s does not exist\n", add_file);
     cal = read_calibration(ori_file, add_file, NULL);    
     fail_if (cal == NULL, "\n ORI or ADDPAR file reading failed \n");
-    
-
          
     volume_par *vpar;
     char vol_file[] = "testing_fodder/parameters/criteria.par";
@@ -44,52 +41,44 @@ START_TEST(test_init_mmLUT)
     vpar = read_volume_par(vol_file);
     fail_if (vpar == NULL, "\n volume parameter file reading failed \n");
     
-    
-    
     control_par *cpar;
     char filename[] = "testing_fodder/parameters/ptv.par";
     ck_assert_msg (file_exists(filename) == 1, "\n File %s does not exist\n", filename);
     cpar = read_control_par(filename);
     fail_if (cpar == NULL, "\n control parameter file reading failed\n ");
 
-     /* lut value is no in the parameter file */
-     cpar->mm->lut = 1;
-
-     mmlut test_mmlut[4], correct_mmlut[4]; 
+    /* lut value is no in the parameter file */
+    cpar->mm->lut = 1;
+    mmlut test_mmlut[4], correct_mmlut[4]; 
      
+    correct_mmlut[0].origin.x = 0.0;
+    correct_mmlut[0].origin.y = 0.0;
+    correct_mmlut[0].origin.z = -250.00001105;
+    correct_mmlut[0].nr = 130;
+    correct_mmlut[0].nz = 177;
+    correct_mmlut[0].rw = 2;
      
-     
-     
-     correct_mmlut[0].origin.x = 0.0;
-     correct_mmlut[0].origin.y = 0.0;
-     correct_mmlut[0].origin.z = -250.00001105;
-     correct_mmlut[0].nr = 130;
-     correct_mmlut[0].nz = 177;
-     correct_mmlut[0].rw = 2;
-     
-     /* run init_mmLUT for one camera only */
-     i = 0;
-     cpar->num_cams = 1;
-              
-     init_mmlut (vpar, cpar, cal);
-                             
-   
-     ck_assert_msg( 
-                    fabs(cal->mmlut.origin.x - correct_mmlut[0].origin.x) < EPS && 
-                    fabs(cal->mmlut.origin.y - correct_mmlut[0].origin.y) < EPS && 
-                    fabs(cal->mmlut.origin.z - correct_mmlut[0].origin.z)  < EPS &&
-                    cal->mmlut.nr == correct_mmlut[i].nr &&
-                    cal->mmlut.nz == correct_mmlut[i].nz &&
-                    cal->mmlut.rw ==  correct_mmlut[i].rw &&
-                    fabs(cal->mmlut.data[0] - 1.11089711) < EPS &&
-                    fabs(cal->mmlut.data[200] - 1.09709147) < EPS,
-         "\n Expected different correct_mmlut values but found: \n \
-         x,y,z = %10.8f %10.8f %10.8f \n nr,nz,rw = %d %d %d \n data = %10.8f %10.8f \
-          in camera %d \n", 
-         cal->mmlut.origin.x, cal->mmlut.origin.y, cal->mmlut.origin.z, \
-         cal->mmlut.nr, cal->mmlut.nz, cal->mmlut.rw, cal->mmlut.data[0], 
-         cal->mmlut.data[200], i);
-   
+    /* run init_mmLUT for one camera only */
+    i = 0;
+    cpar->num_cams = 1;
+             
+    init_mmlut (vpar, cpar, cal);
+    ck_assert_msg( 
+        fabs(cal->mmlut.origin.x - correct_mmlut[0].origin.x) < EPS && 
+        fabs(cal->mmlut.origin.y - correct_mmlut[0].origin.y) < EPS && 
+        fabs(cal->mmlut.origin.z - correct_mmlut[0].origin.z)  < EPS &&
+        cal->mmlut.nr == correct_mmlut[i].nr &&
+        cal->mmlut.nz == correct_mmlut[i].nz &&
+        cal->mmlut.rw ==  correct_mmlut[i].rw &&
+        fabs(cal->mmlut.data[0] - 1.11089711) < EPS &&
+        fabs(cal->mmlut.data[200] - 1.09709147) < EPS,
+        "\n Expected different correct_mmlut values but found: \n \
+        x,y,z = %10.8f %10.8f %10.8f \n nr,nz,rw = %d %d %d \n data = %10.8f %10.8f \
+         in camera %d \n", 
+        cal->mmlut.origin.x, cal->mmlut.origin.y, cal->mmlut.origin.z, \
+        cal->mmlut.nr, cal->mmlut.nz, cal->mmlut.rw, cal->mmlut.data[0], 
+        cal->mmlut.data[200], i
+    );
 }
 END_TEST
 
@@ -159,16 +148,12 @@ START_TEST(test_volumedimension)
     ck_assert_msg (file_exists(add_file) == 1, "\n File %s does not exist\n", add_file);
     cal = read_calibration(ori_file, add_file, NULL);    
     fail_if (cal == NULL, "\n ORI or ADDPAR file reading failed \n");
-    
-
          
     volume_par *vpar;
     char vol_file[] = "testing_fodder/parameters/criteria.par";
     ck_assert_msg (file_exists(vol_file) == 1, "\n File %s does not exist\n", vol_file);    
     vpar = read_volume_par(vol_file);
     fail_if (vpar == NULL, "\n volume parameter file reading failed \n");
-    
-    
     
     control_par *cpar;
     char filename[] = "testing_fodder/parameters/ptv.par";
@@ -179,23 +164,18 @@ START_TEST(test_volumedimension)
     cpar->mm->lut = 1;
     cpar->mm->nlay = 1;
 
-     
-     volumedimension (&xmax, &xmin, &ymax, &ymin, &zmax, &zmin, vpar, cpar, cal);
-     
-     
+    volumedimension (&xmax, &xmin, &ymax, &ymin, &zmax, &zmin, vpar, cpar, cal);
     
-    
-     ck_assert_msg( fabs(xmax - 97.81096328) < EPS && 
-                    fabs(xmin + 35.41493912) < EPS && 
-                    fabs(ymax - 49.40201301)  < EPS &&
-                    fabs(ymin + 68.36694764)  < EPS &&
-                    fabs(zmax - 100.0000)  < EPS &&
-                    fabs(zmin + 100.0000)  < EPS,
-         "\n Expected 97.81096 -35.414939 49.402013 -68.366947 100.0000 -100.0000 \n  \
-         but found %10.8f %10.8f %10.8f %10.8f %10.8f %10.8f \n", xmax, xmin, ymax, 
-         ymin, zmax, zmin);
-               
-    
+    ck_assert_msg( fabs(xmax - 97.81096328) < EPS && 
+        fabs(xmin + 35.41493912) < EPS && 
+        fabs(ymax - 49.40201301)  < EPS &&
+        fabs(ymin + 68.36694764)  < EPS &&
+        fabs(zmax - 100.0000)  < EPS &&
+        fabs(zmin + 100.0000)  < EPS,
+        "\n Expected 97.81096 -35.414939 49.402013 -68.366947 100.0000 -100.0000 \n  \
+        but found %10.8f %10.8f %10.8f %10.8f %10.8f %10.8f \n", xmax, xmin, ymax, 
+        ymin, zmax, zmin
+    );           
 }
 END_TEST
 
@@ -217,8 +197,6 @@ START_TEST(test_get_mmf_mmLUT)
     ck_assert_msg (file_exists(add_file) == 1, "\n File %s does not exist\n", add_file);
     cal = read_calibration(ori_file, add_file, NULL);    
     fail_if (cal == NULL, "\n ORI or ADDPAR file reading failed \n");
-    
-
          
     volume_par *vpar;
     char vol_file[] = "testing_fodder/parameters/criteria.par";
@@ -226,57 +204,49 @@ START_TEST(test_get_mmf_mmLUT)
     vpar = read_volume_par(vol_file);
     fail_if (vpar == NULL, "\n volume parameter file reading failed \n");
     
-    
-    
     control_par *cpar;
     char filename[] = "testing_fodder/parameters/ptv.par";
     ck_assert_msg (file_exists(filename) == 1, "\n File %s does not exist\n", filename);
     cpar = read_control_par(filename);
     fail_if (cpar == NULL, "\n control parameter file reading failed\n ");
 
-     /* lut value is no in the parameter file */
-     cpar->mm->lut = 1;
+    /* lut value is no in the parameter file */
+    cpar->mm->lut = 1;
 
-     mmlut correct_mmlut[4]; 
+    mmlut correct_mmlut[4]; 
      
+    correct_mmlut[0].origin.x = 0.0;
+    correct_mmlut[0].origin.y = 0.0;
+    correct_mmlut[0].origin.z = -250.00001105;
+    correct_mmlut[0].nr = 130;
+    correct_mmlut[0].nz = 177;
+    correct_mmlut[0].rw = 2;
+    
+    init_mmlut (vpar, cpar, cal);
      
-     
-     
-     correct_mmlut[0].origin.x = 0.0;
-     correct_mmlut[0].origin.y = 0.0;
-     correct_mmlut[0].origin.z = -250.00001105;
-     correct_mmlut[0].nr = 130;
-     correct_mmlut[0].nz = 177;
-     correct_mmlut[0].rw = 2;
-     
-     init_mmlut (vpar, cpar, cal);
-                             
-   
-     ck_assert_msg( 
-                    fabs(cal->mmlut.origin.x - correct_mmlut[0].origin.x) < EPS && 
-                    fabs(cal->mmlut.origin.y - correct_mmlut[0].origin.y) < EPS && 
-                    fabs(cal->mmlut.origin.z - correct_mmlut[0].origin.z)  < EPS &&
-                    cal->mmlut.nr == correct_mmlut[i].nr &&
-                    cal->mmlut.nz == correct_mmlut[i].nz &&
-                    cal->mmlut.rw ==  correct_mmlut[i].rw &&
-                    fabs(cal->mmlut.data[0] - 1.11089711) < EPS &&
-                    fabs(cal->mmlut.data[200] - 1.09709147) < EPS,
-         "\n Expected different correct_mmlut values but found: \n \
-         x,y,z = %10.8f %10.8f %10.8f \n nr,nz,rw = %d %d %d \n data = %10.8f %10.8f \
-          in camera %d \n", 
-         cal->mmlut.origin.x, cal->mmlut.origin.y, cal->mmlut.origin.z, \
-         cal->mmlut.nr, cal->mmlut.nz, cal->mmlut.rw, cal->mmlut.data[0], 
-         cal->mmlut.data[200], i);     
+    ck_assert_msg( 
+        fabs(cal->mmlut.origin.x - correct_mmlut[0].origin.x) < EPS && 
+        fabs(cal->mmlut.origin.y - correct_mmlut[0].origin.y) < EPS && 
+        fabs(cal->mmlut.origin.z - correct_mmlut[0].origin.z)  < EPS &&
+        cal->mmlut.nr == correct_mmlut[i].nr &&
+        cal->mmlut.nz == correct_mmlut[i].nz &&
+        cal->mmlut.rw ==  correct_mmlut[i].rw &&
+        fabs(cal->mmlut.data[0] - 1.11089711) < EPS &&
+        fabs(cal->mmlut.data[200] - 1.09709147) < EPS,
+        "\n Expected different correct_mmlut values but found: \n \
+        x,y,z = %10.8f %10.8f %10.8f \n nr,nz,rw = %d %d %d \n data = %10.8f %10.8f \
+         in camera %d \n",
+        cal->mmlut.origin.x, cal->mmlut.origin.y, cal->mmlut.origin.z, \
+        cal->mmlut.nr, cal->mmlut.nz, cal->mmlut.rw, cal->mmlut.data[0], 
+        cal->mmlut.data[200], i);     
                
-         vec3d pos = {1.0, 1.0, 1.0}; 
-         for (i_cam = 0; i_cam < cpar->num_cams; i_cam++){          
-         
-         	mmf = get_mmf_from_mmlut (cal, pos );
+    vec3d pos = {1.0, 1.0, 1.0}; 
+    for (i_cam = 0; i_cam < cpar->num_cams; i_cam++) {          
+         	mmf = get_mmf_from_mmlut (cal, pos);
         
-        	ck_assert_msg( 
-                    fabs(mmf - 1.00363015) < EPS,
-         	"\n Expected mmf  1.00363015 but found %10.8f\n", mmf);
-         }
+            ck_assert_msg(fabs(mmf - 1.00363015) < EPS,
+                "\n Expected mmf  1.00363015 but found %10.8f\n", mmf);
+    }
 }
 END_TEST
 
@@ -288,7 +258,6 @@ START_TEST(test_multimed_nlay)
         
     Calibration *cal;
 
-    
     char ori_file[] = "testing_fodder/cal/cam1.tif.ori";
     char add_file[] = "testing_fodder/cal/cam1.tif.addpar";
     
@@ -296,16 +265,12 @@ START_TEST(test_multimed_nlay)
     ck_assert_msg (file_exists(add_file) == 1, "\n File %s does not exist\n", add_file);
     cal = read_calibration(ori_file, add_file, NULL);    
     fail_if (cal == NULL, "\n ORI or ADDPAR file reading failed \n");
-    
-
-         
+     
     volume_par *vpar;
     char vol_file[] = "testing_fodder/parameters/criteria.par";
     ck_assert_msg (file_exists(vol_file) == 1, "\n File %s does not exist\n", vol_file);    
     vpar = read_volume_par(vol_file);
     fail_if (vpar == NULL, "\n volume parameter file reading failed \n");
-    
-    
     
     control_par *cpar;
     char filename[] = "testing_fodder/parameters/ptv.par";
@@ -315,33 +280,31 @@ START_TEST(test_multimed_nlay)
     
     cpar->mm->lut = 0; // to start LUT initialization 
     cpar->num_cams = 1; // only one camera test
-            
 
-     mmlut correct_mmlut[4];  
+    mmlut correct_mmlut[4];  
      
-     correct_mmlut[0].origin.x = 0.0;
-     correct_mmlut[0].origin.y = 0.0;
-     correct_mmlut[0].origin.z = -250.00003540;
-     correct_mmlut[0].nr = 114;
-     correct_mmlut[0].nz = 177;
-     correct_mmlut[0].rw = 2;
+    correct_mmlut[0].origin.x = 0.0;
+    correct_mmlut[0].origin.y = 0.0;
+    correct_mmlut[0].origin.z = -250.00003540;
+    correct_mmlut[0].nr = 114;
+    correct_mmlut[0].nz = 177;
+    correct_mmlut[0].rw = 2;
              
-     init_mmlut (vpar, cpar, cal);
-                                     
+    init_mmlut (vpar, cpar, cal);
      
-     vec3d pos = {1.23, 1.23, 1.23};
-     double correct_Xq,correct_Yq, Xq, Yq;
-     correct_Xq = 0.85954957; 
-     correct_Yq = 0.86851375;   
+    vec3d pos = {1.23, 1.23, 1.23};
+    double correct_Xq,correct_Yq, Xq, Yq;
+    correct_Xq = 0.85954957; 
+    correct_Yq = 0.86851375;   
      
-     i_cam = 0;
+    i_cam = 0;
                  
-     multimed_nlay(cal, cpar->mm, pos, &Xq, &Yq);
+    multimed_nlay(cal, cpar->mm, pos, &Xq, &Yq);
         
-    for (i=0; i<cpar->num_cams; i++){
+    for (i=0; i < cpar->num_cams; i++){
        ck_assert_msg( 
-                    fabs(Xq - correct_Xq) < EPS && 
-                    fabs(Yq - correct_Yq) < EPS,
+         fabs(Xq - correct_Xq) < EPS && 
+         fabs(Yq - correct_Yq) < EPS,
          "\n Expected different correct_Xq, Yq values \n  \
          but found %10.8f %10.8f \n", Xq, Yq);
     }
@@ -386,44 +349,29 @@ START_TEST(test_trans_Cam_Point)
     vec3d pos_t;
     double cross_p[3], cross_c[3]; 
 
-     trans_Cam_Point(test_Ex, test_mm, test_G, pos, &Ex_t, pos_t, cross_p, cross_c);
+    trans_Cam_Point(test_Ex, test_mm, test_G, pos, &Ex_t, pos_t, cross_p, cross_c);
     
-    
-     ck_assert_msg( fabs(pos_t[0] - 141.421356) < EPS && 
-                    fabs(pos_t[1] - 0.0) < EPS && 
-                    fabs(pos_t[2] + 50.000000)  < EPS,
-         "Expected 141.421356 0.000000 -50.000000  but found %10.8f %10.8f %10.8f\n", 
-         pos_t[0],pos_t[1],pos_t[2]);
-      
-      
+    ck_assert_msg( fabs(pos_t[0] - 141.421356) < EPS && 
+        fabs(pos_t[1] - 0.0) < EPS && 
+        fabs(pos_t[2] + 50.000000)  < EPS,
+        "Expected 141.421356 0.000000 -50.000000  but found %10.8f %10.8f %10.8f\n", 
+        pos_t[0],pos_t[1],pos_t[2]);
          
-     ck_assert_msg( fabs(cross_p[0] - 100.0) < EPS && 
-                    fabs(cross_p[1] - 100.0) < EPS && 
-                    fabs(cross_p[2] - 50.0)  < EPS,
-         "Expected 100.0 100.0 50.000 but found %10.8f %10.8f %10.8f\n", \
-         cross_p[0],cross_p[1],cross_p[2]);
-         
+    ck_assert_msg( fabs(cross_p[0] - 100.0) < EPS && 
+        fabs(cross_p[1] - 100.0) < EPS && 
+        fabs(cross_p[2] - 50.0)  < EPS,
+        "Expected 100.0 100.0 50.000 but found %10.8f %10.8f %10.8f\n", \
+        cross_p[0],cross_p[1],cross_p[2]);
     
-    
-      ck_assert_msg(fabs(cross_c[0] + 0.0) < EPS && 
-                    fabs(cross_c[1] + 0.0) < EPS && 
-                    fabs(cross_c[2] - 55.0)  < EPS,
-         "Expected 0.000000 0.000000 55.000000 but found %10.8f %10.8f %10.8f\n", \
-         cross_c[0],cross_c[1],cross_c[2]);
+    ck_assert_msg(fabs(cross_c[0] + 0.0) < EPS && 
+        fabs(cross_c[1] + 0.0) < EPS && 
+        fabs(cross_c[2] - 55.0)  < EPS,
+        "Expected 0.000000 0.000000 55.000000 but found %10.8f %10.8f %10.8f\n", \
+        cross_c[0],cross_c[1],cross_c[2]);
         
-      /* print if necessary 
-        print_Exterior(Ex_t);
-        print_Exterior(correct_Ex_t);
-      */
-      
-      
       fail_unless(compare_exterior_diff(&correct_Ex_t, &Ex_t));
-      
-    
 }
 END_TEST
-
-
 
 
 Suite* fb_suite(void) {
@@ -441,17 +389,17 @@ Suite* fb_suite(void) {
     tcase_add_test(tc, test_back_trans_Point);
     suite_add_tcase (s, tc);    
     
-  tc = tcase_create ("Test multimed_nlay");
-  tcase_add_test(tc, test_multimed_nlay);
-  suite_add_tcase (s, tc);    
+    tc = tcase_create ("Test multimed_nlay");
+    tcase_add_test(tc, test_multimed_nlay);
+    suite_add_tcase (s, tc);    
 
-  tc = tcase_create ("Test get_mmf_mmLUT");
-  tcase_add_test(tc, test_get_mmf_mmLUT);
-  suite_add_tcase (s, tc);    
+    tc = tcase_create ("Test get_mmf_mmLUT");
+    tcase_add_test(tc, test_get_mmf_mmLUT);
+    suite_add_tcase (s, tc);    
 
-  tc = tcase_create ("Test test_volumedimension");
-  tcase_add_test(tc, test_volumedimension);
-  suite_add_tcase (s, tc);    
+    tc = tcase_create ("Test test_volumedimension");
+    tcase_add_test(tc, test_volumedimension);
+    suite_add_tcase (s, tc);    
           
     return s;
 }
