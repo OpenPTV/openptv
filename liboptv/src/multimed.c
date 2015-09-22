@@ -477,12 +477,18 @@ void volumedimension (double *xmax, double *xmin,
   
   Zmin = vpar->Zmin_lay[0];
   Zmax = vpar->Zmax_lay[0];
+  
+  /* there is a bug, see the original multimed.c  
+  https://github.com/3dptv/3dptv/src_c/multimed.c#L899
+  obviously we have left and right side that could be smaller or larger in Z
+  */
+  if (vpar->Zmin_lay[1] < Zmin) Zmin = vpar->Zmin_lay[1];
+  if (vpar->Zmax_lay[1] > Zmax) Zmax = vpar->Zmax_lay[1];
 
   *zmin = Zmin;
   *zmax = Zmax;
     
   /* find extrema of imaged object volume */
-  /* ==================================== */
   for (i_cam = 0; i_cam < cpar->num_cams; i_cam++) {
       for (i = 0; i < 2; i ++) {
           for (j = 0; j < 2; j++) {
@@ -493,56 +499,23 @@ void volumedimension (double *xmax, double *xmin,
           
               ray_tracing(x, y, &cal[i_cam], *(cpar->mm), pos, a);
           
-          
-              Z = Zmin;
               X = pos[0] + (Zmin - pos[2]) * a[0]/a[2];   
               Y = pos[1] + (Zmin - pos[2]) * a[1]/a[2];
+              
                      
               if ( X > *xmax) *xmax = X;
               if ( X < *xmin) *xmin = X;
               if ( Y > *ymax) *ymax = Y;
               if ( Y < *ymin) *ymin = Y;
-          
-              xyz[0] = X;
-              xyz[1] = Y;
-              xyz[2] = Z;
 
-              trans_Cam_Point(cal[i_cam].ext_par, *(cpar->mm), cal[i_cam].glass_par, xyz,\
-                  &Ex_t, xyz_t, (double *)cross_p, (double *)cross_c);
-  
-              X_t = xyz_t[0];
-              Y_t = xyz_t[1];
-              Z_t = xyz_t[2];
-              
-              R = norm((X_t - Ex_t.x0), (Y_t - Ex_t.y0), 0); 
-
-              if (R > Rmax)
-                  Rmax = R;
-        
-              Z = Zmax;
-              X = pos[0] + (Z - pos[2]) * a[0]/a[2];   
-              Y = pos[1] + (Z - pos[2]) * a[1]/a[2];
+              X = pos[0] + (Zmax - pos[2]) * a[0]/a[2];   
+              Y = pos[1] + (Zmax - pos[2]) * a[1]/a[2];
         
               if ( X > *xmax) *xmax = X;
               if ( X < *xmin) *xmin = X;
               if ( Y > *ymax) *ymax = Y;
               if ( Y < *ymin) *ymin = Y;
         
-              xyz[0] = X;
-              xyz[1] = Y;
-              xyz[2] = Z;
-              
-              trans_Cam_Point(cal[i_cam].ext_par, *(cpar->mm), cal[i_cam].glass_par, xyz,\
-                  &Ex_t, xyz_t, (double *)cross_p, (double *)cross_c);
-
-              X_t = xyz_t[0];
-              Y_t = xyz_t[1];
-              Z_t = xyz_t[2];
-              
-              R = norm((X_t - Ex_t.x0), (Y_t - Ex_t.y0), 0); 
-
-              if (R > Rmax)
-                  Rmax = R;
           }
       }
   }
