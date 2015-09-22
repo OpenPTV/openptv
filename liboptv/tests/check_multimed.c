@@ -140,14 +140,27 @@ START_TEST(test_volumedimension)
     double xmax, xmin, ymax, ymin, zmax, zmin;
     int i; 
     
-    Calibration *cal;
-    char ori_file[] = "testing_fodder/cal/cam2.tif.ori";
-    char add_file[] = "testing_fodder/cal/cam2.tif.addpar";
+    Calibration *tmp, cal[2];
+        
+    char ori_file[] = "testing_fodder/cal/cam1.tif.ori";
+    char add_file[] = "testing_fodder/cal/cam1.tif.addpar";
     
     ck_assert_msg (file_exists(ori_file) == 1, "\n File %s does not exist\n", ori_file);
     ck_assert_msg (file_exists(add_file) == 1, "\n File %s does not exist\n", add_file);
-    cal = read_calibration(ori_file, add_file, NULL);    
-    fail_if (cal == NULL, "\n ORI or ADDPAR file reading failed \n");
+    tmp = read_calibration(ori_file, add_file, NULL);    
+    fail_if (tmp == NULL, "\n ORI or ADDPAR file reading failed \n");
+    cal[0] = *tmp;
+    
+    
+    char ori_file2[] = "testing_fodder/cal/cam2.tif.ori";
+    char add_file2[] = "testing_fodder/cal/cam2.tif.addpar";
+    
+    ck_assert_msg (file_exists(ori_file2) == 1, "\n File %s does not exist\n", ori_file2);
+    ck_assert_msg (file_exists(add_file2) == 1, "\n File %s does not exist\n", add_file2);
+    tmp = read_calibration(ori_file, add_file2, NULL);    
+    fail_if (tmp == NULL, "\n ORI or ADDPAR file reading failed \n");
+    cal[1] = *tmp;
+    
          
     volume_par *vpar;
     char vol_file[] = "testing_fodder/parameters/criteria.par";
@@ -163,16 +176,17 @@ START_TEST(test_volumedimension)
 
     cpar->mm->lut = 1;
     cpar->mm->nlay = 1;
+    cpar->num_cams = 2;
 
     volumedimension (&xmax, &xmin, &ymax, &ymin, &zmax, &zmin, vpar, cpar, cal);
     
-    ck_assert_msg( fabs(xmax - 97.81096328) < EPS && 
-        fabs(xmin + 35.41493912) < EPS && 
-        fabs(ymax - 49.40201301)  < EPS &&
-        fabs(ymin + 68.36694764)  < EPS &&
+    ck_assert_msg( fabs(xmax - 73.02053752) < EPS && 
+        fabs(xmin + 46.80667189) < EPS && 
+        fabs(ymax - 51.04924925)  < EPS &&
+        fabs(ymin + 62.91848990)  < EPS &&
         fabs(zmax - 100.0000)  < EPS &&
         fabs(zmin + 100.0000)  < EPS,
-        "\n Expected 97.81096 -35.414939 49.402013 -68.366947 100.0000 -100.0000 \n  \
+        "\n Expected 73.02053752 -46.80667189 51.04924925 -62.91848990 100.0000 -100.0000 \n  \
         but found %10.8f %10.8f %10.8f %10.8f %10.8f %10.8f \n", xmax, xmin, ymax, 
         ymin, zmax, zmin
     );           
