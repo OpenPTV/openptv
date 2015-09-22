@@ -8,8 +8,11 @@ import os
 inc_dirs = [np.get_include(), '.']
 
 ext_mods = [
-    Extension("optv.tracking_framebuf", ["optv/tracking_framebuf.pyx"], 
-        libraries=['optv'], include_dirs=inc_dirs,
+       Extension("optv.tracking_framebuf", ["optv/tracking_framebuf.pyx"],
+       libraries=['optv'], include_dirs=inc_dirs,
+        pyrex_include_dirs=['.']),
+       Extension("optv.intersect", ["optv/intersect.pyx"],
+       libraries=['optv'], include_dirs=inc_dirs,
         pyrex_include_dirs=['.']),
     Extension("optv.parameters", ["optv/parameters.pyx"], 
         libraries=['optv'], include_dirs=inc_dirs,
