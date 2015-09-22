@@ -487,11 +487,11 @@ void volumedimension (double *xmax, double *xmin,
       for (i = 0; i < 2; i ++) {
           for (j = 0; j < 2; j++) {
               pixel_to_metric (&x, &y, xc[i], yc[j], cpar);
-              x = x - cal->int_par.xh;
-              y = y - cal->int_par.yh;
-              correct_brown_affin (x, y, cal->added_par, &x, &y);
+              x = x - cal[i_cam].int_par.xh;
+              y = y - cal[i_cam].int_par.yh;
+              correct_brown_affin (x, y, cal[i_cam].added_par, &x, &y);
           
-              ray_tracing(x, y, cal, *(cpar->mm), pos, a);
+              ray_tracing(x, y, &cal[i_cam], *(cpar->mm), pos, a);
           
           
               Z = Zmin;
@@ -507,7 +507,7 @@ void volumedimension (double *xmax, double *xmin,
               xyz[1] = Y;
               xyz[2] = Z;
 
-              trans_Cam_Point(cal->ext_par, *(cpar->mm), cal->glass_par, xyz,\
+              trans_Cam_Point(cal[i_cam].ext_par, *(cpar->mm), cal[i_cam].glass_par, xyz,\
                   &Ex_t, xyz_t, (double *)cross_p, (double *)cross_c);
   
               X_t = xyz_t[0];
@@ -532,7 +532,7 @@ void volumedimension (double *xmax, double *xmin,
               xyz[1] = Y;
               xyz[2] = Z;
               
-              trans_Cam_Point(cal->ext_par, *(cpar->mm), cal->glass_par, xyz,\
+              trans_Cam_Point(cal[i_cam].ext_par, *(cpar->mm), cal[i_cam].glass_par, xyz,\
                   &Ex_t, xyz_t, (double *)cross_p, (double *)cross_c);
 
               X_t = xyz_t[0];
