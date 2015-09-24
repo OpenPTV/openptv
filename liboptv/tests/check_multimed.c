@@ -47,8 +47,8 @@ START_TEST(test_init_mmLUT)
     cpar = read_control_par(filename);
     fail_if (cpar == NULL, "\n control parameter file reading failed\n ");
 
-    /* lut value is no in the parameter file */
-    cpar->mm->lut = 1;
+    /* lut value is not in the parameter file */
+    cpar->mm->lut = 0;
     mmlut test_mmlut[4], correct_mmlut[4]; 
      
     correct_mmlut[0].origin.x = 0.0;
@@ -220,7 +220,7 @@ START_TEST(test_get_mmf_mmLUT)
     fail_if (cpar == NULL, "\n control parameter file reading failed\n ");
 
     /* lut value is no in the parameter file */
-    cpar->mm->lut = 1;
+    cpar->mm->lut = 0;
 
     mmlut correct_mmlut[4]; 
      
