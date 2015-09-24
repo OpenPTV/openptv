@@ -250,6 +250,9 @@ void init_mmlut (volume_par *vpar, control_par *cpar, Calibration *cal) {
   /* find extrema of imaged object volume */      
   Zmin = vpar->Zmin_lay[0];
   Zmax = vpar->Zmax_lay[0];
+  
+  if (vpar->Zmin_lay[1] < Zmin) Zmin = vpar->Zmin_lay[1];
+  if (vpar->Zmax_lay[1] > Zmax) Zmax = vpar->Zmax_lay[1];
  
   Zmin -= fmod (Zmin, rw);
   Zmax += (rw - fmod (Zmax, rw));
@@ -310,32 +313,34 @@ void init_mmlut (volume_par *vpar, control_par *cpar, Calibration *cal) {
   
   // if (cal.mmlut.data != NULL)			// preventing memory leaks, ad holten, 04-2013
   //	free (cal.mmlut.data);
-  cal->mmlut.data = (double *) malloc (nr*nz * sizeof (double));
+  if (cpar->mm->lut == 0){
+      cal->mmlut.data = (double *) malloc (nr*nz * sizeof (double));
   
-  /* fill mmlut structure */
-  Ri = (double *) malloc (nr * sizeof (double));
-  for (i = 0; i < nr; i++)
-    Ri[i] = i*rw;
+      /* fill mmlut structure */
+      Ri = (double *) malloc (nr * sizeof (double));
+      for (i = 0; i < nr; i++)
+        Ri[i] = i*rw;
 
-  Zi = (double *) malloc (nz * sizeof (double));
-  for (i = 0; i < nz; i++)
-    Zi[i] = Zmin_t + i*rw;
+      Zi = (double *) malloc (nz * sizeof (double));
+      for (i = 0; i < nz; i++)
+        Zi[i] = Zmin_t + i*rw;
 
-  for (i = 0; i < nr; i++) {
-    for (j = 0; j < nz; j++) {
-        xyz[0] = Ri[i] + Ex_t.x0;
-        xyz[1] = Ex_t.y0;
-        xyz[2] = Zi[j];
+      for (i = 0; i < nr; i++) {
+        for (j = 0; j < nz; j++) {
+            xyz[0] = Ri[i] + Ex_t.x0;
+            xyz[1] = Ex_t.y0;
+            xyz[2] = Zi[j];
     
-        cal->mmlut.data[i*nz + j] = multimed_r_nlay(cal, cpar->mm, xyz);
-    } /* nr */
-  } /* nz */
+            cal->mmlut.data[i*nz + j] = multimed_r_nlay(cal, cpar->mm, xyz);
+        } /* nr */
+      } /* nz */
     
-  free (Ri);	// preventing memory leaks, Ad Holten, 04-2013
-  free (Zi);
+      free (Ri);	// preventing memory leaks, Ad Holten, 04-2013
+      free (Zi);
 
-  /* when finished initalization, change the setting of the LUT flag */
-  cpar->mm->lut = 1;
+      /* when finished initalization, change the setting of the LUT flag */
+      cpar->mm->lut = 1;
+    }
 }
 
 
