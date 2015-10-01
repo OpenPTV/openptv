@@ -10,6 +10,8 @@
 #ifndef CALIBRATION_H
 #define CALIBRATION_H
 
+#include "vec_utils.h"
+
 typedef	double	Dmatrix[3][3];	/* 3 x 3 rotation matrix */
 
 typedef struct
@@ -39,14 +41,9 @@ typedef struct
 }
 ap_52;
 
-typedef struct {
-    double x, y, z;
-} Origin; 
-
-
 /* mmLUT structure */
 typedef struct {
-    Origin origin;
+    vec3d origin;
     int    nr, nz, rw;
     double *data; 
 } mmlut;

@@ -302,10 +302,12 @@ void init_mmlut (volume_par *vpar, control_par *cpar, Calibration *cal) {
   nr = (int)(Rmax/rw + 1);
   nz = (int)((Zmax_t-Zmin_t)/rw + 1);
 
-  /* create two dimensional mmlut structure */
+  /* create two dimensional mmlut structure 
   cal->mmlut.origin.x = Ex_t.x0;
   cal->mmlut.origin.y = Ex_t.y0;
   cal->mmlut.origin.z = Zmin_t;
+  */
+  vec_set(cal->mmlut.origin, Ex_t.x0, Ex_t.y0, Zmin_t);
   
   cal->mmlut.nr = nr;
   cal->mmlut.nz = nz;
@@ -360,13 +362,13 @@ double get_mmf_from_mmlut (Calibration *cal, vec3d pos){
   rw =  cal->mmlut.rw;
   
   if (X == 1.0 && Y == 1.0 && Z == 1.0){
-    Z -= cal->mmlut.origin.z; 
+    Z -= cal->mmlut.origin[2]; 
     sz = Z/rw; 
     iz = (int) sz; 
     sz -= iz;
     
-    X -= cal->mmlut.origin.x;
-    Y -= cal->mmlut.origin.y;
+    X -= cal->mmlut.origin[0];
+    Y -= cal->mmlut.origin[1];
     R = sqrt (X*X + Y*Y); 
     sr = R/rw; 
     ir = (int) sr; 
@@ -402,13 +404,13 @@ double get_mmf_from_mmlut (Calibration *cal, vec3d pos){
   
     return (mmf);     
   } else {
-    Z -= cal->mmlut.origin.z; 
+    Z -= cal->mmlut.origin[2]; 
     sz = Z/rw;
     iz = (int) sz;
     sz -= iz;
     
-    X -= cal->mmlut.origin.x;
-    Y -= cal->mmlut.origin.y;
+    X -= cal->mmlut.origin[0];
+    Y -= cal->mmlut.origin[1];
     R = norm(X, Y, 0);
     
     sr = R/rw;

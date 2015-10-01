@@ -51,9 +51,8 @@ START_TEST(test_init_mmLUT)
     cpar->mm->lut = 0;
     mmlut test_mmlut[4], correct_mmlut[4]; 
      
-    correct_mmlut[0].origin.x = 0.0;
-    correct_mmlut[0].origin.y = 0.0;
-    correct_mmlut[0].origin.z = -250.00001105;
+    vec_set(correct_mmlut[0].origin, 0.0, 0.0, -250.00001105);
+
     correct_mmlut[0].nr = 130;
     correct_mmlut[0].nz = 177;
     correct_mmlut[0].rw = 2;
@@ -64,9 +63,9 @@ START_TEST(test_init_mmLUT)
              
     init_mmlut (vpar, cpar, cal);
     ck_assert_msg( 
-        fabs(cal->mmlut.origin.x - correct_mmlut[0].origin.x) < EPS && 
-        fabs(cal->mmlut.origin.y - correct_mmlut[0].origin.y) < EPS && 
-        fabs(cal->mmlut.origin.z - correct_mmlut[0].origin.z)  < EPS &&
+        fabs(cal->mmlut.origin[0] - correct_mmlut[0].origin[0]) < EPS && 
+        fabs(cal->mmlut.origin[1]- correct_mmlut[0].origin[1]) < EPS && 
+        fabs(cal->mmlut.origin[2] - correct_mmlut[0].origin[2])  < EPS &&
         cal->mmlut.nr == correct_mmlut[i].nr &&
         cal->mmlut.nz == correct_mmlut[i].nz &&
         cal->mmlut.rw ==  correct_mmlut[i].rw &&
@@ -75,7 +74,7 @@ START_TEST(test_init_mmLUT)
         "\n Expected different correct_mmlut values but found: \n \
         x,y,z = %10.8f %10.8f %10.8f \n nr,nz,rw = %d %d %d \n data = %10.8f %10.8f \
          in camera %d \n", 
-        cal->mmlut.origin.x, cal->mmlut.origin.y, cal->mmlut.origin.z, \
+        cal->mmlut.origin[0], cal->mmlut.origin[1], cal->mmlut.origin[2], \
         cal->mmlut.nr, cal->mmlut.nz, cal->mmlut.rw, cal->mmlut.data[0], 
         cal->mmlut.data[200], i
     );
@@ -224,9 +223,7 @@ START_TEST(test_get_mmf_mmLUT)
 
     mmlut correct_mmlut[4]; 
      
-    correct_mmlut[0].origin.x = 0.0;
-    correct_mmlut[0].origin.y = 0.0;
-    correct_mmlut[0].origin.z = -250.00001105;
+    vec_set(correct_mmlut[0].origin, 0.0, 0.0, -250.00001105);
     correct_mmlut[0].nr = 130;
     correct_mmlut[0].nz = 177;
     correct_mmlut[0].rw = 2;
@@ -234,9 +231,9 @@ START_TEST(test_get_mmf_mmLUT)
     init_mmlut (vpar, cpar, cal);
      
     ck_assert_msg( 
-        fabs(cal->mmlut.origin.x - correct_mmlut[0].origin.x) < EPS && 
-        fabs(cal->mmlut.origin.y - correct_mmlut[0].origin.y) < EPS && 
-        fabs(cal->mmlut.origin.z - correct_mmlut[0].origin.z)  < EPS &&
+        fabs(cal->mmlut.origin[0] - correct_mmlut[0].origin[0]) < EPS && 
+        fabs(cal->mmlut.origin[1] - correct_mmlut[0].origin[1]) < EPS && 
+        fabs(cal->mmlut.origin[2] - correct_mmlut[0].origin[2])  < EPS &&
         cal->mmlut.nr == correct_mmlut[0].nr &&
         cal->mmlut.nz == correct_mmlut[0].nz &&
         cal->mmlut.rw ==  correct_mmlut[0].rw &&
@@ -244,7 +241,7 @@ START_TEST(test_get_mmf_mmLUT)
         fabs(cal->mmlut.data[200] - 1.09709147) < EPS,
         "\n Expected different correct_mmlut values but found: \n \
         x,y,z = %10.8f %10.8f %10.8f \n nr,nz,rw = %d %d %d \n data = %10.8f %10.8f\n",
-        cal->mmlut.origin.x, cal->mmlut.origin.y, cal->mmlut.origin.z, \
+        cal->mmlut.origin[0], cal->mmlut.origin[1], cal->mmlut.origin[2], \
         cal->mmlut.nr, cal->mmlut.nz, cal->mmlut.rw, cal->mmlut.data[0], 
         cal->mmlut.data[200]); 
     
@@ -288,9 +285,8 @@ START_TEST(test_multimed_nlay)
 
     mmlut correct_mmlut[4];  
      
-    correct_mmlut[0].origin.x = 0.0;
-    correct_mmlut[0].origin.y = 0.0;
-    correct_mmlut[0].origin.z = -250.00003540;
+    vec_set(correct_mmlut[0].origin, 0.0, 0.0, -250.00003540);
+    
     correct_mmlut[0].nr = 114;
     correct_mmlut[0].nz = 177;
     correct_mmlut[0].rw = 2;
