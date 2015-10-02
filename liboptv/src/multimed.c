@@ -117,6 +117,15 @@ double multimed_r_nlay (Calibration *cal, mm_np *mm, vec3d pos) {
     window position and the two vectors that point to the crossing point
     
     Arguments: 
+    Exterior structure 'ex'
+    multimedia paramaters mm
+    Glass parameters gl
+    3D space position pos
+    Returns:
+    Pointer to ex_t Exterior parameters after shift
+    vector of doubles for shifted position pos_t
+    vector of 3 doubles of cross_p 
+    vector of 3 doubles of cross_c, both used for back projection
 */ 
 void trans_Cam_Point(Exterior ex
                    , mm_np mm
@@ -167,8 +176,8 @@ void trans_Cam_Point(Exterior ex
 
 /* the opposite direction transfer from X_t,Y_t,Z_t to the X,Y,Z in 3D space */
 
-void back_trans_Point(vec3d pos_t, mm_np mm, Glass G, double cross_p[], 
-    double cross_c[], vec3d pos)
+void back_trans_Point(vec3d pos_t, mm_np mm, Glass G, double cross_p[3], 
+    double cross_c[3], vec3d pos)
 {  
     double nVe, nGl;
     vec3d glass_dir, renorm_glass, after_glass, temp;
