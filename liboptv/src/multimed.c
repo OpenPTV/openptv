@@ -65,7 +65,6 @@ double multimed_r_nlay (Calibration *cal, mm_np *mm, vec3d pos) {
     if (mm->n1 == 1 && mm->nlay == 1 && mm->n2[0]== 1 && mm->n3 == 1)
         return (1.0);
     
-    X = pos[0]; Y = pos[1]; Z = pos[2];
     
     /* interpolation using the existing mmlut */
     if (mm->lut) {
@@ -74,6 +73,10 @@ double multimed_r_nlay (Calibration *cal, mm_np *mm, vec3d pos) {
     }
     
     /* iterative procedure */
+    X = pos[0];
+    Y = pos[1];
+    Z = pos[2];
+    
     r = norm((X - cal->ext_par.x0), (Y - cal->ext_par.y0), 0);
     rq = r;
   
@@ -127,29 +130,21 @@ void trans_Cam_Point(Exterior ex
 /* Beat Luethi June 07: I change the stuff to a system perpendicular to the interface */
     double dist_cam_glas,dist_point_glas,dist_o_glas; //glas inside at water 
     int row, col;
-    double X,Y,Z;
+    vec3d glass_dir, primary_pt, renorm_glass, temp;
     
-    X = pos[0]; Y = pos[1]; Z = pos[2];
-    
+    vec_set(glass_dir, gl.vec_x, gl.vec_y, gl.vec_z);
+    vec_set(primary_pt, ex.x0, ex.y0, ex.z0);
 
-    dist_o_glas = sqrt( gl.vec_x * gl.vec_x + gl.vec_y * gl.vec_y + gl.vec_z * gl.vec_z);
+    dist_o_glas = vec_norm(glass_dir);
+    dist_cam_glas = vec_dot(primary_pt, glass_dir) / dist_o_glas \
+        - dist_o_glas - mm.d[0];
+    dist_point_glas = vec_dot(pos, glass_dir) / dist_o_glas - dist_o_glas;
 
+    vec_scalar_mul(glass_dir, dist_cam_glas/dist_o_glas, renorm_glass);
+    vec_subt(primary_pt, renorm_glass, cross_c);
 
-    dist_cam_glas = ex.x0 * gl.vec_x / dist_o_glas + ex.y0 * gl.vec_y / dist_o_glas + \
-    ex.z0 * gl.vec_z / dist_o_glas - dist_o_glas - mm.d[0];
-
-    dist_point_glas = X * gl.vec_x / dist_o_glas + \
-                    Y * gl.vec_y / dist_o_glas + \
-                    Z * gl.vec_z / dist_o_glas - dist_o_glas; 
-
-    cross_c[0] = ex.x0 - dist_cam_glas * gl.vec_x / dist_o_glas;
-    cross_c[1] = ex.y0 - dist_cam_glas * gl.vec_y / dist_o_glas;
-    cross_c[2] = ex.z0 - dist_cam_glas * gl.vec_z / dist_o_glas;
-
-    cross_p[0] = X - dist_point_glas * gl.vec_x / dist_o_glas;
-    cross_p[1] = Y - dist_point_glas * gl.vec_y / dist_o_glas;
-    cross_p[2] = Z - dist_point_glas * gl.vec_z / dist_o_glas;
-
+    vec_scalar_mul(glass_dir, dist_point_glas/dist_o_glas, renorm_glass);
+    vec_subt(pos, renorm_glass, cross_p);
 
     for (row = 0; row < 3; row++)
         for (col = 0; col < 3; col++)
@@ -163,41 +158,40 @@ void trans_Cam_Point(Exterior ex
     ex_t->y0 = 0.;
     ex_t->z0 = dist_cam_glas + mm.d[0];
 
-    pos_t[0]=sqrt( pow(cross_p[0] - (cross_c[0] - mm.d[0] * gl.vec_x / dist_o_glas ) ,2.)
-            +pow(cross_p[1] - (cross_c[1] - mm.d[0] * gl.vec_y / dist_o_glas ), 2.)
-            +pow(cross_p[2] - (cross_c[2] - mm.d[0] * gl.vec_z / dist_o_glas ), 2.));
-    pos_t[1] = 0;
-    pos_t[2] = dist_point_glas;
+    vec_scalar_mul(glass_dir, mm.d[0]/dist_o_glas, renorm_glass);
+    vec_subt(cross_c, renorm_glass, temp);
+    vec_subt(cross_p, temp, temp);
+    
+    vec_set(pos_t, vec_norm(temp), 0, dist_point_glas);
 }
 
 /* the opposite direction transfer from X_t,Y_t,Z_t to the X,Y,Z in 3D space */
 
 void back_trans_Point(vec3d pos_t, mm_np mm, Glass G, double cross_p[], 
-    double cross_c[], vec3d pos){
-    
+    double cross_c[], vec3d pos)
+{  
     double nVe, nGl;
-    double X_t,Y_t,Z_t;
-    X_t = pos_t[0]; Y_t = pos_t[1]; Z_t = pos_t[2];
-
+    vec3d glass_dir, renorm_glass, after_glass, temp;
     
-    nGl = sqrt( pow ( G.vec_x, 2. ) + pow( G.vec_y, 2.) + pow( G.vec_z ,2.) );
+    vec_set(glass_dir, G.vec_x, G.vec_y, G.vec_z);
+    nGl = vec_norm(glass_dir);
     
-    nVe = sqrt( pow ( cross_p[0] - (cross_c[0] - mm.d[0] * G.vec_x / nGl ), 2.)
-              + pow ( cross_p[1] - (cross_c[1] - mm.d[0] * G.vec_y / nGl ), 2.)
-              + pow ( cross_p[2] - (cross_c[2] - mm.d[0] * G.vec_z / nGl ), 2.));
-
-    pos[0] = cross_c[0] - mm.d[0] * G.vec_x / nGl + Z_t * G.vec_x / nGl;
-    pos[1] = cross_c[1] - mm.d[0] * G.vec_y / nGl + Z_t * G.vec_y / nGl;
-    pos[2] = cross_c[2] - mm.d[0] * G.vec_z / nGl + Z_t * G.vec_z / nGl;
-
+    vec_scalar_mul(glass_dir, mm.d[0]/nGl, renorm_glass);
+    vec_subt(cross_c, renorm_glass, after_glass);
+    vec_subt(cross_p, after_glass, temp);
+    
+    nVe = vec_norm(temp);
+    
+    vec_scalar_mul(glass_dir, -pos_t[2]/nGl, renorm_glass);
+    vec_subt(after_glass, renorm_glass, pos);
+    
     if (nVe > 0) {  
         /* We need this for when the cam-point line is exactly perp. to glass.
          The degenerate case will have nVe == 0 and produce NaNs on the
          following calculations.
         */
-        pos[0] += X_t * (cross_p[0] - (cross_c[0] - mm.d[0] * G.vec_x / nGl)) / nVe;
-        pos[1] += X_t * (cross_p[1] - (cross_c[1] - mm.d[0] * G.vec_y / nGl)) / nVe;
-        pos[2] += X_t * (cross_p[2] - (cross_c[2] - mm.d[0] * G.vec_z / nGl)) / nVe;
+        vec_scalar_mul(temp, -pos_t[0]/nVe, renorm_glass);
+        vec_subt(pos, renorm_glass, pos);
     }
 }
 
@@ -309,9 +303,7 @@ void init_mmlut (volume_par *vpar, control_par *cpar, Calibration *cal) {
   cal->mmlut.nz = nz;
   cal->mmlut.rw = rw;
   
-  // if (cal.mmlut.data != NULL)			// preventing memory leaks, ad holten, 04-2013
-  //	free (cal.mmlut.data);
-  if (cpar->mm->lut == 0){
+  if (cpar->mm->lut == 0) {
       cal->mmlut.data = (double *) malloc (nr*nz * sizeof (double));
   
       /* fill mmlut structure */
@@ -325,15 +317,12 @@ void init_mmlut (volume_par *vpar, control_par *cpar, Calibration *cal) {
 
       for (i = 0; i < nr; i++) {
         for (j = 0; j < nz; j++) {
-            xyz[0] = Ri[i] + Ex_t.x0;
-            xyz[1] = Ex_t.y0;
-            xyz[2] = Zi[j];
-    
+            vec_set(xyz, Ri[i] + Ex_t.x0, Ex_t.y0, Zi[j]);
             cal->mmlut.data[i*nz + j] = multimed_r_nlay(cal, cpar->mm, xyz);
         } /* nr */
       } /* nz */
     
-      free (Ri);	// preventing memory leaks, Ad Holten, 04-2013
+      free (Ri);
       free (Zi);
 
       /* when finished initalization, change the setting of the LUT flag */
