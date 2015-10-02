@@ -348,55 +348,12 @@ void init_mmlut (volume_par *vpar, control_par *cpar, Calibration *cal) {
    Calibration parameters pointer, *cal
 */
 double get_mmf_from_mmlut (Calibration *cal, vec3d pos){
-  int i, ir,iz, nr,nz, rw, v4[4];
-  double R, sr, sz, mmf = 1.0;
-  double X,Y,Z;
+    int i, ir,iz, nr,nz, rw, v4[4];
+    double R, sr, sz, mmf = 1.0;
+    double X,Y,Z;
   
-  rw =  cal->mmlut.rw;
+    rw =  cal->mmlut.rw;
   
-  if (pos[0] == 1.0 && pos[1] == 1.0 && pos[2] == 1.0){
-    pos[2] -= cal->mmlut.origin[2]; 
-    sz = pos[2]/rw; 
-    iz = (int) sz; 
-    sz -= iz;
-    
-    pos[0] -= cal->mmlut.origin[0];
-    pos[1] -= cal->mmlut.origin[1];
-    R = norm(pos[0], pos[1], 0); 
-    sr = R/rw; 
-    ir = (int) sr; 
-    sr -= ir;
-    
-    nz =  cal->mmlut.nz;
-    nr =  cal->mmlut.nr;
-    
-    /* check whether point is inside camera's object volume */
-    if (ir > nr)              return (0.0);
-    if (iz < 0  ||  iz > nz)  return (0.0);
-  
-    /* bilinear interpolation in r/z box */
-    /* ================================= */
-  
-    /* get vertices of box */
-    v4[0] = ir*nz + iz;
-    v4[1] = ir*nz + (iz+1);
-    v4[2] = (ir+1)*nz + iz;
-    v4[3] = (ir+1)*nz + (iz+1);
-  
-    /* 2. check whether point is inside camera's object volume */
-    /* important for epipolar line computation */
-    for (i = 0; i < 4; i++)
-        if (v4[i] < 0 || v4[i] > nr*nz)
-            return (0);
-  
-    /* interpolate */
-    mmf = cal->mmlut.data[v4[0]] * (1-sr)*(1-sz)
-        + cal->mmlut.data[v4[1]] * (1-sr)*sz
-        + cal->mmlut.data[v4[2]] * sr*(1-sz)
-        + cal->mmlut.data[v4[3]] * sr*sz;
-  
-    return (mmf);     
-  } else {
     pos[2] -= cal->mmlut.origin[2]; 
     sz = pos[2]/rw;
     iz = (int) sz;
@@ -441,7 +398,6 @@ double get_mmf_from_mmlut (Calibration *cal, vec3d pos){
         + cal->mmlut.data[v4[3]] * sr*sz;
   
     return (mmf);
-  }
 }
 
 
