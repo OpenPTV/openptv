@@ -302,11 +302,7 @@ void init_mmlut (volume_par *vpar, control_par *cpar, Calibration *cal) {
   nr = (int)(Rmax/rw + 1);
   nz = (int)((Zmax_t-Zmin_t)/rw + 1);
 
-  /* create two dimensional mmlut structure 
-  cal->mmlut.origin.x = Ex_t.x0;
-  cal->mmlut.origin.y = Ex_t.y0;
-  cal->mmlut.origin.z = Zmin_t;
-  */
+  /* create two dimensional mmlut structure */
   vec_set(cal->mmlut.origin, Ex_t.x0, Ex_t.y0, Zmin_t);
   
   cal->mmlut.nr = nr;
