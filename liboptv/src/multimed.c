@@ -335,26 +335,25 @@ void init_mmlut (volume_par *vpar, control_par *cpar, Calibration *cal) {
     using the multimedia look up table.
     
     Arguments:
-    double position in 3D space, X,Y,Z
-    multimedia look-up table mmlut
+    pos - vector of 3 doubles, position in 3D space 
+   Calibration parameters pointer, *cal
 */
 double get_mmf_from_mmlut (Calibration *cal, vec3d pos){
   int i, ir,iz, nr,nz, rw, v4[4];
   double R, sr, sz, mmf = 1.0;
   double X,Y,Z;
   
-  X = pos[0]; Y = pos[1]; Z = pos[2];
   rw =  cal->mmlut.rw;
   
-  if (X == 1.0 && Y == 1.0 && Z == 1.0){
-    Z -= cal->mmlut.origin[2]; 
-    sz = Z/rw; 
+  if (pos[0] == 1.0 && pos[1] == 1.0 && pos[2] == 1.0){
+    pos[2] -= cal->mmlut.origin[2]; 
+    sz = pos[2]/rw; 
     iz = (int) sz; 
     sz -= iz;
     
-    X -= cal->mmlut.origin[0];
-    Y -= cal->mmlut.origin[1];
-    R = sqrt (X*X + Y*Y); 
+    pos[0] -= cal->mmlut.origin[0];
+    pos[1] -= cal->mmlut.origin[1];
+    R = norm(pos[0], pos[1], 0); 
     sr = R/rw; 
     ir = (int) sr; 
     sr -= ir;
@@ -389,14 +388,14 @@ double get_mmf_from_mmlut (Calibration *cal, vec3d pos){
   
     return (mmf);     
   } else {
-    Z -= cal->mmlut.origin[2]; 
-    sz = Z/rw;
+    pos[2] -= cal->mmlut.origin[2]; 
+    sz = pos[2]/rw;
     iz = (int) sz;
     sz -= iz;
     
-    X -= cal->mmlut.origin[0];
-    Y -= cal->mmlut.origin[1];
-    R = norm(X, Y, 0);
+    pos[0] -= cal->mmlut.origin[0];
+    pos[1] -= cal->mmlut.origin[1];
+    R = norm(pos[0], pos[1], 0);
     
     sr = R/rw;
     ir = (int) sr;
