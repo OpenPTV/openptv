@@ -96,6 +96,7 @@ track_par* read_track_par(char *filename) {
     return ret;
 
 handle_error:
+    printf("Error reading tracking parameters from %s\n", filename);
     free(ret);
     fclose (fpp);
     return NULL;
@@ -158,6 +159,7 @@ volume_par* read_volume_par(char *filename) {
     return ret;
 
 handle_error:
+    printf("Error reading volume parameters from %s\n", filename);
     free(ret);
     fclose(fpp);
     return NULL;
@@ -259,6 +261,7 @@ control_par* read_control_par(char *filename) {
     return ret;
 
 handle_error:
+    printf("Error reading control parameters from %s\n", filename);
     fclose(par_file);
     free_control_par(ret);    
     return NULL;
