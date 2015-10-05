@@ -22,7 +22,6 @@ START_TEST(test_img_xy_mm_geo)
 
     vec3d pos = {50.0, 100.0, -10.0};
     double x,y ;
-    int i_cam = 0;
             
     Calibration *cal;
 
@@ -57,9 +56,9 @@ START_TEST(test_img_xy_mm_geo)
     
     img_xy_mm_geo (pos, cal, cpar->mm, &x, &y);
     
-    ck_assert_msg(  fabs(x + 0.29374895) < EPS && 
-                    fabs(y - 33.79886299)  < EPS,
-     "Expected -0.29374895 33.79886299  but found %10.8f %10.8f\n", 
+    ck_assert_msg(  fabs(x - 41.51103140) < EPS && 
+                    fabs(y - 27.98720418)  < EPS,
+     "Expected 41.51103140 27.98720418  but found %10.8f %10.8f\n", 
      x,y);      
     
 }
@@ -71,7 +70,6 @@ START_TEST(test_imgcoord)
 {
     vec3d pos = {50.0, 100.0, -10.0};
     double x,y ;
-    int i_cam = 0;
             
     Calibration *cal;
 
@@ -107,9 +105,9 @@ START_TEST(test_imgcoord)
     
     img_coord (pos, cal, cpar->mm, &x, &y);
     
-    ck_assert_msg(  fabs(x - 10.65513015) < EPS && 
-                    fabs(y - 26.18672754)  < EPS,
-     "Expected 10.65513015 26.18672754  but found %10.8f %10.8f\n", 
+    ck_assert_msg(  fabs(x + 7.84022237) < EPS && 
+                    fabs(y - 25.21125605)  < EPS,
+     "Expected -7.84022237 25.21125605  but found %10.8f %10.8f\n", 
      x,y);
     
 }
