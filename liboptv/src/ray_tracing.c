@@ -18,6 +18,7 @@ Routines contained:      -
 ***************************************************************/
 
 #include "ray_tracing.h"
+#include <stdio.h>
 
 /*  wraps previous ray_tracing, parameters are read directly from control_par* structure */
 void ray_tracing (double x
@@ -84,7 +85,6 @@ double  *a3, double  *b3,double  *c3){
     dummy = dummy - c;
     d1 =- dummy/(base2[0] * b[0] + base2[1] *  b[1] + base2[2] * b[2]);
     
-
     /*   point on the horizontal plane between n1,n2  */
     Xb1 = a[0] +  b[0] *  d1;
     Yb1 = a[1] +  b[1] *  d1;
@@ -98,20 +98,22 @@ double  *a3, double  *b3,double  *c3){
     bp[1] = b[1] -  bn[1] *  n;
     bp[2] = b[2] -  bn[2] *  n;
     dummy = sqrt(bp[0] *  bp[0] +  bp[1] *  bp[1] +  bp[2] *  bp[2]);
-    bp[0] = bp[0]/dummy;
-    bp[1] = bp[1]/dummy;
-    bp[2] = bp[2]/dummy;
+    if (dummy > 0){
+        bp[0] = bp[0]/dummy;
+        bp[1] = bp[1]/dummy;
+        bp[2] = bp[2]/dummy;
+    }
 
     p = sqrt(1 -  n *  n);
     /*   interface parallel  */
     p  =  p  *   mm.n1/mm.n2[0];
     /*   interface normal  */
     n =  -sqrt(1 -  p * p);
+    
     a2 = p * bp[0] + n * bn[0];
     b2 = p * bp[1] + n * bn[1];
     c2 = p * bp[2] + n * bn[2];
     d2 = mm.d[0]/fabs((base2[0] *  a2 + base2[1] * b2 + base2[2] * c2));
-    
 
     /*   point on the horizontal plane between n2,n3  */
      *Xb2 = Xb1 + d2 * a2;   
@@ -123,9 +125,11 @@ double  *a3, double  *b3,double  *c3){
     bp[1] = b2 - bn[1] * n;
     bp[2] = c2 - bn[2] *  n;
     dummy = sqrt(bp[0] * bp[0] + bp[1] * bp[1] + bp[2] * bp[2]);
-    bp[0] = bp[0] / dummy;
-    bp[1] = bp[1] / dummy;
-    bp[2] = bp[2] / dummy;
+    if (dummy > 0){
+        bp[0] = bp[0]/dummy;
+        bp[1] = bp[1]/dummy;
+        bp[2] = bp[2]/dummy;
+    }
 
     p = sqrt(1 - n * n);
     p = p * mm.n2[0]/mm.n3;

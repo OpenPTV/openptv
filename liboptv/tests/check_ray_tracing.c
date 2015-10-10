@@ -40,16 +40,11 @@ START_TEST(test_ray_tracing)
     
     /* output */
     
-    double X[3],a[3]; 
+    vec3d X,a; 
 
 
-    
-/*    
-      ray_tracing (x, y, test_Ex, test_I, test_G, test_mm, \
-      &X, &Y, &Z, \
-      &a, &b, &c);
-*/      
-      ray_tracing (x, y, &test_cal, test_mm, (double *)X, (double *)a);
+       
+    ray_tracing (x, y, &test_cal, test_mm, X, a);
 
      
     
@@ -66,6 +61,20 @@ START_TEST(test_ray_tracing)
                     fabs(a[2] + 0.867834)  < EPS,
          "Expected 0.387960,0.310405,-0.867834 but found %f %f %f\n", a);
   
+      ray_tracing (0.0, 0.0, &test_cal, test_mm, X, a);
+
+         
+     ck_assert_msg( fabs(X[0] - 28.22634154) < EPS && 
+                    fabs(X[1] + 0.00004913) < EPS && 
+                    fabs(X[2] - 0.99717738)  < EPS,
+         "Expected X = 28.22634154 -0.00004913 0.99717738 but found %10.8f %10.8f %10.8f\n", X[0], X[1], X[2]);
+      
+      
+         
+     ck_assert_msg( fabs(a[0] - 0.00572448) < EPS && 
+                    fabs(a[1] + 0.00000981) < EPS && 
+                    fabs(a[2] + 0.99998361)  < EPS,
+         "Expected a = 0.00572448 -0.00000981 -0.99998361 but found %10.8f %10.8f %10.8f\n", a[0],a[1],a[2]);
     
 }
 END_TEST
