@@ -8,6 +8,7 @@
  ***************************************************************************/
 
 #include <stdlib.h>
+#include <stdio.h>
 #include "image_processing.h"
 
 /*  This would be a function, only the original writer of these filters put a 
@@ -349,5 +350,70 @@ void copy_images (unsigned char *src, unsigned char *dest, control_par *cpar)
     {
         *ptr2 = *ptr1;
     }
+}
+
+/* prepare_image() - perform the steps necessary for preparing an image to 
+   particle detection: an averaging (smoothing) filter on an image, optionally
+   followed by additional user-defined filter.
+   
+   Arguments:
+   unsigned char  *img - the source image to filter.
+   unsigned char  *img_hp - result buffer for filtered image. Same size as img.
+   int dim_lp - dimension of subtracted lowpass image.
+   int filter_hp - flag for additional filtering of _hp. 1 for lowpass, 2 for 
+      general 3x3 filter given in parameter ``filter_file``.
+   char *filter_file - path to a text file containing the filter matrix to be
+      used in case ```filter_hp == 2```. One line per row, white-space 
+      separated columns.
+   control_par *cpar - image details such as size and image half for interlaced
+      cases.
+   
+   Returns:
+   1 on success, 0 on failure of memory allocation or filter file reading.
+*/
+int prepare_image(unsigned char  *img, unsigned char  *img_hp, int dim_lp,
+    int filter_hp, char *filter_file, control_par *cpar)
+{
+  register int  i;
+  FILE          *fp;
+  unsigned char *img_lp;
+  int image_size = cpar->imx * cpar->imy;
+  filter_t filt; /* for when filter_hp == 2 */
+
+  register unsigned char *ptr1, *ptr2, *ptr3;
+
+  img_lp = (unsigned char *) calloc (image_size, 1);
+  if ( ! img_lp) {
+      puts ("calloc for img_lp --> error");
+      return 0;
+  }
+  fast_box_blur(dim_lp, img, img_lp, cpar);
+  subtract_img (img, img_lp, img_hp, cpar);
+  
+  /* consider field mode */
+  if (cpar->chfield == 1 || cpar->chfield == 2)
+    split (img_hp, cpar->chfield, cpar);
+
+  /* filter highpass image, if wanted */
+  switch (filter_hp) {
+    case 0: break;
+    case 1: lowpass_3 (img_hp, img_hp, cpar);   break;
+    case 2:
+        /* read filter elements from parameter file */
+        fp = fopen (filter_file, "r");
+        for (i = 0; i < 9; i++) {
+            if (fscanf(fp, "%lf", (double *)filt + i) == 0) {
+                fclose(fp);
+                return 0;
+            }
+        }
+        fclose (fp);
+
+        filter_3 (img_hp, img_hp, filt, cpar);
+        break;
+  }
+  
+  free (img_lp);
+  return 1;
 }
 
