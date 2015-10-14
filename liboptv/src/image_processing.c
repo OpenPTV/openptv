@@ -276,3 +276,78 @@ void split(unsigned char *img, int half_selector, control_par *cpar) {
         *ptr = 2;
 }
 
+
+/*  subtract_img() is a simple image arithmetic function that subtracts img2 from 
+    img1.
+    
+    Arguments:
+    unsigned char *img1, *img2 - pointers to the original images.
+    unsigned char *img_new - pointer to result image buffer.
+    control_par *cpar - contains image size parameters.
+*/
+void subtract_img (unsigned char *img1,unsigned char *img2,unsigned char *img_new, control_par *cpar) 
+{
+    register unsigned char *ptr1, *ptr2, *ptr3;
+    int i;
+    int image_size = cpar->imx * cpar->imy;
+    
+    for (i = 0, ptr1 = img1, ptr2 = img2, ptr3 = img_new; i < image_size; 
+        ptr1++, ptr2++, ptr3++, i++)
+    {
+        if ((*ptr1 - *ptr2) < 0)
+            *ptr3 = 0;
+        else
+            *ptr3 = *ptr1 - *ptr2;
+    }
+}
+
+
+/*  Subtract_mask(), by Matthias Oswald, Juli 08
+    Compares img with img_mask and creates a masked image img_new.
+    Pixels that are equal to zero in the img_mask are overwritten with a 
+    default value (=0) in img_new.
+    
+    Arguments:
+    unsigned char *img - original image.
+    unsigned char *img_new - resulting image buffer.
+    control_par *cpar - contains image size parameters.
+*/
+void subtract_mask (unsigned char *img, unsigned char *img_mask, 
+    unsigned char *img_new, control_par *cpar)
+{
+    register unsigned char *ptr1, *ptr2, *ptr3;
+    int i;
+    int image_size = cpar->imx * cpar->imy;
+    
+    for (i = 0, ptr1 = img, ptr2 = img_mask, ptr3 = img_new; i < image_size;
+        ptr1++, ptr2++, ptr3++, i++)
+    {
+        if (*ptr2 == 0)
+            *ptr3 = 0;
+        else
+            *ptr3 = *ptr1;
+    }
+}
+ 
+/*  copy_images() is a simple image arithmetic function that copies one image 
+    into another. It is basically equivalent to a memcpy(), but more 
+    future-proof, we hope.
+    
+    Arguments:
+    unsigned char *src, *dest - unsigned char array pointers to source and 
+        destination of copy, respectively.
+    control_par *cpar - contains image size parameters.
+*/
+void copy_images (unsigned char *src, unsigned char *dest, control_par *cpar)
+{
+    register unsigned char *ptr1, *ptr2;
+    unsigned char *end;
+    int image_size = cpar->imx * cpar->imy;
+	
+    for (end = src + image_size, ptr1 = src, ptr2 = dest; ptr1 < end;
+        ptr1++, ptr2++)
+    {
+        *ptr2 = *ptr1;
+    }
+}
+
