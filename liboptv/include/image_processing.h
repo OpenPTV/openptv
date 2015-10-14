@@ -19,6 +19,8 @@ void subtract_img(unsigned char *img1, unsigned char *img2, unsigned char *img_n
 void subtract_mask(unsigned char *img1, unsigned char *img_mask, unsigned char *img_new, 
     control_par *cpar);
 void copy_images(unsigned char	*img1, unsigned char *img2, control_par *cpar);
+int prepare_image(unsigned char  *img, unsigned char  *img_hp, int dim_lp,
+    int filter_hp, char *filter_file, control_par *cpar)
 
 #endif
 
