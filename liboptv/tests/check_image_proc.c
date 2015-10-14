@@ -321,6 +321,40 @@ START_TEST(test_copy_img)
 }
 END_TEST
 
+START_TEST(test_highpass)
+{
+    unsigned char img[5][5] = {
+        { 0,   0,   0,   0, 0},
+        { 0, 255, 255, 255, 0},
+        { 0, 255, 255, 255, 0},
+        { 0, 255, 255, 255, 0},
+        { 0,   0,   0,   0, 0}
+    };
+    
+    unsigned char img_correct[5][5] = {
+        { 0,   0,   0,   0, 0},
+        { 0, 142, 85, 142, 0},
+        { 0, 85, 0, 85, 0},
+        { 0, 142, 85, 142, 0},
+        { 0,   0,   0,   0, 0}
+    };
+
+    control_par cpar = {
+        .imx = 5,
+        .imy = 5,
+    };
+    
+    unsigned char *img_hp = (unsigned char *) malloc(cpar.imx*cpar.imy* \
+        sizeof(unsigned char));
+    
+    prepare_image(img, img_hp, 1, 0, 0, &cpar); 
+       
+    fail_unless(images_equal(img_hp, img_correct, 5, 5, 6, 6));
+
+    free(img_hp);
+}
+END_TEST
+
 
 Suite* fb_suite(void) {
     Suite *s = suite_create ("Image processing");
@@ -352,6 +386,10 @@ Suite* fb_suite(void) {
     tc = tcase_create ("Copy images");
     tcase_add_test(tc, test_copy_img);
     suite_add_tcase (s, tc);  
+
+    tc = tcase_create ("High-pass");
+    tcase_add_test(tc, test_highpass);
+    suite_add_tcase (s, tc);
 
     return s;
 }
