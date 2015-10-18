@@ -1,4 +1,4 @@
-#Cython definitions for parameters.h
+# Cython definitions for parameters.h
 cdef extern from "optv/parameters.h":
     ctypedef struct mm_np:
         int nlay
@@ -7,7 +7,49 @@ cdef extern from "optv/parameters.h":
         double d[3]
         double n3
         int lut
+    
+    ctypedef struct track_par:
+        double dacc, dangle, dvxmax, dvxmin
+        double dvymax, dvymin, dvzmax, dvzmin
+        int dsumg, dn, dnx, dny, add
+    
+    ctypedef struct sequence_par:
+        char ** img_base_name
+        int first, last
+        
+    ctypedef struct volume_par:
+        double X_lay[2]
+        double Zmin_lay[2]
+        double Zmax_lay[2]
+        double cn, cnx, cny, csumg, eps0, corrmin
+        
+    ctypedef struct control_par:
+        int num_cams
+        char **img_base_name
+        char **cal_img_base_name
+        int hp_flag
+        int allCam_flag
+        int tiff_flag
+        int imx
+        int imy
+        double pix_x
+        double pix_y
+        int chfield
+        mm_np *mm
         
 cdef class MultimediaParams:
     cdef mm_np* _mm_np
+    cdef void set_mm_np(MultimediaParams self, mm_np * other_mm_np_c_struct)
     
+cdef class TrackingParams:
+    cdef track_par * _track_par
+
+cdef class SequenceParams:
+    cdef sequence_par * _sequence_par
+
+cdef class VolumeParams:
+    cdef volume_par * _volume_par
+
+cdef class ControlParams:
+    cdef control_par * _control_par
+    cdef MultimediaParams _multimedia_params
