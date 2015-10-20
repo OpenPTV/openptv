@@ -18,6 +18,8 @@ Routines contained:
 ****************************************************************************/
 
 #include "imgcoord.h"
+#include "multimed.h"
+#include <math.h>
 
 
 /*  img_coord() calculates projection from coordinates in
