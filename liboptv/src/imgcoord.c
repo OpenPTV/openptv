@@ -24,14 +24,14 @@ Routines contained:
 
 /*  img_coord() calculates projection from coordinates in
     world space to pixel coordinates in image space
+    
     Arguments:
-    vec3d pos is a vector of position in 3D (X,Y,Z real space)
-    Calibration *cal parameters pointer of a specific camera
-    multimedia *mm parameters pointer
-    int i_cam - camera number (from 0 to cpar->num_cams)
-    multimedia look-up table array mmLUT pointer
+    vec3d pos - a vector of position in 3D (X,Y,Z real space)
+    Calibration *cal - parameters of the camera on which to project.
+    mm_np *mm - layer thickness and refractive index parameters.
+    
     Output:
-    double x,y in pixel coordinates in the image space
+    double x,y - pixel coordinates of projection in the image space.
  */
 void img_coord (vec3d pos, Calibration *cal, mm_np *mm, double *x, double *y){
     
@@ -39,10 +39,10 @@ void img_coord (vec3d pos, Calibration *cal, mm_np *mm, double *x, double *y){
     Exterior Ex_t;
     double X,Y,Z, X_t,Y_t,Z_t,cross_p[3],cross_c[3];
     vec3d pos_t;
-	
+    
     /* calculate tilted positions and copy them to X_t, Y_t and Z_t */
 
-	trans_Cam_Point(cal->ext_par, *mm, cal->glass_par, pos, \
+    trans_Cam_Point(cal->ext_par, *mm, cal->glass_par, pos, \
           &Ex_t, pos_t, cross_p, cross_c);
     
     multimed_nlay (cal, mm, pos_t, &X_t,&Y_t);
@@ -50,12 +50,12 @@ void img_coord (vec3d pos, Calibration *cal, mm_np *mm, double *x, double *y){
     vec_set(pos_t,X_t,Y_t,pos_t[2]);
     
     back_trans_Point(pos_t, *mm, cal->glass_par, cross_p, cross_c, pos);
-	
+    
     pos[0] -= cal->ext_par.x0;  pos[1] -= cal->ext_par.y0;  pos[2] -= cal->ext_par.z0;
 
     deno = cal->ext_par.dm[0][2] * pos[0] + cal->ext_par.dm[1][2] * pos[1] + 
         cal->ext_par.dm[2][2] * pos[2];
-        
+    
     *x = cal->int_par.xh - cal->int_par.cc * (cal->ext_par.dm[0][0]*pos[0] + 
         cal->ext_par.dm[1][0]*pos[1] + cal->ext_par.dm[2][0]*pos[2]) / deno;
         
@@ -77,13 +77,13 @@ void img_coord (vec3d pos, Calibration *cal, mm_np *mm, double *x, double *y){
 
     *x = cal->added_par.scx * (*x) - sin(cal->added_par.she) * (*y);
     *y = cos(cal->added_par.she) * (*y);
-
 }
 
 
-/* img_xy_geo() calculates projection from coordinates in
+/*  img_xy_geo() calculates projection from coordinates in
     world space to pixel coordinates in image space without 
-    distortions
+    distortions.
+    
     Arguments:
     doubles X,Y,Z in real space
     Calibration *cal parameters pointer
