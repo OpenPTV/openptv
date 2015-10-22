@@ -17,11 +17,12 @@ int file_exists(char *filename);
 #define EPS 1E-6
 
 
-START_TEST(test_img_xy_mm_geo)
+START_TEST(test_flat_image_coord)
 {
 
     vec3d pos = {50.0, 100.0, -10.0};
     double x,y ;
+
             
     Calibration *cal;
 
@@ -54,7 +55,7 @@ START_TEST(test_img_xy_mm_geo)
     
     init_mmlut (vpar, cpar, cal);
     
-    img_xy_mm_geo (pos, cal, cpar->mm, &x, &y);
+    flat_image_coord (pos, cal, cpar->mm, &x, &y);
     
     ck_assert_msg(  fabs(x - 41.51103140) < EPS && 
                     fabs(y - 27.98720418)  < EPS,
@@ -69,20 +70,22 @@ END_TEST
 START_TEST(test_imgcoord)
 {
     vec3d pos = {50.0, 100.0, -10.0};
-    double x,y ;
+    double x,y;
+    
+    ap_52 ap = {0.0, 0.0, 0.0, 0.0, 0.0, 1.0, 1.0};
             
     Calibration *cal;
 
     
-    char ori_file[] = "testing_fodder/cal/cam1.tif.ori";
-    char add_file[] = "testing_fodder/cal/cam1.tif.addpar";
+    char ori_file[] = "testing_fodder/cal/cam2.tif.ori";
+    char add_file[] = "testing_fodder/cal/cam2.tif.addpar";
     
     ck_assert_msg (file_exists(ori_file) == 1, "\n File %s does not exist\n", ori_file);
     ck_assert_msg (file_exists(add_file) == 1, "\n File %s does not exist\n", add_file);
     cal = read_calibration(ori_file, add_file, NULL);    
     fail_if (cal == NULL, "\n ORI or ADDPAR file reading failed \n");
     
-
+    cal->added_par = ap;
          
     volume_par *vpar;
     char vol_file[] = "testing_fodder/parameters/criteria.par";
@@ -103,11 +106,12 @@ START_TEST(test_imgcoord)
     
     init_mmlut (vpar, cpar, cal);
     
+    
     img_coord (pos, cal, cpar->mm, &x, &y);
     
-    ck_assert_msg(  fabs(x + 7.84022237) < EPS && 
-                    fabs(y - 25.21125605)  < EPS,
-     "Expected -7.84022237 25.21125605  but found %10.8f %10.8f\n", 
+    ck_assert_msg(  fabs(x - 41.51103140) < EPS && 
+                    fabs(y - 27.98720418)  < EPS,
+     "Expected 41.51103140 27.98720418  but found %10.8f %10.8f\n", 
      x,y);
     
 }
@@ -118,8 +122,8 @@ END_TEST
 Suite* fb_suite(void) {
     Suite *s = suite_create ("Imgcoord");
  
-    TCase *tc = tcase_create ("test_img_xy_mm_geo");
-    tcase_add_test(tc, test_img_xy_mm_geo);
+    TCase *tc = tcase_create ("test_flat_image_coord");
+    tcase_add_test(tc, test_flat_image_coord);
     suite_add_tcase (s, tc);
     
     tc = tcase_create ("test_imgcoord");
