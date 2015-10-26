@@ -10,8 +10,8 @@ cdef extern from "optv/parameters.h":
     track_par * c_read_track_par "read_track_par"(char * file_name)
     int c_compare_track_par "compare_track_par"(track_par * t1, track_par * t2)
     
-    sequence_par * c_read_sequence_par "read_sequence_par"(char * filename)
-    sequence_par * c_new_sequence_par "new_sequence_par"()
+    sequence_par * c_read_sequence_par "read_sequence_par"(char * filename, int num_cams)
+    sequence_par * c_new_sequence_par "new_sequence_par"(int num_cams)
     void c_free_sequence_par "free_sequence_par"(sequence_par * sp)
     int c_compare_sequence_par "compare_sequence_par"(sequence_par * sp1, sequence_par * sp2)
     
@@ -40,11 +40,13 @@ cdef class MultimediaParams:
             self.set_n3(kwargs['n3'])
         if kwargs.has_key('lut'):
             self.set_lut(kwargs['lut'])
-                
+        else:
+            self.set_lut(0)
+                       
     cdef void set_mm_np(self, mm_np * other_mm_np_c_struct):
         free(self._mm_np)
         self._mm_np = other_mm_np_c_struct
-                
+        
     def get_nlay(self):
         return self._mm_np[0].nlay
     
@@ -91,13 +93,6 @@ cdef class MultimediaParams:
     
     def set_lut(self, lut):
         self._mm_np[0].lut = lut
-    
-#     # sets the _mm_np variable to other_mm_np
-#     # parameter: other_mm_np - pointer to other mm_np C struct
-#     def set_mm_np(self, other_mm_np):
-#         free(self._mm_np)
-#         
-#         self._mm_np = < mm_np *> other_mm_np
     
     def __richcmp__(MultimediaParams self, MultimediaParams other, operator):
         c_compare_result = c_compare_mm_np(self._mm_np, other._mm_np)
@@ -274,8 +269,8 @@ cdef class TrackingParams:
 # Objects of this type can be checked for equality using "==" and "!=" operators
 
 cdef class SequenceParams:
-    def __init__(self):
-        self._sequence_par = c_new_sequence_par()
+    def __init__(self, num_cams):
+        self._sequence_par = c_new_sequence_par(num_cams)
         
     def get_first(self):
         return self._sequence_par[0].first
@@ -290,17 +285,18 @@ cdef class SequenceParams:
         self._sequence_par[0].last = last
         
     # Reads sequence parameters from a config file with the
-    # following format: each line is a value, first 4 values are image names,
-    # 5th is the first number in the sequence, 6th line is the last value in the
+    # following format: each line is a value, first num_cams values are image names,
+    # (num_cams)+1th is the first number in the sequence, (num_cams+2)th line is the last value in the
     # sequence.
     # 
-    # Argument:
+    # Arguments:
     # filename - path to the text file containing the parameters.
-    def read_sequence_par(self, filename):
+    # num_cams - expected number of cameras
+    def read_sequence_par(self, filename, num_cams):
         # free the memory of previous C struct and its inner strings before creating a new one
         c_free_sequence_par(self._sequence_par)
         # read parameters from file to a new sequence_par C struct
-        self._sequence_par = c_read_sequence_par(filename)
+        self._sequence_par = c_read_sequence_par(filename, num_cams)
         
     # Get image base name of camera #cam
     def get_img_base_name(self, cam):
@@ -581,8 +577,8 @@ cdef class ControlParams:
         # please note that the memory of mm_np c struct (that is referred to by the 
         # instance variable _mm_np of _multimedia_params python object) will ALSO be freed 
         c_free_control_par(self._control_par)
-        # ( __dealloc__ method of _multimedia_params will be called automatically to dispose the object)
-        # so now:
-        # set multimeia_params's C struct to null in order to avoid double free corruption
+        # __dealloc__ method of _multimedia_params object will be called automatically to dispose the object
+        # but this memory was just freed by c_free_control_par function,
+        # so in order to avoid double free corruption - set _multimeia_params's C struct pointer to NULL
         self._multimedia_params._mm_np = NULL
 

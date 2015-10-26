@@ -61,10 +61,10 @@ START_TEST(test_read_compare_sequence_par)
     char fname[SEQ_FNAME_MAX_LEN];
     char test_file_path[]="testing_fodder/parameters/sequence.par";
     sequence_par *seqp;
-    
-    seqp = read_sequence_par(test_file_path);
+	int num_cams = 4;
+    seqp = read_sequence_par(test_file_path, num_cams);
 
-    for (cam = 0; cam < 4; cam++) {
+    for (cam = 0; cam < num_cams; cam++) {
         printf("%s", seqp->img_base_name[cam]);
         sprintf(fname, "dumbbell/cam%d_Scene77_", cam + 1);
         fail_unless(strncmp(fname, seqp->img_base_name[cam],
@@ -73,11 +73,10 @@ START_TEST(test_read_compare_sequence_par)
     fail_unless(seqp->first == 497);
     fail_unless(seqp->last == 597);
 
-    sequence_par *seqp2 = read_sequence_par(test_file_path);
+    sequence_par *seqp2 = read_sequence_par(test_file_path, num_cams);
     fail_unless(compare_sequence_par(seqp, seqp2));
     seqp2->first = -999;
     fail_unless(!compare_sequence_par(seqp, seqp2));
-
 }
 END_TEST
 
