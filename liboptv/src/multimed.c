@@ -155,14 +155,6 @@ void trans_Cam_Point(Exterior ex
     vec_scalar_mul(glass_dir, dist_point_glas/dist_o_glas, renorm_glass);
     vec_subt(pos, renorm_glass, cross_p);
 
-    for (row = 0; row < 3; row++)
-        for (col = 0; col < 3; col++)
-             ex_t->dm[row][col] = ex.dm[row][col];
-
-    ex_t->omega = ex.omega;
-    ex_t->phi   = ex.phi;
-    ex_t->kappa = ex.kappa;
-
     ex_t->x0 = 0.;
     ex_t->y0 = 0.;
     ex_t->z0 = dist_cam_glas + mm.d[0];
@@ -272,7 +264,7 @@ void init_mmlut (volume_par *vpar, control_par *cpar, Calibration *cal) {
           y = y - cal->int_par.yh;
   
           correct_brown_affin (x, y, cal->added_par, &x,&y);  
-          ray_tracing(x,y, cal, *(cpar->mm), pos, a);
+          ray_tracing(x, y, cal, *(cpar->mm), pos, a);
           
           move_along_ray(Zmin, pos, a, xyz);
           trans_Cam_Point(cal->ext_par, *(cpar->mm), cal->glass_par, xyz, \
@@ -351,17 +343,20 @@ double get_mmf_from_mmlut (Calibration *cal, vec3d pos){
     int i, ir,iz, nr,nz, rw, v4[4];
     double R, sr, sz, mmf = 1.0;
     double X,Y,Z;
+    vec3d temp;
+    
+    vec_copy(temp,pos);
   
     rw =  cal->mmlut.rw;
   
-    pos[2] -= cal->mmlut.origin[2]; 
-    sz = pos[2]/rw;
+    temp[2] -= cal->mmlut.origin[2]; 
+    sz = temp[2]/rw;
     iz = (int) sz;
     sz -= iz;
     
-    pos[0] -= cal->mmlut.origin[0];
-    pos[1] -= cal->mmlut.origin[1];
-    R = norm(pos[0], pos[1], 0);
+    temp[0] -= cal->mmlut.origin[0];
+    temp[1] -= cal->mmlut.origin[1];
+    R = norm(temp[0], temp[1], 0);
     
     sr = R/rw;
     ir = (int) sr;

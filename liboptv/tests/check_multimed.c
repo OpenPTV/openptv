@@ -369,8 +369,13 @@ START_TEST(test_trans_Cam_Point)
         fabs(cross_c[2] - 55.0)  < EPS,
         "Expected 0.000000 0.000000 55.000000 but found %10.8f %10.8f %10.8f\n", \
         cross_c[0],cross_c[1],cross_c[2]);
-        
-    fail_unless(compare_exterior_diff(&correct_Ex_t, &Ex_t));
+    
+    
+    ck_assert_msg ( (fabs(correct_Ex_t.x0 - Ex_t.x0) < EPS) && 
+                    (fabs(correct_Ex_t.y0 - Ex_t.y0) < EPS) &&
+                    (fabs(correct_Ex_t.z0 - Ex_t.z0) < EPS),
+     "Expected 0.0, 0.0, 50.0, but found %10.8f %10.8f %10.8f\n", \
+        Ex_t.x0,Ex_t.y0,Ex_t.z0);                          
 }
 END_TEST
 
