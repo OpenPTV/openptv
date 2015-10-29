@@ -36,16 +36,19 @@ Routines contained:
 void flat_image_coord (vec3d pos, Calibration *cal, mm_np *mm, double *x, double *y){
 
   double deno;
-  Exterior Ex_t;
+  Calibration cal_t;
   double X_t,Y_t,Z_t,cross_p[3],cross_c[3];
   vec3d pos_t;
+  
+  
+  cal_t.mmlut = cal->mmlut;
 
   /* calculate tilted positions and copy them to X_t, Y_t and Z_t */
   
-	trans_Cam_Point(cal->ext_par, *mm, cal->glass_par, pos, \
-          &Ex_t, pos_t, cross_p, cross_c);
+    trans_Cam_Point(cal->ext_par, *mm, cal->glass_par, pos, \
+         &(cal_t.ext_par), pos_t, cross_p, cross_c);
     
-    multimed_nlay (cal, mm, pos_t, &X_t,&Y_t);
+    multimed_nlay (&cal_t, mm, pos_t, &X_t,&Y_t);
     
     vec_set(pos_t,X_t,Y_t,pos_t[2]);
     

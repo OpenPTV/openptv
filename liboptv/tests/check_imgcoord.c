@@ -57,9 +57,9 @@ START_TEST(test_flat_image_coord)
     
     flat_image_coord (pos, cal, cpar->mm, &x, &y);
     
-    ck_assert_msg(  fabs(x - 41.51103140) < EPS && 
-                    fabs(y - 27.98720418)  < EPS,
-     "Expected 41.51103140 27.98720418  but found %10.8f %10.8f\n", 
+    ck_assert_msg(  fabs(x - 38.57026464) < EPS && 
+                    fabs(y - 28.39602664)  < EPS,
+     "Expected 38.57026464 28.39602664  but found %10.8f %10.8f\n", 
      x,y);      
     
 }
@@ -106,12 +106,11 @@ START_TEST(test_imgcoord)
     
     init_mmlut (vpar, cpar, cal);
     
-    
     img_coord (pos, cal, cpar->mm, &x, &y);
     
-    ck_assert_msg(  fabs(x - 41.51103140) < EPS && 
-                    fabs(y - 27.98720418)  < EPS,
-     "Expected 41.51103140 27.98720418  but found %10.8f %10.8f\n", 
+    ck_assert_msg(  fabs(x - 14.67583450) < EPS && 
+                    fabs(y - 15.34243851)  < EPS,
+     "Expected 14.67583450 15.34243851  but found %10.8f %10.8f\n", 
      x,y);
     
 }
