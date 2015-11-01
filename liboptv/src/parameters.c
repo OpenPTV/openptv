@@ -6,9 +6,9 @@
 #include <string.h>
 
 /* read_sequence_par() reads sequence parameters from a config file with the
-   following format: each line is a value, first num_cams values are image names,
-   (num_cams+1)th is the first number in the sequence, (num_cams+2)th line is the last value in the
-   sequence.
+   following format: each line is a value, first num_cams values are image 
+   names, (num_cams+1)th is the first number in the sequence, (num_cams+2)th 
+   line is the last value in the sequence.
    
    Arguments:
    char *filename - path to the text file containing the parameters.
@@ -55,7 +55,17 @@ handle_error:
     return NULL;
 }
 
-/* Creates a new sequence_par struct and allocates memory for its inner pointers */
+/*  new_sequence_par() creates a new sequence_par struct and allocates memory 
+    for its inner pointers.
+    
+    Arguments:
+    int num_cams - number of cameras
+    
+    Returns:
+    Pointer to a newly-allocated sequence_par structure. Don't forget to free
+    the new memory using free_sequence_par(sp*) function. If reading failed for
+    any reason, returns NULL.
+*/
 sequence_par * new_sequence_par(int num_cams) {
     int cam;
     sequence_par *ret;
@@ -79,11 +89,12 @@ sequence_par * new_sequence_par(int num_cams) {
    Returns:
    True if equal, false otherwise. */
 int compare_sequence_par(sequence_par *sp1, sequence_par *sp2) {
-	if (sp1->first != sp2->first || sp1->last != sp2->last
-			|| sp1->num_cams != sp2->num_cams)
-		return 0; /*not equal*/
-
     int cam;
+    
+    if (sp1->first != sp2->first || sp1->last != sp2->last
+            || sp1->num_cams != sp2->num_cams)
+        return 0; /*not equal*/
+
     for (cam = 0; cam < sp1->num_cams; cam++) {
         if (strcmp(sp1->img_base_name[cam],sp1->img_base_name[cam]) !=0){
             return 0; /*not equal*/
@@ -92,8 +103,13 @@ int compare_sequence_par(sequence_par *sp1, sequence_par *sp2) {
     return 1; /*equal*/
 }
 
-/* Frees the memory allocated for sequence_par struct pointed to by sp and its inner pointers
- * Setting freed pointers to NULL */
+/* free_sequence_par() frees the memory allocated for sequence_par struct 
+   pointed to by sp and its inner pointers, setting freed pointers to NULL.
+   
+   Arguments:
+   sequence_par *sp - the sequence_par struct to free with the other memory 
+      it owns.
+*/
 void free_sequence_par(sequence_par * sp) {
     int cam;
 
@@ -243,8 +259,16 @@ int compare_volume_par(volume_par *v1, volume_par *v2) {
         (v1->corrmin == v2->corrmin) && (v1->eps0 == v2->eps0) );
 }
 
+/* new_control_par() allocates memory for a control_par struct and the other 
+   memory it owns.
+   
+   Arguments:
+   int cams - number of cameras for whose data we need memory allocation.
+   
+   Returns:
+   Pointer to the newly allocated memory for the control_par struct.
+*/
 control_par * new_control_par(int cams) {
-
     int cam;
     control_par *ret = (control_par *) malloc(sizeof(control_par));
 
@@ -345,7 +369,7 @@ handle_error:
 }
 
 /*  free_control_par() frees a control_par pointer and the memory allocated
-    under it for image namew etc.
+    under it for image names etc.
     
     Arguments:
     control_par *cp - pointer to the control_par object to destroy.
