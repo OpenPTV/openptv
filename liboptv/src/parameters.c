@@ -73,7 +73,7 @@ sequence_par * new_sequence_par(int num_cams) {
     ret = (sequence_par *) malloc(sizeof(sequence_par));
     ret->img_base_name = (char **) calloc(num_cams, sizeof(char *));
 
-    ret->num_cams=num_cams;
+    ret->num_cams = num_cams;
     for (cam = 0; cam < num_cams; cam++) {
         ret->img_base_name[cam] = (char *) malloc(SEQ_FNAME_MAX_LEN);
     }

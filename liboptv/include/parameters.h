@@ -10,7 +10,7 @@
 #define SEQ_FNAME_MAX_LEN 240
 
 typedef struct {
-	int num_cams;
+    int num_cams;
     char **img_base_name;
     int first, last;
 } sequence_par;
