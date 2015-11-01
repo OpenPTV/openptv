@@ -61,7 +61,7 @@ START_TEST(test_read_compare_sequence_par)
     char fname[SEQ_FNAME_MAX_LEN];
     char test_file_path[]="testing_fodder/parameters/sequence.par";
     sequence_par *seqp;
-	int num_cams = 4;
+    int num_cams = 4;
     seqp = read_sequence_par(test_file_path, num_cams);
 
     for (cam = 0; cam < num_cams; cam++) {
