@@ -102,11 +102,11 @@ class Test_SequenceParams(unittest.TestCase):
             os.makedirs(self.temp_output_directory)
             
         # create an instance of SequencParams class
-        self.seq_obj = SequenceParams()
+        self.seq_obj = SequenceParams(4)
         
     def test_read_sequence(self):
         # Fill the SequenceParams object with parameters from test file
-        self.seq_obj.read_sequence_par(self.input_sequence_par_file_name)
+        self.seq_obj.read_sequence_par(self.input_sequence_par_file_name, 4)
         
         # check that all parameters are equal to the contents of test file
         self.failUnless(self.seq_obj.get_img_base_name(0) == "dumbbell/cam1_Scene77_") 
@@ -115,37 +115,37 @@ class Test_SequenceParams(unittest.TestCase):
         self.failUnless(self.seq_obj.get_img_base_name(3) == "dumbbell/cam4_Scene77_")
         self.failUnless(self.seq_obj.get_first() == 497)
         self.failUnless(self.seq_obj.get_last() == 597)
-    
+      
     def test_getters_setters(self):
         cams_num = 4
         for cam in range(cams_num):
             newStr = str(cam) + "some string" + str(cam)
             self.seq_obj.set_img_base_name(cam, newStr)
             self.failUnless(self.seq_obj.get_img_base_name(cam) == newStr)
-        
+             
         self.seq_obj.set_first(1234)
         self.failUnless(self.seq_obj.get_first() == 1234)
         self.seq_obj.set_last(5678)
         self.failUnless(self.seq_obj.get_last() == 5678)
-    
-    # testing __richcmp__ comparison method of SequencePar class
+       
+    # testing __richcmp__ comparison method of SequenceParams class
     def test_rich_compare(self):
-        self.seq_obj2 = SequenceParams()
-        self.seq_obj2.read_sequence_par(self.input_sequence_par_file_name)
+        self.seq_obj2 = SequenceParams(4)
+        self.seq_obj2.read_sequence_par(self.input_sequence_par_file_name, 4)
         
-        self.seq_obj3 = SequenceParams()
-        self.seq_obj3.read_sequence_par(self.input_sequence_par_file_name)
-        
+        self.seq_obj3 = SequenceParams(4)
+        self.seq_obj3.read_sequence_par(self.input_sequence_par_file_name, 4)
+               
         self.failUnless(self.seq_obj2 == self.seq_obj3)
         self.failIf(self.seq_obj2 != self.seq_obj3)
-        
+            
         self.seq_obj2.set_first(-999)
         self.failUnless(self.seq_obj2 != self.seq_obj3)
         self.failIf(self.seq_obj2 == self.seq_obj3)
-        
+            
         with self.assertRaises(TypeError):
             var = (self.seq_obj2 > self.seq_obj3)
-    
+     
     def tearDown(self):
         # remove the testing output directory and its files
         shutil.rmtree(self.temp_output_directory)

@@ -6,19 +6,20 @@
 #include <string.h>
 
 /* read_sequence_par() reads sequence parameters from a config file with the
-   following format: each line is a value, first 4 values are image names,
-   5th is the first number in the sequence, 6th line is the last value in the
+   following format: each line is a value, first num_cams values are image names,
+   (num_cams+1)th is the first number in the sequence, (num_cams+2)th line is the last value in the
    sequence.
    
    Arguments:
    char *filename - path to the text file containing the parameters.
+   int num_cams - number of cameras
    
    Returns:
    Pointer to a newly-allocated sequence_par structure. Don't forget to free
-   the new memory that is allocated for the image names. If reading failed for 
+   the new memory using free_sequence_par(sp*) function. If reading failed for
    any reason, returns NULL.
 */
-sequence_par* read_sequence_par(char *filename) {
+sequence_par* read_sequence_par(char *filename, int num_cams) {
     char line[SEQ_FNAME_MAX_LEN];
     FILE* par_file;
     int cam, read_ok;
@@ -30,11 +31,9 @@ sequence_par* read_sequence_par(char *filename) {
     }
     
     /* create new sequence_par struct with memory allocated to all its inner pointers*/
-    ret = new_sequence_par();
+    ret = new_sequence_par(num_cams);
 
-    /* Note the assumption of 4 cameras. Fixing this requires changing the
-       file format. */
-    for (cam = 0; cam < 4; cam++) {
+    for (cam = 0; cam < num_cams; cam++) {
         read_ok = fscanf(par_file, "%s\n", line);
         if (read_ok == 0) goto handle_error;
         
@@ -57,19 +56,20 @@ handle_error:
 }
 
 /* Creates a new sequence_par struct and allocates memory for its inner pointers */
-sequence_par * new_sequence_par() {
+sequence_par * new_sequence_par(int num_cams) {
     int cam;
     sequence_par *ret;
 
     ret = (sequence_par *) malloc(sizeof(sequence_par));
-    ret->img_base_name = (char **) calloc(4, sizeof(char *));
+    ret->img_base_name = (char **) calloc(num_cams, sizeof(char *));
 
-    /* Note the assumption of 4 cameras. */
-    for (cam = 0; cam < 4; cam++) {
+    ret->num_cams=num_cams;
+    for (cam = 0; cam < num_cams; cam++) {
         ret->img_base_name[cam] = (char *) malloc(SEQ_FNAME_MAX_LEN);
     }
     return ret;
 }
+
 /* compare_sequence_par() checks that all fields of two sequence_par objects are
    equal.
 
@@ -79,10 +79,12 @@ sequence_par * new_sequence_par() {
    Returns:
    True if equal, false otherwise. */
 int compare_sequence_par(sequence_par *sp1, sequence_par *sp2) {
-    if (sp1->first != sp2->first || sp1->last != sp2->last)
-        return 0; /*not equal*/
+	if (sp1->first != sp2->first || sp1->last != sp2->last
+			|| sp1->num_cams != sp2->num_cams)
+		return 0; /*not equal*/
+
     int cam;
-    for (cam = 0; cam < 4; cam++) {
+    for (cam = 0; cam < sp1->num_cams; cam++) {
         if (strcmp(sp1->img_base_name[cam],sp1->img_base_name[cam]) !=0){
             return 0; /*not equal*/
         }
@@ -95,7 +97,7 @@ int compare_sequence_par(sequence_par *sp1, sequence_par *sp2) {
 void free_sequence_par(sequence_par * sp) {
     int cam;
 
-    for (cam = 0; cam < 4; cam++) {
+    for (cam = 0; cam < sp->num_cams; cam++) {
         free(sp->img_base_name[cam]);
         sp->img_base_name[cam] = NULL;
     }
