@@ -24,10 +24,23 @@ cdef extern from "optv/parameters.h":
     int c_compare_control_par "compare_control_par"(control_par * c1, control_par * c2);
 
 cdef class MultimediaParams:
+    """
+    Relates to photographing through several transparent media (air, tank 
+    wall, water, etc.). Holds parameters related to media thickness and 
+    refractive index.
+    """
 
     def __init__(self, **kwargs):
+        """
+        Arguments (all optional):
+        nlay - number of layers (default 1).
+        n1 - index of refraction of first medium (usually air, 1).
+        n2 - array, refr. indices of all but first and last layer.
+        n3 - index of refraction of final medium (e.g. water, 1.33).
+        d - thickness of all but first and last layers, [mm].
+        """
+        self._mm_np = <mm_np *> malloc(sizeof(mm_np))
         
-        self._mm_np = < mm_np *> malloc(sizeof(mm_np))
         if kwargs.has_key('nlay'): 
             self.set_nlay(kwargs['nlay'])
         if kwargs.has_key('n1'):
@@ -42,7 +55,7 @@ cdef class MultimediaParams:
             self.set_lut(kwargs['lut'])
         else:
             self.set_lut(0)
-                       
+             
     cdef void set_mm_np(self, mm_np * other_mm_np_c_struct):
         free(self._mm_np)
         self._mm_np = other_mm_np_c_struct
@@ -126,15 +139,15 @@ cdef class MultimediaParams:
     def __dealloc__(self):
         free(self._mm_np)
 
-# Wrapping the track_par C struct for pythonic access
-# Binding the read_track_par C function
-# Objects of this type can be checked for equality using "==" and "!=" operators
-
 cdef class TrackingParams:   
+    """
+    Wrapping the track_par C struct for pythonic access
+    Binding the read_track_par C function
+    Objects of this type can be checked for equality using "==" and "!=" operators
+    """
     def __init__(self, dacc, dangle, dvxmax, dvxmin,
                  dvymax, dvymin, dvzmax, dvzmin,
                  dsumg, dn, dnx, dny, add):
-        
         self._track_par = < track_par *> malloc(sizeof(track_par))
 
         self.set_dacc(dacc)
@@ -169,6 +182,10 @@ cdef class TrackingParams:
     # file_name - path to the text file containing the parameters.
       
     def read_track_par(self, file_name):
+        """
+        Reads tracjing parameters from an old-style .par file having the
+        objects' arguments ordered one per line.
+        """
         self._track_par = c_read_track_par(file_name)
     
     # Checks for equality between this and other trackParams objects
@@ -269,7 +286,16 @@ cdef class TrackingParams:
 # Objects of this type can be checked for equality using "==" and "!=" operators
 
 cdef class SequenceParams:
+    """
+    Wrapping the sequence_par C struct (declared in liboptv/paramethers.h) for 
+    pythonic access. Binding the read_track_par C function. Objects of this 
+    type can be checked for equality using "==" and "!=" operators.
+    """
     def __init__(self, num_cams):
+        """
+        Arguments:
+        num_cams - number of camras used in the scene.
+        """
         self._sequence_par = c_new_sequence_par(num_cams)
         
     def get_first(self):
@@ -284,17 +310,21 @@ cdef class SequenceParams:
     def set_last(self, last):
         self._sequence_par[0].last = last
         
-    # Reads sequence parameters from a config file with the
-    # following format: each line is a value, first num_cams values are image names,
-    # (num_cams)+1th is the first number in the sequence, (num_cams+2)th line is the last value in the
-    # sequence.
-    # 
-    # Arguments:
-    # filename - path to the text file containing the parameters.
-    # num_cams - expected number of cameras
     def read_sequence_par(self, filename, num_cams):
-        # free the memory of previous C struct and its inner strings before creating a new one
+        """
+        Reads sequence parameters from a config file with the following format:
+        each line is a value, first num_cams values are image names, 
+        (num_cams+1)th is the first number in the sequence, (num_cams+2)th line
+        is the last value in the sequence.
+        
+        Arguments:
+        filename - path to the text file containing the parameters.
+        num_cams - expected number of cameras
+        """
+        # free the memory of previous C struct and its inner strings before 
+        # creating a new one.
         c_free_sequence_par(self._sequence_par)
+        
         # read parameters from file to a new sequence_par C struct
         self._sequence_par = c_read_sequence_par(filename, num_cams)
         
@@ -323,9 +353,12 @@ cdef class SequenceParams:
     def __dealloc__(self):
         c_free_sequence_par(self._sequence_par)
         
-# Wrapping the volume_par C struct (declared in liboptv/paramethers.h) for pythonic access
-# Objects of this type can be checked for equality using "==" and "!=" operators
 cdef class VolumeParams:
+    """
+    Wrapping the volume_par C struct (declared in liboptv/paramethers.h) for 
+    pythonic access. Objects of this type can be checked for equality using 
+    "==" and "!=" operators.
+    """
     def __init__(self):
         self._volume_par = < volume_par *> malloc(sizeof(volume_par))
     
@@ -399,24 +432,27 @@ cdef class VolumeParams:
     def set_corrmin(self, corrmin):
         self._volume_par[0].corrmin = corrmin
         
-    # read_volume_par() reads parameters of illuminated volume from a config file
-    # with the following format: each line is a value, in this order:
-    # 1. X_lay[0]
-    # 2. Zmin_lay[0]
-    # 3. Zmax_lay[0]
-    # 4. X_lay[1]
-    # 5. Zmin_lay[1]
-    # 6. Zmax_lay[1]
-    # 7. cnx
-    # 8. cny
-    # 9. cn
-    # 10.csumg
-    # 11.corrmin
-    # 12.eps0
-    #
-    # Argument:
-    # filename - path to the text file containing the parameters.
     def read_volume_par(self, filename):
+        """
+        read_volume_par() reads parameters of illuminated volume from a config 
+        file with the following format: each line is a value, in this order:
+        
+        1. X_lay[0]
+        2. Zmin_lay[0]
+        3. Zmax_lay[0]
+        4. X_lay[1]
+        5. Zmin_lay[1]
+        6. Zmax_lay[1]
+        7. cnx
+        8. cny
+        9. cn
+        10.csumg
+        11.corrmin
+        12.eps0
+        
+        Argument:
+        filename - path to the text file containing the parameters.
+        """
         # free the memory of previous C struct 
         free(self._volume_par)
         # read parameters from file to a new volume_par C struct
@@ -435,10 +471,17 @@ cdef class VolumeParams:
     def __dealloc__(self):
         free(self._volume_par)
         
-# Wrapping the control_par C struct (declared in liboptv/paramethers.h) for pythonic access
-# Objects of this type can be checked for equality using "==" and "!=" operators
 cdef class ControlParams:
+    """
+    Wrapping the control_par C struct (declared in liboptv/paramethers.h) for 
+    pythonic access. Objects of this type can be checked for equality using 
+    "==" and "!=" operators.
+    """
     def __init__(self, cams_num):
+        """
+        Arguments:
+        num_cams - number of camras used in the scene.
+        """
         self._control_par = c_new_control_par(cams_num)
         
         self._multimedia_params = MultimediaParams()
