@@ -3,6 +3,10 @@ from libc.stdlib cimport malloc, free
 from libc.string cimport strncpy
 
 import numpy
+numpy.import_array()
+
+cimport numpy as numpy
+from cpython cimport PyObject
 
 cdef extern from "optv/parameters.h":
     int c_compare_mm_np "compare_mm_np"(mm_np * mm_np1, mm_np * mm_np2)
@@ -65,6 +69,25 @@ cdef class MultimediaParams:
         for i in range(len(n2_np_arr)):
             n2_np_arr[i] = self._mm_np[0].n2[i]
         return n2_np_arr
+    
+    def as_ndarray(self): #TODO memory management
+        cdef numpy.npy_intp shape[1]
+        cdef int arr_size = sizeof(self._mm_np[0].n2) / sizeof(self._mm_np[0].n2[0])
+        shape[0] = < numpy.npy_intp > arr_size
+        cdef numpy.ndarray ndarray
+        ndarray = numpy.PyArray_SimpleNewFromData(1, shape, numpy.NPY_DOUBLE, self._mm_np[0].n2)
+#         ndarray.base = <PyObject*>self # <PyObject*>
+#         ndarray = np.array(array_wrapper, copy=False)##############################################
+#         print ndarray
+        return ndarray
+    def __array__(self):
+         
+        ndarray = numpy.empty(3)
+        ndarray[0]=1111
+        ndarray[1]=2222
+        ndarray[3]=3333
+        print ndarray
+        return ndarray
     
     def set_n2(self, n2):
         for i in range(len(n2)):

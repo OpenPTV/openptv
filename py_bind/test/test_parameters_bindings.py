@@ -17,6 +17,19 @@ class Test_MultimediaParams(unittest.TestCase):
         numpy.testing.assert_array_equal(m.get_n2(), n2_np)
         
         self.failUnlessEqual(m.__str__(), "nlay=\t3 \nn1=\t2.0 \nn2=\t{11.0, 22.0, 33.0} \nd=\t{55.0, 66.0, 77.0} \nn3=\t4.0 \nlut=\t1 ")
+        print m.as_ndarray()
+        arr=numpy.array(3)
+        print type(arr)
+        arr=m.as_ndarray()
+        print "1:"+ str(arr)
+        numpy.testing.assert_array_equal(m.as_ndarray(), n2_np)
+#         del m
+        print arr
+        arr[2]=6
+        arr[1]=2
+        arr[0]=4
+        print arr
+        print m
 
 class Test_TrackingParams(unittest.TestCase):
     
