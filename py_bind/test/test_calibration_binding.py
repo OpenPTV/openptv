@@ -59,5 +59,35 @@ class Test_Calibration(unittest.TestCase):
         # remove the testing output directory and its files
         shutil.rmtree(self.output_directory)
         
+    def test_set_primary(self):
+        """Set primary point (interior) position, only for admissible values"""
+        new_pp = numpy.array([111.1111, 222.2222, 333.3333])
+        self.cal.set_primary_point(new_pp)
+
+        numpy.testing.assert_array_equal(new_pp, self.cal.get_primary_point())
+        self.assertRaises(ValueError, self.cal.set_primary_point, numpy.ones(4))
+        self.assertRaises(ValueError, self.cal.set_primary_point, numpy.ones(2))
+    
+    def test_set_radial(self):
+        """Set radial distortion, only for admissible values"""
+        new_rd = numpy.array([111.1111, 222.2222, 333.3333])
+        self.cal.set_radial_distortion(new_rd)
+
+        numpy.testing.assert_array_equal(new_rd, 
+            self.cal.get_radial_distortion())
+        self.assertRaises(ValueError, self.cal.set_radial_distortion, 
+            numpy.ones(4))
+        self.assertRaises(ValueError, self.cal.set_radial_distortion,
+            numpy.ones(2))
+    
+    def test_set_decentering(self):
+        """Set radial distortion, only for admissible values"""
+        new_de = numpy.array([111.1111, 222.2222])
+        self.cal.set_decentering(new_de)
+
+        numpy.testing.assert_array_equal(new_de, self.cal.get_decentering())
+        self.assertRaises(ValueError, self.cal.set_decentering, numpy.ones(3))
+        self.assertRaises(ValueError, self.cal.set_decentering, numpy.ones(1))
+    
 if __name__ == "__main__":
     unittest.main()

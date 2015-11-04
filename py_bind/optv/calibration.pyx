@@ -1,6 +1,13 @@
 # Implementation of Python binding to calibrtion.h C module
+#
+# References:
+# [1] Dracos, Th., ed.; Three Dimensional Velocity and Vorticity Measuring
+#     and Image Analysis Techniques; 1996. Chapter 3.
+
 from libc.stdlib cimport malloc, free
 import numpy
+cimport numpy as cnp
+
 from optv.calibration import Calibration
 from mhlib import isnumeric
 
@@ -103,6 +110,108 @@ cdef class Calibration:
         
         return ret_dmatrix_np
     
+    def set_primary_point(self, cnp.ndarray prim_point_pos):
+        """
+        Set the camera's primary point position (a.k.a. interior orientation).
+        
+        Arguments:
+        prim_point_pos - a 3 element array holding the values of x and y shift
+            of point from sensor middle and sensor-point distance, in this 
+            order.
+        """
+        if (object>prim_point_pos).shape != (3,):
+            raise ValueError("Expected a 3-element array")
+        
+        self._calibration[0].int_par.xh = prim_point_pos[0]
+        self._calibration[0].int_par.yh = prim_point_pos[1]
+        self._calibration[0].int_par.cc = prim_point_pos[2]
+    
+    def get_primary_point(self):
+        """
+        Returns the primary point position (a.k.a. interior orientation) as a 3
+        element array holding the values of x and y shift of point from sensor
+        middle and sensor-point distance, in this order.
+        """
+        ret = numpy.empty(3)
+        ret[0] = self._calibration[0].int_par.xh
+        ret[1] = self._calibration[0].int_par.yh
+        ret[2] = self._calibration[0].int_par.cc
+        return ret
+        
+    def set_radial_distortion(self, cnp.ndarray dist_coeffs):
+        """
+        Sets the parameters for the image radial distortion, where the x/y
+        coordinates are corrected by a polynomial in r = sqrt(x**2 + y**):
+        p = k1*r**2 + k2*r**4 + k3*r**6
+        
+        Arguments:
+        dist_coeffs - length-3 array, holding k_i.
+        """
+        if (<object>dist_coeffs).shape != (3,):
+            raise ValueError("Expected a 3-element array")
+        
+        self._calibration[0].added_par.k1 = dist_coeffs[0]
+        self._calibration[0].added_par.k2 = dist_coeffs[1]
+        self._calibration[0].added_par.k3 = dist_coeffs[2]
+        
+    def get_radial_distortion(self):
+        """
+        Returns the radial distortion polynomial coefficients as a 3 element
+        array, from lowest power to highest.
+        """
+        ret = numpy.empty(3)
+        ret[0] = self._calibration[0].added_par.k1
+        ret[1] = self._calibration[0].added_par.k2
+        ret[2] = self._calibration[0].added_par.k3
+        return ret
+    
+    def set_decentering(self, cnp.ndarray decent):
+        """
+        Sets the parameters of decentering distortion (a.k.a. p1, p2, see [1]).
+        
+        Arguments:
+        decent - array, holding p_i
+        """
+        if (<object>decent).shape != (2,):
+            raise ValueError("Expected a 2-element array")
+        
+        self._calibration[0].added_par.p1 = decent[0]
+        self._calibration[0].added_par.p2 = decent[1]
+    
+    def get_decentering(self):
+        """
+        Returns the decentering parameters [1] as a 2 element array, 
+        (p_1, p_2).
+        """
+        ret = numpy.empty(2)
+        ret[0] = self._calibration[0].added_par.p1
+        ret[1] = self._calibration[0].added_par.p2
+        return ret
+    
+    def set_affine_trans(self, affine):
+        """
+        Sets the affine transform parameters (x-scale, shear) applied to the
+        image.
+        
+        Arguments:
+        affine - array, holding (x-scale, shear) in order.
+        """
+        if (<object>affine).shape != (2,):
+            raise ValueError("Expected a 2-element array")
+
+        self._calibration[0].added_par.scx = affine[0]
+        self._calibration[0].added_par.she = affine[1]
+    
+    def get_affine(self):
+        """
+        Returns the affine transform parameters [1] as a 2 element array, 
+        (scx, she).
+        """
+        ret = numpy.empty(2)
+        ret[0] = self._calibration[0].added_par.scx
+        ret[1] = self._calibration[0].added_par.she
+        return ret
+
     # Free memory
     def __dealloc__(self):
         free(self._calibration)
