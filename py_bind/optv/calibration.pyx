@@ -7,8 +7,7 @@ from mhlib import isnumeric
 cdef extern from "optv/calibration.h":
     calibration *read_calibration(char *ori_file, char *add_file,
         char *fallback_file)
-    int write_ori (Exterior Ex, Interior I, Glass G, ap_52 ap, char *filename, 
-        char *add_file)
+    int write_calibration(calibration *cal, char *filename, char *add_file)
     void rotation_matrix(Exterior *ex)
     
 cdef class Calibration:
@@ -21,11 +20,9 @@ cdef class Calibration:
             (<char *>add_file if add_file != None else < char *> 0), NULL)
         
     def write(self, filename, add_file):
-        write_ori(self._calibration[0].ext_par,
-                  self._calibration[0].int_par,
-                  self._calibration[0].glass_par,
-                  self._calibration[0].added_par,
-                  filename, add_file)
+        success = write_calibration(self._calibration, filename, add_file)
+        if not success:
+            raise IOError("Failed to write calibration.")
     
     # Sets exterior position.
     # Parameter: x_y_z_np - numpy array of 3 elements for x, y, z
