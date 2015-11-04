@@ -17,11 +17,11 @@ cdef extern from "optv/calibration.h":
     ctypedef struct ap_52:
         double k1, k2, k3, p1, p2, scx, she
         
-    ctypedef struct c_calibration "Calibration":
+    ctypedef struct calibration "Calibration":
         Exterior ext_par
         Interior int_par
         Glass glass_par
         ap_52 added_par
         
 cdef class Calibration:
-    cdef c_calibration * _calibration
+    cdef calibration * _calibration
