@@ -345,17 +345,13 @@ double get_mmf_from_mmlut (Calibration *cal, vec3d pos){
     double X,Y,Z;
     vec3d temp;
     
-    vec_copy(temp,pos);
+    rw = cal->mmlut.rw;
   
-    rw =  cal->mmlut.rw;
-  
-    temp[2] -= cal->mmlut.origin[2]; 
+    vec_subt(pos, cal->mmlut.origin, temp);
     sz = temp[2]/rw;
     iz = (int) sz;
     sz -= iz;
     
-    temp[0] -= cal->mmlut.origin[0];
-    temp[1] -= cal->mmlut.origin[1];
     R = norm(temp[0], temp[1], 0);
     
     sr = R/rw;
