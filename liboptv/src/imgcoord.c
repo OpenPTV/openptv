@@ -18,21 +18,21 @@ Routines contained:
 ****************************************************************************/
 
 #include "imgcoord.h"
-
+#include "multimed.h"
+#include <math.h>
 
 /* flat_image_coord() calculates projection from coordinates in
     world space to metric coordinates in image space without 
     distortions
+    
     Arguments:
-    doubles X,Y,Z in real space
-    Calibration *cal parameters pointer
-    multimedia *mm parameters pointer
-    int i_cam - camera number (from 0 to cpar->num_cams)
-    multimedia look-up table array mmLUT pointer
+    vec3d pos - a vector of position in 3D (X,Y,Z real space)
+    Calibration *cal - parameters of the camera on which to project.
+    mm_np *mm - layer thickness and refractive index parameters.
+    
     Output:
-    double x,y in pixel coordinates in the image space
+    double x,y - pixel coordinates of projection in the image space.
  */
- 
 void flat_image_coord (vec3d pos, Calibration *cal, mm_np *mm, double *x, double *y){
 
   double deno;
