@@ -1,20 +1,9 @@
 /****************************************************************************
-
-Routine:	       	imgcoord.c
-
-Author/Copyright:      	Hans-Gerd Maas
-
-Address:	       	Institute of Geodesy and Photogrammetry
-                        ETH - Hoenggerberg
-		       	CH - 8093 Zurich
-
-Creation Date:	       	22.4.88
-
-Description:	       	computes x', y' from given Point and orientation
-	       		(see: Kraus)
-
-Routines contained:
-
+* Calculation of image coordinates from 3D positions, with or without 
+* A distortion model.
+* 
+* References:
+* [1] https://en.wikipedia.org/wiki/Distortion_(optics)
 ****************************************************************************/
 
 #include "imgcoord.h"
@@ -33,27 +22,25 @@ Routines contained:
     Output:
     double x,y - pixel coordinates of projection in the image space.
  */
-void flat_image_coord (vec3d pos, Calibration *cal, mm_np *mm, double *x, double *y){
+void flat_image_coord (vec3d pos, Calibration *cal, mm_np *mm, 
+    double *x, double *y)
+{
+    double deno;
+    Calibration cal_t;
+    double X_t,Y_t,Z_t,cross_p[3],cross_c[3];
+    vec3d pos_t;
+  
+    cal_t.mmlut = cal->mmlut;
 
-  double deno;
-  Calibration cal_t;
-  double X_t,Y_t,Z_t,cross_p[3],cross_c[3];
-  vec3d pos_t;
-  
-  
-  cal_t.mmlut = cal->mmlut;
-
-  /* calculate tilted positions and copy them to X_t, Y_t and Z_t */
-  
+    /* This block calculate 3D position in an imaginary air-filled space, 
+       i.e. where the point will have been seen in the absence of refractive
+       layers between it and the camera.
+    */
     trans_Cam_Point(cal->ext_par, *mm, cal->glass_par, pos, \
          &(cal_t.ext_par), pos_t, cross_p, cross_c);
-    
     multimed_nlay (&cal_t, mm, pos_t, &X_t,&Y_t);
-    
     vec_set(pos_t,X_t,Y_t,pos_t[2]);
-    
     back_trans_Point(pos_t, *mm, cal->glass_par, cross_p, cross_c, pos);
-	  
 
     deno = cal->ext_par.dm[0][2] * (pos[0]-cal->ext_par.x0)
     + cal->ext_par.dm[1][2] * (pos[1]-cal->ext_par.y0)
@@ -69,24 +56,20 @@ void flat_image_coord (vec3d pos, Calibration *cal, mm_np *mm, double *x, double
 }
 
 /*  img_coord() uses flat_image_coord() to estimate metric coordinates in image space
-    from the 3D position in the world and distorts it using the 
-    Brown distortion model https://en.wikipedia.org/wiki/Distortion_(optics)
+    from the 3D position in the world and distorts it using the Brown 
+    distortion model [1]
     
     Arguments:
-    vec3d pos is a vector of position in 3D (X,Y,Z real space)
-    Calibration *cal parameters pointer of a specific camera
-    multimedia *mm parameters pointer
-    int i_cam - camera number (from 0 to cpar->num_cams)
-    multimedia look-up table array mmLUT pointer
+    vec3d pos - a vector of position in 3D (X,Y,Z real space)
+    Calibration *cal - parameters of the camera on which to project.
+    mm_np *mm - layer thickness and refractive index parameters.
+    
     Output:
-    double x,y in pixel coordinates in the image space
- */
-void img_coord (vec3d pos, Calibration *cal, mm_np *mm, double *x, double *y){
-    	
+    double x,y - pixel coordinates of projection in the image space.
+*/
+void img_coord (vec3d pos, Calibration *cal, mm_np *mm, double *x, double *y) {
     flat_image_coord (pos, cal, mm, x, y);
-
     distort_brown_affin (*x, *y, cal->added_par, x, y);
-
 }
 
 
