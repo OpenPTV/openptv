@@ -15,20 +15,20 @@
     distortions
     
     Arguments:
-    vec3d pos - a vector of position in 3D (X,Y,Z real space)
+    vec3d orig_pos - a vector of position in 3D (X,Y,Z real space)
     Calibration *cal - parameters of the camera on which to project.
     mm_np *mm - layer thickness and refractive index parameters.
     
     Output:
     double x,y - pixel coordinates of projection in the image space.
  */
-void flat_image_coord (vec3d pos, Calibration *cal, mm_np *mm, 
+void flat_image_coord (vec3d orig_pos, Calibration *cal, mm_np *mm, 
     double *x, double *y)
 {
     double deno;
     Calibration cal_t;
     double X_t,Y_t,Z_t,cross_p[3],cross_c[3];
-    vec3d pos_t;
+    vec3d pos_t, pos;
   
     cal_t.mmlut = cal->mmlut;
 
@@ -36,7 +36,7 @@ void flat_image_coord (vec3d pos, Calibration *cal, mm_np *mm,
        i.e. where the point will have been seen in the absence of refractive
        layers between it and the camera.
     */
-    trans_Cam_Point(cal->ext_par, *mm, cal->glass_par, pos, \
+    trans_Cam_Point(cal->ext_par, *mm, cal->glass_par, orig_pos, \
          &(cal_t.ext_par), pos_t, cross_p, cross_c);
     multimed_nlay (&cal_t, mm, pos_t, &X_t,&Y_t);
     vec_set(pos_t,X_t,Y_t,pos_t[2]);
@@ -71,5 +71,4 @@ void img_coord (vec3d pos, Calibration *cal, mm_np *mm, double *x, double *y) {
     flat_image_coord (pos, cal, mm, x, y);
     distort_brown_affin (*x, *y, cal->added_par, x, y);
 }
-
 
