@@ -8,7 +8,7 @@ References:
 """
 
 import unittest, os
-from optv.tracking_framebuf import read_targets, Target
+from optv.tracking_framebuf import read_targets, Target, TargetArray
 
 class TestTargets(unittest.TestCase):
     def test_fill_target(self):
@@ -19,6 +19,14 @@ class TestTargets(unittest.TestCase):
         self.failUnlessEqual(t.count_pixels(), (20, 4, 5))
         self.failUnlessEqual(t.sum_grey_value(), 30)
         
+    def test_fill_target_array(self):
+        tarr = TargetArray(2)
+        tarr[0].set_pos((1.5, 2.5))
+        tarr[1].set_pos((3.5, 4.5))
+        
+        self.failUnlessEqual(tarr[0].pos(), (1.5, 2.5))
+        self.failUnlessEqual(tarr[1].pos(), (3.5, 4.5))
+
     def test_read_targets(self):
         """Reading a targets file from Python."""
         targs = read_targets("../../liboptv/tests/testing_fodder/sample_", 42)

@@ -109,6 +109,23 @@ cdef class Target:
         self._targ.sumg = sumg
 
 cdef class TargetArray:
+    """
+    Represents an array of targets. Allows indexing and iteration.
+    """
+    def __init__(self, int size=0):
+        """
+        Arguments:
+        size - if >0, allocates an empty target array (which should be filled
+            by iteration later), otherwise nothing is allocated.
+        """
+        cdef target *tarr
+        if size <=0:
+            tarr = NULL
+            size = 0
+        else:
+            tarr = <target *>malloc(size * sizeof(target))
+        self.set(tarr, size, 1)
+
     # Assumed to not own the data.
     cdef void set(TargetArray self, target* tarr, int num_targets, int owns_data):
         self._tarr = tarr
