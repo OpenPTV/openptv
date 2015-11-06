@@ -7,7 +7,7 @@ References:
 [1] https://nose.readthedocs.org/en/latest/
 """
 
-import unittest
+import unittest, os
 from optv.tracking_framebuf import read_targets
 
 class TestTargets(unittest.TestCase):
@@ -19,4 +19,23 @@ class TestTargets(unittest.TestCase):
         self.failUnlessEqual([targ.tnr() for targ in targs], [1, 0])
         self.failUnlessEqual([targ.pos()[0] for targ in targs], [1127., 796.])
         self.failUnlessEqual([targ.pos()[1] for targ in targs], [796., 809.])
+    
+    def test_write_targets(self):
+        """Round-trip test of writing targets."""
+        targs = read_targets("../../liboptv/tests/testing_fodder/sample_", 42)
+        targs.write("testing_fodder/round_trip.", 1)
+        tback = read_targets("testing_fodder/round_trip.", 1)
+        
+        self.failUnlessEqual(len(targs), len(tback))
+        self.failUnlessEqual([targ.tnr() for targ in targs], 
+            [targ.tnr() for targ in tback])
+        self.failUnlessEqual([targ.pos()[0] for targ in targs], 
+            [targ.pos()[0] for targ in tback])
+        self.failUnlessEqual([targ.pos()[1] for targ in targs],
+            [targ.pos()[1] for targ in tback])
+        
+    def tearDown(self):
+        filename = "testing_fodder/round_trip.0001_targets"
+        if os.path.exists(filename):
+            os.remove(filename)
 

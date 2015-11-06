@@ -5,6 +5,8 @@ from libc.stdlib cimport malloc, free
 cdef extern from "optv/tracking_frame_buf.h":
     int c_read_targets "read_targets" (target buffer[], \
         char* file_base, int frame_num)
+    int write_targets(target buffer[], int num_targets, char* file_base, \
+        int frame_num)
 
 DEF MAX_TARGETS = 20000 # Until improvement of read_targets to auto-allocate.
 
@@ -77,6 +79,18 @@ cdef class TargetArray:
         self._num_targets = num_targets
         self._owns_data = owns_data
     
+    def write(self, char *file_base, int frame_num):
+        """
+        Writes a _targets file - a text format for targets. First line: number
+        of targets. Each following line: pnr, x, y, n, nx, ny, sumg, tnr.
+        the output file name is of the form <base_name><frame>_targets.
+        
+        Arguments:
+        file_base - path to the file, base part.
+        frame_num - frame number part of the file name.
+        """
+        write_targets(self._tarr, self._num_targets, file_base, frame_num)
+
     def __getitem__(self, int ix):
         """
         Creates a Python Target instance from the C target at `ix` and returns
