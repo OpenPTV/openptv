@@ -34,14 +34,11 @@ cdef class Target:
         self._owns_data = 1
         self._targ = <target *>malloc(sizeof(target))
         
-        self._targ[0].pnr = kwd['pnr']
-        self._targ[0].tnr = kwd['tnr']
-        self._targ[0].x = kwd['x']
-        self._targ[0].y = kwd['y']
-        self._targ[0].n = kwd['n']
-        self._targ[0].nx = kwd['nx']
-        self._targ[0].ny = kwd['ny']
-        self._targ[0].sumg = kwd['sumg']
+        self.set_pnr(kwd['pnr'])
+        self.set_tnr(kwd['tnr'])
+        self.set_pos([kwd['x'], kwd['y']])
+        self.set_pixel_counts(kwd['n'], kwd['nx'], kwd['ny'])
+        self.set_sum_grey_value(kwd['sumg'])
     
     def __dealloc__(self):
         if self._owns_data == 1:
@@ -54,8 +51,14 @@ cdef class Target:
     def tnr(self):
         return self._targ[0].tnr
     
+    def set_tnr(self, tnr):
+        self._targ[0].tnr = tnr
+    
     def pnr(self):
         return self._targ[0].pnr
+    
+    def set_pnr(self, pnr):
+        self._targ[0].pnr = pnr
     
     def pos(self):
         """
@@ -63,6 +66,16 @@ cdef class Target:
         """
         return self._targ[0].x, self._targ[0].y
     
+    def set_pos(self, pos):
+        """
+        Set target position in pixel coordinates.
+        
+        Arguments:
+        pos - a 2-element sequence, for the x and y pixel position.
+        """
+        self._targ[0].x = pos[0]
+        self._targ[0].y = pos[1]
+
     def count_pixels(self):
         """
         Get the pixel counts associated with this target.
@@ -71,6 +84,29 @@ cdef class Target:
         n, nx, ny - number of pixels in target (total, width, height)
         """
         return self._targ.n, self._targ.nx, self._targ.ny
+
+    def set_pixel_counts(self, n, nx, ny):
+        """
+        Set the pixel counts associated with this target.
+        
+        Arguments:
+        n, nx, ny - number of pixels in target (total, width, height)
+        """
+        self._targ.n = n
+        self._targ.nx = nx
+        self._targ.ny = ny
+    
+    def sum_grey_value(self):
+        """
+        Returns the sum of grey values of pixels belonging to target.
+        """
+        return self._targ.sumg
+    
+    def set_sum_grey_value(self, sumg):
+        """
+        Returns the sum of grey values of pixels belonging to target.
+        """
+        self._targ.sumg = sumg
 
 cdef class TargetArray:
     # Assumed to not own the data.
