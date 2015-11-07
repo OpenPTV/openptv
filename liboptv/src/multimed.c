@@ -111,32 +111,28 @@ double multimed_r_nlay (Calibration *cal, mm_np *mm, vec3d pos) {
     }
 }
 
-
-/*  trans_Cam_Point() creates the shifted points for each position X,Y,Z 
-    Using Exterior and Interior parameters and the Glass vector of the variable
-    window position and the two vectors that point to the crossing point
+/*  trans_Cam_Point() projects global-coordinate points of the camera and an
+    image points on the glass surface separating those points.
     
-    Arguments: 
-    Exterior structure 'ex'
-    multimedia paramaters mm
-    Glass parameters gl
-    3D space position pos
-    Returns:
-    Pointer to ex_t Exterior parameters after shift
-    vector of doubles for shifted position pos_t
-    vector of 3 doubles of cross_p 
-    vector of 3 doubles of cross_c, both used for back projection
-*/ 
-void trans_Cam_Point(Exterior ex
-                   , mm_np mm
-                   , Glass gl
-                   , vec3d pos
-                   , Exterior *ex_t
-                   , vec3d pos_t
-                   , double cross_p[3]
-                   , double cross_c[3]){
-
-/* Beat Luethi June 07: I change the stuff to a system perpendicular to the interface */
+    Input arguments:
+    Exterior ex - holding global-coordinates camera position.
+    mm_np mm - holding glass thickness.
+    Glass gl - holding the glass position in global-coordinates as a 
+        glass-normal vector.
+    vec3d pos - the global coordinates of the observed point.
+    
+    Output arguments:
+    Exterior ex_t - only the primary point fields are used, and are set 
+        to the glass/Z axis intersection.
+    double cross_p[3] - the observed point projection coordinates in global
+        coordinates.
+    double cross_c[3] - same for the camera position. Since the camera point
+        is projected on the other side of the glass, it'll have a small 
+        difference in Z value from ``cross_p``.
+*/
+void trans_Cam_Point(Exterior ex, mm_np mm, Glass gl, vec3d pos, 
+    Exterior *ex_t, vec3d pos_t, double cross_p[3], double cross_c[3])
+{
     double dist_cam_glas,dist_point_glas,dist_o_glas; //glas inside at water 
     int row, col;
     vec3d glass_dir, primary_pt, renorm_glass, temp;
@@ -345,17 +341,13 @@ double get_mmf_from_mmlut (Calibration *cal, vec3d pos){
     double X,Y,Z;
     vec3d temp;
     
-    vec_copy(temp,pos);
+    rw = cal->mmlut.rw;
   
-    rw =  cal->mmlut.rw;
-  
-    temp[2] -= cal->mmlut.origin[2]; 
+    vec_subt(pos, cal->mmlut.origin, temp);
     sz = temp[2]/rw;
     iz = (int) sz;
     sz -= iz;
     
-    temp[0] -= cal->mmlut.origin[0];
-    temp[1] -= cal->mmlut.origin[1];
     R = norm(temp[0], temp[1], 0);
     
     sr = R/rw;
