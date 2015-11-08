@@ -1,134 +1,154 @@
-/* Unit tests for ray tracing. */
+/* Unit tests for finding image coordinates of 3D position. */
 
 #include <check.h>
 #include <stdlib.h>
-#include <stdio.h>
 #include <math.h>
 #include "parameters.h"
 #include "calibration.h"
-#include "lsqadj.h"
-#include "ray_tracing.h"
-#include "multimed.h"
 #include "imgcoord.h"
-#include <unistd.h>
+#include "vec_utils.h"
 
-int file_exists(char *filename);
-
-#define EPS 1E-6
-
-
-START_TEST(test_flat_image_coord)
+START_TEST(test_flat_centered_cam)
 {
-
-    vec3d pos = {50.0, 100.0, -10.0};
-    double x,y ;
-
-            
-    Calibration *cal;
-
+    /*  When the image plane is centered on the axis. and the camera looks to
+        a straight angle (e.g. along an axis), the image position can be 
+        gleaned from simple geometry.
+    */
+    vec3d pos = {10, 5, -20};
+    Calibration cal = {
+        .ext_par = {0, 0, 40, 0, 0, 0, {{1, 0, 0}, {0, 1, 0}, {0, 0, 1}}},
+        .int_par = {0, 0, 10},
+        .glass_par = {0, 0, 20},
+        .added_par = {0, 0, 0, 0, 0, 1, 0}
+    };
+    mm_np mm = { /* All in air, simplest case. */
+        .nlay = 1,
+        .n1 = 1,
+        .n2 = {1,0,0},
+        .n3 = 1,
+        .d = {1,0,0},
+        .lut = 1
+    };
+    double x, y; /* Output variables */
     
-    char ori_file[] = "testing_fodder/cal/cam2.tif.ori";
-    char add_file[] = "testing_fodder/cal/cam2.tif.addpar";
-    
-    ck_assert_msg (file_exists(ori_file) == 1, "\n File %s does not exist\n", ori_file);
-    ck_assert_msg (file_exists(add_file) == 1, "\n File %s does not exist\n", add_file);
-    cal = read_calibration(ori_file, add_file, NULL);    
-    fail_if (cal == NULL, "\n ORI or ADDPAR file reading failed \n");
-    
-
-         
-    volume_par *vpar;
-    char vol_file[] = "testing_fodder/parameters/criteria.par";
-    ck_assert_msg (file_exists(vol_file) == 1, "\n File %s does not exist\n", vol_file);    
-    vpar = read_volume_par(vol_file);
-    fail_if (vpar == NULL, "\n volume parameter file reading failed \n");
-    
-    
-    
-    control_par *cpar;
-    char filename[] = "testing_fodder/parameters/ptv.par";
-    ck_assert_msg (file_exists(filename) == 1, "\n File %s does not exist\n", filename);
-    cpar = read_control_par(filename);
-    fail_if (cpar == NULL, "\n control parameter file reading failed\n ");
-    
-    cpar->num_cams = 1; // only one camera test
-    
-    init_mmlut (vpar, cpar, cal);
-    
-    flat_image_coord (pos, cal, cpar->mm, &x, &y);
-    
-    ck_assert_msg(  fabs(x - 38.57026464) < EPS && 
-                    fabs(y - 28.39602664)  < EPS,
-     "Expected 38.57026464 28.39602664  but found %10.8f %10.8f\n", 
-     x,y);      
-    
+    flat_image_coord(pos, &cal, &mm, &x, &y);
+    fail_unless(x == 10./6.);
+    fail_unless(x == 2*y);
 }
 END_TEST
 
-
-
-START_TEST(test_imgcoord)
+START_TEST(test_flat_decentered_cam)
 {
-    vec3d pos = {50.0, 100.0, -10.0};
-    double x,y;
+    /*  When the camera axis goes through the origin, the image point is (0, 0)
+        for centered internal parameters.
+    */
+    vec3d pos = {10, 0, -20};
+    Calibration cal = {
+        .ext_par = {-20, 0, 40, 0, -atan(0.5), 0, 
+            {{1, 0, 0}, {0, 1, 0}, {0, 0, 1}}},
+        .int_par = {0, 0, 10},
+        .glass_par = {0, 0, 20},
+        .added_par = {0, 0, 0, 0, 0, 1, 0}
+    };
+    mm_np mm = { /* All in air, simplest case. */
+        .nlay = 1,
+        .n1 = 1,
+        .n2 = {1,0,0},
+        .n3 = 1,
+        .d = {1,0,0},
+        .lut = 1
+    };
+    double x, y; /* Output variables */
     
-    ap_52 ap = {0.0, 0.0, 0.0, 0.0, 0.0, 1.0, 1.0};
-            
-    Calibration *cal;
-
-    
-    char ori_file[] = "testing_fodder/cal/cam2.tif.ori";
-    char add_file[] = "testing_fodder/cal/cam2.tif.addpar";
-    
-    ck_assert_msg (file_exists(ori_file) == 1, "\n File %s does not exist\n", ori_file);
-    ck_assert_msg (file_exists(add_file) == 1, "\n File %s does not exist\n", add_file);
-    cal = read_calibration(ori_file, add_file, NULL);    
-    fail_if (cal == NULL, "\n ORI or ADDPAR file reading failed \n");
-    
-    cal->added_par = ap;
-         
-    volume_par *vpar;
-    char vol_file[] = "testing_fodder/parameters/criteria.par";
-    ck_assert_msg (file_exists(vol_file) == 1, "\n File %s does not exist\n", vol_file);    
-    vpar = read_volume_par(vol_file);
-    fail_if (vpar == NULL, "\n volume parameter file reading failed \n");
-    
-    
-    
-    control_par *cpar;
-    char filename[] = "testing_fodder/parameters/ptv.par";
-    ck_assert_msg (file_exists(filename) == 1, "\n File %s does not exist\n", filename);
-    cpar = read_control_par(filename);
-    fail_if (cpar == NULL, "\n control parameter file reading failed\n ");
-    
-    
-    cpar->num_cams = 1; // only one camera test
-    
-    init_mmlut (vpar, cpar, cal);
-    
-    img_coord (pos, cal, cpar->mm, &x, &y);
-    
-    ck_assert_msg(  fabs(x - 14.67583450) < EPS && 
-                    fabs(y - 15.34243851)  < EPS,
-     "Expected 14.67583450 15.34243851  but found %10.8f %10.8f\n", 
-     x,y);
-    
+    rotation_matrix(&cal.ext_par);
+    flat_image_coord(pos, &cal, &mm, &x, &y);
+    fail_unless(x == 0);
+    fail_unless(y == 0);
 }
 END_TEST
-            
 
+START_TEST(test_flat_multilayer)
+{
+    /*  When the camera axis goes through the origin, the image point is (0, 0)
+        for centered internal parameters. That's true even for varying 
+        refractive indices, if the glass normal is still parallel to the camera
+        to point line.
+    */
+    double angle = atan(0.5);
+    vec3d pos = {10, 0, -20};
+    Calibration cal = {
+        .ext_par = {-20, 0, 40, 0, -angle, 0, 
+            {{1, 0, 0}, {0, 1, 0}, {0, 0, 1}}},
+        .int_par = {0, 0, 10},
+        .glass_par = {-20*sin(angle), 0, 20*cos(angle)},
+        .added_par = {0, 0, 0, 0, 0, 1, 0}
+    };
+    mm_np mm = { /* All in air, except the glass. */
+        .nlay = 1,
+        .n1 = 1,
+        .n2 = {1.5,0,0},
+        .n3 = 1,
+        .d = {1,0,0},
+        .lut = 1
+    };
+    double x, y; /* Output variables */
+    
+    rotation_matrix(&cal.ext_par);
+    flat_image_coord(pos, &cal, &mm, &x, &y);
+    fail_unless(x == 0);
+    fail_unless(y == 0);
+}
+END_TEST
+
+START_TEST(test_distorted_centered_cam)
+{
+    /*  When the image plane is centered on the axis. and the camera looks to
+        a straight angle (e.g. along an axis), the image position can be 
+        gleaned from simple geometry. Distortion can be predicted.
+    */
+    vec3d pos = {10, 5, -20};
+    Calibration cal = {
+        .ext_par = {0, 0, 40, 0, 0, 0, {{1, 0, 0}, {0, 1, 0}, {0, 0, 1}}},
+        .int_par = {0, 0, 10},
+        .glass_par = {0, 0, 20},
+        .added_par = {-0.01, 0, 0, 0, 0, 1, 0} /* barrel distortion */
+    };
+    mm_np mm = { /* All in air, simplest case. */
+        .nlay = 1,
+        .n1 = 1,
+        .n2 = {1,0,0},
+        .n3 = 1,
+        .d = {1,0,0},
+        .lut = 1
+    };
+    double x, y; /* Output variables */
+    double r; /* radial distortion prediction */
+    
+    img_coord(pos, &cal, &mm, &x, &y);
+    r = norm(10./6., 5./6., 0);
+    fail_unless(x == 10./6.*(1 - 0.01*r*r));
+    fail_unless(x == 2*y);
+}
+END_TEST
 
 Suite* fb_suite(void) {
     Suite *s = suite_create ("Imgcoord");
  
-    TCase *tc = tcase_create ("test_flat_image_coord");
-    tcase_add_test(tc, test_flat_image_coord);
+    TCase *tc = tcase_create ("Image coordinates all-air");
+    tcase_add_test(tc, test_flat_centered_cam);
     suite_add_tcase (s, tc);
     
-    tc = tcase_create ("test_imgcoord");
-    tcase_add_test(tc, test_imgcoord);     
+    tc = tcase_create ("Image coordinates all-air camera moved");
+    tcase_add_test(tc, test_flat_decentered_cam);     
     suite_add_tcase (s, tc); 
       
+    tc = tcase_create ("Multilayer image coordinates, no distortion");
+    tcase_add_test(tc, test_flat_multilayer);     
+    suite_add_tcase (s, tc); 
+    
+    tc = tcase_create ("Distorted image coordinates");
+    tcase_add_test(tc, test_distorted_centered_cam);
+    suite_add_tcase (s, tc);
     return s;
 }
 
@@ -136,19 +156,9 @@ int main(void) {
     int number_failed;
     Suite *s = fb_suite ();
     SRunner *sr = srunner_create (s);
-    //srunner_run_all (sr, CK_ENV);
-    //srunner_run_all (sr, CK_SUBUNIT);
-    srunner_run_all (sr, CK_VERBOSE);
+    srunner_run_all (sr, CK_ENV);
     number_failed = srunner_ntests_failed (sr);
     srunner_free (sr);
     return (number_failed == 0) ? EXIT_SUCCESS : EXIT_FAILURE;
 }
 
-int file_exists(char *filename){
-    if( access(filename, F_OK ) != -1 ) {
-        return 1;
-    } else {
-        printf("File %s does not exist\n",filename);
-        return NULL;
-    }
-}
