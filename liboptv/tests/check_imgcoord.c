@@ -8,6 +8,8 @@
 #include "imgcoord.h"
 #include "vec_utils.h"
 
+#define EPS 1E-6
+
 START_TEST(test_flat_centered_cam)
 {
     /*  When the image plane is centered on the axis. and the camera looks to
@@ -62,8 +64,8 @@ START_TEST(test_flat_decentered_cam)
     
     rotation_matrix(&cal.ext_par);
     flat_image_coord(pos, &cal, &mm, &x, &y);
-    fail_unless(x == 0);
-    fail_unless(y == 0);
+    fail_unless(fabs(x) < EPS);
+    fail_unless(fabs(y) < EPS);
 }
 END_TEST
 
@@ -95,8 +97,8 @@ START_TEST(test_flat_multilayer)
     
     rotation_matrix(&cal.ext_par);
     flat_image_coord(pos, &cal, &mm, &x, &y);
-    fail_unless(x == 0);
-    fail_unless(y == 0);
+    fail_unless(fabs(x) < EPS);
+    fail_unless(fabs(y) < EPS);
 }
 END_TEST
 
