@@ -60,11 +60,11 @@ double multimed_r_nlay (Calibration *cal, mm_np *mm, vec3d pos) {
     int n_iter = 40;
     double beta1, beta2[32], beta3, r, rbeta, rdiff, rq, mmf=1.0;
     double X,Y,Z;
+    double zout;
     
     /* 1-medium case */
     if (mm->n1 == 1 && mm->nlay == 1 && mm->n2[0]== 1 && mm->n3 == 1)
         return (1.0);
-    
     
     /* interpolation using the existing mmlut */
 	if (cal->mmlut.data != NULL) {
@@ -77,6 +77,11 @@ double multimed_r_nlay (Calibration *cal, mm_np *mm, vec3d pos) {
     Y = pos[1];
     Z = pos[2];
     
+    /* Extra layers protrude into water side: */
+    zout = Z;
+    for (i = 1; i < mm->nlay; i++)
+        zout += mm->d[i];
+    
     r = norm((X - cal->ext_par.x0), (Y - cal->ext_par.y0), 0);
     rq = r;
   
@@ -87,7 +92,7 @@ double multimed_r_nlay (Calibration *cal, mm_np *mm, vec3d pos) {
             beta2[i] = asin (sin(beta1) * mm->n1/mm->n2[i]);
         beta3 = asin (sin(beta1) * mm->n1/mm->n3);
 
-        rbeta = (cal->ext_par.z0 - mm->d[0]) * tan(beta1) - Z * tan(beta3);
+        rbeta = (cal->ext_par.z0 - mm->d[0]) * tan(beta1) - zout * tan(beta3);
         for (i = 0; i < mm->nlay; i++)
             rbeta += (mm->d[i] * tan(beta2[i]));
         
