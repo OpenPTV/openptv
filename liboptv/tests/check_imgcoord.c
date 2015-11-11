@@ -39,6 +39,35 @@ START_TEST(test_flat_centered_cam)
 }
 END_TEST
 
+START_TEST(test_shifted_sensor)
+{
+    /*  When the image plane is centered on the axis. and the camera looks to
+        a straight angle (e.g. along an axis), the image position can be 
+        gleaned from simple geometry.
+    */
+    vec3d pos = {10, 5, -20};
+    Calibration cal = {
+        .ext_par = {0, 0, 40, 0, 0, 0, {{1, 0, 0}, {0, 1, 0}, {0, 0, 1}}},
+        .int_par = {0.1, 0.1, 10},
+        .glass_par = {0, 0, 20},
+        .added_par = {0, 0, 0, 0, 0, 1, 0}
+    };
+    mm_np mm = { /* All in air, simplest case. */
+        .nlay = 1,
+        .n1 = 1,
+        .n2 = {1,0,0},
+        .n3 = 1,
+        .d = {1,0,0},
+        .lut = 1
+    };
+    double x, y; /* Output variables */
+    
+    img_coord(pos, &cal, &mm, &x, &y);
+    fail_unless(x == 10./6. + 0.1);
+    fail_unless(x == 2*(y - 0.1) + 0.1);
+}
+END_TEST
+
 START_TEST(test_flat_decentered_cam)
 {
     /*  When the camera axis goes through the origin, the image point is (0, 0)
@@ -150,6 +179,10 @@ Suite* fb_suite(void) {
     
     tc = tcase_create ("Distorted image coordinates");
     tcase_add_test(tc, test_distorted_centered_cam);
+    suite_add_tcase (s, tc);
+    
+    tc = tcase_create ("Shifted sensor not ignored");
+    tcase_add_test(tc, test_shifted_sensor);
     suite_add_tcase (s, tc);
     return s;
 }
