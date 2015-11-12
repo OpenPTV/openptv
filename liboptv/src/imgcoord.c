@@ -69,6 +69,8 @@ void flat_image_coord (vec3d orig_pos, Calibration *cal, mm_np *mm,
 */
 void img_coord (vec3d pos, Calibration *cal, mm_np *mm, double *x, double *y) {
     flat_image_coord (pos, cal, mm, x, y);
+    *x += cal->int_par.xh;
+    *y += cal->int_par.yh;
     distort_brown_affin (*x, *y, cal->added_par, x, y);
 }
 
