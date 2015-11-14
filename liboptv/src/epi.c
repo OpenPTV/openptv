@@ -110,7 +110,6 @@ void epi_mm_2D (double xl, double yl, Calibration *cal1, mm_np mmp, volume_par *
     the minimum number of candidates to initialise the array at different versions 
     was 4 or 8, hard-coded and it could be up to MAXCAND which is a global parameter at 
     the moment.
-  */
 	
 */
 
