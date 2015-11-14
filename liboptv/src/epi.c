@@ -7,11 +7,17 @@
 int dumbbell_pyptv = 0;
 
 
-/*    ray tracing gives the point of exit and the direction
-      cosines at the waterside of the glass;
-      min. and max. depth give window in object space,
-      which can be transformed into _2 image
-      (use img_xy_mm because of comparison with img_geo)  
+/*    epi_mm() takes a point in images space of one camera, positions of this 
+      and another camera and returns the epipolar line (in millimeter units) 
+      that corresponds to the point of interest in the another camera space.
+      Arguments:
+      xl,yl - position of the point in the specific camera
+      Calibration *cal1 - position of the specific camera
+      Calibration *cal2 - position of another camera
+      mm_np mmp structure of the multimedia model of the experiment
+      volume parameters vpar - limits the search in 3D for the epipolar line
+      Output:
+      xmin,ymin and xmax,ymax - end points of the epipolar line in the "second" camera 
 */
 
 void epi_mm (double xl, double yl, Calibration *cal1,
@@ -42,11 +48,23 @@ void epi_mm (double xl, double yl, Calibration *cal1,
 }
 
 
-  /*  ray tracing gives the point of exit and the direction
-      cosines at the waterside of the glass;
-      min. and max. depth give window in object space,
-      which can be transformed into _2 image
-      (use img_xy_mm because of comparison with img_geo)  */
+/*    epi_mm_2D() is a very degenerate case of the epipolar geometry use
+      it is valuable only for the single camera with multi-media case
+      it takes a point in images space of one (single) camera, positions of this 
+      camera and returns the position (in millimeter units) inside the 3D space
+      that corresponds to the provided point of interest, limited in the middle of 
+      the 3D space, half-way between Zmin and Zmax. In purely 2D experiment, with 
+      an infinitely small light sheet thickness or on a flat surface, this will mean
+      the point ray traced through the multi-media into the 3D space.  
+      Arguments:
+      xl,yl - position of the point in the specific camera
+      Calibration *cal1 - position of the specific camera
+      mm_np mmp structure of the multimedia model of the experiment
+      volume parameters vpar - limits the search in 3D for the epipolar line
+      Output:
+      out - vector of 3D position of the point in the mid-plane between Zmin and Zmax, 
+      which are estimated using volume limits provided in the volume_par 
+*/
       
 void epi_mm_2D (double xl, double yl, Calibration *cal1, mm_np mmp, volume_par *vpar, 
     vec3d out){
@@ -68,9 +86,10 @@ void epi_mm_2D (double xl, double yl, Calibration *cal1, mm_np mmp, volume_par *
 
 }
 
-/* find_candidate is searching in the image space of the image all the candidates
-around the epipolar line originating from another camera.
-Inputs:
+/* find_candidate() is searching in the image space of the image all the candidates
+    around the epipolar line originating from another camera. It is a binary search 
+    in a x-sorted coord-set, exploits shape information of the particles.
+    Inputs:
 	coord_2d structure of a pointer, x,y
 	target structure of all the particles in the image: x,y, n, nx, ny, sumg ...
 	num - number of particles in the image (int)
@@ -81,10 +100,17 @@ Inputs:
 	volume parameters
 	control parameters
 	Calibration parameters
+	is_sorted flag that describes if the particle data is sorted or not (read below)
 	
-Output: 
+    Output: 
 	count of the candidates (int *)
     candidates structure - pointer, tolerance and correlation value (a sort of a quality)
+    
+    *Warning*
+    the minimum number of candidates to initialise the array at different versions 
+    was 4 or 8, hard-coded and it could be up to MAXCAND which is a global parameter at 
+    the moment.
+  */
 	
 */
 
@@ -96,10 +122,11 @@ function is used twice with two different strategies:
 		
     where 'j' is the row number if the geo [] list sorted by x
     later, in correspondences_4 the same list is used in all the cameras and the same 
-    index is used for the pointer and the best candidates are taken from the top of the list
+    index is used for the pointer and the best candidates are taken from the top of the 
+    list
     
-2. for any other function, where this re-sorting does not occur and the pointer is the correct
-information, then we have to use 
+2. for any other function, where this re-sorting does not occur and the pointer is 
+    the correct information, then we have to use 
 
 	   cand[*count].pnr = p2;
 	
@@ -108,8 +135,7 @@ information, then we have to use
 void find_candidate (coord_2d *crd, target *pix, int num, double xa, double ya, \
 double xb, double yb, int n, int nx, int ny, int sumg, candidate cand[], int *count, \
 int nr, volume_par *vpar, control_par *cpar, Calibration *cal, int is_sorted){
-/*  binarized search in a x-sorted coord-set, exploits shape information  */
-/*  gives messages (in examination)  */
+
 
   register int	j;
   int	       	j0, dj, p2;
@@ -118,9 +144,7 @@ int nr, volume_par *vpar, control_par *cpar, Calibration *cal, int is_sorted){
   int           dumbbell = 0;
   double 		tol_band_width;
   
-  /* the minimum number of candidates to initialise the array 
-  at different versions it was 4 or 8, could be up to MAXCAND 
-  */
+
     
   tol_band_width = vpar->eps0;
   
@@ -167,8 +191,8 @@ int nr, volume_par *vpar, control_par *cpar, Calibration *cal, int is_sorted){
 	  	if (crd[j0].x < (xa - tol_band_width))  j0 += dj;
 	  	else  j0 -= dj;
 	  }
-      
-      j0 -= 12;  if (j0 < 0)  j0 = 0;  	/* due to truncation error we might shift to smaller x */
+      /* due to truncation error we might shift to smaller x */
+      j0 -= 12;  if (j0 < 0)  j0 = 0; 
 
       for (j=j0, *count=0; j<num; j++){ 	/* candidate search */
       	
