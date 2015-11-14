@@ -82,6 +82,16 @@ START_TEST(test_vec_subt)
 }
 END_TEST
 
+START_TEST(test_vec_add)
+{
+    vec3d vec1 = {1., 2., 3.}, res = {4., 5., 6.}, vec2 = {3., 3., 3.}, out;
+    vec_add(vec1, vec2, out);
+
+    fail_unless(vec_cmp(out, res));
+}
+END_TEST
+
+
 START_TEST(test_diff_norm)
 {
     int i;
@@ -104,6 +114,15 @@ START_TEST(test_scalar_mul)
     vec_scalar_mul(v1, 4., out);
 
     fail_unless(vec_cmp(out, v2));
+}
+END_TEST
+
+START_TEST(test_unit_vec)
+{
+    vec3d v1 = {1., 100., 1.}, res = {0.0099, 0.9999, 0.0099}, out;
+    unit_vector(v1, out);
+
+    fail_unless(vec_approx_cmp(out, res, 1e-4));
 }
 END_TEST
 
@@ -140,6 +159,14 @@ Suite* fb_suite(void) {
 
     tc = tcase_create("Multiply vec3d by scalar");
     tcase_add_test(tc, test_scalar_mul);
+    suite_add_tcase (s, tc);
+    
+    tc = tcase_create("Unit vector");
+    tcase_add_test(tc, test_unit_vec);
+    suite_add_tcase (s, tc);
+    
+    tc = tcase_create("Add vectors");
+    tcase_add_test(tc, test_vec_add);
     suite_add_tcase (s, tc);
 
     return s;

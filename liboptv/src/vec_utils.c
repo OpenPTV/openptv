@@ -52,6 +52,16 @@ void vec_subt(vec3d from, vec3d sub, vec3d output) {
     for (ix = 0; ix < 3; ix ++) output[ix] = from[ix] - sub[ix];
 }
 
+/*  vec_add() adds two 3D vectors.
+    
+    Arguments:
+    vec3d vec1, vec2, output - result is output[i] = vec1[i] + vec2[i]
+*/
+void vec_add(vec3d vec1, vec3d vec2, vec3d output) {
+    int ix;
+    for (ix = 0; ix < 3; ix ++) output[ix] = vec1[ix] + vec2[ix];
+}
+
 /*  vec_scalar_mul() multiplies a vector by a scalar.
     
     Arguments:
@@ -137,5 +147,23 @@ int vec_approx_cmp(vec3d vec1, vec3d vec2, double eps) {
         if (fabs(vec1[ix] - vec2[ix]) > eps)
             return 0;
     return 1;
+}
+
+
+/* returns a unit vector, normalized by the norm */
+/*  init_vector() divides a vector by its norm. 
+    
+    Arguments:
+    vec3d vec - the original vector (3 x 1 doubles) 
+    vec3d output - result, normalised, unit length vector.
+*/
+void unit_vector(vec3d vec, vec3d out){
+	double dummy; 
+	
+	dummy = vec_norm(vec);
+	/* if the vector is zero length we return zero vector back */
+	if (dummy == 0) dummy = 1.0;	
+	vec_scalar_mul(vec, 1./dummy, out);
+
 }
 
