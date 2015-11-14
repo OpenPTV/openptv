@@ -23,9 +23,16 @@ Modification Date:     April 20, 2014
 #define EPS 1e-5
 
 
-/* tracers the optical ray through the multi-media interface of three layers, typically
-air - glass - water, returns the two vectors: 
-position of the ray crossing point and the vector normal to the interface 
+/* ray_tracing () traces the optical ray through the multi-media interface of 
+   (presently) three layers, typically air - glass - water, and returns the two vectors: 
+    position of the ray crossing point and the vector normal to the interface 
+    Arguments:
+    x,y - doubles, position of a point in the image space 
+    Calibration *cal structure of a specific camera
+    mm_np mm structure of the multi-media information (thickness, index of refraction)
+    Output:
+    X - vector (vec3d) of the crossing point position
+    out - vector pointing normal to the interface 
 */
 
 void ray_tracing (double x
