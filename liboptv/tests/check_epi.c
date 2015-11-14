@@ -72,25 +72,25 @@ END_TEST
 START_TEST(test_epi_mm)
 {
 
-        double x, y, z, xmin, xmax, ymin, ymax;
-        vec3d pos, v;
- 
- /* first camera */
-        
+    double x, y, z, xmin, xmax, ymin, ymax;
+    vec3d pos, v;
+
+    /* first camera */
+    
     Exterior test_Ex_1 = {
         10.0, 0.0, 100.0,
         0.0, -0.01, 0.0, 
         {{1.0, 0.0, 0.0}, 
         {0.0, 1.0, 0.0},
         {0.0, 0.0, 1.0}}};
-    
+
     Interior test_I = {0.0, 0.0, 100.0};
     Glass test_G = {0.0, 0.0, 50.0};
     ap_52 test_addp = {0., 0., 0., 0., 0., 1., 0.};
     Calibration test_cal_1 = {test_Ex_1, test_I, test_G, test_addp};
+
+    /* second camera at small angle around y axis */
     
-  /* second camera at small angle around y axis */
-        
     Exterior test_Ex_2 = {
         -10.0, 0.0, 100.0,
         0.0, 0.01, 0.0, 
@@ -99,44 +99,41 @@ START_TEST(test_epi_mm)
         {0.0, 0.0, 1.0}}};
 
     Calibration test_cal_2 = {test_Ex_2, test_I, test_G, test_addp};
+
     
-    	
     volume_par test_vpar = {
         {-250., 250.}, {-50., -50.}, {50., 50.}, 0.01, 0.3, 0.3, 0.01, 1.0, 33
         };
-        
+    
     /* non-trivial case */
      x = 10.0; 
      y = 10.0;
-     
+ 
      /* void  epi_mm (double xl, double yl, Calibration *cal1,
     Calibration *cal2, mm_np mmp, volume_par *vpar,
     int i_cam, mmlut *mmLUT,
     double *xmin, double *ymin, double *xmax, double *ymax); */
-             
+         
     mm_np test_mm = {
-    	1, 
-    	1.0, 
-    	{1.49, 0.0, 0.0}, 
-    	{5.0, 0.0, 0.0},
-    	1.33,
-    	1};
- 
-            
+        1, 
+        1.0, 
+        {1.49, 0.0, 0.0}, 
+        {5.0, 0.0, 0.0},
+        1.33,
+        1};
+
+        
     epi_mm (x, y, &test_cal_1, &test_cal_2, test_mm, &test_vpar, \
     &xmin, &xmax, &ymin, &ymax);
-    
-    
-    ck_assert_msg(  fabs(xmin -  25.99080685) < EPS && 
-                    fabs(xmax - 9.90742032 ) < EPS && 
-                    fabs(ymin - 50.90709213) < EPS && 
-                    fabs(ymax - 9.90876535)  < EPS,
-         "\n Expected 25.99080685 9.90742032 50.90709213 9.90876535 \n  \
+
+
+    ck_assert_msg(  fabs(xmin -  26.44927852) < EPS && 
+                    fabs(xmax - 10.08218486 ) < EPS && 
+                    fabs(ymin - 51.60078764) < EPS && 
+                    fabs(ymax - 10.04378909)  < EPS,
+         "\n Expected 26.44927852 10.08218486 51.60078764 10.04378909 \n  \
          but found %10.8f %10.8f %10.8f %10.8f \n", xmin, xmax, ymin, ymax);
 
-
-   
-      
     
 }
 END_TEST
@@ -145,23 +142,23 @@ START_TEST(test_epi_mm_perpendicular)
 {
 
     double x, y, z, xmin, xmax, ymin, ymax;
- 
- /* first camera */
-        
+
+    /* first camera */
+    
     Exterior test_Ex_1 = {
         0.0, 0.0, 100.0,
         0.0, 0.0, 0.0, 
         {{1.0, 0.0, 0.0}, 
         {0.0, 1.0, 0.0},
         {0.0, 0.0, 1.0}}};
-    
+
     Interior test_I = {0.0, 0.0, 100.0};
     Glass test_G = {0.0, 0.0, 50.0};
     ap_52 test_addp = {0., 0., 0., 0., 0., 1., 0.};
     Calibration test_cal_1 = {test_Ex_1, test_I, test_G, test_addp};
+
+    /* second camera at small angle around y axis */
     
-  /* second camera at small angle around y axis */
-        
     Exterior test_Ex_2 = {
         100.0, 0.0, 0.0,
         0.0, 1.57, 0.0, 
@@ -170,33 +167,33 @@ START_TEST(test_epi_mm_perpendicular)
         {0.0, 0.0, 1.0}}};
 
     Calibration test_cal_2 = {test_Ex_2, test_I, test_G, test_addp};
-    
+
     /* all in air */
     mm_np test_mm = {
-    	1, 
-    	1.0, 
-    	{1.0, 0.0, 0.0}, 
-    	{1.0, 0.0, 0.0},
-    	1.0,
-    	1};
-    	
+        1, 
+        1.0, 
+        {1.0, 0.0, 0.0}, 
+        {1.0, 0.0, 0.0},
+        1.0,
+        1};
+    
     volume_par test_vpar = {
         {-100., 100.}, {-100., -100.}, {100.0, 100.0}, 0.01, 0.3, 0.3, 0.01, 1.0, 33};
-        
     
+
     epi_mm (0.0, 0.0, &test_cal_1, &test_cal_2, test_mm, &test_vpar, \
     &xmin, &xmax, &ymin, &ymax);
-    
-    
-   ck_assert_msg(  fabs(xmin + 100.0000) < EPS && 
+
+
+    ck_assert_msg(  fabs(xmin + 100.0000) < EPS && 
                     fabs(xmax - 0.0000) < EPS && 
                     fabs(ymin - 100.0000) < EPS && 
                     fabs(ymax - 0.0000)  < EPS,
          "\n Expected -100.0000 0.0000 100.0000 -0.0000 \n  \
          but found %10.8f %10.8f %10.8f %10.8f \n", xmin, xmax, ymin, ymax);
-    
-      
-    
+
+  
+
 }
 END_TEST
 
