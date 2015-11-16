@@ -48,7 +48,7 @@ START_TEST(test_init_mmLUT)
     fail_if (cpar == NULL, "\n control parameter file reading failed\n ");
 
     /* lut value is not in the parameter file */
-    cpar->mm->lut = 0;
+//    cpar->mm->lut = 0;
     mmlut test_mmlut[4], correct_mmlut[4]; 
      
     vec_set(correct_mmlut[0].origin, 0.0, 0.0, -250.00001105);
@@ -173,7 +173,7 @@ START_TEST(test_volumedimension)
     cpar = read_control_par(filename);
     fail_if (cpar == NULL, "\n control parameter file reading failed\n ");
 
-    cpar->mm->lut = 1;
+//    cpar->mm->lut = 1;
     cpar->mm->nlay = 1;
     cpar->num_cams = 2;
 
@@ -218,8 +218,8 @@ START_TEST(test_get_mmf_mmLUT)
     cpar = read_control_par(filename);
     fail_if (cpar == NULL, "\n control parameter file reading failed\n ");
 
-    /* lut value is no in the parameter file */
-    cpar->mm->lut = 0;
+    /* lut value is not in the parameter file */
+//    cpar->mm->lut = 0;
 
     mmlut correct_mmlut[4]; 
      
@@ -280,7 +280,7 @@ START_TEST(test_multimed_nlay)
     cpar = read_control_par(filename);
     fail_if (cpar == NULL, "\n control parameter file reading failed\n ");
     
-    cpar->mm->lut = 0; // to start LUT initialization 
+//    cpar->mm->lut = 0; // to start LUT initialization
     cpar->num_cams = 1; // only one camera test
 
     mmlut correct_mmlut[4];  

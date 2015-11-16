@@ -13,7 +13,6 @@ cdef class MultimediaParams:
         self.set_n2(kwargs['n2'])
         self.set_d(kwargs['d'])
         self.set_n3(kwargs['n3'])
-        self.set_lut(kwargs['lut'])
     
     def get_nlay(self):
         return self._mm_np[0].nlay
@@ -55,13 +54,7 @@ cdef class MultimediaParams:
     
     def set_n3(self, n3):
         self._mm_np[0].n3 = n3
-        
-    def get_lut(self):
-        return self._mm_np[0].lut
-    
-    def set_lut(self, lut):
-        self._mm_np[0].lut = lut
-        
+               
     def __str__(self):
         n2_str="{"
         for i in range(sizeof(self._mm_np[0].n2) / sizeof(self._mm_np[0].n2[0]) -1 ):
@@ -74,13 +67,12 @@ cdef class MultimediaParams:
             
         d_str += str(self._mm_np[0].d[i+1]) + "}"
         
-        return "nlay=\t{} \nn1=\t{} \nn2=\t{} \nd=\t{} \nn3=\t{} \nlut=\t{} ".format(
+        return "nlay=\t{} \nn1=\t{} \nn2=\t{} \nd=\t{} \nn3=\t{} ".format(
                 str(self._mm_np[0].nlay),
                 str(self._mm_np[0].n1),
                 n2_str,
                 d_str,
-                str(self._mm_np[0].n3),
-                str(self._mm_np[0].lut))
+                str(self._mm_np[0].n3))
         
         def __dealloc__(self):
             free(self._mm_np)

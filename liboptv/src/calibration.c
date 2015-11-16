@@ -244,7 +244,9 @@ Calibration *read_calibration(char *ori_file, char *add_file,
     char *fallback_file)
 {
     Calibration *ret = (Calibration *) malloc(sizeof(Calibration));
-    
+    /* indicate that data is not set yet */
+    ret->mmlut.data=NULL;
+
     if (read_ori(&(ret->ext_par), &(ret->int_par), &(ret->glass_par), ori_file,
         &(ret->added_par), add_file, fallback_file))
     {

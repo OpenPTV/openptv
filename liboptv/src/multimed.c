@@ -67,7 +67,7 @@ double multimed_r_nlay (Calibration *cal, mm_np *mm, vec3d pos) {
     
     
     /* interpolation using the existing mmlut */
-    if (mm->lut) {
+	if (cal->mmlut.data != NULL) {
         mmf = get_mmf_from_mmlut(cal, pos);
         if (mmf > 0) return (mmf);
     }
@@ -312,7 +312,7 @@ void init_mmlut (volume_par *vpar, control_par *cpar, Calibration *cal) {
   cal->mmlut.nz = nz;
   cal->mmlut.rw = rw;
   
-  if (cpar->mm->lut == 0) {
+  if (cal->mmlut.data == NULL) {
       cal->mmlut.data = (double *) malloc (nr*nz * sizeof (double));
   
       /* fill mmlut structure */
@@ -333,9 +333,6 @@ void init_mmlut (volume_par *vpar, control_par *cpar, Calibration *cal) {
     
       free (Ri);
       free (Zi);
-
-      /* when finished initalization, change the setting of the LUT flag */
-      cpar->mm->lut = 1;
     }
 }
 
