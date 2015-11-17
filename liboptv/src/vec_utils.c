@@ -149,21 +149,20 @@ int vec_approx_cmp(vec3d vec1, vec3d vec2, double eps) {
     return 1;
 }
 
-
-/* returns a unit vector, normalized by the norm */
-/*  init_vector() divides a vector by its norm. 
+/*  unit_vector() divides a vector by its norm. In the special case of zero
+    vector, returns the original vector.
     
     Arguments:
     vec3d vec - the original vector (3 x 1 doubles) 
     vec3d output - result, normalised, unit length vector.
 */
 void unit_vector(vec3d vec, vec3d out){
-	double dummy; 
+	double normed; 
 	
-	dummy = vec_norm(vec);
-	/* if the vector is zero length we return zero vector back */
-	if (dummy == 0) dummy = 1.0;	
-	vec_scalar_mul(vec, 1./dummy, out);
-
+	normed = vec_norm(vec);
+	if (normed == 0)
+        normed = 1.0;
+    
+	vec_scalar_mul(vec, 1./normed, out);
 }
 
