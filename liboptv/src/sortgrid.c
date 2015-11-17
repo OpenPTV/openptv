@@ -28,8 +28,8 @@ Description:	       	reads objects, detected by detection etc.,
    Arguments: 
     Calibration *cal points to calibration parameters
     Control *cpar points to control parameters
-    nfix is the integer number of points in the calibration text files or number of files
-        if the calibration is multiplane. 
+    nfix is the integer number of points in the calibration text files or number of files 
+    if the calibration is multiplane. 
     coord_3d fix[] array of doubles of 3d positions of the calibration target points
     num is the number of detected (by image processing) dots on the calibration image
     i_cam is the integer number of the camera
@@ -43,15 +43,9 @@ void just_plot (Calibration* cal, control_par *cpar, int nfix, coord_3d fix[], i
   int	       	intx, inty;
   double       	xp, yp, eps=10.0;
   // target       	old[512]; Alex, 17.09.09, working on Wesleyan data
-  target       	old[1024]; 
+  target       	old[1024];
   
-  
-  
-  
-  
-  
-   printf("Inside just_plot\n");
-   ncal_points[n_img]=nfix;
+//   ncal_points[n_img] = nfix;
   
   /* reproject all calibration plate points into pixel space
      and search a detected target nearby */
@@ -61,9 +55,9 @@ void just_plot (Calibration* cal, control_par *cpar, int nfix, coord_3d fix[], i
         img_coord (fix[i].pos, cal, cpar->mm,  &xp, &yp);
         metric_to_pixel (&xp, &yp, xp, yp, cpar);
 
-        /* draw projected points for check purpuses */
-        x_calib[n_img][i] =(int) xp;
-        y_calib[n_img][i] = (int) yp;
+        /* draw projected points for check purposes */
+//         x_calib[i_cam][i] =(int) xp;
+//         y_calib[i_cam][i] = (int) yp;
     
 
 
@@ -130,7 +124,7 @@ void sortgrid_man (Calibration* cal, control_par *cpar, int nfix, coord_3d fix[]
   
   for (i=0; i<nfix; i++)
     {
-      img_coord (fix[i].x, fix[i].y, fix[i].z, cal, cpar->mm, i_cam, &xp,&yp);
+      img_coord (fix[i].pos, cal, cpar->mm,  &xp, &yp);
       metric_to_pixel (&xp, &yp, xp, yp, cpar);
       
       /* draw projected points for check purpuses */
@@ -138,24 +132,24 @@ void sortgrid_man (Calibration* cal, control_par *cpar, int nfix, coord_3d fix[]
       intx = (int) xp;
       inty = (int) yp;
 // added for Python binding
-      x_calib[n_img][i]=intx;
-      y_calib[n_img][i]=inty;
+//       x_calib[i_cam][i]=intx;
+//       y_calib[i_cam][i]=inty;
 
 	  printf ("coord of point %d: %d, %d\n", i,intx,inty);
 
    // removed for Python binding 
   //    drawcross (interp, intx, inty, cr_sz+1, n_img, "cyan");
         
-      if (xp > -eps  &&  yp > -eps  &&  xp < imx+eps  &&  yp < imy+eps)
+      if (xp > -eps  &&  yp > -eps  &&  xp < cpar->imx + eps  &&  yp < cpar->imy + eps)
         {
-          // printf("going to find neighbours %d, %d, %3.1f, %3.1f, %3.1f\n", old, num, xp, yp, eps); 
+// printf("going to find neighbours %d, %d, %3.1f, %3.1f, %3.1f\n", old, num, xp, yp, eps); 
           j = nearest_neighbour_pix (old, num, xp, yp, eps);
       
           if (j != -999)
             {
               pix[i] = old[j];  pix[i].pnr = fix[i].pnr;
               z_calib[i_cam][i] = fix[i].pnr; // Alex, 18.05.11
-              printf("z_calib[%d][%d]=%d\n",n_img,i,z_calib[i_cam][i]);
+              printf("z_calib[%d][%d]=%d\n",i_cam,i,z_calib[i_cam][i]);
             }
         }
     }
@@ -163,8 +157,19 @@ void sortgrid_man (Calibration* cal, control_par *cpar, int nfix, coord_3d fix[]
 
 
 /* 
-  nearest_neighbour_pix () 
+  nearest_neighbour_pix () searches for the particle in the image space that is 
+  the nearest neighbour of a point x,y. The search is within epsilon distance from
+  the point.
+   
   Arguments: 
+  target pix - database of all the particles in a given frame of a given camera
+  int num - number of particles in the database pix
+  double x,y - position of a point (can be a mouse click or another particle center)
+  double eps - a small floating value of epsilon defining the search region around x,y
+  Returns:
+  int pnr  - a pointer to the nearest neighbour (index of the particle in the structure) 
+  or -999 if no particle is found 
+  
     
   originally from tools.c in Tcl/Tk version
 */ 
