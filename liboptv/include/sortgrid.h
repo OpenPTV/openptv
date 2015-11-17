@@ -17,14 +17,20 @@ typedef struct
   vec3d pos;
 } coord_3d;
 
+typedef struct
+{
+  int x, y;
+} pixel_pos;
+
 				   
 void sortgrid_man (Calibration* cal, control_par *cpar, int nfix, coord_3d fix[], int num,
-    target pix[], int i_cam);
+    target pix[]);
     				
-void just_plot (Calibration* cal, control_par *cpar, int nfix, coord_3d fix[], int num,
-    target pix[], int i_cam);
+void just_plot (Calibration* cal, control_par *cpar, int nfix, coord_3d fix[], 
+    pixel_pos calib_points[]);
 				
 int nearest_neighbour_pix (target pix[], int num, double x, double y, double eps);
+int read_sortgrid_par(char *filename);
 
 #endif
 

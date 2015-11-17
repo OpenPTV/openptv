@@ -18,55 +18,47 @@ Description:	       	reads objects, detected by detection etc.,
 		       	does not work in each imaginable case !
 ****************************************************************************/
 
+#define NMAX 1024
+#define DEFAULT_SEARCH_RADIUS 10
 
 #include "sortgrid.h"
 
-/* just_plot() converts the positions of 3d points provided for calibration in a 
-   calibration file (fix) to the image space for each camera in order to present
-   those on a screen for user interaction. Used only in "show initial guess" without
-   sorting or finding the corresponding points like in sortgrid_man
-   Arguments: 
+/* 
+    nearest_pixel_location () converts the positions of 3d points provided for calibration
+    in a calibration file (fix) to the image space for each camera in order to present
+    those on a screen for user interaction. Used only in "show initial guess" without
+    sorting or finding the corresponding points like in sortgrid_man
+    Arguments: 
     Calibration *cal points to calibration parameters
     Control *cpar points to control parameters
     nfix is the integer number of points in the calibration text files or number of files 
     if the calibration is multiplane. 
-    coord_3d fix[] array of doubles of 3d positions of the calibration target points
+    coord_3d fix[] array of doubles of 3D positions of the calibration target points
     num is the number of detected (by image processing) dots on the calibration image
     i_cam is the integer number of the camera
-   Output:
-    target pix[] is the array of targets or detected dots that have an ID, pixel position,
-    size (total, in x or y), sum of grey values, (pnr, x,y, n,nx,ny,sumg, tnr) 
+    Output:
+    pixel_pos calib_points[] structure of integer pixel positions (.x, .y) corresponding 
+    to the 3D points in structure fix. 
 */    
-void just_plot (Calibration* cal, control_par *cpar, int nfix, coord_3d fix[], int num,
-    target pix[], int i_cam){
+void nearest_pixel_location (Calibration* cal, control_par *cpar, int nfix, coord_3d fix[], 
+pixel_pos calib_points[]){
   int	       	i, j;
   int	       	intx, inty;
-  double       	xp, yp, eps=10.0;
-  // target       	old[512]; Alex, 17.09.09, working on Wesleyan data
+  double       	xp, yp;
   target       	old[1024];
   
-//   ncal_points[n_img] = nfix;
-  
-  /* reproject all calibration plate points into pixel space
-     and search a detected target nearby */
   
   for (i=0; i<nfix; i++)
     {
         img_coord (fix[i].pos, cal, cpar->mm,  &xp, &yp);
         metric_to_pixel (&xp, &yp, xp, yp, cpar);
 
-        /* draw projected points for check purposes */
-//         x_calib[i_cam][i] =(int) xp;
-//         y_calib[i_cam][i] = (int) yp;
-    
-
-
-	  printf ("coord of point %d: %d, %d\n", i,intx,inty);
-      
-//      drawcross (interp, intx, inty, cr_sz+1, n_img, "yellow");
-  //   draw_pnr (interp, intx, inty, fix[i].pnr, n_img, "yellow");
-      
-      
+/*      previous name - saved for reference until we change the python bindings 
+        x_calib[i_cam][i] =(int) xp;  
+        y_calib[i_cam][i] = (int) yp;
+*/
+        calib_points[i].x = (int) xp;
+        calib_points[i].y = (int) yp;
     }
 }
 
@@ -86,70 +78,51 @@ void just_plot (Calibration* cal, control_par *cpar, int nfix, coord_3d fix[], i
 */
 
 void sortgrid_man (Calibration* cal, control_par *cpar, int nfix, coord_3d fix[], int num,
-    target pix[], int i_cam){
+    target pix[])
+{
   int	       	i, j;
   int	       	intx, inty;
-  double       	xp, yp, eps=10.0;
-//  target       	old[512];
-  target       	old[1024];
-  int            x_calib[4][1000], y_calib[4][1000], z_calib[4][1000];
+  double       	xp, yp;
+  int           tmp, eps = 10;
+  target       	old[NMAX];
+  pixel_pos     calib_points[NMAX];
   
-  
+  eps = read_sortgrid_par("parameters/sortgrid.par");
+  if (eps == NULL) eps = DEFAULT_SEARCH_RADIUS;
   
   /* copy and re-initialize pixel data before sorting */
   for (i=0; i<num; i++)	old[i] = pix[i];
-  for (i=0; i<nfix; i++)
-    {
+  
+  for (i=0; i<nfix; i++) {
       pix[i].pnr = -999;  pix[i].x = -999;  pix[i].y = -999;
       pix[i].n = 0; pix[i].nx = 0; pix[i].ny = 0;
       pix[i].sumg = 0;
     }
   
-  
-  FILE *fpp = fopen ("parameters/sortgrid.par", "r");
 
-  if (fpp) {
-    fscanf (fpp, "%lf", &eps);
-    printf ("Sortgrid search radius: %.1f pixel (from sortgrid.par)\n",eps);
-    fclose (fpp);
-  }
-  else {
-    printf ("parameters/sortgrid.par does not exist, ");
-    printf ("using default search radius 10 pixel\n");
-  }
   
-  
+
   /* reproject all calibration plate points into pixel space
      and search a detected target nearby */
   
-  for (i=0; i<nfix; i++)
-    {
-      img_coord (fix[i].pos, cal, cpar->mm,  &xp, &yp);
-      metric_to_pixel (&xp, &yp, xp, yp, cpar);
-      
-      /* draw projected points for check purpuses */
-      
-      intx = (int) xp;
-      inty = (int) yp;
-// added for Python binding
-//       x_calib[i_cam][i]=intx;
-//       y_calib[i_cam][i]=inty;
-
-	  printf ("coord of point %d: %d, %d\n", i,intx,inty);
-
-   // removed for Python binding 
-  //    drawcross (interp, intx, inty, cr_sz+1, n_img, "cyan");
-        
-      if (xp > -eps  &&  yp > -eps  &&  xp < cpar->imx + eps  &&  yp < cpar->imy + eps)
-        {
-// printf("going to find neighbours %d, %d, %3.1f, %3.1f, %3.1f\n", old, num, xp, yp, eps); 
+ 
+  nearest_pixel_location (cal, cpar, nfix, fix, calib_points);
+  
+  for (i=0; i<nfix; i++){
+       /* if the point is not touching the image border */ 
+      if ( calib_points[i].x > -eps  &&  calib_points[i].x > -eps  &&  
+            calib_points[i].x < cpar->imx + eps  &&  calib_points[i].y < cpar->imy + eps){
+          
+          /* find the nearest target point */
           j = nearest_neighbour_pix (old, num, xp, yp, eps);
       
-          if (j != -999)
-            {
-              pix[i] = old[j];  pix[i].pnr = fix[i].pnr;
+          if (j != -999) { /* if found */
+              pix[i] = old[j];          /* assign its row number */
+              pix[i].pnr = fix[i].pnr;  /* assign the pointer of a corresponding point */
+              /*
               z_calib[i_cam][i] = fix[i].pnr; // Alex, 18.05.11
               printf("z_calib[%d][%d]=%d\n",i_cam,i,z_calib[i_cam][i]);
+              */
             }
         }
     }
@@ -170,8 +143,7 @@ void sortgrid_man (Calibration* cal, control_par *cpar, int nfix, coord_3d fix[]
   int pnr  - a pointer to the nearest neighbour (index of the particle in the structure) 
   or -999 if no particle is found 
   
-    
-  originally from tools.c in Tcl/Tk version
+  moved here from tools.c in the Tcl/Tk version
 */ 
 int nearest_neighbour_pix (target pix[], int num, double x, double y, double eps){
   register int	j;
@@ -194,3 +166,29 @@ int nearest_neighbour_pix (target pix[], int num, double x, double y, double eps
   return (pnr);
 }
 
+
+
+/* read_sortgrid_par() reads a single line, single value parameter file sortgrid.par 
+
+   Arguments:
+   char *filename - path to the text file containing the parameters.
+   
+   Returns:
+   integer eps - search radius in pixels for the sortgrid. If reading failed for 
+   any reason, returns NULL.
+*/
+int read_sortgrid_par(char *filename) {
+    FILE* fpp;
+    int eps;
+    
+    fpp = fopen(filename, "r");
+    if(fscanf(fpp, "%d\n",  &eps) == 0) goto handle_error;
+    fclose (fpp);
+    
+    return eps;
+
+handle_error:
+    printf("Error reading sortgrid parameter from %s\n", filename);
+    fclose (fpp);
+    return NULL;
+}
