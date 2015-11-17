@@ -463,19 +463,11 @@ target_par* read_target_par(char *filename) {
     target_par *ret;
     ret = malloc(sizeof(target_par));
 
-    int discont;
-    int gvthres[4];
-    int nnmin, nnmax;
-    int nxmin, nxmax;
-    int nymin, nymax;
-    int sumg_min;
-    int cr_sz;
-
-    if (   !(fscanf(file, "%d", &ret->discont)==1)      /* max discontinuity */
-        || !(fscanf(file, "%d", &ret->gvthres[0])==1)   /* threshold for binarization 1.image */
+    if (   !(fscanf(file, "%d", &ret->gvthres[0])==1)   /* threshold for binarization 1.image */
         || !(fscanf(file, "%d", &ret->gvthres[1])==1)   /* threshold for binarization 2.image */
         || !(fscanf(file, "%d", &ret->gvthres[2])==1)   /* threshold for binarization 3.image */
         || !(fscanf(file, "%d", &ret->gvthres[3])==1)   /* threshold for binarization 4.image */
+        || !(fscanf(file, "%d", &ret->discont)==1)      /* max discontinuity */
         || !(fscanf(file, "%d  %d", &ret->nnmin, &ret->nnmax)==2) /* min. and max. number of */
         || !(fscanf(file, "%d  %d", &ret->nxmin, &ret->nxmax)==2) /* pixels per target,  */
         || !(fscanf(file, "%d  %d", &ret->nymin, &ret->nymax)==2) /* abs, in x, in y     */
@@ -522,11 +514,11 @@ void write_target_par(target_par *targ, char *filename) {
         printf("Can't create file: %s\n", filename);
 
     fprintf(file, "%d\n%d\n%d\n%d\n%d\n%d\n%d\n%d\n%d\n%d\n%d\n%d\n%d",
-            targ->discont,
             targ->gvthres[0],
             targ->gvthres[1],
             targ->gvthres[2],
             targ->gvthres[3],
+            targ->discont,
             targ->nnmin,
             targ->nnmax,
             targ->nxmin,
