@@ -113,6 +113,10 @@ add_test(check_imgcoord ${CMAKE_CURRENT_BINARY_DIR}/check_imgcoord)
 target_link_libraries(check_sortgrid ${LIBS})
 add_test(check_sortgrid ${CMAKE_CURRENT_BINARY_DIR}/check_sortgrid)
 
+add_custom_command(TARGET check_sortgrid PRE_BUILD
+    COMMAND ${CMAKE_COMMAND} -E copy_directory
+    ${CMAKE_CURRENT_SOURCE_DIR}/testing_fodder $<TARGET_FILE_DIR:check_sortgrid>/testing_fodder)
+
  
     
 add_custom_target(verify COMMAND ${CMAKE_CTEST_COMMAND})
