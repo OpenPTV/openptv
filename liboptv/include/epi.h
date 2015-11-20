@@ -38,7 +38,7 @@ void  epi_mm_2D (double xl, double yl, Calibration *cal1,
     
 void find_candidate(coord_2d *crd, target *pix, int num,
     double xa, double ya, double xb, double yb,
-    int n, int nx, int ny, int sumg, candidate cand[], int *count, int icam,
+    int n, int nx, int ny, int sumg, candidate cand[], int *count,
     volume_par *vpar, control_par *cpar, Calibration *cal, int is_sorted);
     
 #endif

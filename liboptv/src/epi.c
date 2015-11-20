@@ -133,7 +133,7 @@ function is used twice with two different strategies:
 
 void find_candidate (coord_2d *crd, target *pix, int num, double xa, double ya, \
 double xb, double yb, int n, int nx, int ny, int sumg, candidate cand[], int *count, \
-int nr, volume_par *vpar, control_par *cpar, Calibration *cal, int is_sorted){
+volume_par *vpar, control_par *cpar, Calibration *cal, int is_sorted){
 
 
   register int	j;
@@ -151,12 +151,12 @@ int nr, volume_par *vpar, control_par *cpar, Calibration *cal, int is_sorted){
   /* define sensor format for search interrupt */
   xmin = (-1) * cpar->pix_x * cpar->imx/2;	xmax = cpar->pix_x * cpar->imx/2;
   ymin = (-1) * cpar->pix_y * cpar->imy/2;	ymax = cpar->pix_y * cpar->imy/2;
-  xmin -= cal[nr].int_par.xh;	ymin -= cal[nr].int_par.yh;
-  xmax -= cal[nr].int_par.xh;	ymax -= cal[nr].int_par.yh;
+  xmin -= cal->int_par.xh;	ymin -= cal->int_par.yh;
+  xmax -= cal->int_par.xh;	ymax -= cal->int_par.yh;
       
   
-  correct_brown_affin (xmin, ymin, cal[nr].added_par, &xmin, &ymin);
-  correct_brown_affin (xmax, ymax, cal[nr].added_par, &xmax, &ymax);
+  correct_brown_affin (xmin, ymin, cal->added_par, &xmin, &ymin);
+  correct_brown_affin (xmax, ymax, cal->added_par, &xmax, &ymax);
     
   
   /* we need to reset only few first lines to be sure we do not reuse old pointers */

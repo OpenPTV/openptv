@@ -259,7 +259,6 @@ typedef struct {
 candidate test_cand[MAXCAND];
 
 int count; 
-int icam = 0; /* number of the camera from which we take the candidates */
 
 Exterior test_Ex = {
         0.0, 0.0, 100.0,
@@ -334,7 +333,7 @@ Exterior test_Ex = {
 	int is_sorted = 1;
 	
 	find_candidate (test_crd, test_pix, num, xa, ya, xb, yb, n, nx, ny, sumg, \
-	test_cand, &count, icam, &test_vpar, &test_cpar, &test_cal, is_sorted);
+	test_cand, &count, &test_vpar, &test_cpar, &test_cal, is_sorted);
 
     double sum_corr;
     
