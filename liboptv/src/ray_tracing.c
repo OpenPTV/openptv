@@ -1,12 +1,9 @@
 /***************************************************************
 Routine:                ray_tracing
-
 Author/Copyright:       Hans -  Gerd Maas
-
 Address:                Institute of Geodesy and Photogrammetry
                         ETH  -   Hoenggerberg
                         CH  -   8093 Zurich
-
 Creation Date:          21.4.88
     
 Description:            traces one ray, given by image coordinates,
@@ -15,123 +12,99 @@ Description:            traces one ray, given by image coordinates,
                     (see Hoehle, Manual of photogrammetry)
     
 Routines contained:      -  
+Updated for liboptv: Alex Liberzon
+Modification Date:     April 20, 2014
 ***************************************************************/
 
+#include <stdio.h>
 #include "ray_tracing.h"
 
-/*  wraps previous ray_tracing, parameters are read directly from control_par* structure */
+
+#define EPS 1e-5
+
+
+/* ray_tracing () traces the optical ray through the multi-media interface of 
+   (presently) three layers, typically air - glass - water, and returns the two vectors: 
+    position of the ray crossing point and the vector normal to the interface 
+    Arguments:
+    x,y - doubles, position of a point in the image space 
+    Calibration *cal structure of a specific camera
+    mm_np mm structure of the multi-media information (thickness, index of refraction)
+    Output:
+    X - vector (vec3d) of the crossing point position
+    out - vector pointing normal to the interface 
+*/
+
 void ray_tracing (double x
 				, double y
 				, Calibration* cal
 				, mm_np mm
-				, double X[3]
-				, double a[3]){
-
-old_ray_tracing(x
-			, y
-			, cal->ext_par
-			, cal->int_par
-			, cal->glass_par
-			, mm
-			, &X[0]
-			, &X[1]
-			, &X[2]
-			, &a[0]
-			, &a[1]
-			, &a[2]);
-}
-
-
-
-void old_ray_tracing (double x, double y, Exterior Ex, Interior I, Glass G,\
-mm_np mm, double  *Xb2, double  *Yb2, double  *Zb2, \
-double  *a3, double  *b3,double  *c3){
+				, vec3d X
+				, vec3d out){
 
 /*   ray -  tracing, see HOEHLE and Manual of Photogrammetry  */
 
-    double a1, b1, c1, a2, b2, c2, Xb1, Yb1, Zb1, d1, d2, cosi1, cosi2;
-    double vect1[3], vect2[3], factor, s2;
-    double a[3],b[3],base2[3],c,dummy,bn[3],bp[3],n,p;
-
-    s2  = sqrt (x * x + y * y + I.cc * I.cc);
+    double d1, d2, c, dummy, n, p;
+    vec3d vect1, vect2, a, base2, bn, bp, tmp1, tmp2, Xb, a2;
     
     /*   direction cosines in image coordinate system  */
-    vect1[0] = x/s2;
-    vect1[1] = y/s2;
-    vect1[2] =- I.cc/s2;
+    vec_set(tmp1, x, y, -1*cal->int_par.cc);
+    unit_vector(tmp1, vect1);
 
-    matmul (vect2, (double *)Ex.dm, vect1, 3,3,1, 3,3);
+    matmul (vect2, (double *)cal->ext_par.dm, vect1, 3,3,1, 3,3);
     
-    /*   direction cosines in space coordinate system , medium n1  */
-    a1 = vect2[0];
-    b1 = vect2[1];
-    c1 = vect2[2];
-    
-    
-    a[0] = Ex.x0; 
-    a[1] = Ex.y0; 
-    a[2] = Ex.z0;
-    b[0] = vect2[0];
-    b[1] = vect2[1];
-    b[2] = vect2[2];
-    c  =  sqrt(G.vec_x * G.vec_x + G.vec_y * G.vec_y + G.vec_z * G.vec_z);
-    base2[0] = G.vec_x/c; 
-    base2[1] = G.vec_y/c; 
-    base2[2] = G.vec_z/c;
+    vec_set(a, cal->ext_par.x0, cal->ext_par.y0, cal->ext_par.z0);    
 
-    c = c + mm.d[0];
-    dummy = base2[0] * a[0] + base2[1] * a[1] + base2[2] * a[2];
-    dummy = dummy - c;
-    d1 =- dummy/(base2[0] * b[0] + base2[1] *  b[1] + base2[2] * b[2]);
+    /* base2 is the unit vector in glass direction */
+    vec_set(tmp1, cal->glass_par.vec_x, cal->glass_par.vec_y, cal->glass_par.vec_z);
     
+    unit_vector(tmp1, base2);
+    c = vec_norm(tmp1) + mm.d[0];
+    
+    dummy = vec_dot(base2, a) - c;
+    d1 = -1*dummy/vec_dot(base2, vect2); 
+        
 
     /*   point on the horizontal plane between n1,n2  */
-    Xb1 = a[0] +  b[0] *  d1;
-    Yb1 = a[1] +  b[1] *  d1;
-    Zb1 = a[2] +  b[2] *  d1;
+    vec_scalar_mul(vect2, d1, tmp1);
+    vec_add(a, tmp1, Xb);
+
+        
+    vec_copy(bn, base2); 
+    n = vec_dot(vect2, bn);
     
-    bn[0] = base2[0];
-    bn[1] = base2[1];
-    bn[2] = base2[2];
-    n = (b[0] *  bn[0] +  b[1] *  bn[1] +  b[2] *  bn[2]);
-    bp[0] = b[0] -  bn[0] *  n;
-    bp[1] = b[1] -  bn[1] *  n;
-    bp[2] = b[2] -  bn[2] *  n;
-    dummy = sqrt(bp[0] *  bp[0] +  bp[1] *  bp[1] +  bp[2] *  bp[2]);
-    bp[0] = bp[0]/dummy;
-    bp[1] = bp[1]/dummy;
-    bp[2] = bp[2]/dummy;
+    vec_scalar_mul(bn, n, tmp1);
+    vec_subt(vect2, tmp1, tmp2);
+    unit_vector(tmp2, bp);
+    
 
     p = sqrt(1 -  n *  n);
     /*   interface parallel  */
     p  =  p  *   mm.n1/mm.n2[0];
     /*   interface normal  */
     n =  -sqrt(1 -  p * p);
-    a2 = p * bp[0] + n * bn[0];
-    b2 = p * bp[1] + n * bn[1];
-    c2 = p * bp[2] + n * bn[2];
-    d2 = mm.d[0]/fabs((base2[0] *  a2 + base2[1] * b2 + base2[2] * c2));
+    
+    
+    vec_scalar_mul(bp, p, tmp1); 
+    vec_scalar_mul(bn, n, tmp2); 
+    vec_add(tmp1, tmp2, a2); 
+    d2 = mm.d[0]/fabs(vec_dot(base2, a2));        
     
 
     /*   point on the horizontal plane between n2,n3  */
-     *Xb2 = Xb1 + d2 * a2;   
-     *Yb2 = Yb1 + d2 * b2;   
-     *Zb2 = Zb1 + d2 * c2;
-    
-    n = (a2 *  bn[0] +  b2 *  bn[1] +  c2 *  bn[2]);
-    bp[0] = a2 - bn[0] * n;
-    bp[1] = b2 - bn[1] * n;
-    bp[2] = c2 - bn[2] *  n;
-    dummy = sqrt(bp[0] * bp[0] + bp[1] * bp[1] + bp[2] * bp[2]);
-    bp[0] = bp[0] / dummy;
-    bp[1] = bp[1] / dummy;
-    bp[2] = bp[2] / dummy;
+    vec_scalar_mul(a2, d2, tmp1);
+    vec_add(Xb, tmp1, X);
+
+    n = vec_dot(a2, bn);
+    vec_scalar_mul(bn, n, tmp1);
+    vec_subt(a2, tmp1, tmp2);      
+    unit_vector(tmp2, bp);
 
     p = sqrt(1 - n * n);
     p = p * mm.n2[0]/mm.n3;
     n = -sqrt(1 - p * p);
-    *a3 = p * bp[0] + n * bn[0];
-    *b3 = p * bp[1] + n * bn[1];
-    *c3 = p * bp[2] + n * bn[2];
+    
+    vec_scalar_mul(bp, p, tmp1);
+    vec_scalar_mul(bn, n, tmp2);
+    vec_add (tmp1, tmp2, out);
 }
-
