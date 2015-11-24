@@ -111,8 +111,7 @@ START_TEST(test_back_trans_Point)
     	1.0, 
     	{1.49, 0.0, 0.0}, 
     	{5.0, 0.0, 0.0},
-    	1.33,
-    	1};
+    	1.33};
     
     Exterior Ex_t; 
     double X_t, Y_t, Z_t;
@@ -342,8 +341,7 @@ START_TEST(test_trans_Cam_Point)
     	1.0, 
     	{1.49, 0.0, 0.0}, 
     	{5.0, 0.0, 0.0},
-    	1.33,
-    	1};
+    	1.33};
     
     /* output */
     Exterior Ex_t; 
