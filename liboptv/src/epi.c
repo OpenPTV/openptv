@@ -4,9 +4,6 @@
 
 #include "epi.h"
 
-int dumbbell_pyptv = 0;
-
-
 /*    epi_mm() takes a point in images space of one camera, positions of this 
       and another camera and returns the epipolar line (in millimeter units) 
       that corresponds to the point of interest in the another camera space.
