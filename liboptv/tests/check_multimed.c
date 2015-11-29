@@ -316,6 +316,7 @@ START_TEST(test_trans_Cam_Point)
 {
     /* input */  
     vec3d pos = {100.0, 100.0, 0.0};     
+    double sep_norm = vec_norm(pos);
         
     Exterior test_Ex = {
         0.0, 0.0, 100.0,
@@ -350,25 +351,30 @@ START_TEST(test_trans_Cam_Point)
 
     trans_Cam_Point(test_Ex, test_mm, test_G, pos, &Ex_t, pos_t, cross_p, cross_c);
     
-    ck_assert_msg( fabs(pos_t[0] - 141.421356) < EPS && 
+    ck_assert_msg( fabs(pos_t[0] - sep_norm) < EPS && 
         fabs(pos_t[1] - 0.0) < EPS && 
-        fabs(pos_t[2] + 50.000000)  < EPS,
-        "Expected 141.421356 0.000000 -50.000000  but found %10.8f %10.8f %10.8f\n", 
-        pos_t[0],pos_t[1],pos_t[2]);
+        fabs(pos_t[2] + test_G.vec_z)  < EPS,
+        "Expected %g 0.000000 %g  but found %10.8f %10.8f %10.8f\n", 
+        sep_norm, -test_G.vec_z, pos_t[0],pos_t[1],pos_t[2]);
          
-    ck_assert_msg( fabs(cross_p[0] - 100.0) < EPS && 
-        fabs(cross_p[1] - 100.0) < EPS && 
-        fabs(cross_p[2] - 50.0)  < EPS,
-        "Expected 100.0 100.0 50.000 but found %10.8f %10.8f %10.8f\n", \
-        cross_p[0],cross_p[1],cross_p[2]);
+    ck_assert_msg( fabs(cross_p[0] - pos[0]) < EPS && 
+        fabs(cross_p[1] - pos[1]) < EPS && 
+        fabs(cross_p[2] - test_G.vec_z)  < EPS,
+        "Expected %g %g %g but found %10.8f %10.8f %10.8f\n", \
+        pos[0], pos[1], test_G.vec_z, cross_p[0],cross_p[1],cross_p[2]);
     
-    ck_assert_msg(fabs(cross_c[0] + 0.0) < EPS && 
-        fabs(cross_c[1] + 0.0) < EPS && 
-        fabs(cross_c[2] - 55.0)  < EPS,
-        "Expected 0.000000 0.000000 55.000000 but found %10.8f %10.8f %10.8f\n", \
+    ck_assert_msg(fabs(cross_c[0] + test_Ex.x0) < EPS && 
+        fabs(cross_c[1] + test_Ex.y0) < EPS && 
+        fabs(cross_c[2] - (test_G.vec_z + test_mm.d[0]))  < EPS,
+        "Expected %g %g %g but found %10.8f %10.8f %10.8f\n", \
+        -test_Ex.x0, -test_Ex.y0, test_G.vec_z + test_mm.d[0],
         cross_c[0],cross_c[1],cross_c[2]);
-        
-    fail_unless(compare_exterior_diff(&correct_Ex_t, &Ex_t));
+    
+    ck_assert_msg ( (fabs(correct_Ex_t.x0 - Ex_t.x0) < EPS) && 
+                    (fabs(correct_Ex_t.y0 - Ex_t.y0) < EPS) &&
+                    (fabs(correct_Ex_t.z0 - Ex_t.z0) < EPS),
+     "Expected 0.0, 0.0, 50.0, but found %10.8f %10.8f %10.8f\n", \
+        Ex_t.x0,Ex_t.y0,Ex_t.z0);                          
 }
 END_TEST
 

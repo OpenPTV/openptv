@@ -225,7 +225,7 @@ int compare_calib(Calibration *c1, Calibration *c2) {
 }
 
 /**************************************************
- * read_calibration() reads orientation fiels and creates a Calibration object
+ * read_calibration() reads orientation files and creates a Calibration object
  * that represents the files' data.
  * 
  * Note: for now it uses read_ori(). This is scheduled to change soon.
@@ -233,8 +233,7 @@ int compare_calib(Calibration *c1, Calibration *c2) {
  * Arguments:
  * char *ori_file - name of the file containing interior, exterior, and glass
  *   parameters.
- * char *add_file - name of the file containing additional orientation
- *   parameters.
+ * char *add_file - name of the file containing distortion parameters.
  * char *fallback_file - name of file to use if add_file can't be opened.
  *
  * Returns:
@@ -258,6 +257,26 @@ Calibration *read_calibration(char *ori_file, char *add_file,
     }
 }
 
+
+/**************************************************
+ * write_calibration() writes to orientation files the data in a Calibration 
+ * object.
+ * 
+ * Note: for now it uses write_ori(). This is scheduled to change soon.
+ * 
+ * Arguments:
+ * Calibration *cal - the calibration data to write.
+ * char *ori_file - name of the file to hold interior, exterior, and glass
+ *   parameters.
+ * char *add_file - name of the file to hold distortion parameters.
+ *
+ * Returns:
+ * True value on success, False otherwise.
+ */
+int write_calibration(Calibration *cal, char *ori_file, char *add_file) {
+    return write_ori(cal->ext_par, cal->int_par, cal->glass_par, 
+        cal->added_par, ori_file, add_file);
+}
 
 /* rotation_matrix() rotates the Dmatrix of Exterior Ex using
 *  three angles of the camera

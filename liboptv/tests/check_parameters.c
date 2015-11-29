@@ -11,13 +11,19 @@ START_TEST(test_read_write_compare_targ_rec_par)
     filename_read[]  = "testing_fodder/parameters/targ_rec_all_different_fields.par",
     filename_write[] = "testing_fodder/parameters/targ_out_read.par";
 
-    target_par targ_correct= { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13 };
+    target_par targ_correct= { 
+        .gvthres = {1, 2, 3, 4}, 
+        .discont = 5,
+        .nnmin = 6, .nnmax = 7,
+        .nxmin = 8, .nxmax = 9,
+        .nymin = 10, .nymax = 11, 
+        .sumg_min = 12, 
+        .cr_sz = 13 };
+    
     target_par *targ_read = read_target_par(filename_read);
-
     fail_unless(compare_target_par(&targ_correct, targ_read));
 
     write_target_par(targ_read, filename_write);
-
     fail_unless(compare_target_par(&targ_correct, read_target_par(filename_write)));
 
     remove(filename_write);
@@ -53,15 +59,16 @@ START_TEST(test_read_compare_mm_np_par)
 END_TEST
 
 
-START_TEST(test_read_sequence_par)
+START_TEST(test_read_compare_sequence_par)
 {
     int cam;
     char fname[SEQ_FNAME_MAX_LEN];
+    char test_file_path[]="testing_fodder/parameters/sequence.par";
     sequence_par *seqp;
+    int num_cams = 4;
+    seqp = read_sequence_par(test_file_path, num_cams);
 
-    seqp = read_sequence_par("testing_fodder/parameters/sequence.par");
-    
-    for (cam = 0; cam < 4; cam++) {
+    for (cam = 0; cam < num_cams; cam++) {
         printf("%s", seqp->img_base_name[cam]);
         sprintf(fname, "dumbbell/cam%d_Scene77_", cam + 1);
         fail_unless(strncmp(fname, seqp->img_base_name[cam],
@@ -69,9 +76,11 @@ START_TEST(test_read_sequence_par)
     }
     fail_unless(seqp->first == 497);
     fail_unless(seqp->last == 597);
-    
-    
-    
+
+    sequence_par *seqp2 = read_sequence_par(test_file_path, num_cams);
+    fail_unless(compare_sequence_par(seqp, seqp2));
+    seqp2->first = -999;
+    fail_unless(!compare_sequence_par(seqp, seqp2));
 }
 END_TEST
 
@@ -146,8 +155,8 @@ END_TEST
 Suite* fb_suite(void) {
     Suite *s = suite_create ("Parameters handling");
 
-    TCase *tc = tcase_create ("Read sequence parameters");
-    tcase_add_test(tc, test_read_sequence_par);
+    TCase *tc = tcase_create ("Read compare sequence parameters");
+    tcase_add_test(tc, test_read_compare_sequence_par);
     suite_add_tcase (s, tc);
     
     tc = tcase_create ("Read tracking parameters");
