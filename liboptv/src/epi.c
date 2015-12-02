@@ -143,6 +143,7 @@ void epi_mm_2D (double xl, double yl, Calibration *cal1, mm_np mmp, volume_par *
       pointer is the correct information, then we have to use 
 
         cand[*count].pnr = p2;
+   https://groups.google.com/forum/#!searchin/openptv/find_candidate/openptv/SxC0GruS8mY/UxB56yq-mEgJ
 */
 
 void find_candidate (coord_2d *crd, target *pix, int num, 
