@@ -169,19 +169,10 @@ void find_candidate (coord_2d *crd, target *pix, int num,
   ymin = (-1) * cpar->pix_y * cpar->imy/2;	ymax = cpar->pix_y * cpar->imy/2;
   xmin -= cal->int_par.xh;	ymin -= cal->int_par.yh;
   xmax -= cal->int_par.xh;	ymax -= cal->int_par.yh;
-      
   
   correct_brown_affin (xmin, ymin, cal->added_par, &xmin, &ymin);
   correct_brown_affin (xmax, ymax, cal->added_par, &xmax, &ymax);
     
-  
-  /* we need to reset only few first lines to be sure we do not reuse old pointers */
-  for (j = 0; j < 4; j++) { 
-      cand[j].pnr = -999;
-      cand[j].tol = -999;
-      cand[j].corr = -999;
-  }
-
   /* line equation: y = m*x + b */
   if (xa == xb) { /* the line is a point or a vertical line in this camera */	
   		xb += 1e-10; /* if we use xa += 1e-10, we always switch later */
