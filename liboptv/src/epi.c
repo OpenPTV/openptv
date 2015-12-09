@@ -100,6 +100,8 @@ void epi_mm_2D (double xl, double yl, Calibration *cal1, mm_np mmp, volume_par *
     
     Arguments:
     coord_2d *crd - points to an array of detected-points position information.
+        the points must be in flat-image (brown/affine corrected) coordinates
+        and sorted by their x coordinate, i.e. ``crd[i].x <= crd[i + 1].x``.
     target *pix - array of target information (size, grey value, etc.) 
         structures. pix[j] describes the target corresponding to 
         (crd[...].pnr == j).
@@ -110,7 +112,9 @@ void epi_mm_2D (double xl, double yl, Calibration *cal1, mm_np mmp, volume_par *
     int sumg - same, for the grey value.
     
     Outputs:
-    candidate cand[] - array of candidate properties.
+    candidate cand[] - array of candidate properties. The .pnr property of cand
+        points to an index in the corrected detections array (``crd``). The
+        indexing depends on whether the corrected array is x-sorted
     int *count - the number of selected candidates, length of cand array.
     
     Extra configuration Arguments:
