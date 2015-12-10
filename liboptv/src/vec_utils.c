@@ -113,6 +113,18 @@ double vec_dot(vec3d vec1, vec3d vec2) {
     return sum;
 }
 
+/*  vec_cross() calculates the cross product of two vectors.
+    
+    Arguments:
+    vec3d vec1, vec2 - the vectors whose cross product is sought.
+    vec3d out - output buffer for the result vector.
+*/
+void vec_cross(vec3d vec1, vec3d vec2, vec3d out) {
+    out[0] = vec1[1]*vec2[2] - vec1[2]*vec2[1];
+    out[1] = vec1[2]*vec2[0] - vec1[0]*vec2[2];
+    out[2] = vec1[0]*vec2[1] - vec1[1]*vec2[0];
+}
+
 /*  vec_cmp() checks whether two vectors are equal.
     
     Arguments:
