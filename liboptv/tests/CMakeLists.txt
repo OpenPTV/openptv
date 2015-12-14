@@ -113,6 +113,9 @@ add_test(check_imgcoord ${CMAKE_CURRENT_BINARY_DIR}/check_imgcoord)
 target_link_libraries(check_orientation ${LIBS})
 add_test(check_orientation ${CMAKE_CURRENT_BINARY_DIR}/check_orientation)
  
+add_custom_command(TARGET check_orientation PRE_BUILD
+    COMMAND ${CMAKE_COMMAND} -E copy_directory
+    ${CMAKE_CURRENT_SOURCE_DIR}/testing_fodder $<TARGET_FILE_DIR:check_orientation>/testing_fodder)
     
 add_custom_target(verify COMMAND ${CMAKE_CTEST_COMMAND})
 add_dependencies(verify check_fb check_calibration check_parameters check_lsqadj \ 
