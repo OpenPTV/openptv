@@ -54,16 +54,12 @@ cdef class MultimediaParams:
         n3 - index of refraction of final medium (e.g. water, 1.33).
         d - thickness of all but first and last layers, [mm].
         """
-        self._mm_np = <mm_np *> malloc(sizeof(mm_np))
+        self._mm_np = < mm_np *> malloc(sizeof(mm_np))
         
-        if kwargs.has_key('nlay'): 
-            self.set_nlay(kwargs['nlay'])
         if kwargs.has_key('n1'):
             self.set_n1(kwargs['n1'])
-        if kwargs.has_key('n2'):
-            self.set_n2(kwargs['n2'])
-        if kwargs.has_key('d'):
-            self.set_d(kwargs['d'])
+        if kwargs.has_key('n2') and kwargs.has_key('d'):
+            self.set_layers(kwargs['n2'], kwargs['d'])
         if kwargs.has_key('n3'):
             self.set_n3(kwargs['n3'])
         if kwargs.has_key('lut'):
@@ -77,15 +73,25 @@ cdef class MultimediaParams:
         
     def get_nlay(self):
         return self._mm_np[0].nlay
-    
-    def set_nlay(self, nlay):
-        self._mm_np[0].nlay = nlay
         
     def get_n1(self):
         return self._mm_np[0].n1
+    
     def set_n1(self, n1):
         self._mm_np[0].n1 = n1
         
+    def set_layers(self, refr_index, thickness):
+        if len(refr_index) != len(thickness):
+            raise ValueError("Lengths of refractive index and thickness must be equal.")
+        else:
+            for i in range(len(refr_index)):
+                self._mm_np[0].n2[i] = refr_index[i]
+            
+            for i in range(len(thickness)):
+                self._mm_np[0].d[i] = thickness[i]
+            
+            self._mm_np[0].nlay = len(refr_index)
+            
     # get n2 as numpy array
     # Parameters: copy (optional) - choose true for returned numpy object to 
     # take ownership of the memory of the n2 field of the underlying mm_np struct. 
@@ -99,19 +105,11 @@ cdef class MultimediaParams:
     def get_n2(self, copy=True):
         arr_size = sizeof(self._mm_np[0].n2) / sizeof(self._mm_np[0].n2[0])
         return wrap_1d_c_arr_as_ndarray(self, arr_size , numpy.NPY_DOUBLE, self._mm_np[0].n2, copy)
-    
-    def set_n2(self, n2):
-        for i in range(len(n2)):
-            self._mm_np[0].n2[i] = n2[i]
-            
+                
     def get_d(self, copy=True):
         arr_size = sizeof(self._mm_np[0].d) / sizeof(self._mm_np[0].d[0])
         return wrap_1d_c_arr_as_ndarray(self, arr_size , numpy.NPY_DOUBLE, self._mm_np[0].d, copy)
-        
-    def set_d(self, d):
-        for i in range(len(d)):
-            self._mm_np[0].d[i] = d[i]
-        
+           
     def get_n3(self):
         return self._mm_np[0].n3
     
@@ -500,34 +498,42 @@ cdef class ControlParams:
         return self._control_par[0].num_cams
         
     def get_hp_flag(self):
-        return self._control_par[0].hp_flag
+        return self._control_par[0].hp_flag != 0
     
     def set_hp_flag(self, hp_flag):
-        self._control_par[0].hp_flag = hp_flag
+        if hp_flag == True:
+            self._control_par[0].hp_flag = 1
+        else:
+            self._control_par[0].hp_flag = 0
         
     def get_allCam_flag(self):
-        return self._control_par[0].allCam_flag
+        return self._control_par[0].allCam_flag != 0
     
     def set_allCam_flag(self, allCam_flag):
-        self._control_par[0].allCam_flag = allCam_flag
+        if allCam_flag == True:
+            self._control_par[0].allCam_flag = 1
+        else:
+            self._control_par[0].allCam_flag = 0
+
         
     def get_tiff_flag(self):
-        return self._control_par[0].tiff_flag
+        return self._control_par[0].tiff_flag != 0
     
     def set_tiff_flag(self, tiff_flag):
-        self._control_par[0].tiff_flag = tiff_flag
+        if tiff_flag == True:
+            self._control_par[0].tiff_flag = 1
+        else:
+            self._control_par[0].tiff_flag = 0            
     
-    def get_imx(self):
-        return self._control_par[0].imx
+    def get_image_xy(self, copy=True):
+        return (self._control_par[0].imx, self._control_par[0].imy)
     
-    def set_imx(self, imx):
-        self._control_par[0].imx = imx
-        
-    def get_imy(self):
-        return self._control_par[0].imy
-    
-    def set_imy(self, imy):
-        self._control_par[0].imy = imy
+    def set_image_xy(self, image_xy_tuple):
+        if len(image_xy_tuple) != 2:
+            raise ValueError("Tuple passed as image size must have exactly two elements [x,y].")
+        # set the values
+        self._control_par[0].imx = image_xy_tuple[0]
+        self._control_par[0].imy = image_xy_tuple[1]
         
     def get_pix_x(self):
         return self._control_par[0].pix_x
