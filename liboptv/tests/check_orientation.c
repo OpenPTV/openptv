@@ -145,6 +145,9 @@ START_TEST(test_convergence_measure)
     }
     fail_unless(fabs(weighted_dumbbell_precision(
         targets, 16, num_cams, &media_par, calib, 1, 0)) < 1e-10);
+    /* With dumbbell length: */
+    fail_unless(fabs(weighted_dumbbell_precision(
+        targets, 16, num_cams, &media_par, calib, 10, 10)) < 1e-10);
     
     /* Jigged case (reusing target memory), moving the points and cameras 
        in parallel to create a known shift between parallel rays. */

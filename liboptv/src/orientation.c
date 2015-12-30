@@ -151,7 +151,7 @@ double weighted_dumbbell_precision(vec2d** targets, int num_targs, int num_cams,
         if (pt % 2 == 1) {
             vec_subt(res[0], res[1], res[0]);
             dist = vec_norm(res[0]);
-            len_err_tot += 1 + ((dist > db_length) ? (db_length/dist) : dist/db_length);
+            len_err_tot += 1 - ((dist > db_length) ? (db_length/dist) : dist/db_length);
         }
     } 
     
