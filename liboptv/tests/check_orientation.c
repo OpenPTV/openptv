@@ -100,7 +100,7 @@ START_TEST(test_convergence_measure)
        with the jig amplitude. */
     
     vec3d known[16], jigged;
-    vec2d* targets[4];
+    vec2d* targets[16];
     Calibration *calib[4];
     
     int num_cams = 4, num_pts = 16;
@@ -134,12 +134,13 @@ START_TEST(test_convergence_measure)
     }
     
     /* Plain case: */
-    for (cam = 0; cam < num_cams; cam++) {
-        targets[cam] = (vec2d *) calloc(16, sizeof(vec2d));
+    for (cpt_ix = 0; cpt_ix < num_pts; cpt_ix++) {
+        targets[cpt_ix] = (vec2d *) calloc(num_cams, sizeof(vec2d));
         
-        for (cpt_ix = 0; cpt_ix < num_pts; cpt_ix++) {
+        for (cam = 0; cam < num_cams; cam++) {
             img_coord(known[cpt_ix], calib[cam], &media_par, 
-                &(targets[cam][cpt_ix][0]), &(targets[cam][cpt_ix][1]));
+                &(targets[cpt_ix][cam][0]), 
+                &(targets[cpt_ix][cam][1]));
         }
     }
     fail_unless(fabs(
@@ -154,8 +155,9 @@ START_TEST(test_convergence_measure)
             vec_copy(jigged, known[cpt_ix]);
             jigged[1] += ((cam % 2) ? jigg_amp : -jigg_amp);
             
-            img_coord(jigged, calib[cam], &media_par,
-                &(targets[cam][cpt_ix][0]), &(targets[cam][cpt_ix][1]));
+            img_coord(jigged, calib[cam], &media_par, 
+                &(targets[cpt_ix][cam][0]), 
+                &(targets[cpt_ix][cam][1]));
         }
     }
     jigged_skew_dist = epipolar_convergence(
