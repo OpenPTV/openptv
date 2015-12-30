@@ -35,8 +35,8 @@ START_TEST(test_ray_distance_midpoint)
     fail_unless(vec_cmp(midpoint, skew_midp));
     
     /* Intersecting rays case: */
-    fail_unless(skew_midpoint(pos1, dir1, pos1, dir2, midpoint) == 0.);
-    fail_unless(vec_cmp(midpoint, pos1));
+    fail_unless(skew_midpoint(pos1, dir1, dir1, dir2, midpoint) == 0.);
+    fail_unless(vec_cmp(midpoint, dir1));
 }
 END_TEST
 

@@ -67,11 +67,11 @@ double skew_midpoint(vec3d vert1, vec3d direct1, vec3d vert2, vec3d direct2,
     
     /* position along each ray */
     vec_cross(sp_diff, direct2, temp);
-    vec_scalar_mul(temp, vec_dot(perp_both, temp)/scale, temp);
+    vec_scalar_mul(direct1, vec_dot(perp_both, temp)/scale, temp);
     vec_add(vert1, temp, on1);
     
     vec_cross(sp_diff, direct1, temp);
-    vec_scalar_mul(temp, vec_dot(perp_both, temp)/scale, temp);
+    vec_scalar_mul(direct2, vec_dot(perp_both, temp)/scale, temp);
     vec_add(vert2, temp, on2);
  
     /* Distance: */
@@ -109,6 +109,7 @@ double epipolar_convergence(vec2d* targets[], int num_targs, int num_cams,
     vec2d current;
     vec3d* vertices = (vec3d *) calloc(num_cams, sizeof(vec3d));
     vec3d* directs = (vec3d *) calloc(num_cams, sizeof(vec3d));
+    vec3d point; 
     
     for (pt = 0; pt < num_targs; pt++) {
         /* Shoot rays from all cameras. */
@@ -130,8 +131,8 @@ double epipolar_convergence(vec2d* targets[], int num_targs, int num_cams,
                 if (targets[pair][pt][0] == PT_UNUSED) continue;
                 
                 num_used_pairs++;
-                dtot += ray_distance(vertices[cam], directs[cam],
-                    vertices[pair], directs[pair]);
+                dtot += skew_midpoint(vertices[cam], directs[cam],
+                    vertices[pair], directs[pair], point);
             }
         }
     } /* end of per-point iteration */
