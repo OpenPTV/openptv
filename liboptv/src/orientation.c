@@ -117,8 +117,9 @@ double point_position(vec2d targets[], int num_cams, mm_np *multimed_pars,
     return (dtot / num_used_pairs);
 }
 
-/*  epipolar_convergence() Finds how closely epipolar lines converge to find
-    true 3D positions of known points. 
+/*  weighted_dumbbell_precision() Gives a weighted sum of dumbbell precision
+    measures: ray convergence, and dumbbell length. The weight of the first is 
+    1, and the later is weighted by a user defined value.
     
     Arguments:
     (vec2d **) targets - 2D array of targets, so order 3 tensor of shape
@@ -130,18 +131,31 @@ double point_position(vec2d targets[], int num_cams, mm_np *multimed_pars,
     mm_np *multimed_pars - multimedia parameters struct for ray tracing through
         several layers.
     Calibration* cals[] - each camera's calibration object.
+    int db_length - distance between two consecutive targets (assuming the
+        targets list is a 2 by 2 list of dumbbell frames).
+    double db_weight - the weight of the average length error compared to
+        the average ray convergence error.
 */
-double epipolar_convergence(vec2d** targets, int num_targs, int num_cams,
-    mm_np *multimed_pars, Calibration* cals[]) 
+double weighted_dumbbell_precision(vec2d** targets, int num_targs, int num_cams,
+    mm_np *multimed_pars, Calibration* cals[], int db_length, double db_weight)
 {
     int pt;
-    double dtot = 0;
-    vec3d res;
+    double dtot = 0, len_err_tot = 0, dist;
+    vec3d res[2], *res_current;
     
     for (pt = 0; pt < num_targs; pt++) {
-        dtot += point_position(targets[pt], num_cams, multimed_pars, cals, res);
-    } /* end of per-point iteration */
+        res_current = &(res[pt % 2]);
+        dtot += point_position(targets[pt], num_cams, multimed_pars, cals, 
+            *res_current);
+        
+        if (pt % 2 == 1) {
+            vec_subt(res[0], res[1], res[0]);
+            dist = vec_norm(res[0]);
+            len_err_tot += 1 + ((dist > db_length) ? (db_length/dist) : dist/db_length);
+        }
+    } 
     
-    return (dtot / num_targs);
+    /* note half as many pairs as targets is assumed */
+    return (dtot / num_targs + db_weight*len_err_tot/(0.5*num_targs));
 }
 

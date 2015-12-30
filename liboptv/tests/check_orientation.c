@@ -143,8 +143,8 @@ START_TEST(test_convergence_measure)
                 &(targets[cpt_ix][cam][1]));
         }
     }
-    fail_unless(fabs(
-        epipolar_convergence(targets, 16, num_cams, &media_par, calib)) < 1e-10);
+    fail_unless(fabs(weighted_dumbbell_precision(
+        targets, 16, num_cams, &media_par, calib, 1, 0)) < 1e-10);
     
     /* Jigged case (reusing target memory), moving the points and cameras 
        in parallel to create a known shift between parallel rays. */
@@ -160,8 +160,8 @@ START_TEST(test_convergence_measure)
                 &(targets[cpt_ix][cam][1]));
         }
     }
-    jigged_skew_dist = epipolar_convergence(
-        targets, 16, num_cams, &media_par, calib);
+    jigged_skew_dist = weighted_dumbbell_precision(
+        targets, 16, num_cams, &media_par, calib, 1, 0);
     jigged_correct = 16*4*(2*jigg_amp)/(16*6); 
     /* two thirds, but because of details: each disagreeing pair (4 out of 6) 
        has a 2*jigg_amp error because the cameras are moved in opposite

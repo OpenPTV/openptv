@@ -15,7 +15,7 @@ double skew_midpoint(vec3d vert1, vec3d direct1, vec3d vert2, vec3d direct2,
     vec3d res);
 double point_position(vec2d targets[], int num_cams, mm_np *multimed_pars,
     Calibration* cals[], vec3d res);
-double epipolar_convergence(vec2d* targets[], int num_targs, int num_cams,
-    mm_np *multimed_pars, Calibration* cals[]);
+double weighted_dumbbell_precision(vec2d** targets, int num_targs, int num_cams,
+    mm_np *multimed_pars, Calibration* cals[], int db_length, double db_weight);
 
 #endif
