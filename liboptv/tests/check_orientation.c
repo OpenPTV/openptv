@@ -40,6 +40,58 @@ START_TEST(test_ray_distance_midpoint)
 }
 END_TEST
 
+START_TEST(test_point_position)
+{
+    /* Generate target information based on a known point. In the simple case,
+       calculated point must equal known point and average ray distance == 0.
+       Then jigg the cameras symmetrically to get the same points again but 
+       with an analytically derivable ray distance. */
+    
+    int cam, num_cams = 4;
+    vec2d targs_plain[4], targs_jigged[4];
+    
+    Calibration *calib[4];
+    char ori_tmpl[] = "cal/sym_cam%d.tif.ori";
+    char ori_name[25];
+    mm_np media_par = {1, 1., {1., 0., 0.}, {1., 0., 0.}, 1., 1.};
+    
+    vec3d point = {17, 42, 0}; /* Something in the FOV, non-symmetric. */
+    vec3d res, jigged;
+    double jigg_amp = 0.5, skew_dist, jigged_correct;
+    
+    /* Target generation requires an existing calibration. */
+    chdir("testing_fodder/");
+    
+    /* Four cameras on 4 quadrants. */
+    for (cam = 0; cam < num_cams; cam++) {
+        sprintf(ori_name, ori_tmpl, cam + 1);
+        calib[cam] = read_calibration(ori_name, "cal/cam1.tif.addpar", NULL);
+        
+        img_coord(point, calib[cam], &media_par, 
+            &(targs_plain[cam][0]), &(targs_plain[cam][1]));
+        
+        vec_copy(jigged, point);
+        jigged[1] += ((cam % 2) ? jigg_amp : -jigg_amp);
+        img_coord(jigged, calib[cam], &media_par, 
+            &(targs_jigged[cam][0]), &(targs_jigged[cam][1]));
+    }
+    
+    skew_dist = point_position(targs_plain, num_cams, &media_par, calib, res);
+    fail_unless(skew_dist < 1e-10);
+    vec_subt(point, res, res);
+    fail_unless(vec_norm(res) < 1e-10);
+    
+    skew_dist = point_position(targs_jigged, num_cams, &media_par, calib, res);
+    jigged_correct = 4*(2*jigg_amp)/6;
+    /* two thirds, but because of details: each disagreeing pair (4 out of 6) 
+       has a 2*jigg_amp error because the cameras are moved in opposite
+       directions. */
+    fail_unless(fabs(skew_dist - jigged_correct) < 0.05);
+    vec_subt(point, res, res);
+    fail_unless(vec_norm(res) < 0.01);
+}
+END_TEST
+
 START_TEST(test_convergence_measure)
 {
     /* Generate target information based on known points. In the simple case,
@@ -124,6 +176,10 @@ Suite* orient_suite(void) {
     tcase_add_test(tc, test_ray_distance_midpoint);
     suite_add_tcase (s, tc);
 
+    tc = tcase_create ("Point position");
+    tcase_add_test(tc, test_point_position);
+    suite_add_tcase (s, tc);
+    
     tc = tcase_create ("Convergence measures");
     tcase_add_test(tc, test_convergence_measure);
     suite_add_tcase (s, tc);
