@@ -1,7 +1,9 @@
 /*  Unit tests for functions related to finding calibration parameters. Uses 
     the Check framework: http://check.sourceforge.net/
     
-    To run it, type "make check" when in the top C directory, src_c/
+    To run it, type "make verify" when in the src/build/
+    after installing the library.
+    
     If that doesn't run the tests, use the Check tutorial:
     http://check.sourceforge.net/doc/check_html/check_3.html
 */
