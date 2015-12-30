@@ -21,18 +21,22 @@
 #include "imgcoord.h"
 #include "trafo.h"
 
-START_TEST(test_ray_distance)
+START_TEST(test_ray_distance_midpoint)
 {
     /* Generate simply-oriented skew rays with a known distance and get that
        distance from the distance finding routine. */
     
     vec3d pos1 = {0., 0., 0.}, dir1 = {1., 0., 0.};
     vec3d pos2 = {0., 0., 1.}, dir2 = {0., 1., 0.};
+    vec3d midpoint, skew_midp = {0., 0., 0.5};
     
-    /* cases: skew, intersecting, parallel */
-    fail_unless(ray_distance(pos1, dir1, pos2, dir2) == 1.);
-    fail_unless(ray_distance(pos1, dir1, pos1, dir2) == 0.);
-    fail_unless(ray_distance(pos1, dir1, pos2, dir1) == 1.);
+    /* Skew rays case: */
+    fail_unless(skew_midpoint(pos1, dir1, pos2, dir2, midpoint) == 1.);
+    fail_unless(vec_cmp(midpoint, skew_midp));
+    
+    /* Intersecting rays case: */
+    fail_unless(skew_midpoint(pos1, dir1, pos1, dir2, midpoint) == 0.);
+    fail_unless(vec_cmp(midpoint, pos1));
 }
 END_TEST
 
@@ -116,8 +120,8 @@ END_TEST
 Suite* orient_suite(void) {
     Suite *s = suite_create ("Finding calibration parameters");
 
-    TCase *tc = tcase_create ("Ray distance");
-    tcase_add_test(tc, test_ray_distance);
+    TCase *tc = tcase_create ("Skew rays");
+    tcase_add_test(tc, test_ray_distance_midpoint);
     suite_add_tcase (s, tc);
 
     tc = tcase_create ("Convergence measures");

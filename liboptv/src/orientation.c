@@ -38,6 +38,53 @@ double ray_distance(vec3d vert1, vec3d direct1, vec3d vert2, vec3d direct2) {
     return fabs(vec_dot(sp_diff, perp_both))/vec_norm(perp_both);
 }
 
+/*  skew_midpoint() finds the middle of the minimal distance segment between 
+    skew rays. Undefined for parallel rays.
+    
+    Reference for algorithm: 
+    docs/skew_midpoint.pdf
+
+    Arguments:
+    vec3d vert1, direct1 - vertex and direction unit vector of one ray.
+    vec3d vert2, direct2 - vertex and direction unit vector of other ray.
+    vec3d res - output buffer for midpoint result.
+    
+    Returns:
+    The minimal distance between the skew lines.
+*/
+double skew_midpoint(vec3d vert1, vec3d direct1, vec3d vert2, vec3d direct2, 
+    vec3d res) 
+{
+    vec3d perp_both, sp_diff, on1, on2, temp;
+    double scale;
+    
+    /* vector between starting points */
+    vec_subt(vert2, vert1, sp_diff);
+    
+    /* The shortest distance is on a line perpendicular to both rays. */
+    vec_cross(direct1, direct2, perp_both);
+    scale = vec_dot(perp_both, perp_both);
+    
+    /* position along each ray */
+    vec_cross(sp_diff, direct2, temp);
+    vec_scalar_mul(temp, vec_dot(perp_both, temp)/scale, temp);
+    vec_add(vert1, temp, on1);
+    
+    vec_cross(sp_diff, direct1, temp);
+    vec_scalar_mul(temp, vec_dot(perp_both, temp)/scale, temp);
+    vec_add(vert2, temp, on2);
+ 
+    /* Distance: */
+    vec_subt(on1, on2, res);
+    scale = vec_norm(res);
+       
+    /* Average */
+    vec_add(on1, on2, res);
+    vec_scalar_mul(res, 0.5, res);
+    
+    return scale;
+}
+
 
 /*  epipolar_convergence() Finds how closely epipolar lines converge to find
     true 3D positions of known points. 
