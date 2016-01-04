@@ -92,16 +92,6 @@ cdef class MultimediaParams:
             
             self._mm_np[0].nlay = len(refr_index)
             
-    # get n2 as numpy array
-    # Parameters: copy (optional) - choose true for returned numpy object to 
-    # take ownership of the memory of the n2 field of the underlying mm_np struct. 
-    # 
-    # PLEASE NOTE: by default, the returned numpy array is a new array 
-    # containing COPIED values from MultimediaParams' underlying mm_np struct.
-    # 
-    # if you want the returned numpy array to take ownership of memory of 
-    # MultimediaParams' mm_np struct and affect it directly, change the value 
-    # of the optional parameter 'copy' to False
     def get_n2(self, copy=True):
         """
         get the mid-layer refractive indices (n2) as a numpy array
@@ -115,10 +105,6 @@ cdef class MultimediaParams:
         return wrap_1d_c_arr_as_ndarray(self, arr_size, numpy.NPY_DOUBLE, 
             self._mm_np[0].n2, copy)
     
-    def set_n2(self, n2):
-        for i in range(len(n2)):
-            self._mm_np[0].n2[i] = n2[i]
-            
     def get_d(self, copy=True):
         arr_size = sizeof(self._mm_np[0].d) / sizeof(self._mm_np[0].d[0])
         return wrap_1d_c_arr_as_ndarray(self, arr_size , numpy.NPY_DOUBLE, self._mm_np[0].d, copy)
