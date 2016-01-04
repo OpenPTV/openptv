@@ -12,28 +12,19 @@
 #include "vec_utils.h"
 #include <stdio.h>
 
-typedef struct
-{
-  int pnr;
-  vec3d pos;
-} coord_3d;
-
-
-typedef struct
-{
-  double x, y;
-} pixel_pos;
+// to be removed when #78 is merged
+typedef double vec2d[2];
 
 				   
-void sortgrid (Calibration* cal, control_par *cpar, int nfix, coord_3d fix[], int num,
+void sortgrid (Calibration* cal, control_par *cpar, int nfix, vec3d fix[], int num,
     int eps, target pix[]);
     				
-void nearest_pixel_location (Calibration* cal, control_par *cpar, int nfix, coord_3d fix[], 
-pixel_pos calib_points[]);
+void nearest_pixel_location (Calibration* cal, control_par *cpar, int nfix, vec3d fix[], 
+vec2d calib_points[]);
 				
 int nearest_neighbour_pix (target pix[], int num, double x, double y, double eps);
 int read_sortgrid_par(char *filename);
-int read_calblock(coord_3d fix[], char* filename);
+int read_calblock(vec3d fix[], char* filename);
 
 #endif
 

@@ -4,6 +4,7 @@
 #include <stdlib.h>
 #include <math.h>
 #include <unistd.h>
+#include <stdio.h>
 
 
 #include "sortgrid.h"
@@ -54,7 +55,7 @@ END_TEST
 START_TEST(test_read_calblock)
 {
     int num_points, correct_num_points = 5;
-    coord_3d fix[100];
+    vec3d fix[100];
     char calblock_file[] = "testing_fodder/cal/calblock.txt";
     
 
@@ -73,7 +74,7 @@ START_TEST(test_sortgrid)
 {
     Calibration *cal;
     control_par *cpar;
-    coord_3d fix[100];
+    vec3d fix[100];
     target pix[2];
     int nfix, i;
     int eps, correct_eps = 25;
@@ -101,6 +102,7 @@ START_TEST(test_sortgrid)
 
     sortgrid (cal, cpar, nfix, fix, targets_read, eps, pix);
     fail_unless(pix[0].pnr == -999);
+    fail_unless(pix[1].pnr == -999);
 
     sortgrid (cal, cpar, nfix, fix, targets_read, 120, pix);
     fail_unless(pix[1].pnr == 2);
