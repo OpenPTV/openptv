@@ -46,8 +46,7 @@ double skew_midpoint(vec3d vert1, vec3d direct1, vec3d vert2, vec3d direct2,
     vec_add(vert2, temp, on2);
  
     /* Distance: */
-    vec_subt(on1, on2, res);
-    scale = vec_norm(res);
+    scale = vec_diff_norm(on1, on2);
        
     /* Average */
     vec_add(on1, on2, res);
