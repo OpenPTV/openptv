@@ -293,9 +293,10 @@ START_TEST(test_find_candidate)
     
     find_candidate (test_crd, test_pix, num_pix, xa, ya, xb, yb, n, nx, ny, sumg,
         test_cand, &count, &test_vpar, test_cpar, &test_cal);
+    
+    free_control_par(test_cpar);
 
     double sum_corr;
-    
     for (i = 0; i < count; i++) {
     	sum_corr += test_cand[i].corr;
     }	
