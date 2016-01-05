@@ -39,17 +39,16 @@ Description:	       	reads objects, detected by detection etc.,
     pixel_pos calib_points[] structure of floating pixel positions (.x, .y) corresponding 
     to the 3D points in structure fix. 
 */    
-void nearest_pixel_location (Calibration* cal, control_par *cpar, int nfix, coord_3d fix[], 
-pixel_pos calib_points[]){
+void nearest_pixel_location (Calibration* cal, control_par *cpar, int nfix, vec3d fix[], 
+vec2d calib_points[]){
   int	       	i, j;
   int	       	intx, inty;
   double       	xp, yp;
   
-  
   for (i=0; i<nfix; i++)
     {
-        img_coord (fix[i].pos, cal, cpar->mm,  &xp, &yp);
-        metric_to_pixel (&(calib_points[i].x), &(calib_points[i].y), xp, yp, cpar);
+        img_coord (fix[i], cal, cpar->mm,  &xp, &yp);
+        metric_to_pixel (&(calib_points[i][0]), &(calib_points[i][1]), xp, yp, cpar);
     }
 }
 
@@ -74,16 +73,16 @@ pixel_pos calib_points[]){
     position, size of the dot, sum of grey values and another identification (tnr)
 */
 
-void sortgrid (Calibration* cal, control_par *cpar, int nfix, coord_3d fix[], 
-                int num, int eps, target pix[])
+void sortgrid (Calibration* cal, control_par *cpar, int nfix, vec3d fix[], int num, 
+                int eps, target pix[])
 {
   int	       	i, j;
   int	       	intx, inty;
   int           tmp;
   target       	*old;
-  pixel_pos     *calib_points;
+  vec2d         *calib_points;
     
-  calib_points = (pixel_pos *) malloc(nfix * sizeof(pixel_pos));
+  calib_points = (vec2d *) malloc(nfix * sizeof(vec2d));
   old = (target *) malloc(num * sizeof(target));
 
   /* copy and re-initialize pixel data before sorting and remove pointer */
@@ -100,15 +99,15 @@ void sortgrid (Calibration* cal, control_par *cpar, int nfix, coord_3d fix[],
   /* and search a detected target nearby */
   for (i=0; i<nfix; i++){
        /* if the point is not touching the image border */ 
-      if ( calib_points[i].x > -eps  &&  calib_points[i].x > -eps  &&  
-            calib_points[i].x < cpar->imx + eps  &&  calib_points[i].y < cpar->imy + eps){
+      if ( calib_points[i][0]> -eps  &&  calib_points[i][1]> -eps  &&  
+           calib_points[i][0] < cpar->imx + eps  && calib_points[i][1]< cpar->imy + eps){
                     
           /* find the nearest target point */
-          j = nearest_neighbour_pix (old, num, calib_points[i].x, calib_points[i].x, eps);
+          j =nearest_neighbour_pix(old, num, calib_points[i][0], calib_points[i][1], eps);
       
           if (j != -999) { /* if found */
               pix[i] = old[j];          /* assign its row number */
-              pix[i].pnr = fix[i].pnr;  /* assign the pointer of a corresponding point */
+              pix[i].pnr = i+1;         /* assign the pointer of a corresponding point */
             }
         }
     }
@@ -193,9 +192,9 @@ handle_error:
    Returns:
    int number of valid calibration points. If reading failed for any reason, returns NULL.
 */
-int read_calblock(coord_3d fix[], char* filename) {
+int read_calblock(vec3d fix[], char* filename) {
     FILE* fpp;
-    int	k = 0;
+    int	dummy, k = 0;
        
     fpp = fopen (filename, "r");
     if (! fpp) {
@@ -203,8 +202,8 @@ int read_calblock(coord_3d fix[], char* filename) {
         goto handle_error;
     }
     
-    while (fscanf(fpp, "%d %lf %lf %lf\n", &(fix[k].pnr),&(fix[k].pos[0]),
-            &(fix[k].pos[1]),&(fix[k].pos[2])) == 4) k++;
+    while (fscanf(fpp, "%d %lf %lf %lf\n", &(dummy),&(fix[k][0]),
+            &(fix[k][1]),&(fix[k][2])) == 4) k++;
     
     fclose (fpp);
 
