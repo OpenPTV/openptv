@@ -3,6 +3,10 @@ from libc.stdlib cimport malloc, free
 from libc.string cimport strncpy
 
 import numpy
+numpy.import_array()
+
+cimport numpy as numpy
+from cpython cimport PyObject, Py_INCREF
 
 cdef extern from "optv/parameters.h":
     int c_compare_mm_np "compare_mm_np"(mm_np * mm_np1, mm_np * mm_np2)
@@ -23,6 +27,17 @@ cdef extern from "optv/parameters.h":
     void c_free_control_par "free_control_par"(control_par * cp);
     int c_compare_control_par "compare_control_par"(control_par * c1, control_par * c2);
 
+cdef numpy.ndarray wrap_1d_c_arr_as_ndarray(object base_obj, int arr_size, int num_type, void * data, int copy): 
+    cdef numpy.npy_intp shape[1]  # for 1 dimensional array
+    shape[0] = < numpy.npy_intp > arr_size
+    cdef numpy.ndarray ndarray
+    ndarray = numpy.PyArray_SimpleNewFromData(1, shape, num_type, data)
+    ndarray.base = < PyObject *> base_obj
+    Py_INCREF(base_obj)
+    if copy:
+        return numpy.copy(ndarray)
+    return ndarray
+    
 cdef class MultimediaParams:
     """
     Relates to photographing through several transparent media (air, tank 
@@ -68,28 +83,29 @@ cdef class MultimediaParams:
         
     def get_n1(self):
         return self._mm_np[0].n1
-    
     def set_n1(self, n1):
         self._mm_np[0].n1 = n1
         
-    def get_n2(self):
+    def get_n2(self, copy=True):
+        """
+        get the mid-layer refractive indices (n2) as a numpy array
+        
+        Arguments: 
+        copy - False for returned numpy object to take ownership of 
+            the memory of the n2 field of the underlying mm_np struct. True
+            (default) to return a COPY instead.
+        """
         arr_size = sizeof(self._mm_np[0].n2) / sizeof(self._mm_np[0].n2[0])
-        n2_np_arr = numpy.empty(arr_size)
-        for i in range(len(n2_np_arr)):
-            n2_np_arr[i] = self._mm_np[0].n2[i]
-        return n2_np_arr
+        return wrap_1d_c_arr_as_ndarray(self, arr_size, numpy.NPY_DOUBLE, 
+            self._mm_np[0].n2, copy)
     
     def set_n2(self, n2):
         for i in range(len(n2)):
             self._mm_np[0].n2[i] = n2[i]
             
-    def get_d(self):
+    def get_d(self, copy=True):
         arr_size = sizeof(self._mm_np[0].d) / sizeof(self._mm_np[0].d[0])
-        d_np_arr = numpy.empty(arr_size)
-        
-        for i in range(len(d_np_arr)):
-            d_np_arr[i] = self._mm_np[0].d[i]
-        return d_np_arr
+        return wrap_1d_c_arr_as_ndarray(self, arr_size , numpy.NPY_DOUBLE, self._mm_np[0].d, copy)
         
     def set_d(self, d):
         for i in range(len(d)):
@@ -355,34 +371,25 @@ cdef class VolumeParams:
         self._volume_par = < volume_par *> malloc(sizeof(volume_par))
     
     # Getters and setters
-    def get_X_lay(self):
+    def get_X_lay(self, copy=True):
         arr_size = sizeof(self._volume_par[0].X_lay) / sizeof(self._volume_par[0].X_lay[0])
-        ret_np_arr = numpy.empty(arr_size)
-        for i in range(arr_size):
-            ret_np_arr[i] = self._volume_par[0].X_lay[i]
-        return ret_np_arr
+        return wrap_1d_c_arr_as_ndarray(self, arr_size , numpy.NPY_DOUBLE, self._volume_par[0].X_lay, copy)
     
     def set_X_lay(self, X_lay):
         for i in range(len(X_lay)):
             self._volume_par[0].X_lay[i] = X_lay[i]
             
-    def get_Zmin_lay(self):
+    def get_Zmin_lay(self, copy=True):
         arr_size = sizeof(self._volume_par[0].Zmin_lay) / sizeof(self._volume_par[0].Zmin_lay[0])
-        ret_np_arr = numpy.empty(arr_size)
-        for i in range(arr_size):
-            ret_np_arr[i] = self._volume_par[0].Zmin_lay[i]
-        return ret_np_arr
-    
+        return wrap_1d_c_arr_as_ndarray(self, arr_size , numpy.NPY_DOUBLE, self._volume_par[0].Zmin_lay, copy)
+
     def set_Zmin_lay(self, Zmin_lay):
         for i in range(len(Zmin_lay)):
             self._volume_par[0].Zmin_lay[i] = Zmin_lay[i]
             
-    def get_Zmax_lay(self):
+    def get_Zmax_lay(self, copy=True):
         arr_size = sizeof(self._volume_par[0].Zmax_lay) / sizeof(self._volume_par[0].Zmax_lay[0])
-        ret_np_arr = numpy.empty(arr_size)
-        for i in range(arr_size):
-            ret_np_arr[i] = self._volume_par[0].Zmax_lay[i]
-        return ret_np_arr
+        return wrap_1d_c_arr_as_ndarray(self, arr_size , numpy.NPY_DOUBLE, self._volume_par[0].Zmax_lay, copy)
     
     def set_Zmax_lay(self, Zmax_lay):
         for i in range(len(Zmax_lay)):
