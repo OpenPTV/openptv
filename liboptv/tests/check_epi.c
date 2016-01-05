@@ -289,8 +289,8 @@ START_TEST(test_find_candidate)
     double xb = 10.;
     double yb = 10.;
     
-    find_candidate (test_crd, test_pix, num_pix, xa, ya, xb, yb, n, nx, ny, sumg,
-        test_cand, &count, &test_vpar, test_cpar, &test_cal);
+    count = find_candidate (test_crd, test_pix, num_pix, xa, ya, xb, yb, 
+        n, nx, ny, sumg, test_cand, &test_vpar, test_cpar, &test_cal);
     
     free_control_par(test_cpar);
     

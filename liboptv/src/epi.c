@@ -4,9 +4,6 @@
 
 #include "epi.h"
 
-int dumbbell_pyptv = 0;
-
-
 /*  epi_mm() takes a point in images space of one camera, positions of this 
     and another camera and returns the epipolar line (in millimeter units) 
     that corresponds to the point of interest in the another camera space.
@@ -115,24 +112,25 @@ void epi_mm_2D (double xl, double yl, Calibration *cal1, mm_np *mmp, volume_par 
     candidate cand[] - array of candidate properties. The .pnr property of cand
         points to an index in the x-sorted corrected detections array 
         (``crd``).
-    int *count - the number of selected candidates, length of cand array.
     
     Extra configuration Arguments:
     volume_par *vpar - observed volume dimensions.
     control_par *cpar - general scene data s.a. image size.
     Calibration *cal - position and other parameters on the camera seeing 
         the candidates.
+    
+    Returns:
+    int count - the number of selected candidates, length of cand array. 
+        Negative if epipolar line out of sensor array.
 */
-void find_candidate (coord_2d *crd, target *pix, int num, 
+int find_candidate (coord_2d *crd, target *pix, int num, 
     double xa, double ya, double xb, double yb, int n, int nx, int ny, int sumg, 
-    candidate cand[], int *count, volume_par *vpar, control_par *cpar, 
-    Calibration *cal)
+    candidate cand[], volume_par *vpar, control_par *cpar, Calibration *cal)
 {
   register int	j;
-  int	       	j0, dj, p2;
+  int	       	j0, dj, p2, count = 0;
   double      	m, b, d, temp, qn, qnx, qny, qsumg, corr;
   double       	xmin, xmax, ymin, ymax,particle_size;
-  int           dumbbell = 0;
   double 		tol_band_width;
   
   tol_band_width = vpar->eps0;
@@ -168,8 +166,7 @@ void find_candidate (coord_2d *crd, target *pix, int num,
   /* If epipolar line out of sensor area, give up. */
 
   if ( (xb <= xmin) || (xa >= xmax) || (yb <= ymin) || (ya >= ymax)) {
-      *count = -1;
-      return;
+      return -1;
   }
     
   /* binary search for start point of candidate search */
@@ -184,12 +181,12 @@ void find_candidate (coord_2d *crd, target *pix, int num,
   j0 -= 12;  
   if (j0 < 0)  j0 = 0; 
 
-  for (j = j0, *count = 0; j < num; j++) {  /* candidate search */
+  for (j = j0; j < num; j++) {  /* candidate search */
       	
       /* Since the list is x-sorted, an out of x-bound candidate is after the
          last possible candidate, so stop. */
       if (crd[j].x > xb + tol_band_width) 
-          return; 
+          return count; 
 
       /* Candidate should at the very least be in the epipolar search window
          to be considred. */
@@ -215,9 +212,9 @@ void find_candidate (coord_2d *crd, target *pix, int num,
       /* Enforce minimum quality values  and maximum candidates */
       if (qn < vpar->cn || qnx < vpar->cnx || qny < vpar->cny ||
           qsumg <= vpar->csumg) continue;
-      if (*count >= MAXCAND){ 
-          printf("More candidates than (maxcand): %d\n",*count); 
-          return; 
+      if (count >= MAXCAND){ 
+          printf("More candidates than (maxcand): %d\n", count); 
+          return count; 
       }
             
       /* empirical correlation coefficient from shape and brightness 
@@ -227,12 +224,11 @@ void find_candidate (coord_2d *crd, target *pix, int num,
       /* prefer matches with brighter targets */
       corr *= ((double) (sumg + pix[p2].sumg));
       
-      cand[*count].pnr = j;
-      cand[*count].tol = d;
-      cand[*count].corr = corr;
-      (*count)++;
+      cand[count].pnr = j;
+      cand[count].tol = d;
+      cand[count].corr = corr;
+      count++;
   }
-  if (*count == 0)
-      printf ("- - -");
+  return count;
 }
 
