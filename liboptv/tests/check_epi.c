@@ -261,36 +261,25 @@ START_TEST(test_find_candidate)
     int cam;
     char img_format[] = "cam%d";
     char cal_format[] = "cal/cam%d.tif";
-    control_par test_cpar, *cpar;
+    control_par *test_cpar, *cpar;
     
-    test_cpar.num_cams = 4;
-    test_cpar.img_base_name = (char **) malloc(4*sizeof(char *));
-    test_cpar.cal_img_base_name = (char **) malloc(4*sizeof(char *));
-    test_cpar.mm = (mm_np *) malloc(sizeof(mm_np));
-    
-    
+    test_cpar = new_control_par(4);
     for (cam = 0; cam < 4; cam++) {
-        test_cpar.img_base_name[cam] = 
-            (char *) malloc((strlen(img_format) + 1) * sizeof(char));
-        sprintf(test_cpar.img_base_name[cam], img_format, cam + 1);
-        
-        test_cpar.cal_img_base_name[cam] = 
-            (char *) malloc((strlen(cal_format) + 1) * sizeof(char));
-        sprintf(test_cpar.cal_img_base_name[cam], cal_format, cam + 1);
+        sprintf(test_cpar->img_base_name[cam], img_format, cam + 1);
+        sprintf(test_cpar->cal_img_base_name[cam], cal_format, cam + 1);
     }
-    
-    test_cpar.hp_flag = 1;
-    test_cpar.allCam_flag = 0;
-    test_cpar.tiff_flag = 1;
-    test_cpar.imx = 1280;
-    test_cpar.imy = 1024;
-    test_cpar.pix_x = 0.02; /* 20 micron pixel */
-    test_cpar.pix_y = 0.02;
-    test_cpar.chfield = 0;
-    test_cpar.mm->n1 = 1;
-    test_cpar.mm->n2[0] = 1.49;
-    test_cpar.mm->n3 = 1.33;
-    test_cpar.mm->d[0] = 5;
+    test_cpar->hp_flag = 1;
+    test_cpar->allCam_flag = 0;
+    test_cpar->tiff_flag = 1;
+    test_cpar->imx = 1280;
+    test_cpar->imy = 1024;
+    test_cpar->pix_x = 0.02; /* 20 micron pixel */
+    test_cpar->pix_y = 0.02;
+    test_cpar->chfield = 0;
+    test_cpar->mm->n1 = 1;
+    test_cpar->mm->n2[0] = 1.49;
+    test_cpar->mm->n3 = 1.33;
+    test_cpar->mm->d[0] = 5;
     
     /* the result is that the sensor size is 12.8 mm x 10.24 mm */
     
@@ -302,8 +291,8 @@ START_TEST(test_find_candidate)
     
     int is_sorted = 1;
     
-    find_candidate (test_crd, test_pix, num, xa, ya, xb, yb, n, nx, ny, sumg,
-        test_cand, &count, &test_vpar, &test_cpar, &test_cal, is_sorted);
+    find_candidate (test_crd, test_pix, num_pix, xa, ya, xb, yb, n, nx, ny, sumg,
+        test_cand, &count, &test_vpar, test_cpar, &test_cal, is_sorted);
 
     double sum_corr;
     
