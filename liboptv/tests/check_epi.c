@@ -48,7 +48,7 @@ START_TEST(test_epi_mm_2D)
      x = 1.0; 
      y = 10.0;
     
-    epi_mm_2D (x, y, &test_cal, test_mm, &test_vpar, out);
+    epi_mm_2D (x, y, &test_cal, &test_mm, &test_vpar, out);
 
     
     ck_assert_msg(  fabs(out[0] - 0.85858163) < EPS && 
@@ -57,7 +57,7 @@ START_TEST(test_epi_mm_2D)
          "\n Expected 0.8586 8.5858 0.0000 \n  \
          but found %10.8f %10.8f %10.8f \n", out[0], out[1], out[2]);
     
-    epi_mm_2D (0.0, 0.0, &test_cal, test_mm, &test_vpar, out);
+    epi_mm_2D (0.0, 0.0, &test_cal, &test_mm, &test_vpar, out);
 
     
     ck_assert_msg(  fabs(out[0] - 0.0) < EPS && 
@@ -123,7 +123,7 @@ START_TEST(test_epi_mm)
         1};
 
         
-    epi_mm (x, y, &test_cal_1, &test_cal_2, test_mm, &test_vpar, \
+    epi_mm (x, y, &test_cal_1, &test_cal_2, &test_mm, &test_vpar, \
     &xmin, &xmax, &ymin, &ymax);
 
 
@@ -181,7 +181,7 @@ START_TEST(test_epi_mm_perpendicular)
         {-100., 100.}, {-100., -100.}, {100.0, 100.0}, 0.01, 0.3, 0.3, 0.01, 1.0, 33};
     
 
-    epi_mm (0.0, 0.0, &test_cal_1, &test_cal_2, test_mm, &test_vpar, \
+    epi_mm (0.0, 0.0, &test_cal_1, &test_cal_2, &test_mm, &test_vpar, \
     &xmin, &xmax, &ymin, &ymax);
 
 

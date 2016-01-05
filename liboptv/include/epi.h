@@ -30,11 +30,11 @@ coord_2d;
 	
 
 void epi_mm (double xl, double yl, Calibration *cal1,
-    Calibration *cal2, mm_np mmp, volume_par *vpar,
+    Calibration *cal2, mm_np *mmp, volume_par *vpar,
     double *xmin, double *ymin, double *xmax, double *ymax);
     
 void  epi_mm_2D (double xl, double yl, Calibration *cal1,
-    mm_np mmp, volume_par *vpar, vec3d out);
+    mm_np *mmp, volume_par *vpar, vec3d out);
     
 void find_candidate(coord_2d *crd, target *pix, int num,
     double xa, double ya, double xb, double yb,
