@@ -16,7 +16,7 @@ int dumbbell_pyptv = 0;
         in [mm].
     Calibration *cal1 - position of the origin camera
     Calibration *cal2 - position of camera on which the line is projected.
-    mm_np mmp - multimedia model of the experiment.
+    mm_np *mmp - pointer to multimedia model of the experiment.
     volume_par *vpar - limits the search in 3D for the epipolar line
 
     Output:
@@ -25,14 +25,14 @@ int dumbbell_pyptv = 0;
 */
 
 void epi_mm (double xl, double yl, Calibration *cal1,
-    Calibration *cal2, mm_np mmp, volume_par *vpar,
+    Calibration *cal2, mm_np *mmp, volume_par *vpar,
     double *xmin, double *ymin, double *xmax, double *ymax){
 
     double Zmin, Zmax;
     vec3d pos, v, X; 
 
 
-    ray_tracing (xl, yl, cal1, mmp, pos, v);
+    ray_tracing (xl, yl, cal1, *mmp, pos, v);
 
     /* calculate min and max depth for position (valid only for one setup) */
     Zmin = vpar->Zmin_lay[0]
@@ -44,10 +44,10 @@ void epi_mm (double xl, double yl, Calibration *cal1,
     (vpar->X_lay[1] - vpar->X_lay[0]);
 
     move_along_ray(Zmin, pos, v, X);
-    flat_image_coord (X, cal2, &mmp, xmin, ymin);
+    flat_image_coord (X, cal2, mmp, xmin, ymin);
 
     move_along_ray(Zmax, pos, v, X);
-    flat_image_coord (X, cal2, &mmp, xmax, ymax);
+    flat_image_coord (X, cal2, mmp, xmax, ymax);
 }
 
 
@@ -63,7 +63,7 @@ void epi_mm (double xl, double yl, Calibration *cal1,
     Arguments:
     double xl, yl - position of the point in the camera image space [mm].
     Calibration *cal1 - position of the camera
-    mm_np mmp - multimedia model of the experiment.
+    mm_np *mmp - pointer to multimedia model of the experiment.
     volume_par *vpar - limits the search in 3D for the epipolar line.
     
     Output:
@@ -71,13 +71,13 @@ void epi_mm (double xl, double yl, Calibration *cal1,
         Zmax, which are estimated using volume limits provided in vpar.
 */
       
-void epi_mm_2D (double xl, double yl, Calibration *cal1, mm_np mmp, volume_par *vpar, 
+void epi_mm_2D (double xl, double yl, Calibration *cal1, mm_np *mmp, volume_par *vpar, 
     vec3d out){
 
   vec3d pos, v;
   double Zmin, Zmax;
     
-  ray_tracing (xl, yl, cal1, mmp, pos, v);
+  ray_tracing (xl, yl, cal1, *mmp, pos, v);
       
   Zmin = vpar->Zmin_lay[0]
     + (pos[0] - vpar->X_lay[0]) * (vpar->Zmin_lay[1] - vpar->Zmin_lay[0]) / 
