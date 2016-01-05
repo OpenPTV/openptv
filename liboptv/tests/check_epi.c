@@ -292,7 +292,7 @@ START_TEST(test_find_candidate)
     int is_sorted = 1;
     
     find_candidate (test_crd, test_pix, num_pix, xa, ya, xb, yb, n, nx, ny, sumg,
-        test_cand, &count, &test_vpar, test_cpar, &test_cal, is_sorted);
+        test_cand, &count, &test_vpar, test_cpar, &test_cal);
 
     double sum_corr;
     

@@ -113,8 +113,8 @@ void epi_mm_2D (double xl, double yl, Calibration *cal1, mm_np *mmp, volume_par 
     
     Outputs:
     candidate cand[] - array of candidate properties. The .pnr property of cand
-        points to an index in the corrected detections array (``crd``). The
-        indexing depends on whether the corrected array is x-sorted
+        points to an index in the x-sorted corrected detections array 
+        (``crd``).
     int *count - the number of selected candidates, length of cand array.
     
     Extra configuration Arguments:
@@ -122,40 +122,12 @@ void epi_mm_2D (double xl, double yl, Calibration *cal1, mm_np *mmp, volume_par 
     control_par *cpar - general scene data s.a. image size.
     Calibration *cal - position and other parameters on the camera seeing 
         the candidates.
-    int is_sorted - determines whether target numbering according to the 
-        x-sorted list or by point number. See discussion below.
-    
-    Warning:
-    the minimum number of candidates to initialise the array at different versions 
-    was 4 or 8, hard-coded and it could be up to MAXCAND which is a global parameter at 
-    the moment.
 */
-
-/* very useful discussion on the mailing list brought us to the understanding that this 
-   function is used twice with two different strategies:
-
-   1. for the correspondences_4 we can abuse the pointer and use 
-
-        cand[*count].pnr = j; 
-
-      where 'j' is the row number if the geo [] list sorted by x later, in 
-      correspondences_4 the same list is used in all the cameras and the same 
-      index is used for the pointer and the best candidates are taken from the
-      top of the list.
-    
-   2. for any other function, where this re-sorting does not occur and the 
-      pointer is the correct information, then we have to use 
-
-        cand[*count].pnr = p2;
-   https://groups.google.com/forum/#!searchin/openptv/find_candidate/openptv/SxC0GruS8mY/UxB56yq-mEgJ
-*/
-
 void find_candidate (coord_2d *crd, target *pix, int num, 
     double xa, double ya, double xb, double yb, int n, int nx, int ny, int sumg, 
     candidate cand[], int *count, volume_par *vpar, control_par *cpar, 
-    Calibration *cal, int is_sorted){
-
-
+    Calibration *cal)
+{
   register int	j;
   int	       	j0, dj, p2;
   double      	m, b, d, temp, qn, qnx, qny, qsumg, corr;
@@ -163,10 +135,7 @@ void find_candidate (coord_2d *crd, target *pix, int num,
   int           dumbbell = 0;
   double 		tol_band_width;
   
-
-    
   tol_band_width = vpar->eps0;
-  
  
   /* define sensor format for search interrupt */
   xmin = (-1) * cpar->pix_x * cpar->imx/2;	xmax = cpar->pix_x * cpar->imx/2;
@@ -257,14 +226,8 @@ void find_candidate (coord_2d *crd, target *pix, int num,
             
       /* prefer matches with brighter targets */
       corr *= ((double) (sumg + pix[p2].sumg));
-
-      /* when called from correspondences_4 is_sorted = 1
-         when called from mousefunction is_sorted = 0 */ 
-      if (is_sorted == 1) 
-          cand[*count].pnr = j;
-      else 
-          cand[*count].pnr = p2;
-
+      
+      cand[*count].pnr = j;
       cand[*count].tol = d;
       cand[*count].corr = corr;
       (*count)++;
