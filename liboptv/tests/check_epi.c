@@ -215,7 +215,7 @@ START_TEST(test_find_candidate)
     /* coord_2d is int pnr, double x,y */
     coord_2d test_crd[] = {
         {0, 0.0, 0.0},
-        {6, 0.1, 0.1},
+        {6, 0.1, 0.1}, /* best candidate, right on the diagonal */
         {3, 0.2, 0.8},
         {4, 0.4, -1.1},
         {1, 0.7, -0.1},
@@ -229,7 +229,7 @@ START_TEST(test_find_candidate)
     int ny = 3;
     int sumg = 100;
     
-    candidate test_cand[MAXCAND];
+    candidate test_cand[7];
     
     int count; 
     
@@ -289,13 +289,16 @@ START_TEST(test_find_candidate)
     double xb = 10.;
     double yb = 10.;
     
-    int is_sorted = 1;
-    
     find_candidate (test_crd, test_pix, num_pix, xa, ya, xb, yb, n, nx, ny, sumg,
         test_cand, &count, &test_vpar, test_cpar, &test_cal);
     
     free_control_par(test_cpar);
+    
+    /* expected results: */
+    fail_unless(test_cand[0].pnr = 1);
+    fail_unless(test_cand[0].tol < EPS);
 
+    /* regression guard */
     double sum_corr;
     for (i = 0; i < count; i++) {
     	sum_corr += test_cand[i].corr;
