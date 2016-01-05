@@ -7,10 +7,7 @@
 #include "epi.h"
 #include "multimed.h"
 
-
 #define EPS 1E-5
-
-
 
 START_TEST(test_epi_mm_2D)
 {
@@ -200,67 +197,43 @@ END_TEST
 START_TEST(test_find_candidate)
 {
 
-int i;
+    int i;
+    /* set of particles to choose from */
 
-/* 
-typedef struct
-{
-  int     pnr;
-  double  x, y;
-  int     n, nx, ny, sumg;
-  int     tnr;
-}
-target;
-*/ 
+    target test_pix[] = {
+        {0, 0.0, -0.2, 5, 1, 2, 10, -999},
+        {6, 0.2, 0.0, 10, 8, 1, 20, -999},
+        {3, 0.2, 0.8, 10, 3, 3, 30, -999},
+        {4, 0.4, -1.1, 10, 3, 3, 40, -999},
+        {1, 0.7, -0.1, 10, 3, 3, 50, -999},
+        {7, 1.2, 0.3, 10, 3, 3, 60, -999},
+        {5, 10.4, 0.1, 10, 3, 3, 70, -999}
+    };
+    			   
+    int num_pix = 7; /* length of the test_pix */
 
-/* set of particles to choose from 
+    /* coord_2d is int pnr, double x,y */
+    coord_2d test_crd[] = {
+        {0, 0.0, 0.0},
+        {6, 0.1, 0.1},
+        {3, 0.2, 0.8},
+        {4, 0.4, -1.1},
+        {1, 0.7, -0.1},
+        {7, 1.2, 0.3},
+        {5, 10.4, 0.1}
+    };
 
-following the discussion on the mailing list we need to test this function
-with sorted and unsorted lists
-
-*/
-
-target test_pix[] = {{0, 0.0, -0.2, 5, 1, 2, 10, -999},
-					 {6, 0.2, 0.0, 10, 8, 1, 20, -999},
-					 {3, 0.2, 0.8, 10, 3, 3, 30, -999},
-					 {4, 0.4, -1.1, 10, 3, 3, 40, -999},
-					 {1, 0.7, -0.1, 10, 3, 3, 50, -999},
-					 {7, 1.2, 0.3, 10, 3, 3, 60, -999},
-					 {5, 10.4, 0.1, 10, 3, 3, 70, -999}
-					 };
-				   
-int num = 7; /* length of the test_pix */
-
-/* coord_2d is int pnr, double x,y */
-coord_2d test_crd[] = {{0, 0.0, 0.0},
-					 {6, 0.1, 0.1},
-					 {3, 0.2, 0.8},
-					 {4, 0.4, -1.1},
-					 {1, 0.7, -0.1},
-					 {7, 1.2, 0.3},
-					 {5, 10.4, 0.1}
-					 };
-
-
-
-/* parameters of the particle for which we look for the candidates */
-int n = 10; 
-int nx = 3; 
-int ny = 3;
-int sumg = 100;
-
-/*
-typedef struct {
-  int  	pnr;
-  double  tol, corr;
-} candidate;
-*/
-
-candidate test_cand[MAXCAND];
-
-int count; 
-
-Exterior test_Ex = {
+    /* parameters of the particle for which we look for the candidates */
+    int n = 10; 
+    int nx = 3; 
+    int ny = 3;
+    int sumg = 100;
+    
+    candidate test_cand[MAXCAND];
+    
+    int count; 
+    
+    Exterior test_Ex = {
         0.0, 0.0, 100.0,
         0.0, 0.0, 0.0, 
         {{1.0, 0.0, 0.0}, 
@@ -279,11 +252,10 @@ Exterior test_Ex = {
     	{5.0, 0.0, 0.0},
     	1.33,
     	1};
-    	
+    
     volume_par test_vpar = {
         {-250., 250.}, {-100., -100.}, {100., 100.}, 0.01, 0.3, 0.3, 0.01, 1.0, 33
-        };
-        
+    };    
     
     /* prepare test control parameters, basically for pix_x  */
     int cam;
@@ -320,45 +292,42 @@ Exterior test_Ex = {
     test_cpar.mm->n3 = 1.33;
     test_cpar.mm->d[0] = 5;
     
-    
     /* the result is that the sensor size is 12.8 mm x 10.24 mm */
     
     /* epipolar line  */
-	double xa = -10.;
-	double ya = -10.;
-	double xb = 10.;
-	double yb = 10.;
-
-
-	int is_sorted = 1;
-	
-	find_candidate (test_crd, test_pix, num, xa, ya, xb, yb, n, nx, ny, sumg, \
-	test_cand, &count, &test_vpar, &test_cpar, &test_cal, is_sorted);
+    double xa = -10.;
+    double ya = -10.;
+    double xb = 10.;
+    double yb = 10.;
+    
+    int is_sorted = 1;
+    
+    find_candidate (test_crd, test_pix, num, xa, ya, xb, yb, n, nx, ny, sumg,
+        test_cand, &count, &test_vpar, &test_cpar, &test_cal, is_sorted);
 
     double sum_corr;
     
-    for (i = 0; i<count; i++){
-    	// printf("cand[%d]: %d %f %f \n " , i, test_cand[i].pnr, test_cand[i].tol, test_cand[i].corr);
+    for (i = 0; i < count; i++) {
     	sum_corr += test_cand[i].corr;
-    	}
-    	
+    }	
    
     ck_assert_msg( fabs(sum_corr - 2625.) < EPS && 
                    (count == 4)  && 
                     fabs(test_cand[3].tol  - 0.565685) < EPS,
          "\n Expected ...  \n  \
          but found %f %d %9.6f \n", sum_corr, count, test_cand[3].tol);	
- 
 }
 END_TEST
 
 Suite* fb_suite(void) {
     Suite *s = suite_create ("epi");
+    
     TCase *tc = tcase_create ("epi_test");
     tcase_add_test(tc, test_epi_mm_2D);
     tcase_add_test(tc, test_epi_mm_perpendicular);
     tcase_add_test(tc, test_epi_mm);    
     tcase_add_test(tc, test_find_candidate);
+    
     suite_add_tcase (s, tc);   
     return s;
 }
@@ -367,10 +336,10 @@ int main(void) {
     int number_failed;
     Suite *s = fb_suite ();
     SRunner *sr = srunner_create (s);
-    //srunner_run_all (sr, CK_ENV);
-    //srunner_run_all (sr, CK_SUBUNIT);
-    srunner_run_all (sr, CK_VERBOSE);
+    
+    srunner_run_all (sr, CK_ENV);
     number_failed = srunner_ntests_failed (sr);
+    
     srunner_free (sr);
     return (number_failed == 0) ? EXIT_SUCCESS : EXIT_FAILURE;
 }
