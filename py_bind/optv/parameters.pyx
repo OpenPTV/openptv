@@ -514,7 +514,6 @@ cdef class ControlParams:
             self._control_par[0].allCam_flag = 1
         else:
             self._control_par[0].allCam_flag = 0
-
         
     def get_tiff_flag(self):
         return self._control_par[0].tiff_flag != 0
@@ -525,27 +524,25 @@ cdef class ControlParams:
         else:
             self._control_par[0].tiff_flag = 0            
     
-    def get_image_xy(self, copy=True):
+    def get_image_size(self, copy=True):
         return (self._control_par[0].imx, self._control_par[0].imy)
     
-    def set_image_xy(self, image_xy_tuple):
-        if len(image_xy_tuple) != 2:
-            raise ValueError("Tuple passed as image size must have exactly two elements [x,y].")
+    def set_image_size(self, image_dims_tuple):
+        if len(image_dims_tuple) != 2:
+            raise ValueError("Tuple passed as image size must have exactly two elements (width,height).")
         # set the values
-        self._control_par[0].imx = image_xy_tuple[0]
-        self._control_par[0].imy = image_xy_tuple[1]
-        
-    def get_pix_x(self):
-        return self._control_par[0].pix_x
+        self._control_par[0].imx = image_dims_tuple[0]
+        self._control_par[0].imy = image_dims_tuple[1]
     
-    def set_pix_x(self, pix_x):
-        self._control_par[0].pix_x = pix_x
+    def get_pixel_size(self, copy=True):
+        return (self._control_par[0].pix_x, self._control_par[0].pix_y)
     
-    def get_pix_y(self):
-        return self._control_par[0].pix_y
-    
-    def set_pix_y(self, pix_y):
-        self._control_par[0].pix_y = pix_y
+    def set_pixel_size(self, pixel_size_tuple):
+        if len(pixel_size_tuple) != 2:
+            raise ValueError("Tuple passed as pixel size must have exactly two elements (width,height).")
+        # set the values
+        self._control_par[0].pix_x = pixel_size_tuple[0]
+        self._control_par[0].pix_y = pixel_size_tuple[1]
     
     def get_chfield(self):
         return self._control_par[0].chfield
