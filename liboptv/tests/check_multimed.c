@@ -47,8 +47,6 @@ START_TEST(test_init_mmLUT)
     cpar = read_control_par(filename);
     fail_if (cpar == NULL, "\n control parameter file reading failed\n ");
 
-    /* lut value is not in the parameter file */
-//    cpar->mm->lut = 0;
     mmlut test_mmlut[4], correct_mmlut[4]; 
      
     vec_set(correct_mmlut[0].origin, 0.0, 0.0, -250.00001105);
@@ -63,7 +61,7 @@ START_TEST(test_init_mmLUT)
              
     init_mmlut (vpar, cpar, cal);
     ck_assert_msg( 
-        fabs(cal->mmlut.origin[0] - correct_mmlut[0].origin[0]) < EPS && 
+        fabs(cal->mmlut.origin[0] - correct_mmlut[0].origin[0]) < EPS &&
         fabs(cal->mmlut.origin[1]- correct_mmlut[0].origin[1]) < EPS && 
         fabs(cal->mmlut.origin[2] - correct_mmlut[0].origin[2])  < EPS &&
         cal->mmlut.nr == correct_mmlut[i].nr &&
@@ -172,7 +170,6 @@ START_TEST(test_volumedimension)
     cpar = read_control_par(filename);
     fail_if (cpar == NULL, "\n control parameter file reading failed\n ");
 
-//    cpar->mm->lut = 1;
     cpar->mm->nlay = 1;
     cpar->num_cams = 2;
 
@@ -216,9 +213,6 @@ START_TEST(test_get_mmf_mmLUT)
     ck_assert_msg (file_exists(filename) == 1, "\n File %s does not exist\n", filename);
     cpar = read_control_par(filename);
     fail_if (cpar == NULL, "\n control parameter file reading failed\n ");
-
-    /* lut value is not in the parameter file */
-//    cpar->mm->lut = 0;
 
     mmlut correct_mmlut[4]; 
      
@@ -279,7 +273,6 @@ START_TEST(test_multimed_nlay)
     cpar = read_control_par(filename);
     fail_if (cpar == NULL, "\n control parameter file reading failed\n ");
     
-//    cpar->mm->lut = 0; // to start LUT initialization
     cpar->num_cams = 1; // only one camera test
 
     mmlut correct_mmlut[4];  
@@ -303,7 +296,7 @@ START_TEST(test_multimed_nlay)
         
     for (i=0; i < cpar->num_cams; i++){
        ck_assert_msg( 
-         fabs(Xq - correct_Xq) < EPS && 
+         fabs(Xq - correct_Xq) < EPS &&
          fabs(Yq - correct_Yq) < EPS,
          "\n Expected different correct_Xq, Yq values \n  \
          but found %10.8f %10.8f \n", Xq, Yq);

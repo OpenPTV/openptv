@@ -66,10 +66,6 @@ cdef class MultimediaParams:
             self.set_d(kwargs['d'])
         if kwargs.has_key('n3'):
             self.set_n3(kwargs['n3'])
-        if kwargs.has_key('lut'):
-            self.set_lut(kwargs['lut'])
-        else:
-            self.set_lut(0)
              
     cdef void set_mm_np(self, mm_np * other_mm_np_c_struct):
         free(self._mm_np)
@@ -486,7 +482,7 @@ cdef class ControlParams:
         self._multimedia_params = MultimediaParams()
         self._multimedia_params.set_mm_np(self._control_par[0].mm)
         
-    # Getters and setters 
+    # Getters and setters
     def get_num_cams(self):
         return self._control_par[0].num_cams
         
