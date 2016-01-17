@@ -21,6 +21,63 @@
 #include "imgcoord.h"
 #include "trafo.h"
 
+START_TEST(test_orient_v3)
+{
+    /*  */
+    Exterior test_Ex = {
+        0.0, 0.0, 100.0,
+        0.0, 0.0, 0.0, 
+        {{1.0, 0.0, 0.0}, 
+        {0.0, 1.0, 0.0},
+        {0.0, 0.0, 1.0}}};
+        
+    Exterior correct_Ex = {
+        0.0, 0.0, 100.0,
+        0.0, 0.0, 0.0, 
+        {{1.0, 0.0, 0.0}, 
+        {0.0, 1.0, 0.0},
+        {0.0, 0.0, 1.0}}};
+
+    
+    Interior test_I = {0.0, 0.0, 100.0};
+    Glass test_G = {0.0, 0.0, 50.0};
+    ap_52 test_addp = {0., 0., 0., 0., 0., 1., 0.};
+    Calibration test_cal = {test_Ex, test_I, test_G, test_addp};
+    
+    mm_np test_mm = {
+        1, 
+        1.0, 
+        {1.49, 0.0, 0.0}, 
+        {5.0, 0.0, 0.0},
+        1.33,
+        1};
+    
+    target test_pix[] = {
+        {0, 0.0, -0.2, 5, 1, 2, 10, -999},
+        {6, 0.2, 0.0, 10, 8, 1, 20, -999},
+        {3, 0.2, 0.8, 10, 3, 3, 30, -999},
+        {4, 0.4, -1.1, 10, 3, 3, 40, -999},
+        {1, 0.7, -0.1, 10, 3, 3, 50, -999},
+        {7, 1.2, 0.3, 10, 3, 3, 60, -999},
+        {5, 10.4, 0.1, 10, 3, 3, 70, -999}
+};
+               
+    vec2d test_crd[] = {
+        {0.0, 0.0},
+        {0.1, 0.1}, /* best candidate, right on the diagonal */
+        {0.2, 0.8},
+        {0.4, -1.1},
+        {0.7, -0.1},
+        {1.2, 0.3},
+        {10.4, 0.1}
+};
+
+    // orient_v3(test_cal, mm, int nfix, test_pix, test_crd, int ncam);
+    fail_unless(vec_cmp(test_cal.exp_par, correct_Ex));
+
+}
+END_TEST
+
 START_TEST(test_ray_distance_midpoint)
 {
     /* Generate simply-oriented skew rays with a known distance and get that
@@ -187,6 +244,10 @@ Suite* orient_suite(void) {
     
     tc = tcase_create ("Convergence measures");
     tcase_add_test(tc, test_convergence_measure);
+    suite_add_tcase (s, tc);
+    
+    tc = tcase_create ("Orientation v3");
+    tcase_add_test(tc, test_orient_v3);
     suite_add_tcase (s, tc);
 
     return s;
