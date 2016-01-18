@@ -23,57 +23,46 @@
 
 START_TEST(test_orient_v3)
 {
-    /*  */
-    Exterior test_Ex = {
-        0.0, 0.0, 100.0,
-        0.0, 0.0, 0.0, 
-        {{1.0, 0.0, 0.0}, 
-        {0.0, 1.0, 0.0},
-        {0.0, 0.0, 1.0}}};
-        
-    Exterior correct_Ex = {
-        0.0, 0.0, 100.0,
-        0.0, 0.0, 0.0, 
-        {{1.0, 0.0, 0.0}, 
-        {0.0, 1.0, 0.0},
-        {0.0, 0.0, 1.0}}};
+    /* a copy of test_sortgrid */
+    
+    Calibration *cal;
+    control_par *cpar;
+    vec3d fix[100];
+    target pix[2];
+    int nfix, i;
+    int eps, correct_eps = 25;
 
-    
-    Interior test_I = {0.0, 0.0, 100.0};
-    Glass test_G = {0.0, 0.0, 50.0};
-    ap_52 test_addp = {0., 0., 0., 0., 0., 1., 0.};
-    Calibration test_cal = {test_Ex, test_I, test_G, test_addp};
-    
-    mm_np test_mm = {
-        1, 
-        1.0, 
-        {1.49, 0.0, 0.0}, 
-        {5.0, 0.0, 0.0},
-        1.33,
-        1};
-    
-    target test_pix[] = {
-        {0, 0.0, -0.2, 5, 1, 2, 10, -999},
-        {6, 0.2, 0.0, 10, 8, 1, 20, -999},
-        {3, 0.2, 0.8, 10, 3, 3, 30, -999},
-        {4, 0.4, -1.1, 10, 3, 3, 40, -999},
-        {1, 0.7, -0.1, 10, 3, 3, 50, -999},
-        {7, 1.2, 0.3, 10, 3, 3, 60, -999},
-        {5, 10.4, 0.1, 10, 3, 3, 70, -999}
-};
-               
-    vec2d test_crd[] = {
-        {0.0, 0.0},
-        {0.1, 0.1}, /* best candidate, right on the diagonal */
-        {0.2, 0.8},
-        {0.4, -1.1},
-        {0.7, -0.1},
-        {1.2, 0.3},
-        {10.4, 0.1}
-};
+    eps = read_sortgrid_par("testing_fodder/parameters/sortgrid.par");
+    fail_unless(eps == correct_eps);
 
-    // orient_v3(test_cal, mm, int nfix, test_pix, test_crd, int ncam);
-    fail_unless(vec_cmp(test_cal.exp_par, correct_Ex));
+
+    char *file_base = "testing_fodder/sample_";
+    int frame_num = 42;
+    int targets_read = 0;
+
+    targets_read = read_targets(pix, file_base, frame_num);
+    fail_unless(targets_read == 2);
+
+
+    char ori_file[] = "testing_fodder/cal/cam1.tif.ori";
+    char add_file[] = "testing_fodder/cal/cam1.tif.addpar";
+
+    fail_if((cal = read_calibration(ori_file, add_file, NULL)) == 0);
+
+    fail_if((cpar = read_control_par("testing_fodder/parameters/ptv.par")) == 0);
+
+    fail_if((nfix = read_calblock(fix,"testing_fodder/cal/calblock.txt")) != 5);   
+
+    sortgrid (cal, cpar, nfix, fix, targets_read, eps, pix);
+    fail_unless(pix[0].pnr == -999);
+    fail_unless(pix[1].pnr == -999);
+
+    sortgrid (cal, cpar, nfix, fix, targets_read, 120, pix);
+    fail_unless(pix[1].pnr == 2);
+    fail_unless(pix[1].x == 796);
+    
+    /* now we can do orientation */
+    
 
 }
 END_TEST

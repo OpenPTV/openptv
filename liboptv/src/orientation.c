@@ -164,26 +164,28 @@ double weighted_dumbbell_precision(vec2d** targets, int num_targs, int num_cams,
     mm_np *mm       - multimedia parameters struct for ray tracing through several layers.
     Calibration* cal  -      camera calibration object.
     int nfix	-	 # of object points 
-    vec3d fix[]	-	 object point data 
-    vec2d crd[]	-	 image coordinates 
+    vec3d fix[]	-	 object point data obtained using read_calblock() function and 
+                    represents the known calibration body 3D points
+    target pix[] -	image coordinates obtained from sortgrid(). The points which are 
+                    associated with fix[] have real pointer (i+1), others have -999
     int ncam  -		image number for residual display 
 */
 
 
-void orient_v3 (Calibration* cal, mm_np *mm, int nfix, vec3d fix[], vec2d crd[], int ncam)
-{
+void orient_v3 (Calibration* cal, mm_np *mm, control_par *cpar, int nfix, vec3d fix[], 
+                target pix[], int ncam) {
     int  	i,j,n, itnum, stopflag, n_obs=0, convergeflag;
     int  	useflag, ccflag, scxflag, sheflag, interfflag, xhflag, yhflag,
             k1flag, k2flag, k3flag, p1flag, p2flag;
     int  	intx1, intx2, inty1, inty2;
     
     double  ident[10], XPX[19][19], XPy[19], beta[19], omega=0, sigma0, sigmabeta[19]; 
-    double 	xp, yp, xpd, ypd, r, qq, p, sumP;
+    double 	xp, yp, xpd, ypd, xc, yc, r, qq, p, sumP;
     
     int dummy, multi,numbers;
     
     FILE *par_file;
-    double al,be,ga,nGl,e1_x,e1_y,e1_z,e2_x,e2_y,e2_z,n1,n2,safety_x,safety_y,safety_z;
+    double al,be,ga,nGl,e1_x,e1_y,e1_z,e2_x,e2_y,e2_z,safety_x,safety_y,safety_z;
     double *P, *y, *Xbeta, *resi, *pixnr;
     vec3d glass_dir, tmp_vec, e1, e2, pos;
     
@@ -287,20 +289,24 @@ void orient_v3 (Calibration* cal, mm_np *mm, int nfix, vec3d fix[], vec2d crd[],
         {
   
           itnum++;
-    
-          for (i=0, n=0; i<nfix; i++) if (crd[i].pnr == fix[i].pnr) 
-          {
-          /* use only certain points as control points */
-          switch (useflag)
-            {
-            case 1: if ((fix[i].pnr % 2) == 0)  continue;  break;
-            case 2: if ((fix[i].pnr % 2) != 0)  continue;  break;
-            case 3: if ((fix[i].pnr % 3) == 0)  continue;  break;
-            }
+ 
+          for (i=0, n=0; i<nfix; i++)
+          { 
+            /* note that we do not use anymore pointer in fix, the points are read by 
+            the order of appearance and if we want to use every other point we use 'i' */
+            
+             /* use only certain points as control points */
+              switch (useflag)
+                {
+                case 1: if ((i % 2) == 0)  continue;  break;
+                case 2: if ((i % 2) != 0)  continue;  break;
+                case 3: if ((i % 3) == 0)  continue;  break;
+                }
 
           /* check for correct correspondence */
-          if (crd[i].pnr != fix[i].pnr)	continue;
-
+          if (pix[i].pnr == i+1) continue;
+          
+		  pixel_to_metric (&xc, &yc, pix[i].x, pix[i].y, &cpar);
 
           pixnr[n/2] = i;		/* for drawing residuals */
           vec_set(pos, fix[i].x, fix[i].y, fix[i].z);
@@ -341,16 +347,15 @@ void orient_v3 (Calibration* cal, mm_np *mm, int nfix, vec3d fix[], vec2d crd[],
           qq =  cal->added_par.k1*r*r; qq += cal->added_par.k2*pow(r,4.0);
           qq += cal->added_par.k3*pow(r,6.0);
           qq += 1;
-          X[n][14] = xp * qq + cal->added_par.p1 * (r*r + 2*xp*xp) + 2*cal->added_par.p2*xp*yp;
+          X[n][14] = xp * qq + cal->added_par.p1 * (r*r + 2*xp*xp) + \
+                                                                2*cal->added_par.p2*xp*yp;
           X[n+1][14] = 0;
 
           X[n][15] = -cos(cal->added_par.she) * yp;
           X[n+1][15] = -sin(cal->added_par.she) * yp;
 
 
-
-          /* numeric derivatives */
-          
+          /* numeric derivatives */          
           cal->ext_par.x0 += dm;
           img_coord (pos, cal, mm, &xpd, &ypd); 
           X[n][0]      = (xpd - xp) / dm;
@@ -441,11 +446,11 @@ void orient_v3 (Calibration* cal, mm_np *mm, int nfix, vec3d fix[], vec2d crd[],
           cal->glass_par.vec_y = safety_y;
           cal->glass_par.vec_z = safety_z;
   
-          y[n]   = crd[i].x - xp;
-          y[n+1] = crd[i].y - yp;
+          y[n]   = xc - xp;
+          y[n+1] = yc - yp;
 
           n += 2;
-        } // end if crd == fix
+        } // end the loop of nfix points 
   
   
           n_obs = n;
