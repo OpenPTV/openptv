@@ -172,7 +172,7 @@ double weighted_dumbbell_precision(vec2d** targets, int num_targs, int num_cams,
 */
 
 
-void orient_v3 (Calibration* cal, mm_np *mm, control_par *cpar, int nfix, vec3d fix[], 
+void orient (Calibration* cal, mm_np *mm, control_par *cpar, int nfix, vec3d fix[], 
                 target pix[], int ncam) {
     int  	i,j,n, itnum, stopflag, n_obs=0, convergeflag;
     int  	useflag, ccflag, scxflag, sheflag, interfflag, xhflag, yhflag,
