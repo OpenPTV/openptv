@@ -32,11 +32,11 @@ Description:	       	reads objects, detected by detection etc.,
     Control *cpar points to control parameters
     nfix is the integer number of points in the calibration text files or number of files 
     if the calibration is multiplane. 
-    coord_3d fix[] array of doubles of 3D positions of the calibration target points
+    vec3d fix[] array of doubles of 3D positions of the calibration target points
     num is the number of detected (by image processing) dots on the calibration image
     i_cam is the integer number of the camera
     Output:
-    pixel_pos calib_points[] structure of floating pixel positions (.x, .y) corresponding 
+    vec2d calib_points[] structure of floating pixel positions (.x, .y) corresponding 
     to the 3D points in structure fix. 
 */    
 void nearest_pixel_location (Calibration* cal, control_par *cpar, int nfix, vec3d fix[], 
@@ -65,7 +65,7 @@ vec2d calib_points[]){
     Calibration *cal pointer to calibration parameters
     Control *cpar pointer to control parameters
     nfix is the integer number of points in the calibration text file 
-    coord_3d fix[] structure 3d positions and integer identification pointers of 
+    vec3d fix[] structure 3d positions and integer identification pointers of 
     the calibration target points in the calibration file
     num is the number of detected (by image processing) dots on the calibration image
     Output:
@@ -122,7 +122,9 @@ void sortgrid (Calibration* cal, control_par *cpar, int nfix, vec3d fix[], int n
   the point.
    
   Arguments: 
-  target pix - database of all the particles in a given frame of a given camera
+  target pix - database of all the particles in a given frame of a given camera 
+    that have an ID (pnr), pixel  position, size of the dot, sum of grey values 
+    and another identification (tnr) for later tracking
   int num - number of particles in the database pix
   double x,y - position of a point (can be a mouse click or another particle center)
   double eps - a small floating value of epsilon defining the search region around x,y
