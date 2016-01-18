@@ -113,6 +113,7 @@ void sortgrid (Calibration* cal, control_par *cpar, int nfix, vec3d fix[], int n
     }
     
     free(calib_points);
+    free(old);
 }
 
 
