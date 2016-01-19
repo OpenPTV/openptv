@@ -37,6 +37,12 @@ add_dependencies(check_imgcoord optv)
 add_executable(check_sortgrid EXCLUDE_FROM_ALL check_sortgrid.c)
 add_dependencies(check_sortgrid optv)
 
+add_executable(check_orientation EXCLUDE_FROM_ALL check_orientation.c)
+add_dependencies(check_orientation optv)
+
+add_executable(check_epi EXCLUDE_FROM_ALL check_epi.c)
+add_dependencies(check_epi optv)
+
 get_property(OPTV_LIBRARY TARGET optv PROPERTY LOCATION)
 set(LIBS ${LIBS} ${CHECK_LIBRARIES} ${OPTV_LIBRARY})
 
@@ -117,10 +123,18 @@ add_custom_command(TARGET check_sortgrid PRE_BUILD
     COMMAND ${CMAKE_COMMAND} -E copy_directory
     ${CMAKE_CURRENT_SOURCE_DIR}/testing_fodder $<TARGET_FILE_DIR:check_sortgrid>/testing_fodder)
 
+target_link_libraries(check_orientation ${LIBS})
+add_test(check_orientation ${CMAKE_CURRENT_BINARY_DIR}/check_orientation)
+
+target_link_libraries(check_epi ${LIBS})
+add_test(check_epi ${CMAKE_CURRENT_BINARY_DIR}/check_epi)
  
+add_custom_command(TARGET check_orientation PRE_BUILD
+    COMMAND ${CMAKE_COMMAND} -E copy_directory
+    ${CMAKE_CURRENT_SOURCE_DIR}/testing_fodder $<TARGET_FILE_DIR:check_orientation>/testing_fodder)
     
 add_custom_target(verify COMMAND ${CMAKE_CTEST_COMMAND})
 add_dependencies(verify check_fb check_calibration check_parameters check_lsqadj \ 
 check_ray_tracing check_trafo check_vec_utils check_image_proc check_multimed \ 
-check_imgcoord check_sortgrid)
+check_imgcoord check_orientation check_epi check_sortgrid)
 
