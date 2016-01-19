@@ -19,6 +19,7 @@
 #include "vec_utils.h"
 #include "parameters.h"
 #include "imgcoord.h"
+#include "sortgrid.h"
 #include "trafo.h"
 
 START_TEST(test_orient_v3)
@@ -60,6 +61,9 @@ START_TEST(test_orient_v3)
     sortgrid (cal, cpar, nfix, fix, targets_read, 120, pix);
     fail_unless(pix[1].pnr == 2);
     fail_unless(pix[1].x == 796);
+    
+    printf("%d %d\n", pix[0].pnr, pix[1].pnr);
+    orient (cal, cpar, nfix, fix, pix);
     
     /* now we can do orientation */
     
