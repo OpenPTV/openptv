@@ -9,6 +9,7 @@
 #include "imgcoord.h"
 #include "multimed.h"   
 #include "trafo.h"
+#include "orientation.h"
 #include "vec_utils.h"
 #include <stdio.h>
 
