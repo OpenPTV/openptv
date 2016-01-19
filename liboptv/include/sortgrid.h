@@ -10,10 +10,8 @@
 #include "multimed.h"   
 #include "trafo.h"
 #include "vec_utils.h"
+#include "orientation.h"
 #include <stdio.h>
-
-// to be removed when #78 is merged
-typedef double vec2d[2];
 
 				   
 void sortgrid (Calibration* cal, control_par *cpar, int nfix, vec3d fix[], int num,

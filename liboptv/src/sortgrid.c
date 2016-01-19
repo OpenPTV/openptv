@@ -86,6 +86,7 @@ void sortgrid (Calibration* cal, control_par *cpar, int nfix, vec3d fix[], int n
   old = (target *) malloc(num * sizeof(target));
 
   /* copy and re-initialize pixel data before sorting and remove pointer */
+  /* THERE IS A BUG WHEN NUM < NFIX */
   for (i=0; i<num; i++)
   {	
     old[i] = pix[i]; 
@@ -103,9 +104,9 @@ void sortgrid (Calibration* cal, control_par *cpar, int nfix, vec3d fix[], int n
            calib_points[i][0] < cpar->imx + eps  && calib_points[i][1]< cpar->imy + eps){
                     
           /* find the nearest target point */
-          j =nearest_neighbour_pix(old, num, calib_points[i][0], calib_points[i][1], eps);
+          j = nearest_neighbour_pix(old, num, calib_points[i][0], calib_points[i][1], eps);
       
-          if (j != -999) { /* if found */
+          if (j != -999) {              /* if found */
               pix[i] = old[j];          /* assign its row number */
               pix[i].pnr = i+1;         /* assign the pointer of a corresponding point */
             }
