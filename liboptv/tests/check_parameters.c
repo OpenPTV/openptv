@@ -43,7 +43,6 @@ START_TEST(test_read_compare_mm_np_par)
 	mm1.d[1]=0;
 	mm1.d[2]=0;
 	mm1.n3=3.6;
-	mm1.lut=5;
 
 	mm2.nlay=3;
 	mm2.n1=3.2;
@@ -54,7 +53,6 @@ START_TEST(test_read_compare_mm_np_par)
 	mm2.d[1]=0;
 	mm2.d[2]=0;
 	mm2.n3=3.5;
-	mm2.lut=4;
 
 	fail_if (compare_mm_np(&mm1,&mm2) == 1);
 }
