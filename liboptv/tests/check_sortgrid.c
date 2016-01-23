@@ -76,6 +76,7 @@ START_TEST(test_sortgrid)
     control_par *cpar;
     vec3d fix[100];
     target pix[2];
+    target *sorted_pix;
     int nfix, i;
     int eps, correct_eps = 25;
 
@@ -100,13 +101,13 @@ START_TEST(test_sortgrid)
 
     fail_if((nfix = read_calblock(fix,"testing_fodder/cal/calblock.txt")) != 5);   
 
-    sortgrid (cal, cpar, nfix, fix, targets_read, eps, pix);
-    fail_unless(pix[0].pnr == -999);
-    fail_unless(pix[1].pnr == -999);
+    sorted_pix = sortgrid (cal, cpar, nfix, fix, targets_read, eps, pix);
+    fail_unless(sorted_pix[0].pnr == -999);
+    fail_unless(sorted_pix[1].pnr == -999);
 
-    sortgrid (cal, cpar, nfix, fix, targets_read, 120, pix);
-    fail_unless(pix[1].pnr == 1);
-    fail_unless(pix[1].x == 796);
+    sorted_pix = sortgrid (cal, cpar, nfix, fix, targets_read, 120, pix);
+    fail_unless(sorted_pix[1].pnr == 1);
+    fail_unless(sorted_pix[1].x == 796);
     
 }
 END_TEST

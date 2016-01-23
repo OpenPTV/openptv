@@ -69,28 +69,26 @@ vec2d calib_points[]){
     the calibration target points in the calibration file
     num is the number of detected (by image processing) dots on the calibration image
     Output:
-    target pix[] is the array of targets or detected dots that have an ID (pnr), pixel 
-    position, size of the dot, sum of grey values and another identification (tnr)
+    target sorted_pix[] is the array of targets or detected dots that have an ID (pnr), 
+    pixel position, size of the dot, sum of grey values and another identification (tnr)
+    the pnr pointer is the row number of the dot in the calibration block file
 */
 
-void sortgrid (Calibration* cal, control_par *cpar, int nfix, vec3d fix[], int num, 
+target* sortgrid (Calibration* cal, control_par *cpar, int nfix, vec3d fix[], int num, 
                 int eps, target pix[])
 {
   int	       	i, j;
   int	       	intx, inty;
   int           tmp;
-  target       	*old;
+  target       	*sorted_pix;
   vec2d         *calib_points;
     
   calib_points = (vec2d *) malloc(nfix * sizeof(vec2d));
-  old = (target *) malloc(num * sizeof(target));
+  
+  /* sorted pix should be just of the same size as fix[] */
+  sorted_pix = (target *) malloc(nfix * sizeof(target));
 
-  /* copy and re-initialize pixel data before sorting and remove pointer */
-  for (i=0; i<num; i++)
-  {	
-    old[i] = pix[i]; 
-    pix[i].pnr = -999;
-   }
+  for (i=0; i<nfix; i++) sorted_pix[i].pnr = -999;
   
 
   /* reproject all calibration plate points into pixel space */
@@ -103,17 +101,17 @@ void sortgrid (Calibration* cal, control_par *cpar, int nfix, vec3d fix[], int n
            calib_points[i][0] < cpar->imx + eps  && calib_points[i][1]< cpar->imy + eps){
                     
           /* find the nearest target point */
-          j = nearest_neighbour_pix(old, num, calib_points[i][0], calib_points[i][1], eps);
+          j = nearest_neighbour_pix(pix, num, calib_points[i][0], calib_points[i][1], eps);
       
-          if (j != -999) { /* if found */
-              pix[i] = old[j];          /* assign its row number */
-              pix[i].pnr = i;          /* assign the pointer of a row number of a point */
+          if (j != -999) {              /* if found */
+              sorted_pix[i] = pix[j];          /* assign its row number */
+              sorted_pix[i].pnr = i;          /* pointer is a row number of a point */
             }
         }
     }
     
     free(calib_points);
-    free(old);
+    return(sorted_pix);
 }
 
 

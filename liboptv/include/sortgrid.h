@@ -14,7 +14,7 @@
 #include <stdio.h>
 
 			   
-void sortgrid (Calibration* cal, control_par *cpar, int nfix, vec3d fix[], int num,
+target* sortgrid (Calibration* cal, control_par *cpar, int nfix, vec3d fix[], int num,
     int eps, target pix[]);
     				
 void nearest_pixel_location (Calibration* cal, control_par *cpar, int nfix, vec3d fix[], 
