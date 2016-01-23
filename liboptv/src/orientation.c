@@ -297,275 +297,275 @@ void orient (Calibration* cal, control_par *cpar, int nfix, vec3d fix[], target 
 
     itnum = 0;  stopflag = 0;
     while ((stopflag == 0) && (itnum < NUM_ITER))
+    {
+
+      itnum++;
+
+      for (i=0, n=0; i<nfix; i++)
+      {
+
+         /* use only certain points as control points */
+        switch (useflag)
         {
-
-          itnum++;
-
-          for (i=0, n=0; i<nfix; i++)
-          {
-            /* note that we do not use anymore pointer in fix, the points are read by
-            the order of appearance and if we want to use every other point we use 'i' */
-
-             /* use only certain points as control points */
-          switch (useflag)
-            {
-            case 1: if ((i % 2) == 0)  continue;  break;
-            case 2: if ((i % 2) != 0)  continue;  break;
-            case 3: if ((i % 3) == 0)  continue;  break;
-            }
-
-          /* check for correct correspondence */
-          if (pix[i].pnr == i+1) continue;
-
-    		  pixel_to_metric (&xc, &yc, pix[i].x, pix[i].y, cpar);
-
-          pixnr[n/2] = i;		/* for drawing residuals */
-          vec_set(pos, fix[i][0], fix[i][1], fix[i][2]);
-          rotation_matrix(&(cal->ext_par));
-          img_coord (pos, cal, cpar->mm, &xp, &yp);
-
-      /*
-          if ((i % 100) == 0){
-           printf("\n %d %f %f %f %d %d %f %f \n",i,Xp,Yp,Zp,crd[i].pnr, fix[i].pnr,xp,yp);
-          }
-     */
-
-          /* derivatives of additional parameters */
-
-          r = sqrt (xp*xp + yp*yp);
-
-          X[n][7] = cal->added_par.scx;
-          X[n+1][7] = sin(cal->added_par.she);
-
-          X[n][8] = 0;
-          X[n+1][8] = 1;
-
-          X[n][9] = cal->added_par.scx * xp * r*r;
-          X[n+1][9] = yp * r*r;
-
-          X[n][10] = cal->added_par.scx * xp * pow(r,4.0);
-          X[n+1][10] = yp * pow(r,4.0);
-
-          X[n][11] = cal->added_par.scx * xp * pow(r,6.0);
-          X[n+1][11] = yp * pow(r,6.0);
-
-          X[n][12] = cal->added_par.scx * (2*xp*xp + r*r);
-          X[n+1][12] = 2 * xp * yp;
-
-          X[n][13] = 2 * cal->added_par.scx * xp * yp;
-          X[n+1][13] = 2*yp*yp + r*r;
-
-          qq =  cal->added_par.k1*r*r; qq += cal->added_par.k2*pow(r,4.0);
-          qq += cal->added_par.k3*pow(r,6.0);
-          qq += 1;
-          X[n][14] = xp * qq + cal->added_par.p1 * (r*r + 2*xp*xp) + \
-                                                                2*cal->added_par.p2*xp*yp;
-          X[n+1][14] = 0;
-
-          X[n][15] = -cos(cal->added_par.she) * yp;
-          X[n+1][15] = -sin(cal->added_par.she) * yp;
-
-
-          /* numeric derivatives */
-          cal->ext_par.x0 += dm;
-          img_coord (pos, cal, cpar->mm, &xpd, &ypd);
-          X[n][0]      = (xpd - xp) / dm;
-          X[n+1][0] = (ypd - yp) / dm;
-          cal->ext_par.x0 -= dm;
-
-          cal->ext_par.y0 += dm;
-          img_coord (pos, cal, cpar->mm, &xpd, &ypd);
-          X[n][1]   = (xpd - xp) / dm;
-          X[n+1][1] = (ypd - yp) / dm;
-          cal->ext_par.y0 -= dm;
-
-          cal->ext_par.z0 += dm;
-          img_coord (pos, cal, cpar->mm, &xpd, &ypd);
-          X[n][2]      = (xpd - xp) / dm;
-          X[n+1][2] = (ypd - yp) / dm;
-          cal->ext_par.z0 -= dm;
-
-          cal->ext_par.omega += drad;
-          rotation_matrix(&(cal->ext_par));
-          img_coord (pos, cal, cpar->mm, &xpd, &ypd);
-          X[n][3]      = (xpd - xp) / drad;
-          X[n+1][3] = (ypd - yp) / drad;
-          cal->ext_par.omega -= drad;
-
-          cal->ext_par.phi += drad;
-          rotation_matrix(&(cal->ext_par));
-          img_coord (pos, cal, cpar->mm, &xpd, &ypd);
-          X[n][4]      = (xpd - xp) / drad;
-          X[n+1][4] = (ypd - yp) / drad;
-          cal->ext_par.phi -= drad;
-
-          cal->ext_par.kappa += drad;
-          rotation_matrix(&(cal->ext_par));
-          img_coord (pos, cal, cpar->mm, &xpd, &ypd);
-          X[n][5]      = (xpd - xp) / drad;
-          X[n+1][5] = (ypd - yp) / drad;
-          cal->ext_par.kappa -= drad;
-
-          cal->int_par.cc += dm;
-          rotation_matrix(&(cal->ext_par));
-          img_coord (pos, cal, cpar->mm, &xpd, &ypd);
-          X[n][6]      = (xpd - xp) / dm;
-          X[n+1][6] = (ypd - yp) / dm;
-          cal->int_par.cc -= dm;
-
-
-          al += dm;
-          cal->glass_par.vec_x += e1[0]*nGl*al;
-          cal->glass_par.vec_y += e1[1]*nGl*al;
-          cal->glass_par.vec_z += e1[2]*nGl*al;
-
-          img_coord (pos, cal, cpar->mm, &xpd, &ypd);
-          X[n][16]      = (xpd - xp) / dm;
-          X[n+1][16] = (ypd - yp) / dm;
-
-          al -= dm;
-          cal->glass_par.vec_x = safety_x;
-          cal->glass_par.vec_y = safety_y;
-          cal->glass_par.vec_z = safety_z;
-
-          //cal->glass_par.vec_y += dm;
-          be += dm;
-          cal->glass_par.vec_x += e2[0]*nGl*be;
-          cal->glass_par.vec_y += e2[1]*nGl*be;
-          cal->glass_par.vec_z += e2[2]*nGl*be;
-
-          img_coord (pos, cal, cpar->mm, &xpd, &ypd);
-          X[n][17]      = (xpd - xp) / dm;
-          X[n+1][17] = (ypd - yp) / dm;
-
-          be -= dm;
-          cal->glass_par.vec_x = safety_x;
-          cal->glass_par.vec_y = safety_y;
-          cal->glass_par.vec_z = safety_z;
-
-          ga += dm;
-          cal->glass_par.vec_x += cal->glass_par.vec_x*nGl*ga;
-          cal->glass_par.vec_y += cal->glass_par.vec_y*nGl*ga;
-          cal->glass_par.vec_z += cal->glass_par.vec_z*nGl*ga;
-
-          img_coord (pos, cal, cpar->mm, &xpd, &ypd);
-          X[n][18]      = (xpd - xp) / dm;
-          X[n+1][18] = (ypd - yp) / dm;
-
-          ga -= dm;
-          cal->glass_par.vec_x = safety_x;
-          cal->glass_par.vec_y = safety_y;
-          cal->glass_par.vec_z = safety_z;
-
-          y[n]   = xc - xp;
-          y[n+1] = yc - yp;
-
-          n += 2;
-        } // end the loop of nfix points
-
-
-          n_obs = n;
-
-          /* identities */
-
-          for (i=0; i<10; i++)  X[n_obs+i][6+i] = 1;
-
-          y[n_obs+0] = ident[0] - cal->int_par.cc;
-          y[n_obs+1] = ident[1] - cal->int_par.xh;
-          y[n_obs+2] = ident[2] - cal->int_par.yh;
-          y[n_obs+3] = ident[3] - cal->added_par.k1;
-          y[n_obs+4] = ident[4] - cal->added_par.k2;
-          y[n_obs+5] = ident[5] - cal->added_par.k3;
-          y[n_obs+6] = ident[6] - cal->added_par.p1;
-          y[n_obs+7] = ident[7] - cal->added_par.p2;
-          y[n_obs+8] = ident[8] - cal->added_par.scx;
-          y[n_obs+9] = ident[9] - cal->added_par.she;
-
-
-
-          /* weights */
-          for (i=0; i<n_obs; i++)  P[i] = 1;
-
-          if ( ! ccflag)  P[n_obs+0] = POS_INF;
-          if ( ! xhflag)  P[n_obs+1] = POS_INF;
-          if ( ! yhflag)  P[n_obs+2] = POS_INF;
-          if ( ! k1flag)  P[n_obs+3] = POS_INF;
-          if ( ! k2flag)  P[n_obs+4] = POS_INF;
-          if ( ! k3flag)  P[n_obs+5] = POS_INF;
-          if ( ! p1flag)  P[n_obs+6] = POS_INF;
-          if ( ! p2flag)  P[n_obs+7] = POS_INF;
-          if ( ! scxflag) P[n_obs+8] = POS_INF;
-          if ( ! sheflag) P[n_obs+9] = POS_INF;
-
-
-          n_obs += 10;  sumP = 0;
-          for (i=0; i<n_obs; i++)	       	/* homogenize */
-        {
-          p = sqrt (P[i]);
-          for (j=0; j<19; j++)  Xh[i][j] = p * X[i][j];
-          yh[i] = p * y[i];  sumP += P[i];
+        case 1: if ((i % 2) == 0)  continue;  break;
+        case 2: if ((i % 2) != 0)  continue;  break;
+        case 3: if ((i % 3) == 0)  continue;  break;
         }
 
+        /* check for correct correspondence 
+        note that we do not use anymore pointer in fix, the points are read by
+        the order of appearance and if we want to use every other point we use 'i' */
+        if (pix[i].pnr == i) continue;
 
+        pixel_to_metric (&xc, &yc, pix[i].x, pix[i].y, cpar);
 
-          /* Gauss Markoff Model */
-          numbers = 16;
+        pixnr[n/2] = i;		/* for drawing residuals */
+        vec_set(pos, fix[i][0], fix[i][1], fix[i][2]);
+        rotation_matrix(&(cal->ext_par));
+        img_coord (pos, cal, cpar->mm, &xp, &yp);
 
-          if(interfflag){
-             numbers = 18;
-          }
-
-          ata ((double *) Xh, (double *) XPX, n_obs, numbers, 19 );
-          matinv ((double *) XPX, numbers, 19);
-          atl ((double *) XPy, (double *) Xh, yh, n_obs, numbers, 19);
-          matmul ((double *) beta, (double *) XPX, (double *) XPy, numbers,numbers,1,19,19);
-
-          stopflag = 1;
-          convergeflag = 1;
-          for (i=0; i<numbers; i++)
-        {
-          if (fabs (beta[i]) > 0.0001)  stopflag = 0;	/* more iterations */////Achtung
-          if (fabs (beta[i]) > 0.01)  convergeflag = 0;
+        /*
+        if ((i % 100) == 0){
+        printf("\n %d %f %f %f %d %d %f %f \n",i,Xp,Yp,Zp,crd[i].pnr, fix[i].pnr,xp,yp);
         }
+        */
 
-          if ( ! ccflag) beta[6] = 0.0;
-          if ( ! xhflag) beta[7] = 0.0;
-          if ( ! yhflag) beta[8] = 0.0;
-          if ( ! k1flag) beta[9] = 0.0;
-          if ( ! k2flag) beta[10] = 0.0;
-          if ( ! k3flag) beta[11] = 0.0;
-          if ( ! p1flag) beta[12] = 0.0;
-          if ( ! p2flag) beta[13] = 0.0;
-          if ( ! scxflag)beta[14] = 0.0;
-          if ( ! sheflag) beta[15] = 0.0;
+        /* derivatives of additional parameters */
 
-          cal->ext_par.x0 += beta[0];
-          cal->ext_par.y0 += beta[1];
-          cal->ext_par.z0 += beta[2];
-          cal->ext_par.omega += beta[3];
-          cal->ext_par.phi += beta[4];
-          cal->ext_par.kappa += beta[5];
-          cal->int_par.cc += beta[6];
-          cal->int_par.xh += beta[7];
-          cal->int_par.yh += beta[8];
-          cal->added_par.k1 += beta[9];
-          cal->added_par.k2 += beta[10];
-          cal->added_par.k3 += beta[11];
-          cal->added_par.p1 += beta[12];
-          cal->added_par.p2 += beta[13];
-          cal->added_par.scx += beta[14];
-          cal->added_par.she += beta[15];
+        r = sqrt (xp*xp + yp*yp);
 
-          if(interfflag)
-          {
-              cal->glass_par.vec_x += e1[0]*nGl*beta[16];
-              cal->glass_par.vec_y += e1[1]*nGl*beta[16];
-              cal->glass_par.vec_z += e1[2]*nGl*beta[16];
-              cal->glass_par.vec_x += e2[0]*nGl*beta[17];
-              cal->glass_par.vec_y += e2[1]*nGl*beta[17];
-              cal->glass_par.vec_z += e2[2]*nGl*beta[17];
-          }
-          beta[0]=beta[0];
+        X[n][7] = cal->added_par.scx;
+        X[n+1][7] = sin(cal->added_par.she);
+
+        X[n][8] = 0;
+        X[n+1][8] = 1;
+
+        X[n][9] = cal->added_par.scx * xp * r*r;
+        X[n+1][9] = yp * r*r;
+
+        X[n][10] = cal->added_par.scx * xp * pow(r,4.0);
+        X[n+1][10] = yp * pow(r,4.0);
+
+        X[n][11] = cal->added_par.scx * xp * pow(r,6.0);
+        X[n+1][11] = yp * pow(r,6.0);
+
+        X[n][12] = cal->added_par.scx * (2*xp*xp + r*r);
+        X[n+1][12] = 2 * xp * yp;
+
+        X[n][13] = 2 * cal->added_par.scx * xp * yp;
+        X[n+1][13] = 2*yp*yp + r*r;
+
+        qq =  cal->added_par.k1*r*r; qq += cal->added_par.k2*pow(r,4.0);
+        qq += cal->added_par.k3*pow(r,6.0);
+        qq += 1;
+        X[n][14] = xp * qq + cal->added_par.p1 * (r*r + 2*xp*xp) + \
+                                                            2*cal->added_par.p2*xp*yp;
+        X[n+1][14] = 0;
+
+        X[n][15] = -cos(cal->added_par.she) * yp;
+        X[n+1][15] = -sin(cal->added_par.she) * yp;
+
+
+        /* numeric derivatives */
+        cal->ext_par.x0 += dm;
+        img_coord (pos, cal, cpar->mm, &xpd, &ypd);
+        X[n][0]      = (xpd - xp) / dm;
+        X[n+1][0] = (ypd - yp) / dm;
+        cal->ext_par.x0 -= dm;
+
+        cal->ext_par.y0 += dm;
+        img_coord (pos, cal, cpar->mm, &xpd, &ypd);
+        X[n][1]   = (xpd - xp) / dm;
+        X[n+1][1] = (ypd - yp) / dm;
+        cal->ext_par.y0 -= dm;
+
+        cal->ext_par.z0 += dm;
+        img_coord (pos, cal, cpar->mm, &xpd, &ypd);
+        X[n][2]      = (xpd - xp) / dm;
+        X[n+1][2] = (ypd - yp) / dm;
+        cal->ext_par.z0 -= dm;
+
+        cal->ext_par.omega += drad;
+        rotation_matrix(&(cal->ext_par));
+        img_coord (pos, cal, cpar->mm, &xpd, &ypd);
+        X[n][3]      = (xpd - xp) / drad;
+        X[n+1][3] = (ypd - yp) / drad;
+        cal->ext_par.omega -= drad;
+
+        cal->ext_par.phi += drad;
+        rotation_matrix(&(cal->ext_par));
+        img_coord (pos, cal, cpar->mm, &xpd, &ypd);
+        X[n][4]      = (xpd - xp) / drad;
+        X[n+1][4] = (ypd - yp) / drad;
+        cal->ext_par.phi -= drad;
+
+        cal->ext_par.kappa += drad;
+        rotation_matrix(&(cal->ext_par));
+        img_coord (pos, cal, cpar->mm, &xpd, &ypd);
+        X[n][5]      = (xpd - xp) / drad;
+        X[n+1][5] = (ypd - yp) / drad;
+        cal->ext_par.kappa -= drad;
+
+        cal->int_par.cc += dm;
+        rotation_matrix(&(cal->ext_par));
+        img_coord (pos, cal, cpar->mm, &xpd, &ypd);
+        X[n][6]      = (xpd - xp) / dm;
+        X[n+1][6] = (ypd - yp) / dm;
+        cal->int_par.cc -= dm;
+
+
+        al += dm;
+        cal->glass_par.vec_x += e1[0]*nGl*al;
+        cal->glass_par.vec_y += e1[1]*nGl*al;
+        cal->glass_par.vec_z += e1[2]*nGl*al;
+
+        img_coord (pos, cal, cpar->mm, &xpd, &ypd);
+        X[n][16]      = (xpd - xp) / dm;
+        X[n+1][16] = (ypd - yp) / dm;
+
+        al -= dm;
+        cal->glass_par.vec_x = safety_x;
+        cal->glass_par.vec_y = safety_y;
+        cal->glass_par.vec_z = safety_z;
+
+        //cal->glass_par.vec_y += dm;
+        be += dm;
+        cal->glass_par.vec_x += e2[0]*nGl*be;
+        cal->glass_par.vec_y += e2[1]*nGl*be;
+        cal->glass_par.vec_z += e2[2]*nGl*be;
+
+        img_coord (pos, cal, cpar->mm, &xpd, &ypd);
+        X[n][17]      = (xpd - xp) / dm;
+        X[n+1][17] = (ypd - yp) / dm;
+
+        be -= dm;
+        cal->glass_par.vec_x = safety_x;
+        cal->glass_par.vec_y = safety_y;
+        cal->glass_par.vec_z = safety_z;
+
+        ga += dm;
+        cal->glass_par.vec_x += cal->glass_par.vec_x*nGl*ga;
+        cal->glass_par.vec_y += cal->glass_par.vec_y*nGl*ga;
+        cal->glass_par.vec_z += cal->glass_par.vec_z*nGl*ga;
+
+        img_coord (pos, cal, cpar->mm, &xpd, &ypd);
+        X[n][18]      = (xpd - xp) / dm;
+        X[n+1][18] = (ypd - yp) / dm;
+
+        ga -= dm;
+        cal->glass_par.vec_x = safety_x;
+        cal->glass_par.vec_y = safety_y;
+        cal->glass_par.vec_z = safety_z;
+
+        y[n]   = xc - xp;
+        y[n+1] = yc - yp;
+
+        n += 2;
+    } // end the loop of nfix points
+
+
+    n_obs = n;
+
+    /* identities */
+
+    for (i=0; i<10; i++)  X[n_obs+i][6+i] = 1;
+
+    y[n_obs+0] = ident[0] - cal->int_par.cc;
+    y[n_obs+1] = ident[1] - cal->int_par.xh;
+    y[n_obs+2] = ident[2] - cal->int_par.yh;
+    y[n_obs+3] = ident[3] - cal->added_par.k1;
+    y[n_obs+4] = ident[4] - cal->added_par.k2;
+    y[n_obs+5] = ident[5] - cal->added_par.k3;
+    y[n_obs+6] = ident[6] - cal->added_par.p1;
+    y[n_obs+7] = ident[7] - cal->added_par.p2;
+    y[n_obs+8] = ident[8] - cal->added_par.scx;
+    y[n_obs+9] = ident[9] - cal->added_par.she;
+
+
+
+    /* weights */
+    for (i=0; i<n_obs; i++)  P[i] = 1;
+
+    if ( ! ccflag)  P[n_obs+0] = POS_INF;
+    if ( ! xhflag)  P[n_obs+1] = POS_INF;
+    if ( ! yhflag)  P[n_obs+2] = POS_INF;
+    if ( ! k1flag)  P[n_obs+3] = POS_INF;
+    if ( ! k2flag)  P[n_obs+4] = POS_INF;
+    if ( ! k3flag)  P[n_obs+5] = POS_INF;
+    if ( ! p1flag)  P[n_obs+6] = POS_INF;
+    if ( ! p2flag)  P[n_obs+7] = POS_INF;
+    if ( ! scxflag) P[n_obs+8] = POS_INF;
+    if ( ! sheflag) P[n_obs+9] = POS_INF;
+
+
+    n_obs += 10;  sumP = 0;
+    for (i=0; i<n_obs; i++)	       	/* homogenize */
+    {
+    p = sqrt (P[i]);
+    for (j=0; j<19; j++)  Xh[i][j] = p * X[i][j];
+    yh[i] = p * y[i];  sumP += P[i];
+    }
+
+
+
+    /* Gauss Markoff Model */
+    numbers = 16;
+
+    if(interfflag){
+     numbers = 18;
+    }
+
+    ata ((double *) Xh, (double *) XPX, n_obs, numbers, 19 );
+    matinv ((double *) XPX, numbers, 19);
+    atl ((double *) XPy, (double *) Xh, yh, n_obs, numbers, 19);
+    matmul ((double *) beta, (double *) XPX, (double *) XPy, numbers,numbers,1,19,19);
+
+    stopflag = 1;
+    convergeflag = 1;
+    for (i=0; i<numbers; i++)
+    {
+    if (fabs (beta[i]) > 0.0001)  stopflag = 0;	/* more iterations */////Achtung
+    if (fabs (beta[i]) > 0.01)  convergeflag = 0;
+    }
+
+    if ( ! ccflag) beta[6] = 0.0;
+    if ( ! xhflag) beta[7] = 0.0;
+    if ( ! yhflag) beta[8] = 0.0;
+    if ( ! k1flag) beta[9] = 0.0;
+    if ( ! k2flag) beta[10] = 0.0;
+    if ( ! k3flag) beta[11] = 0.0;
+    if ( ! p1flag) beta[12] = 0.0;
+    if ( ! p2flag) beta[13] = 0.0;
+    if ( ! scxflag)beta[14] = 0.0;
+    if ( ! sheflag) beta[15] = 0.0;
+
+    cal->ext_par.x0 += beta[0];
+    cal->ext_par.y0 += beta[1];
+    cal->ext_par.z0 += beta[2];
+    cal->ext_par.omega += beta[3];
+    cal->ext_par.phi += beta[4];
+    cal->ext_par.kappa += beta[5];
+    cal->int_par.cc += beta[6];
+    cal->int_par.xh += beta[7];
+    cal->int_par.yh += beta[8];
+    cal->added_par.k1 += beta[9];
+    cal->added_par.k2 += beta[10];
+    cal->added_par.k3 += beta[11];
+    cal->added_par.p1 += beta[12];
+    cal->added_par.p2 += beta[13];
+    cal->added_par.scx += beta[14];
+    cal->added_par.she += beta[15];
+
+    if(interfflag)
+    {
+      cal->glass_par.vec_x += e1[0]*nGl*beta[16];
+      cal->glass_par.vec_y += e1[1]*nGl*beta[16];
+      cal->glass_par.vec_z += e1[2]*nGl*beta[16];
+      cal->glass_par.vec_x += e2[0]*nGl*beta[17];
+      cal->glass_par.vec_y += e2[1]*nGl*beta[17];
+      cal->glass_par.vec_z += e2[2]*nGl*beta[17];
+    }
+    beta[0]=beta[0];
     } // end of while iterations and stopflag
 
 
@@ -626,8 +626,10 @@ void orient (Calibration* cal, control_par *cpar, int nfix, vec3d fix[], target 
                                                                     sigmabeta[15]*RO);
 
     /* this part is also irrelevant for liboptv, temporary saved to remind us
-       to check outside the orient()
-
+       to check outside the orient() and act in the main program to deal with
+       the multi-plane or other type of calibration
+   */    
+    /*
     par_file = fopen_r ("parameters/examine.par");
     fscanf (par_file,"%d\n", &dummy);
     fscanf (par_file,"%d\n", &multi);
@@ -643,7 +645,9 @@ void orient (Calibration* cal, control_par *cpar, int nfix, vec3d fix[], target 
     /* show original images with residual vectors (requires globals)
     is commented out as irrelevant but kept for the future move to the
     Python side
-
+    */
+    
+    /*
     printf ("%d: %5.2f micron, ", nr+1, sigma0*1000);
     printf("\ntest 1 inside orientation\n");
     for (i=0; i<n_obs-10; i+=2)
