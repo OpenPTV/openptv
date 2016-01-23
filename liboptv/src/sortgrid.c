@@ -107,7 +107,7 @@ void sortgrid (Calibration* cal, control_par *cpar, int nfix, vec3d fix[], int n
       
           if (j != -999) { /* if found */
               pix[i] = old[j];          /* assign its row number */
-              pix[i].pnr = i+1;         /* assign the pointer of a corresponding point */
+              pix[i].pnr = i;          /* assign the pointer of a row number of a point */
             }
         }
     }

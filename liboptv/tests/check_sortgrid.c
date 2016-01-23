@@ -105,7 +105,7 @@ START_TEST(test_sortgrid)
     fail_unless(pix[1].pnr == -999);
 
     sortgrid (cal, cpar, nfix, fix, targets_read, 120, pix);
-    fail_unless(pix[1].pnr == 2);
+    fail_unless(pix[1].pnr == 1);
     fail_unless(pix[1].x == 796);
     
 }
