@@ -129,6 +129,10 @@ add_custom_command(TARGET check_sortgrid PRE_BUILD
 target_link_libraries(check_orientation ${LIBS})
 add_test(check_orientation ${CMAKE_CURRENT_BINARY_DIR}/check_orientation)
 
+add_custom_command(TARGET check_orientation PRE_BUILD
+    COMMAND ${CMAKE_COMMAND} -E copy_directory
+    ${CMAKE_CURRENT_SOURCE_DIR}/testing_fodder $<TARGET_FILE_DIR:check_orientation>/testing_fodder)
+
 target_link_libraries(check_epi ${LIBS})
 add_test(check_epi ${CMAKE_CURRENT_BINARY_DIR}/check_epi)
 
