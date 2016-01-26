@@ -62,10 +62,6 @@ cdef class MultimediaParams:
             self.set_layers(kwargs['n2'], kwargs['d'])
         if kwargs.has_key('n3'):
             self.set_n3(kwargs['n3'])
-        if kwargs.has_key('lut'):
-            self.set_lut(kwargs['lut'])
-        else:
-            self.set_lut(0)
              
     cdef void set_mm_np(self, mm_np * other_mm_np_c_struct):
         free(self._mm_np)
@@ -114,13 +110,7 @@ cdef class MultimediaParams:
     
     def set_n3(self, n3):
         self._mm_np[0].n3 = n3
-        
-    def get_lut(self):
-        return self._mm_np[0].lut
-    
-    def set_lut(self, lut):
-        self._mm_np[0].lut = lut
-    
+
     def __richcmp__(MultimediaParams self, MultimediaParams other, operator):
         c_compare_result = c_compare_mm_np(self._mm_np, other._mm_np)
         if (operator == 2):  # "==" action was performed
@@ -128,7 +118,6 @@ cdef class MultimediaParams:
         elif(operator == 3):  # "!=" action was performed
                 return (c_compare_result == 0)
         else: raise TypeError("Unhandled comparison operator " + operator)
-        
         
     def __str__(self):
         n2_str = "{"
@@ -142,13 +131,12 @@ cdef class MultimediaParams:
             
         d_str += str(self._mm_np[0].d[i + 1]) + "}"
         
-        return "nlay=\t{} \nn1=\t{} \nn2=\t{} \nd=\t{} \nn3=\t{} \nlut=\t{} ".format(
+        return "nlay=\t{} \nn1=\t{} \nn2=\t{} \nd=\t{} \nn3=\t{} ".format(
                 str(self._mm_np[0].nlay),
                 str(self._mm_np[0].n1),
                 n2_str,
                 d_str,
-                str(self._mm_np[0].n3),
-                str(self._mm_np[0].lut))
+                str(self._mm_np[0].n3))
         
     def __dealloc__(self):
         free(self._mm_np)
@@ -492,7 +480,7 @@ cdef class ControlParams:
         self._multimedia_params = MultimediaParams()
         self._multimedia_params.set_mm_np(self._control_par[0].mm)
         
-    # Getters and setters 
+    # Getters and setters
     def get_num_cams(self):
         return self._control_par[0].num_cams
         

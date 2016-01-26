@@ -1,0 +1,291 @@
+#LyX 2.1 created this file. For more info see http://www.lyx.org/
+\lyxformat 474
+\begin_document
+\begin_header
+\textclass article
+\use_default_options true
+\maintain_unincluded_children false
+\language english
+\language_package default
+\inputencoding auto
+\fontencoding global
+\font_roman default
+\font_sans default
+\font_typewriter default
+\font_math auto
+\font_default_family default
+\use_non_tex_fonts false
+\font_sc false
+\font_osf false
+\font_sf_scale 100
+\font_tt_scale 100
+\graphics default
+\default_output_format default
+\output_sync 0
+\bibtex_command default
+\index_command default
+\paperfontsize default
+\spacing single
+\use_hyperref false
+\papersize default
+\use_geometry true
+\use_package amsmath 1
+\use_package amssymb 1
+\use_package cancel 1
+\use_package esint 1
+\use_package mathdots 1
+\use_package mathtools 1
+\use_package mhchem 1
+\use_package stackrel 1
+\use_package stmaryrd 1
+\use_package undertilde 1
+\cite_engine basic
+\cite_engine_type default
+\biblio_style plain
+\use_bibtopic false
+\use_indices false
+\paperorientation portrait
+\suppress_date false
+\justification true
+\use_refstyle 1
+\index Index
+\shortcut idx
+\color #008000
+\end_index
+\secnumdepth 3
+\tocdepth 3
+\paragraph_separation skip
+\defskip medskip
+\quotes_language english
+\papercolumns 1
+\papersides 1
+\paperpagestyle default
+\tracking_changes false
+\output_changes false
+\html_math_output 0
+\html_css_as_file 0
+\html_be_strict false
+\end_header
+
+\begin_body
+
+\begin_layout Title
+Skew lines midpoint position
+\end_layout
+
+\begin_layout Author
+Yosef Meller
+\end_layout
+
+\begin_layout Standard
+The 3D point position of a correspondence tupel (i.e.
+ a number of corresponding 2D points each from a different camera) is obtained
+ by averaging the positions of points in the middle of the shortest-distance
+ line between rays going from each two 3D camera positions into the correspondin
+g image-plane points.
+ Therefore, the most basic calculation here is of the midpoint between the
+ two rays.
+\end_layout
+
+\begin_layout Standard
+Let 
+\begin_inset Formula $\vec{p}_{1}=\vec{x}_{1}+r_{1}\vec{u}_{1}$
+\end_inset
+
+ and 
+\begin_inset Formula $\vec{p}_{2}=\vec{x}_{2}+r_{2}\vec{u}_{2}$
+\end_inset
+
+ denote two points along two skew lines (i.e.
+ lines that do not intersect and are not parallel), where 
+\begin_inset Formula $u_{i}$
+\end_inset
+
+ are unit vectors.
+ Denote the segment connecting them 
+\begin_inset Formula $\vec{k}=\vec{p}_{2}-\vec{p}_{1}$
+\end_inset
+
+, and for convenience define 
+\begin_inset Formula $\vec{d}=\vec{x}_{2}-\vec{x}_{1}$
+\end_inset
+
+.
+ The terminology is sketched in figure 
+\begin_inset CommandInset ref
+LatexCommand ref
+reference "fig:Skew-lines"
+
+\end_inset
+
+.
+\end_layout
+
+\begin_layout Standard
+\begin_inset Float figure
+wide false
+sideways false
+status open
+
+\begin_layout Plain Layout
+\noindent
+\align center
+\begin_inset Graphics
+	filename skew_lines.png
+	scale 60
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Plain Layout
+\begin_inset Caption Standard
+
+\begin_layout Plain Layout
+Skew lines
+\begin_inset CommandInset label
+LatexCommand label
+name "fig:Skew-lines"
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+Simple vector arithmetics shows that 
+\begin_inset Formula $\vec{k}=-r_{1}\vec{u}_{1}+\vec{d}+r_{2}\vec{u}_{2}$
+\end_inset
+
+.
+\end_layout
+
+\begin_layout Standard
+The shortest segment connecting two skew lines is necessarily perpendicular
+ to both, hence if 
+\begin_inset Formula $p_{i}$
+\end_inset
+
+ are the end points of that line, then 
+\begin_inset Formula $\vec{u}_{1}\cdot\vec{k}=\vec{u}_{2}\cdot\vec{k}=0$
+\end_inset
+
+, yielding the equation system:
+\begin_inset Formula 
+\begin{eqnarray*}
+r_{1}-\left(\vec{u}_{1}\cdot\vec{u}_{2}\right)r_{2} & = & \vec{u}_{1}\cdot\vec{d}\\
+\left(\vec{u}_{1}\cdot\vec{u}_{2}\right)r_{1}-r_{2} & = & \vec{u}_{2}\cdot\vec{d}
+\end{eqnarray*}
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+The solution, easily obtained with pen and paper, is 
+\begin_inset Formula 
+\begin{eqnarray*}
+r_{1} & = & \frac{\left(\vec{u}_{1}\cdot\vec{u}_{2}\right)\left(\vec{u}_{2}\cdot\vec{d}\right)-\left(\vec{u}_{1}\cdot\vec{d}\right)}{1-\left(\vec{u}_{1}\cdot\vec{u}_{2}\right)^{2}}\\
+r_{2} & = & \frac{\left(\vec{u}_{1}\cdot\vec{u}_{2}\right)\left(\vec{u}_{1}\cdot\vec{d}\right)-\left(\vec{u}_{2}\cdot\vec{d}\right)}{1-\left(\vec{u}_{1}\cdot\vec{u}_{2}\right)^{2}}
+\end{eqnarray*}
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+To simplify and reduce calculations for the computer implementation, we
+ first define 
+\begin_inset Formula $\alpha$
+\end_inset
+
+ to be the angle between 
+\begin_inset Formula $\vec{u}_{1},\vec{u}_{2}$
+\end_inset
+
+.
+ Then we can simplify the denominator using the known trigonometric properties
+ of cross product and dot product
+\begin_inset Foot
+status open
+
+\begin_layout Plain Layout
+https://en.wikipedia.org/wiki/Cross_product
+\end_layout
+
+\end_inset
+
+: 
+\begin_inset Formula 
+\[
+1-\left(\vec{u}_{1}\cdot\vec{u}_{2}\right)^{2}=1-\cos^{2}\alpha=\sin^{2}\alpha=\left\Vert \vec{u}_{1}\times\vec{u}_{2}\right\Vert ^{2}
+\]
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+The numerator is simplified using the Binet-Cauchy identity
+\begin_inset Foot
+status open
+
+\begin_layout Plain Layout
+https://en.wikipedia.org/wiki/Cross_product#Lagrange.27s_identity
+\end_layout
+
+\end_inset
+
+:
+\begin_inset Formula 
+\begin{eqnarray*}
+\left(\vec{u}_{1}\cdot\vec{u}_{2}\right)\left(\vec{u}_{2}\cdot\vec{d}\right)-\left(\vec{u}_{1}\cdot\vec{d}\right) & = & \left(\vec{u}_{1}\cdot\vec{u}_{2}\right)\left(\vec{u}_{2}\cdot\vec{d}\right)-\left(\vec{u}_{2}\cdot\vec{u}_{2}\right)\left(\vec{u}_{1}\cdot\vec{d}\right)=\\
+ & = & \left(\vec{u}_{1}\times\vec{u}_{2}\right)\cdot\left(\vec{d}\times\vec{u}_{2}\right)
+\end{eqnarray*}
+
+\end_inset
+
+and similarly for the 
+\begin_inset Formula $r_{2}$
+\end_inset
+
+ numerator, to get the final form 
+\begin_inset Formula 
+\begin{eqnarray*}
+r_{1} & = & \frac{\left(\vec{u}_{1}\times\vec{u}_{2}\right)\cdot\left(\vec{d}\times\vec{u}_{2}\right)}{\left\Vert \vec{u}_{1}\times\vec{u}_{2}\right\Vert ^{2}}\\
+r_{2} & = & \frac{\left(\vec{u}_{1}\times\vec{u}_{2}\right)\cdot\left(\vec{d}\times\vec{u}_{1}\right)}{\left\Vert \vec{u}_{1}\times\vec{u}_{2}\right\Vert ^{2}}
+\end{eqnarray*}
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+Finally, the midpoint is 
+\begin_inset Formula $\frac{1}{2}\left(\vec{p}_{2}+\vec{p}_{1}\right)=\frac{1}{2}\left(\vec{x}_{1}+r_{1}\vec{u}_{1}+\vec{x}_{2}+r_{2}\vec{u}_{2}\right)$
+\end_inset
+
+.
+\end_layout
+
+\end_body
+\end_document
