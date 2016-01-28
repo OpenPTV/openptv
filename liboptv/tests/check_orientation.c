@@ -60,12 +60,12 @@ START_TEST(test_raw_orient)
 
     raw_orient (cal, cpar, nfix, fix4, pix4);
     fail_if((org_cal = read_calibration(ori_file, add_file, NULL)) == NULL);
-    fail_unless (fabs(cal->ext_par.x0 == org_cal->ext_par.x0) +
-            fabs(cal->ext_par.y0 == org_cal->ext_par.y0) +
-            fabs(cal->ext_par.z0 == org_cal->ext_par.z0) +
-            fabs(cal->ext_par.omega == org_cal->ext_par.omega) +
-            fabs(cal->ext_par.phi == org_cal->ext_par.phi) +
-            fabs(cal->ext_par.kappa == org_cal->ext_par.kappa) < 1E-6);
+    fail_unless (fabs(cal->ext_par.x0 - org_cal->ext_par.x0) +
+            fabs(cal->ext_par.y0 - org_cal->ext_par.y0) +
+            fabs(cal->ext_par.z0 - org_cal->ext_par.z0) +
+            fabs(cal->ext_par.omega - org_cal->ext_par.omega) +
+            fabs(cal->ext_par.phi - org_cal->ext_par.phi) +
+            fabs(cal->ext_par.kappa - org_cal->ext_par.kappa) < 1E-6);
 
     /* fake the pix points by back-projection */
     for (i=0; i<nfix; i++){
@@ -96,6 +96,7 @@ START_TEST(test_orient)
 
     Calibration *cal, *org_cal;
     control_par *cpar;
+    orient_par *opar;
     vec3d fix4[4], pos;
     target pix4[4];
     int nfix, i;
@@ -125,15 +126,18 @@ START_TEST(test_orient)
         pix4[i].pnr = i;
     }
 
+    /* read orientation parameters */
+    fail_if((opar = read_orient_par("testing_fodder/parameters/orient.par"))== 0);
 
-       orient (cal, cpar, nfix, fix4, pix4);
-    // fail_if((org_cal = read_calibration(ori_file, add_file, NULL)) == NULL);
-    // fail_unless (fabs(cal->ext_par.x0 == org_cal->ext_par.x0) +
-    //         fabs(cal->ext_par.y0 == org_cal->ext_par.y0) +
-    //         fabs(cal->ext_par.z0 == org_cal->ext_par.z0) +
-    //         fabs(cal->ext_par.omega == org_cal->ext_par.omega) +
-    //         fabs(cal->ext_par.phi == org_cal->ext_par.phi) +
-    //         fabs(cal->ext_par.kappa == org_cal->ext_par.kappa) < 1E-6);
+    orient (cal, cpar, nfix, fix4, pix4, opar);
+    fail_if((org_cal = read_calibration(ori_file, add_file, NULL)) == NULL);
+    fail_unless (fabs(cal->ext_par.x0 - org_cal->ext_par.x0) +
+            fabs(cal->ext_par.y0 - org_cal->ext_par.y0) +
+            fabs(cal->ext_par.z0 - org_cal->ext_par.z0) +
+            fabs(cal->ext_par.omega - org_cal->ext_par.omega) +
+            fabs(cal->ext_par.phi - org_cal->ext_par.phi) +
+            fabs(cal->ext_par.kappa - org_cal->ext_par.kappa) < 1E-6);
+
     //
     // /* fake the pix points by back-projection */
     // for (i=0; i<nfix; i++){

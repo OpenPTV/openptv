@@ -15,6 +15,7 @@
 #define RO 200./M_PI
 #define IDT 10
 #define NPAR 19
+#define CONVERGENCE 0.0001
 
 /*  skew_midpoint() finds the middle of the minimal distance segment between
     skew rays. Undefined for parallel rays.
@@ -173,6 +174,8 @@ double weighted_dumbbell_precision(vec2d** targets, int num_targs, int num_cams,
                     represents the known calibration body 3D points
     target pix[] -	image coordinates obtained from sortgrid(). The points
     which are associated with fix[] have real pointer (=i), others have -999
+    orient_par flags - structure of all the flags of the parameters to be (un)changed, 
+        read from orient.par parameter file using read_orient_par(), defaults are zeros;
     Output:
     Calibration *cal_in - if the orientation routine converged, this structure
     is updated, otherwise, returned untouched. The routine works on a copy of
@@ -181,10 +184,10 @@ double weighted_dumbbell_precision(vec2d** targets, int num_targs, int num_cams,
 
 
 void orient (Calibration* cal_in, control_par *cpar, int nfix, vec3d fix[],
-            target pix[], orient_flags flags) {
-    int  	i,j,n, itnum, stopflag, n_obs=0, convergeflag, maxsize;
-    int  	useflag=0, ccflag=0, scxflag=0, sheflag=0, interfflag=0, xhflag=0, yhflag=0,
-            k1flag=0, k2flag=0, k3flag=0, p1flag=0, p2flag=0;
+            target pix[], orient_par *flags) {
+    int  	i,j,n, itnum, stopflag, n_obs=0, maxsize;
+//     int  	useflag=0, ccflag=0, scxflag=0, sheflag=0, interfflag=0, xhflag=0, yhflag=0,
+//             k1flag=0, k2flag=0, k3flag=0, p1flag=0, p2flag=0;
     int  	intx1, intx2, inty1, inty2;
 
     double  ident[IDT], XPX[NPAR][NPAR], XPy[NPAR], beta[NPAR], omega=0;
@@ -252,31 +255,14 @@ void orient (Calibration* cal_in, control_par *cpar, int nfix, vec3d fix[],
 
     printf("Memory allocated successfully \n");
 
-    /* read, which parameters shall be used */
-    par_file = fopen("parameters/orient.par","r");
-    if (par_file != NULL){
-          fscanf (par_file,"%d", &useflag);
-          fscanf (par_file,"%d", &ccflag);
-          fscanf (par_file,"%d", &xhflag);
-          fscanf (par_file,"%d", &yhflag);
-          fscanf (par_file,"%d", &k1flag);
-          fscanf (par_file,"%d", &k2flag);
-          fscanf (par_file,"%d", &k3flag);
-          fscanf (par_file,"%d", &p1flag);
-          fscanf (par_file,"%d", &p2flag);
-          fscanf (par_file,"%d", &scxflag);
-          fscanf (par_file,"%d", &sheflag);
-          fscanf (par_file,"%d", &interfflag);
-          fclose (par_file);
+    if(flags->interfflag){
+        numbers = 18;
     }
-    else
-    {
-        printf("Failed to read orient.par \n");
+    else{
+        numbers = 16;
     }
 
-
-    vec_set(glass_dir, cal->glass_par.vec_x, cal->glass_par.vec_y,
-      cal->glass_par.vec_z);
+    vec_set(glass_dir, cal->glass_par.vec_x, cal->glass_par.vec_y, cal->glass_par.vec_z);
     nGl = vec_norm(glass_dir);
 
     e1_x = 2*cal->glass_par.vec_z - 3*cal->glass_par.vec_x;
@@ -328,7 +314,7 @@ void orient (Calibration* cal_in, control_par *cpar, int nfix, vec3d fix[],
       {
 
         /* use only certain points as control points */
-        switch (useflag)
+        switch (flags->useflag)
         {
         case 1: if ((i % 2) == 0)  continue;  break;
         case 2: if ((i % 2) != 0)  continue;  break;
@@ -515,19 +501,19 @@ void orient (Calibration* cal_in, control_par *cpar, int nfix, vec3d fix[],
         /* weights */
         for (i=0; i<n_obs; i++)  P[i] = 1;
 
-        if ( ! ccflag)  P[n_obs+0] = POS_INF;
-        if ( ! xhflag)  P[n_obs+1] = POS_INF;
-        if ( ! yhflag)  P[n_obs+2] = POS_INF;
-        if ( ! k1flag)  P[n_obs+3] = POS_INF;
-        if ( ! k2flag)  P[n_obs+4] = POS_INF;
-        if ( ! k3flag)  P[n_obs+5] = POS_INF;
-        if ( ! p1flag)  P[n_obs+6] = POS_INF;
-        if ( ! p2flag)  P[n_obs+7] = POS_INF;
-        if ( ! scxflag) P[n_obs+8] = POS_INF;
-        if ( ! sheflag) P[n_obs+9] = POS_INF;
+        if ( ! flags->ccflag)  P[n_obs+0] = POS_INF;
+        if ( ! flags->xhflag)  P[n_obs+1] = POS_INF;
+        if ( ! flags->yhflag)  P[n_obs+2] = POS_INF;
+        if ( ! flags->k1flag)  P[n_obs+3] = POS_INF;
+        if ( ! flags->k2flag)  P[n_obs+4] = POS_INF;
+        if ( ! flags->k3flag)  P[n_obs+5] = POS_INF;
+        if ( ! flags->p1flag)  P[n_obs+6] = POS_INF;
+        if ( ! flags->p2flag)  P[n_obs+7] = POS_INF;
+        if ( ! flags->scxflag) P[n_obs+8] = POS_INF;
+        if ( ! flags->sheflag) P[n_obs+9] = POS_INF;
 
 
-        n_obs += 10;  sumP = 0;
+        n_obs += IDT;  sumP = 0;
         for (i=0; i<n_obs; i++)	       	/* homogenize */
         {
             p = sqrt (P[i]);
@@ -536,35 +522,28 @@ void orient (Calibration* cal_in, control_par *cpar, int nfix, vec3d fix[],
         }
         
         /* Gauss Markoff Model */
-        numbers = 16;
-
-        if(interfflag){
-         numbers = 18;
-        }
-
         ata ((double *) Xh, (double *) XPX, n_obs, numbers, NPAR );
         matinv ((double *) XPX, numbers, NPAR);
         atl ((double *) XPy, (double *) Xh, yh, n_obs, numbers, NPAR);
-        matmul ((double *) beta, (double *) XPX, (double *) XPy, numbers,numbers,1,NPAR,NPAR);
+        matmul ((double *) beta, (double *) XPX, (double *) XPy, numbers, numbers,1, NPAR,
+                                                                                    NPAR);
 
         stopflag = 1;
-        convergeflag = 1;
         for (i=0; i<numbers; i++)
         {
-        if (fabs (beta[i]) > 0.0001)  stopflag = 0;	/* more iterations */////Achtung
-        if (fabs (beta[i]) > 0.01)  convergeflag = 0;
+         if (fabs (beta[i]) > CONVERGENCE)  stopflag = 0; 
         }
 
-        if ( ! ccflag) beta[6] = 0.0;
-        if ( ! xhflag) beta[7] = 0.0;
-        if ( ! yhflag) beta[8] = 0.0;
-        if ( ! k1flag) beta[9] = 0.0;
-        if ( ! k2flag) beta[10] = 0.0;
-        if ( ! k3flag) beta[11] = 0.0;
-        if ( ! p1flag) beta[12] = 0.0;
-        if ( ! p2flag) beta[13] = 0.0;
-        if ( ! scxflag)beta[14] = 0.0;
-        if ( ! sheflag) beta[15] = 0.0;
+        if ( ! flags->ccflag) beta[6] = 0.0;
+        if ( ! flags->xhflag) beta[7] = 0.0;
+        if ( ! flags->yhflag) beta[8] = 0.0;
+        if ( ! flags->k1flag) beta[9] = 0.0;
+        if ( ! flags->k2flag) beta[10] = 0.0;
+        if ( ! flags->k3flag) beta[11] = 0.0;
+        if ( ! flags->p1flag) beta[12] = 0.0;
+        if ( ! flags->p2flag) beta[13] = 0.0;
+        if ( ! flags->scxflag)beta[14] = 0.0;
+        if ( ! flags->sheflag) beta[15] = 0.0;
 
         cal->ext_par.x0 += beta[0];
         cal->ext_par.y0 += beta[1];
@@ -583,7 +562,7 @@ void orient (Calibration* cal_in, control_par *cpar, int nfix, vec3d fix[],
         cal->added_par.scx += beta[14];
         cal->added_par.she += beta[15];
 
-        if(interfflag)
+        if(flags->interfflag)
         {
           cal->glass_par.vec_x += e1[0]*nGl*beta[16];
           cal->glass_par.vec_y += e1[1]*nGl*beta[16];
@@ -595,16 +574,15 @@ void orient (Calibration* cal_in, control_par *cpar, int nfix, vec3d fix[],
         beta[0]=beta[0];
     } // end of while iterations and stopflag
 
-
-
     /* compute residuals etc. */
 
-    matmul ( (double *) Xbeta, (double *) X, (double *) beta, n_obs, numbers, 1, n_obs, NPAR);
+    matmul ( (double *) Xbeta, (double *) X, (double *) beta, n_obs, numbers, 1, n_obs, 
+                                                                                    NPAR);
     omega = 0;
     for (i=0; i<n_obs; i++)
     {
-      resi[i] = Xbeta[i] - y[i];
-      omega += resi[i] * P[i] * resi[i];
+        resi[i] = Xbeta[i] - y[i];
+        omega += resi[i] * P[i] * resi[i];
     }
     sigma0 = sqrt (omega / (n_obs - numbers));
 
@@ -631,7 +609,8 @@ void orient (Calibration* cal_in, control_par *cpar, int nfix, vec3d fix[],
     printf ("omega = %8.4f   +/- %8.4f\n", cal->ext_par.omega*RO, sigmabeta[3]*RO);
     printf ("phi   = %8.4f   +/- %8.4f\n", cal->ext_par.phi*RO, sigmabeta[4]*RO);
     printf ("kappa = %8.4f   +/- %8.4f\n", cal->ext_par.kappa*RO, sigmabeta[5]*RO);
-    if(interfflag){
+    
+    if(flags->interfflag){
     printf ("cal->glass_par.vec_x = %8.4f   +/- %8.4f\n", cal->glass_par.vec_x/nGl, \
                                                         (sigmabeta[16]+sigmabeta[17]));
     printf ("cal->glass_par.vec_y = %8.4f   +/- %8.4f\n", cal->glass_par.vec_y/nGl, \
@@ -639,7 +618,7 @@ void orient (Calibration* cal_in, control_par *cpar, int nfix, vec3d fix[],
     printf ("cal->glass_par.vec_z = %8.4f   +/- %8.4f\n", cal->glass_par.vec_z/nGl, \
                                                         (sigmabeta[16]+sigmabeta[17]));
     }
-    //printf ("vec_z = %8.4f   +/- %8.4f\n", cal->glass_par.vec_z, sigmabeta[18]);
+    
     printf ("camera const  = %8.5f   +/- %8.5f\n", cal->int_par.cc, sigmabeta[6]);
     printf ("xh            = %8.5f   +/- %8.5f\n", cal->int_par.xh, sigmabeta[7]);
     printf ("yh            = %8.5f   +/- %8.5f\n", cal->int_par.yh, sigmabeta[8]);
@@ -695,7 +674,7 @@ void orient (Calibration* cal_in, control_par *cpar, int nfix, vec3d fix[],
 
 
 
-    if (convergeflag){
+    if (stopflag){
         rotation_matrix(&(cal->ext_par));
         memcpy(cal_in, cal, sizeof (Calibration));
     }
@@ -933,4 +912,42 @@ int read_man_ori_fix(vec3d fix4[4], char* calblock_filename, char* man_ori_filen
 handle_error:
     if (fpp != NULL) fclose (fpp);
     return 0;
+}
+
+
+/* Reads orientation parameters from file.
+ * Parameter: filename - the absolute/relative path to file to be read.
+ * Returns: pointer to a new orient_par structure.
+ */
+orient_par* read_orient_par(char *filename) {
+    FILE * file = fopen(filename, "r");
+    if (file == NULL) {
+        printf("Could not open orientation parameters file %s.\n", filename);
+        return NULL;
+    }
+
+    orient_par *ret;
+    ret = malloc(sizeof(orient_par));
+
+    if (   !(fscanf(file, "%d", &ret->useflag)==1)  /* use every point or every other pt */
+        || !(fscanf(file, "%d", &ret->ccflag)==1)   /* flag to change back focal distance */
+        || !(fscanf(file, "%d", &ret->xhflag)==1)   /* change xh point, 1-yes, 0-no */
+        || !(fscanf(file, "%d", &ret->yhflag)==1)   /* change yh point */
+        || !(fscanf(file, "%d", &ret->k1flag)==1)   /* change k1 */
+        || !(fscanf(file, "%d", &ret->k2flag)==1)   /* change k2 */
+        || !(fscanf(file, "%d", &ret->k3flag)==1)   /* k3  */
+        || !(fscanf(file, "%d", &ret->p1flag)==1)    /* p1  */
+        || !(fscanf(file, "%d", &ret->p2flag)==1)     /* p2 */
+        || !(fscanf(file, "%d", &ret->scxflag)==1)   /* scx - scaling  */
+        || !(fscanf(file, "%d", &ret->sheflag)==1)    /* she - shearing  */
+        || !(fscanf(file, "%d", &ret->interfflag))==1)  /* interface glass vector */
+    {
+        printf("Error reading orientation parameters from %s\n", filename);
+        free(ret);
+        fclose(file);
+        return NULL;
+    }
+
+    fclose(file);
+    return ret;
 }
