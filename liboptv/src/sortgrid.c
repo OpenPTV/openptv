@@ -18,40 +18,8 @@ Description:	       	reads objects, detected by detection etc.,
 		       	does not work in each imaginable case !
 ****************************************************************************/
 
-#define NMAX 1024
 
 #include "sortgrid.h"
-
-/* 
-    nearest_pixel_location () converts the positions of 3d points provided for calibration
-    in a calibration file (fix) to the image space for each camera in order to present
-    those on a screen for user interaction. Used only in "show initial guess" without
-    sorting or finding the corresponding points like in sortgrid_man
-    Arguments: 
-    Calibration *cal points to calibration parameters
-    Control *cpar points to control parameters
-    nfix is the integer number of points in the calibration text files or number of files 
-    if the calibration is multiplane. 
-    vec3d fix[] array of doubles of 3D positions of the calibration target points
-    num is the number of detected (by image processing) dots on the calibration image
-    i_cam is the integer number of the camera
-    Output:
-    vec2d calib_points[] structure of floating pixel positions (.x, .y) corresponding 
-    to the 3D points in structure fix. 
-*/    
-void nearest_pixel_location (Calibration* cal, control_par *cpar, int nfix, vec3d fix[], 
-vec2d calib_points[]){
-  int	       	i, j;
-  int	       	intx, inty;
-  double       	xp, yp;
-  
-  for (i=0; i<nfix; i++)
-    {
-        img_coord (fix[i], cal, cpar->mm,  &xp, &yp);
-        metric_to_pixel (&(calib_points[i][0]), &(calib_points[i][1]), xp, yp, cpar);
-    }
-}
-
 
 /* sortgrid () is sorting detected target points by back-projection. Three dimensional 
     positions of the dots on the calibration target are provided with the known IDs. The 
@@ -81,27 +49,28 @@ target* sortgrid (Calibration* cal, control_par *cpar, int nfix, vec3d fix[], in
   int	       	intx, inty;
   int           tmp;
   target       	*sorted_pix;
-  vec2d         *calib_points;
-    
-  calib_points = (vec2d *) malloc(nfix * sizeof(vec2d));
-  
+  vec2d         calib_point;
+  double        xp,yp;
+      
   /* sorted pix should be just of the same size as fix[] */
   sorted_pix = (target *) malloc(nfix * sizeof(target));
 
   for (i=0; i<nfix; i++) sorted_pix[i].pnr = -999;
   
-
-  /* reproject all calibration plate points into pixel space */
-  nearest_pixel_location (cal, cpar, nfix, fix, calib_points);
   
   /* and search a detected target nearby */
   for (i=0; i<nfix; i++){
+  
+        img_coord (fix[i], cal, cpar->mm,  &xp, &yp);
+        metric_to_pixel (&(calib_point[0]), &(calib_point[1]), xp, yp, cpar);
+
+  
        /* if the point is not touching the image border */ 
-      if ( calib_points[i][0]> -eps  &&  calib_points[i][1]> -eps  &&  
-           calib_points[i][0] < cpar->imx + eps  && calib_points[i][1]< cpar->imy + eps){
+      if ( calib_point[0]> -eps  &&  calib_point[1]> -eps  &&  
+           calib_point[0] < cpar->imx + eps  && calib_point[1]< cpar->imy + eps){
                     
           /* find the nearest target point */
-          j = nearest_neighbour_pix(pix, num, calib_points[i][0], calib_points[i][1], eps);
+          j = nearest_neighbour_pix(pix, num, calib_point[0], calib_point[1], eps);
       
           if (j != -999) {              /* if found */
               sorted_pix[i] = pix[j];          /* assign its row number */
@@ -110,7 +79,6 @@ target* sortgrid (Calibration* cal, control_par *cpar, int nfix, vec3d fix[], in
         }
     }
     
-    free(calib_points);
     return(sorted_pix);
 }
 
