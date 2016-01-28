@@ -191,8 +191,8 @@ START_TEST(test_point_position)
     Calibration *calib[4];
     char ori_tmpl[] = "cal/sym_cam%d.tif.ori";
     char ori_name[25];
-    mm_np media_par = {1, 1., {1., 0., 0.}, {1., 0., 0.}, 1., 1.};
-
+    mm_np media_par = {1, 1., {1., 0., 0.}, {1., 0., 0.}, 1.};
+    
     vec3d point = {17, 42, 0}; /* Something in the FOV, non-symmetric. */
     vec3d res, jigged;
     double jigg_amp = 0.5, skew_dist, jigged_correct;
@@ -249,7 +249,7 @@ START_TEST(test_convergence_measure)
     char ori_name[25];
 
     /* Using a neutral medium, this isn't what's tested. */
-    mm_np media_par = {1, 1., {1., 0., 0.}, {1., 0., 0.}, 1., 1.};
+    mm_np media_par = {1, 1., {1., 0., 0.}, {1., 0., 0.}, 1.};
     control_par *cpar;
 
     /* Target generation requires an existing calibration. */
