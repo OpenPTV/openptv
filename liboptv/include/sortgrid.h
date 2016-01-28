@@ -15,11 +15,7 @@
 
 			   
 target* sortgrid (Calibration* cal, control_par *cpar, int nfix, vec3d fix[], int num,
-    int eps, target pix[]);
-    				
-void nearest_pixel_location (Calibration* cal, control_par *cpar, int nfix, vec3d fix[], 
-vec2d calib_points[]);
-				
+    int eps, target pix[]);				
 int nearest_neighbour_pix (target pix[], int num, double x, double y, double eps);
 int read_sortgrid_par(char *filename);
 int read_calblock(vec3d fix[], char* filename);
