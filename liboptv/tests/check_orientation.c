@@ -94,47 +94,63 @@ START_TEST(test_orient)
 {
     /* a copy of test_sortgrid */
 
-    Calibration *cal;
+    Calibration *cal, *org_cal;
     control_par *cpar;
-    vec3d fix[100];
-    target pix[2];
+    vec3d fix4[4], pos;
+    target pix4[4];
     int nfix, i;
     int eps, correct_eps = 25;
-
-    eps = read_sortgrid_par("testing_fodder/parameters/sortgrid.par");
-    fail_unless(eps == correct_eps);
+    double xp, yp;
 
 
-    char *file_base = "testing_fodder/sample_";
-    int frame_num = 42;
-    int targets_read = 0;
+    /* read 4 points manually selected from the calibration file */
+    nfix = read_man_ori_fix(fix4, "testing_fodder/cal/calblock.txt",
+                                    "testing_fodder/parameters/man_ori.par", 0);
+    fail_unless(nfix == 4);
+    fail_unless(fix4[3][2] == 8.0);
 
-    targets_read = read_targets(pix, file_base, frame_num);
-    fail_unless(targets_read == 2);
 
-
+    /* read the orientation and the parameters */
     char ori_file[] = "testing_fodder/cal/cam1.tif.ori";
     char add_file[] = "testing_fodder/cal/cam1.tif.addpar";
 
     fail_if((cal = read_calibration(ori_file, add_file, NULL)) == 0);
-
     fail_if((cpar = read_control_par("testing_fodder/parameters/ptv.par"))== 0);
 
-    fail_if((nfix = read_calblock(fix,"testing_fodder/cal/calblock.txt")) != 5);
 
-    sortgrid (cal, cpar, nfix, fix, targets_read, eps, pix);
-    fail_unless(pix[0].pnr == -999);
-    fail_unless(pix[1].pnr == -999);
+    /* fake the pix points by back-projection */
+    for (i=0; i<nfix; i++){
+        vec_set(pos, fix4[i][0], fix4[i][1], fix4[i][2]);
+        img_coord (pos, cal, cpar->mm, &xp, &yp);
+        metric_to_pixel (&(pix4[i].x), &(pix4[i].y), xp, yp, cpar);
+    }
 
-    sortgrid (cal, cpar, nfix, fix, targets_read, 120, pix);
-    fail_unless(pix[1].pnr == 2);
-    fail_unless(pix[1].x == 796);
 
-    printf("%d %d\n", pix[0].pnr, pix[1].pnr);
-    orient (cal, cpar, nfix, fix, pix);
+    orient (cal, cpar, nfix, fix4, pix4);
+    fail_if((org_cal = read_calibration(ori_file, add_file, NULL)) == NULL);
+    fail_unless (fabs(cal->ext_par.x0 == org_cal->ext_par.x0) +
+            fabs(cal->ext_par.y0 == org_cal->ext_par.y0) +
+            fabs(cal->ext_par.z0 == org_cal->ext_par.z0) +
+            fabs(cal->ext_par.omega == org_cal->ext_par.omega) +
+            fabs(cal->ext_par.phi == org_cal->ext_par.phi) +
+            fabs(cal->ext_par.kappa == org_cal->ext_par.kappa) < 1E-6);
 
-    /* now we can do orientation */
+    /* fake the pix points by back-projection */
+    for (i=0; i<nfix; i++){
+        pix4[i].x = pix4[i].x + 0.0;
+        pix4[i].y = pix4[i].y - 0.1;
+    }
 
+    orient (cal, cpar, nfix, fix4, pix4);
+    printf("%f %f %f \n", cal->ext_par.x0, cal->ext_par.y0,
+    cal->ext_par.z0);
+    printf("%f %f %f \n", cal->ext_par.omega, cal->ext_par.phi,
+    cal->ext_par.kappa);
+    printf("---------------------------------- \n");
+    printf("%f %f %f \n", org_cal->ext_par.x0, org_cal->ext_par.y0,
+    org_cal->ext_par.z0);
+    printf("%f %f %f \n", org_cal->ext_par.omega, org_cal->ext_par.phi,
+    org_cal->ext_par.kappa);
 
 }
 END_TEST
@@ -307,9 +323,9 @@ Suite* orient_suite(void) {
     tcase_add_test(tc, test_convergence_measure);
     suite_add_tcase (s, tc);
 
-//     tc = tcase_create ("Orientation");
-//     tcase_add_test(tc, test_orient);
-//     suite_add_tcase (s, tc);
+    tc = tcase_create ("Orientation");
+    tcase_add_test(tc, test_orient);
+    suite_add_tcase (s, tc);
 
     tc = tcase_create ("Raw orientation");
     tcase_add_test(tc, test_raw_orient);
