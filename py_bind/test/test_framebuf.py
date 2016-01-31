@@ -7,8 +7,8 @@ References:
 [1] https://nose.readthedocs.org/en/latest/
 """
 
-import unittest, os
-from optv.tracking_framebuf import read_targets, Target, TargetArray
+import unittest, os, numpy as np
+from optv.tracking_framebuf import read_targets, Target, TargetArray, Frame
 
 class TestTargets(unittest.TestCase):
     def test_fill_target(self):
@@ -54,4 +54,33 @@ class TestTargets(unittest.TestCase):
         filename = "testing_fodder/round_trip.0001_targets"
         if os.path.exists(filename):
             os.remove(filename)
+
+class TestFrame(unittest.TestCase):
+    def test_read_frame(self):
+        """reading a frame"""
+        targ_files = ["testing_fodder/frame/cam%d." % c for c in xrange(1, 5)]
+        frm = Frame(4, corres_file_base="testing_fodder/frame/rt_is",
+            linkage_file_base="testing_fodder/frame/ptv_is", 
+            target_file_base=targ_files, frame_num=333)
+        
+        pos = frm.positions()
+        self.failUnlessEqual(pos.shape, (10,3))
+        
+        targs = frm.target_positions_for_camera(3)
+        self.failUnlessEqual(targs.shape, (10,2))
+        
+        targs_correct = np.array([[ 426., 199.],
+            [ 429.,  60.],
+            [ 431., 327.],
+            [ 509., 315.],
+            [ 345., 222.],
+            [ 465., 139.],
+            [ 487., 403.],
+            [ 241., 178.],
+            [ 607., 209.],
+            [ 563., 238.]])
+        np.testing.assert_array_equal(targs, targs_correct)
+
+if __name__ == "__main__":
+    unittest.main()
 
