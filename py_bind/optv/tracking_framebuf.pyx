@@ -282,8 +282,7 @@ cdef class Frame:
         success = read_frame(self._frm, corres_file_base, linkage_file_base, 
             pb, targ_fb, frame_num)
         
-        if not success:
-            raise IOError("Could not read frame for some reason.")
+        return success
      
     def positions(Frame self):
         """
@@ -321,6 +320,7 @@ cdef class Frame:
         pos2d = np.empty((self._frm.num_parts, 2))
         for pt in range(self._frm.num_parts):
             tix = self._frm.correspond[pt].p[cam]
+            if 
             pos2d[pt,0] = self._frm.targets[cam][tix].x
             pos2d[pt,1] = self._frm.targets[cam][tix].y
         
