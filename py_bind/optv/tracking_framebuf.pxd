@@ -15,6 +15,9 @@ cdef extern from "optv/tracking_frame_buf.h":
         int nr
         int p[4]
     
+    cpdef enum:
+        CORRES_NONE = -1
+    
     ctypedef struct path_inf "P":
         vec3d x
         int prev, next, prio

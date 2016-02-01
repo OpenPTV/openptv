@@ -311,7 +311,8 @@ cdef class Frame:
         
         Returns:
         an (n,2) array with the 2D position of targets detected in the image
-            seen by camera ``cam``.
+            seen by camera ``cam``. for each 3D position. If no target in this
+            camera belongs to the 3D position, its target is set to NaN. 
         """
         cdef:
             np.ndarray[ndim=2, dtype=pos_t] pos2d
@@ -320,9 +321,12 @@ cdef class Frame:
         pos2d = np.empty((self._frm.num_parts, 2))
         for pt in range(self._frm.num_parts):
             tix = self._frm.correspond[pt].p[cam]
-            if 
-            pos2d[pt,0] = self._frm.targets[cam][tix].x
-            pos2d[pt,1] = self._frm.targets[cam][tix].y
+            
+            if tix == CORRES_NONE:
+                pos2d[pt] = np.nan
+            else:
+                pos2d[pt,0] = self._frm.targets[cam][tix].x
+                pos2d[pt,1] = self._frm.targets[cam][tix].y
         
         return pos2d
     
