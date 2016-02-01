@@ -325,4 +325,12 @@ cdef class Frame:
             pos2d[pt,1] = self._frm.targets[cam][tix].y
         
         return pos2d
+    
+    def __dealloc__(self):
+        if self._frm == NULL:
+            return
+        
+        free_frame(self._frm)
+        free(self._frm)
+        self._frm = NULL
 
