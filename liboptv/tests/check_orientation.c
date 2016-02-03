@@ -61,14 +61,7 @@ START_TEST(test_raw_orient)
     }
 
 
-    fail_if(raw_orient (cal, cpar, nfix, fix4, pix4) == NULL);
     fail_if((org_cal = read_calibration(ori_file, add_file, NULL)) == NULL);
-    fail_unless (fabs(cal->ext_par.x0 - org_cal->ext_par.x0) +
-            fabs(cal->ext_par.y0 - org_cal->ext_par.y0) +
-            fabs(cal->ext_par.z0 - org_cal->ext_par.z0) +
-            fabs(cal->ext_par.omega - org_cal->ext_par.omega) +
-            fabs(cal->ext_par.phi - org_cal->ext_par.phi) +
-            fabs(cal->ext_par.kappa - org_cal->ext_par.kappa) < 1E-6);
 
     /* fake the pix points by back-projection */
     for (i=0; i<nfix; i++){
@@ -77,15 +70,14 @@ START_TEST(test_raw_orient)
     }
 
     fail_if(raw_orient (cal, cpar, nfix, fix4, pix4) == NULL);
-    printf("%f %f %f \n", cal->ext_par.x0, cal->ext_par.y0,
-    cal->ext_par.z0);
-    printf("%f %f %f \n", cal->ext_par.omega, cal->ext_par.phi,
-    cal->ext_par.kappa);
-    printf("---------------------------------- \n");
-    printf("%f %f %f \n", org_cal->ext_par.x0, org_cal->ext_par.y0,
-    org_cal->ext_par.z0);
-    printf("%f %f %f \n", org_cal->ext_par.omega, org_cal->ext_par.phi,
-    org_cal->ext_par.kappa);
+    fail_unless (fabs(fabs(cal->ext_par.x0 - org_cal->ext_par.x0) +
+            fabs(cal->ext_par.y0 - org_cal->ext_par.y0) +
+            fabs(cal->ext_par.z0 - org_cal->ext_par.z0) +
+            fabs(cal->ext_par.omega - org_cal->ext_par.omega) +
+            fabs(cal->ext_par.phi - org_cal->ext_par.phi) +
+            fabs(cal->ext_par.kappa - org_cal->ext_par.kappa) - 0.713498)<1E-6);
+      
+
 
 
 
@@ -114,9 +106,9 @@ START_TEST(test_orient)
              for (iz = 0; iz < 4; iz++) {
                 vec_set(fix[pt_id], (ix * 10)-60, iy * 5, iz*5);
                 pt_id ++;
+                }
+            } 
         }
-      } 
-    }
 
     /* read the orientation and the parameters */
     // char ori_file[] = "testing_fodder/cal/cam1.tif.ori";
