@@ -97,21 +97,26 @@ START_TEST(test_orient)
     Calibration *cal, *org_cal;
     control_par *cpar;
     orient_par *opar;
-    vec3d fix4[4], pos;
-    target pix4[4];
-    int nfix, i;
+    vec3d fix[64], pos;
+    target pix[64];
+    int nfix, i, k=0, pnr, ix, iy, iz, pt_id;
     int eps, correct_eps = 25;
     double xp, yp;
-
-    /* read 4 points manually selected from the calibration file */
-    nfix = read_man_ori_fix(fix4, "testing_fodder/cal/calblock.txt",
-                                    "testing_fodder/parameters/man_ori.par", 0);
-    fail_unless(nfix == 4);
-    fail_unless(fix4[3][2] == 8.0);
-
+    FILE *fpp;
+    
+    pt_id = 0;
+    for (ix = 0; ix < 4; ix++) {
+        for (iy = 0; iy < 4; iy++) {
+             for (iz = 0; iz < 4; iz++) {
+                vec_set(fix[pt_id], (ix * 10)-60, iy * 5, iz*5);
+                pt_id ++;
+        }
+      } 
+    }
 
     /* read the orientation and the parameters */
-    char ori_file[] = "testing_fodder/cal/cam1.tif.ori";
+    // char ori_file[] = "testing_fodder/cal/cam1.tif.ori";
+    char ori_file[] = "testing_fodder/cal/sym_cam1.tif.ori";
     char add_file[] = "testing_fodder/cal/cam1.tif.addpar";
 
     fail_if((cal = read_calibration(ori_file, add_file, NULL)) == 0);
@@ -119,17 +124,27 @@ START_TEST(test_orient)
 
 
     /* fake the pix points by back-projection */
-    for (i=0; i<nfix; i++){
-        vec_set(pos, fix4[i][0], fix4[i][1], fix4[i][2]);
-        img_coord (pos, cal, cpar->mm, &xp, &yp);
-        metric_to_pixel (&(pix4[i].x), &(pix4[i].y), xp, yp, cpar);
-        pix4[i].pnr = i;
+    for (i=0; i<64; i++){
+        img_coord (fix[i], cal, cpar->mm, &xp, &yp);
+        metric_to_pixel (&(pix[i].x), &(pix[i].y), xp, yp, cpar);
+        pix[i].pnr = i;
+        // printf("%d %lf %lf %lf\n", i, fix[i][0],fix[i][1],fix[i][2]);
+        // printf("%d, %lf %lf\n", pix[i].pnr, pix[i].x,pix[i].y);
+        
     }
 
     /* read orientation parameters */
     fail_if((opar = read_orient_par("testing_fodder/parameters/orient.par"))== 0);
-
-    orient (cal, cpar, nfix, fix4, pix4, opar);
+    
+    /* perturb the orientation, orient, compare */
+    cal->ext_par.x0 -= 15.0;
+    cal->ext_par.y0 += 15.0;
+    cal->ext_par.z0 -= 115.0;
+    cal->ext_par.omega -= 0.5;
+    cal->ext_par.phi += 0.5;
+    cal->ext_par.kappa += 0.5;
+    
+    orient (cal, cpar, 64, fix, pix, opar);
     fail_if((org_cal = read_calibration(ori_file, add_file, NULL)) == NULL);
     fail_unless (fabs(cal->ext_par.x0 - org_cal->ext_par.x0) +
             fabs(cal->ext_par.y0 - org_cal->ext_par.y0) +
@@ -138,23 +153,36 @@ START_TEST(test_orient)
             fabs(cal->ext_par.phi - org_cal->ext_par.phi) +
             fabs(cal->ext_par.kappa - org_cal->ext_par.kappa) < 1E-6);
 
-    //
-    // /* fake the pix points by back-projection */
-    // for (i=0; i<nfix; i++){
-    //     pix4[i].x = pix4[i].x + 0.0;
-    //     pix4[i].y = pix4[i].y - 0.1;
-    // }
-    //
-    // orient (cal, cpar, nfix, fix4, pix4);
-    // printf("%f %f %f \n", cal->ext_par.x0, cal->ext_par.y0,
-    // cal->ext_par.z0);
-    // printf("%f %f %f \n", cal->ext_par.omega, cal->ext_par.phi,
-    // cal->ext_par.kappa);
-    // printf("---------------------------------- \n");
-    // printf("%f %f %f \n", org_cal->ext_par.x0, org_cal->ext_par.y0,
-    // org_cal->ext_par.z0);
-    // printf("%f %f %f \n", org_cal->ext_par.omega, org_cal->ext_par.phi,
-    // org_cal->ext_par.kappa);
+    /* perturb the orientation with internal parameters too*/
+    cal->ext_par.x0 -= 15.0;
+    cal->ext_par.y0 += 15.0;
+    cal->ext_par.z0 -= 115.0;
+    cal->ext_par.omega -= 0.5;
+    cal->ext_par.phi += 0.5;
+    cal->ext_par.kappa += 0.5;
+    cal->int_par.cc -= 5;
+    cal->int_par.xh += 1.0;
+    cal->int_par.yh -= 1.0;
+    
+    opar->ccflag = 1;
+    opar->xhflag = 1;
+    
+    // opar->interfflag = 1;
+    
+    orient (cal, cpar, 64, fix, pix, opar);
+//     fail_unless (fabs(cal->ext_par.x0 - org_cal->ext_par.x0) +
+//             fabs(cal->ext_par.y0 - org_cal->ext_par.y0) +
+//             fabs(cal->ext_par.z0 - org_cal->ext_par.z0) +
+//             fabs(cal->ext_par.omega - org_cal->ext_par.omega)/180 +
+//             fabs(cal->ext_par.phi - org_cal->ext_par.phi)/180 +
+//             fabs(cal->ext_par.kappa - org_cal->ext_par.kappa)/180 < 2);
+   printf ("%lf\n",fabs(cal->ext_par.x0 - org_cal->ext_par.x0) +
+            fabs(cal->ext_par.y0 - org_cal->ext_par.y0) +
+            fabs(cal->ext_par.z0 - org_cal->ext_par.z0) +
+            fabs(cal->ext_par.omega - org_cal->ext_par.omega)/180 +
+            fabs(cal->ext_par.phi - org_cal->ext_par.phi)/180 +
+            fabs(cal->ext_par.kappa - org_cal->ext_par.kappa)/180);
+    
 
 }
 END_TEST
@@ -326,14 +354,16 @@ Suite* orient_suite(void) {
     tc = tcase_create ("Convergence measures");
     tcase_add_test(tc, test_convergence_measure);
     suite_add_tcase (s, tc);
+    
+    tc = tcase_create ("Raw orientation");
+    tcase_add_test(tc, test_raw_orient);
+    suite_add_tcase (s, tc);
 
     tc = tcase_create ("Orientation");
     tcase_add_test(tc, test_orient);
     suite_add_tcase (s, tc);
 
-    tc = tcase_create ("Raw orientation");
-    tcase_add_test(tc, test_raw_orient);
-    suite_add_tcase (s, tc);
+
 
     return s;
 }

@@ -11,11 +11,11 @@
 
 #define PT_UNUSED -999
 #define NUM_ITER  80
-#define POS_INF 1e20
+#define POS_INF 1E20
 #define RO 200./M_PI
 #define IDT 10
 #define NPAR 19
-#define CONVERGENCE 0.0001
+#define CONVERGENCE 0.00001
 
 /*  skew_midpoint() finds the middle of the minimal distance segment between
     skew rays. Undefined for parallel rays.
@@ -207,15 +207,9 @@ void orient (Calibration* cal_in, control_par *cpar, int nfix, vec3d fix[],
     double  dm = 0.00001,  drad = 0.0000001;
 
 
-    printf("inside orient () \n");
     /* we need to preserve the calibration if the model does not converge */
     cal = malloc (sizeof (Calibration));
-    printf("Memory allocated successfully \n");
-
     memcpy(cal, cal_in, sizeof (Calibration));
-    printf("Copied memory for cal successfully \n");
-    
-    
 
     /* memory allocation. if all points nfix participate, then the 
     n_obs = 2*nfix and the final size of the matrix, together with 
@@ -230,30 +224,23 @@ void orient (Calibration* cal_in, control_par *cpar, int nfix, vec3d fix[],
     Xbeta = (double *) calloc(maxsize, sizeof(double));
     resi = (double *) calloc(maxsize, sizeof(double));
     pixnr = (double *) calloc(maxsize, sizeof(double));
+    
 
-    double **X = malloc(sizeof (*X) * maxsize);
-    double **Xh = malloc(sizeof (*Xh) * maxsize);
-    if (X != NULL)
-    {
-      for (i = 0; i < maxsize; i++)
-      {
-        X[i] = malloc(NPAR*sizeof(double));
-        Xh[i] = malloc(NPAR*sizeof(double));
-      }
-    }
-    else {
-        printf(" Memory allocation failed \n");
-    }
+
+    double (*X)[NPAR] = malloc(sizeof (*X) * maxsize);
+    double (*Xh)[NPAR] = malloc(sizeof (*Xh) * maxsize);
 
     /* fill with zeros */
-    for(i = 0; i < maxsize; i++)
-    {
-    for(j = 0; j < NPAR; j++)
-    	X[i][j] = 0.0;
-    	XPX[i][j] = 0.0;
+    for(i = 0; i < maxsize; i++){
+        for(j = 0; j < NPAR; j++){
+    	    X[i][j] = 0.0;
+    	    Xh[i][j] = 0.0;
+      }
+      y[i] = 0; P[i] = 1;
     }
+    
+   for(i=0;i<NPAR;i++) sigmabeta[j] = 0.0;
 
-    printf("Memory allocated successfully \n");
 
     if(flags->interfflag){
         numbers = 18;
@@ -302,6 +289,7 @@ void orient (Calibration* cal_in, control_par *cpar, int nfix, vec3d fix[],
     safety_x = cal->glass_par.vec_x;
     safety_y = cal->glass_par.vec_y;
     safety_z = cal->glass_par.vec_z;
+    
 
     itnum = 0;  stopflag = 0;
     while ((stopflag == 0) && (itnum < NUM_ITER))
@@ -310,7 +298,7 @@ void orient (Calibration* cal_in, control_par *cpar, int nfix, vec3d fix[],
       itnum++;
     
 
-      for (i=0, n=0; i<nfix; i++)
+      for (i=0, n=0; i<nfix; i++) if(pix[i].pnr == i)
       {
 
         /* use only certain points as control points */
@@ -326,6 +314,7 @@ void orient (Calibration* cal_in, control_par *cpar, int nfix, vec3d fix[],
         the order of appearance and if we want to use every other point
         we use 'i' */
         
+        // printf("pix[%d].%d %lf %lf\n", i,pix[i].pnr, pix[i].x,pix[i].y);
         if (pix[i].pnr != i) continue; // if it's -999 
 
         /* every point from the image pace to the corrected mm position xc,yc*/
@@ -335,12 +324,13 @@ void orient (Calibration* cal_in, control_par *cpar, int nfix, vec3d fix[],
         pixnr[n/2] = i;		/* for drawing residuals */
 
         /* every calibration dot to the projected mm position, xp,yp */
-        vec_set(pos, fix[i][0], fix[i][1], fix[i][2]);
         rotation_matrix(&(cal->ext_par));
-        img_coord (pos, cal, cpar->mm, &xp, &yp);
+        img_coord (fix[i], cal, cpar->mm, &xp, &yp);
 
         
-        printf("\n %d %f %f %f %d %f %f \n",i,pos[0],pos[1],pos[2],pix[i].pnr,xp,yp);
+        // printf("\n %d %f %f %f %d %f %f \n",i,fix[i][0],fix[i][1],fix[i][2],pix[i].pnr, xp,yp);
+        
+        // printf("xc,yc  %lf %lf -> xp, yp %lf %lf\n", xc, yc, xp, yp); 
 
 
 
@@ -382,48 +372,48 @@ void orient (Calibration* cal_in, control_par *cpar, int nfix, vec3d fix[],
 
         /* numeric derivatives of internal camera coefficients */
         cal->ext_par.x0 += dm;
-        img_coord (pos, cal, cpar->mm, &xpd, &ypd);
+        img_coord (fix[i], cal, cpar->mm, &xpd, &ypd);
         X[n][0]      = (xpd - xp) / dm;
         X[n+1][0] = (ypd - yp) / dm;
         cal->ext_par.x0 -= dm;
 
         cal->ext_par.y0 += dm;
-        img_coord (pos, cal, cpar->mm, &xpd, &ypd);
+        img_coord (fix[i], cal, cpar->mm, &xpd, &ypd);
         X[n][1]   = (xpd - xp) / dm;
         X[n+1][1] = (ypd - yp) / dm;
         cal->ext_par.y0 -= dm;
 
         cal->ext_par.z0 += dm;
-        img_coord (pos, cal, cpar->mm, &xpd, &ypd);
-        X[n][2]      = (xpd - xp) / dm;
+        img_coord (fix[i], cal, cpar->mm, &xpd, &ypd);
+        X[n][2]   = (xpd - xp) / dm;
         X[n+1][2] = (ypd - yp) / dm;
         cal->ext_par.z0 -= dm;
 
         cal->ext_par.omega += drad;
         rotation_matrix(&(cal->ext_par));
-        img_coord (pos, cal, cpar->mm, &xpd, &ypd);
-        X[n][3]      = (xpd - xp) / drad;
+        img_coord (fix[i], cal, cpar->mm, &xpd, &ypd);
+        X[n][3]   = (xpd - xp) / drad;
         X[n+1][3] = (ypd - yp) / drad;
         cal->ext_par.omega -= drad;
 
         cal->ext_par.phi += drad;
         rotation_matrix(&(cal->ext_par));
-        img_coord (pos, cal, cpar->mm, &xpd, &ypd);
+        img_coord (fix[i], cal, cpar->mm, &xpd, &ypd);
         X[n][4]      = (xpd - xp) / drad;
         X[n+1][4] = (ypd - yp) / drad;
         cal->ext_par.phi -= drad;
 
         cal->ext_par.kappa += drad;
         rotation_matrix(&(cal->ext_par));
-        img_coord (pos, cal, cpar->mm, &xpd, &ypd);
+        img_coord (fix[i], cal, cpar->mm, &xpd, &ypd);
         X[n][5]      = (xpd - xp) / drad;
         X[n+1][5] = (ypd - yp) / drad;
         cal->ext_par.kappa -= drad;
 
         cal->int_par.cc += dm;
         rotation_matrix(&(cal->ext_par));
-        img_coord (pos, cal, cpar->mm, &xpd, &ypd);
-        X[n][6]      = (xpd - xp) / dm;
+        img_coord (fix[i], cal, cpar->mm, &xpd, &ypd);
+        X[n][6]   = (xpd - xp) / dm;
         X[n+1][6] = (ypd - yp) / dm;
         cal->int_par.cc -= dm;
 
@@ -433,7 +423,7 @@ void orient (Calibration* cal_in, control_par *cpar, int nfix, vec3d fix[],
         cal->glass_par.vec_y += e1[1]*nGl*al;
         cal->glass_par.vec_z += e1[2]*nGl*al;
 
-        img_coord (pos, cal, cpar->mm, &xpd, &ypd);
+        img_coord (fix[i], cal, cpar->mm, &xpd, &ypd);
         X[n][16]      = (xpd - xp) / dm;
         X[n+1][16] = (ypd - yp) / dm;
 
@@ -448,7 +438,7 @@ void orient (Calibration* cal_in, control_par *cpar, int nfix, vec3d fix[],
         cal->glass_par.vec_y += e2[1]*nGl*be;
         cal->glass_par.vec_z += e2[2]*nGl*be;
 
-        img_coord (pos, cal, cpar->mm, &xpd, &ypd);
+        img_coord (fix[i], cal, cpar->mm, &xpd, &ypd);
         X[n][17]      = (xpd - xp) / dm;
         X[n+1][17] = (ypd - yp) / dm;
 
@@ -462,7 +452,7 @@ void orient (Calibration* cal_in, control_par *cpar, int nfix, vec3d fix[],
         cal->glass_par.vec_y += cal->glass_par.vec_y*nGl*ga;
         cal->glass_par.vec_z += cal->glass_par.vec_z*nGl*ga;
 
-        img_coord (pos, cal, cpar->mm, &xpd, &ypd);
+        img_coord (fix[i], cal, cpar->mm, &xpd, &ypd);
         X[n][18]      = (xpd - xp) / dm;
         X[n+1][18] = (ypd - yp) / dm;
 
@@ -473,17 +463,21 @@ void orient (Calibration* cal_in, control_par *cpar, int nfix, vec3d fix[],
 
         y[n]   = xc - xp;
         y[n+1] = yc - yp;
+        
+        // printf("y[%d] = %8.5f, %8.5f\n", n, y[n], y[n+1]);
+        // printf("xc,yc, xp, yp = %6.4f, %6.4f, %6.4f, %6.4f\n", xc,yc,xp,yp);
 
         n += 2;
         } // end the loop of nfix points
     
         n_obs = n;
         
-        printf(" n_obs = %d\n", n_obs);
-
+        // printf(" n_obs = %d last X %lf\n", n_obs, X[n_obs-2][17]);
+        
         /* identities */
 
         for (i=0; i<IDT; i++)  X[n_obs+i][6+i] = 1;
+        
 
         y[n_obs+0] = ident[0] - cal->int_par.cc;
         y[n_obs+1] = ident[1] - cal->int_par.xh;
@@ -498,19 +492,20 @@ void orient (Calibration* cal_in, control_par *cpar, int nfix, vec3d fix[],
 
 
 
+        
         /* weights */
         for (i=0; i<n_obs; i++)  P[i] = 1;
 
-        if ( ! flags->ccflag)  P[n_obs+0] = POS_INF;
-        if ( ! flags->xhflag)  P[n_obs+1] = POS_INF;
-        if ( ! flags->yhflag)  P[n_obs+2] = POS_INF;
-        if ( ! flags->k1flag)  P[n_obs+3] = POS_INF;
-        if ( ! flags->k2flag)  P[n_obs+4] = POS_INF;
-        if ( ! flags->k3flag)  P[n_obs+5] = POS_INF;
-        if ( ! flags->p1flag)  P[n_obs+6] = POS_INF;
-        if ( ! flags->p2flag)  P[n_obs+7] = POS_INF;
-        if ( ! flags->scxflag) P[n_obs+8] = POS_INF;
-        if ( ! flags->sheflag) P[n_obs+9] = POS_INF;
+        P[n_obs+0] = ( ! flags->ccflag) ?  POS_INF : 1;
+        P[n_obs+1] = ( ! flags->xhflag) ?  POS_INF : 1;
+        P[n_obs+2] = ( ! flags->yhflag) ?  POS_INF : 1;
+        P[n_obs+3] = ( ! flags->k1flag) ?  POS_INF : 1;
+        P[n_obs+4] = ( ! flags->k2flag) ?  POS_INF : 1;
+        P[n_obs+5] = ( ! flags->k3flag) ?  POS_INF : 1;
+        P[n_obs+6] = ( ! flags->p1flag) ?  POS_INF : 1;
+        P[n_obs+7] = ( ! flags->p2flag) ?  POS_INF : 1;
+        P[n_obs+8] = ( ! flags->scxflag) ?  POS_INF : 1;
+        P[n_obs+9] = ( ! flags->sheflag) ?  POS_INF : 1;
 
 
         n_obs += IDT;  sumP = 0;
@@ -523,6 +518,12 @@ void orient (Calibration* cal_in, control_par *cpar, int nfix, vec3d fix[],
         
         /* Gauss Markoff Model */
         ata ((double *) Xh, (double *) XPX, n_obs, numbers, NPAR );
+        
+//         for(i=0;i<NPAR; i++){
+//             for(j=0;j<NPAR;j++){
+//                 printf("XPX[%d][%d] = %lf\n", i,j,XPX[i][j]);
+//             }
+//         }
         matinv ((double *) XPX, numbers, NPAR);
         atl ((double *) XPy, (double *) Xh, yh, n_obs, numbers, NPAR);
         matmul ((double *) beta, (double *) XPX, (double *) XPy, numbers, numbers,1, NPAR,
@@ -531,7 +532,7 @@ void orient (Calibration* cal_in, control_par *cpar, int nfix, vec3d fix[],
         stopflag = 1;
         for (i=0; i<numbers; i++)
         {
-         if (fabs (beta[i]) > CONVERGENCE)  stopflag = 0; 
+         if (fabs (beta[i]) > CONVERGENCE)  stopflag = 0;
         }
 
         if ( ! flags->ccflag) beta[6] = 0.0;
@@ -571,7 +572,7 @@ void orient (Calibration* cal_in, control_par *cpar, int nfix, vec3d fix[],
           cal->glass_par.vec_y += e2[1]*nGl*beta[17];
           cal->glass_par.vec_z += e2[2]*nGl*beta[17];
         }
-        beta[0]=beta[0];
+        // beta[0]=beta[0];
     } // end of while iterations and stopflag
 
     /* compute residuals etc. */
@@ -602,34 +603,36 @@ void orient (Calibration* cal_in, control_par *cpar, int nfix, vec3d fix[],
     /* print results */
     printf ("\n|||||||||||||||||||||||||||||||||||||||||||||||||||||||||||");
     printf ("\n\nResults after %d iterations:\n\n", itnum);
-    printf ("sigma0 = %6.2f micron\n", sigma0*1000);
-    printf ("X0 =    %8.3f   +/- %8.3f\n", cal->ext_par.x0, sigmabeta[0]);
-    printf ("Y0 =    %8.3f   +/- %8.3f\n", cal->ext_par.y0, sigmabeta[1]);
-    printf ("Z0 =    %8.3f   +/- %8.3f\n", cal->ext_par.z0, sigmabeta[2]);
-    printf ("omega = %8.4f   +/- %8.4f\n", cal->ext_par.omega*RO, sigmabeta[3]*RO);
-    printf ("phi   = %8.4f   +/- %8.4f\n", cal->ext_par.phi*RO, sigmabeta[4]*RO);
-    printf ("kappa = %8.4f   +/- %8.4f\n", cal->ext_par.kappa*RO, sigmabeta[5]*RO);
+    printf ("sigma0         = %6.2f micron\n", sigma0*1000);
+    printf ("X0             = %+8.3f mm     +/- %8.3f\n", cal->ext_par.x0, sigmabeta[0]);
+    printf ("Y0             = %+8.3f mm     +/- %8.3f\n", cal->ext_par.y0, sigmabeta[1]);
+    printf ("Z0             = %+8.3f mm     +/- %8.3f\n", cal->ext_par.z0, sigmabeta[2]);
+    printf ("omega          = %+8.4f deg    +/- %8.4f\n", cal->ext_par.omega*RO, sigmabeta[3]*RO);
+    printf ("phi            = %+8.4f deg    +/- %8.4f\n", cal->ext_par.phi*RO, sigmabeta[4]*RO);
+    printf ("kappa          = %+8.4f deg    +/- %8.4f\n", cal->ext_par.kappa*RO, sigmabeta[5]*RO);
     
+    
+    printf ("camera const   = %+8.3f mm     +/- %8.3f\n", cal->int_par.cc, sigmabeta[6]);
+    printf ("xh             = %+8.3f mm     +/- %8.3f\n", cal->int_par.xh, sigmabeta[7]);
+    printf ("yh             = %+8.3f mm     +/- %8.3f\n", cal->int_par.yh, sigmabeta[8]);
+    printf ("k1             = %+8.3f        +/- %8.3f\n", cal->added_par.k1, sigmabeta[9]);
+    printf ("k2             = %+8.3f        +/- %8.3f\n", cal->added_par.k2, sigmabeta[10]);
+    printf ("k3             = %+8.3f        +/- %8.3f\n", cal->added_par.k3, sigmabeta[11]);
+    printf ("p1             = %+8.3f        +/- %8.3f\n", cal->added_par.p1, sigmabeta[12]);
+    printf ("p2             = %+8.3f        +/- %8.3f\n", cal->added_par.p2, sigmabeta[13]);
+    printf ("scale for x'   = %+8.3f        +/- %8.3f\n", cal->added_par.scx, sigmabeta[14]);
+    printf ("shearing       = %+8.3f        +/- %8.3f\n", cal->added_par.she*RO, \
+                                                                    sigmabeta[15]*RO);
+                                                                    
     if(flags->interfflag){
-    printf ("cal->glass_par.vec_x = %8.4f   +/- %8.4f\n", cal->glass_par.vec_x/nGl, \
+    printf ("glass_x        = %8.3f mm      +/- %8.3f\n", cal->glass_par.vec_x/nGl, \
                                                         (sigmabeta[16]+sigmabeta[17]));
-    printf ("cal->glass_par.vec_y = %8.4f   +/- %8.4f\n", cal->glass_par.vec_y/nGl, \
+    printf ("glass_y        = %8.3f mm      +/- %8.3f\n", cal->glass_par.vec_y/nGl, \
                                                         (sigmabeta[16]+sigmabeta[17]));
-    printf ("cal->glass_par.vec_z = %8.4f   +/- %8.4f\n", cal->glass_par.vec_z/nGl, \
+    printf ("glass_z        = %8.3f mm      +/- %8.3f\n", cal->glass_par.vec_z/nGl, \
                                                         (sigmabeta[16]+sigmabeta[17]));
     }
-    
-    printf ("camera const  = %8.5f   +/- %8.5f\n", cal->int_par.cc, sigmabeta[6]);
-    printf ("xh            = %8.5f   +/- %8.5f\n", cal->int_par.xh, sigmabeta[7]);
-    printf ("yh            = %8.5f   +/- %8.5f\n", cal->int_par.yh, sigmabeta[8]);
-    printf ("k1            = %8.5f   +/- %8.5f\n", cal->added_par.k1, sigmabeta[9]);
-    printf ("k2            = %8.5f   +/- %8.5f\n", cal->added_par.k2, sigmabeta[10]);
-    printf ("k3            = %8.5f   +/- %8.5f\n", cal->added_par.k3, sigmabeta[11]);
-    printf ("p1            = %8.5f   +/- %8.5f\n", cal->added_par.p1, sigmabeta[12]);
-    printf ("p2            = %8.5f   +/- %8.5f\n", cal->added_par.p2, sigmabeta[13]);
-    printf ("scale for x'  = %8.5f   +/- %8.5f\n", cal->added_par.scx, sigmabeta[14]);
-    printf ("shearing      = %8.5f   +/- %8.5f\n", cal->added_par.she*RO, \
-                                                                    sigmabeta[15]*RO);
+
 
     /* this part is also irrelevant for liboptv, temporary saved to remind us
        to check outside the orient() and act in the main program to deal with
@@ -678,17 +681,12 @@ void orient (Calibration* cal_in, control_par *cpar, int nfix, vec3d fix[],
         rotation_matrix(&(cal->ext_par));
         memcpy(cal_in, cal, sizeof (Calibration));
     }
-    else{
+    else {
         /* restore the saved calibration if not converged */
         // cal = read_calibration(ori_file, add_file, NULL);
         printf ("\n|||||||||||||||||||||||||||||||||||||||||||||||||||||||||||");
         printf (" Orientation does not converge");
         printf ("\n|||||||||||||||||||||||||||||||||||||||||||||||||||||||||||");
-    }
-
-    for(i = 0; i < nfix; i++) {
-        free(X[i]);
-        free(Xh[i]);
     }
 
     free(X);
