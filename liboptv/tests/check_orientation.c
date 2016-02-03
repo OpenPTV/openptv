@@ -22,6 +22,9 @@
 #include "sortgrid.h"
 #include "trafo.h"
 
+#define RO 200./M_PI
+
+
 START_TEST(test_raw_orient)
 {
     /* a copy of test_sortgrid */
@@ -99,6 +102,7 @@ START_TEST(test_orient)
     orient_par *opar;
     vec3d fix[64], pos;
     target pix[64];
+    double sigmabeta[20], nGl;
     int nfix, i, k=0, pnr, ix, iy, iz, pt_id;
     int eps, correct_eps = 25;
     double xp, yp;
@@ -144,7 +148,7 @@ START_TEST(test_orient)
     cal->ext_par.phi += 0.5;
     cal->ext_par.kappa += 0.5;
     
-    orient (cal, cpar, 64, fix, pix, opar);
+    orient (cal, cpar, 64, fix, pix, opar, &sigmabeta);
     fail_if((org_cal = read_calibration(ori_file, add_file, NULL)) == NULL);
     fail_unless (fabs(cal->ext_par.x0 - org_cal->ext_par.x0) +
             fabs(cal->ext_par.y0 - org_cal->ext_par.y0) +
@@ -166,23 +170,50 @@ START_TEST(test_orient)
     
     opar->ccflag = 1;
     opar->xhflag = 1;
-    
-    // opar->interfflag = 1;
-    
-    orient (cal, cpar, 64, fix, pix, opar);
-//     fail_unless (fabs(cal->ext_par.x0 - org_cal->ext_par.x0) +
-//             fabs(cal->ext_par.y0 - org_cal->ext_par.y0) +
-//             fabs(cal->ext_par.z0 - org_cal->ext_par.z0) +
-//             fabs(cal->ext_par.omega - org_cal->ext_par.omega)/180 +
-//             fabs(cal->ext_par.phi - org_cal->ext_par.phi)/180 +
-//             fabs(cal->ext_par.kappa - org_cal->ext_par.kappa)/180 < 2);
-   printf ("%lf\n",fabs(cal->ext_par.x0 - org_cal->ext_par.x0) +
+        
+    orient (cal, cpar, 64, fix, pix, opar, &sigmabeta);
+    fail_unless (fabs(fabs(cal->ext_par.x0 - org_cal->ext_par.x0) +
             fabs(cal->ext_par.y0 - org_cal->ext_par.y0) +
             fabs(cal->ext_par.z0 - org_cal->ext_par.z0) +
             fabs(cal->ext_par.omega - org_cal->ext_par.omega)/180 +
             fabs(cal->ext_par.phi - org_cal->ext_par.phi)/180 +
-            fabs(cal->ext_par.kappa - org_cal->ext_par.kappa)/180);
+            fabs(cal->ext_par.kappa - org_cal->ext_par.kappa)/180 - 19.495073)< 1E-6);
+            
+    /* print results */
+    printf ("sigma0         = %6.2f micron\n", sigmabeta[19]*1000);
+    printf ("X0             = %+8.3f mm     +/- %8.3f\n", cal->ext_par.x0, sigmabeta[0]);
+    printf ("Y0             = %+8.3f mm     +/- %8.3f\n", cal->ext_par.y0, sigmabeta[1]);
+    printf ("Z0             = %+8.3f mm     +/- %8.3f\n", cal->ext_par.z0, sigmabeta[2]);
+    printf ("omega          = %+8.4f deg    +/- %8.4f\n", cal->ext_par.omega*RO, 
+                                                                        sigmabeta[3]*RO);
+    printf ("phi            = %+8.4f deg    +/- %8.4f\n", cal->ext_par.phi*RO, 
+                                                                        sigmabeta[4]*RO);
+    printf ("kappa          = %+8.4f deg    +/- %8.4f\n", cal->ext_par.kappa*RO, 
+                                                                        sigmabeta[5]*RO);
     
+    
+    printf ("camera const   = %+8.3f mm     +/- %8.3f\n", cal->int_par.cc, sigmabeta[6]);
+    printf ("xh             = %+8.3f mm     +/- %8.3f\n", cal->int_par.xh, sigmabeta[7]);
+    printf ("yh             = %+8.3f mm     +/- %8.3f\n", cal->int_par.yh, sigmabeta[8]);
+    printf ("k1             = %+8.3f        +/- %8.3f\n", cal->added_par.k1, sigmabeta[9]);
+    printf ("k2             = %+8.3f        +/- %8.3f\n", cal->added_par.k2, sigmabeta[10]);
+    printf ("k3             = %+8.3f        +/- %8.3f\n", cal->added_par.k3, sigmabeta[11]);
+    printf ("p1             = %+8.3f        +/- %8.3f\n", cal->added_par.p1, sigmabeta[12]);
+    printf ("p2             = %+8.3f        +/- %8.3f\n", cal->added_par.p2, sigmabeta[13]);
+    printf ("scale for x'   = %+8.3f        +/- %8.3f\n", cal->added_par.scx, sigmabeta[14]);
+    printf ("shearing       = %+8.3f        +/- %8.3f\n", cal->added_par.she*RO, \
+                                                                    sigmabeta[15]*RO);
+     
+    vec_set(pos, cal->glass_par.vec_x, cal->glass_par.vec_y, cal->glass_par.vec_z);
+    nGl = vec_norm(pos);                                                                
+    if(opar->interfflag){
+    printf ("glass_x        = %8.3f mm      +/- %8.3f\n", cal->glass_par.vec_x/nGl, \
+                                                        (sigmabeta[16]+sigmabeta[17]));
+    printf ("glass_y        = %8.3f mm      +/- %8.3f\n", cal->glass_par.vec_y/nGl, \
+                                                        (sigmabeta[16]+sigmabeta[17]));
+    printf ("glass_z        = %8.3f mm      +/- %8.3f\n", cal->glass_par.vec_z/nGl, \
+                                                        (sigmabeta[16]+sigmabeta[17]));
+    }    
 
 }
 END_TEST
