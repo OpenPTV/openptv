@@ -12,18 +12,18 @@
 
 /* Parameters for orientation */
 typedef struct {
-    int useflag;
-    int ccflag;
-    int xhflag;
-    int yhflag;
-    int k1flag;
-    int k2flag;
-    int k3flag;
-    int p1flag;
-    int p2flag;
-    int scxflag;
-    int sheflag;
-    int interfflag;
+    unsigned useflag;
+    unsigned ccflag;
+    unsigned xhflag;
+    unsigned yhflag;
+    unsigned k1flag;
+    unsigned k2flag;
+    unsigned k3flag;
+    unsigned p1flag;
+    unsigned p2flag;
+    unsigned scxflag;
+    unsigned sheflag;
+    unsigned interfflag;
 } orient_par;
 
 typedef double vec2d[2];
@@ -43,7 +43,9 @@ void raw_orient(Calibration* cal, control_par *cpar, int nfix, vec3d fix[], targ
 
 int read_man_ori_fix(vec3d fix4[4], char* calblock_filename, char* man_ori_filename, 
     int cam);
-
+void num_deriv_exterior(Calibration* cal, control_par *cpar, double dpos, double dang, 
+vec3d pos, double x_ders[6], double y_ders[6]);
+    
 orient_par* read_orient_par(char *filename);
 
 #endif
