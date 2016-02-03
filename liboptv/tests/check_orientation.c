@@ -61,7 +61,7 @@ START_TEST(test_raw_orient)
     }
 
 
-    raw_orient (cal, cpar, nfix, fix4, pix4);
+    fail_if(raw_orient (cal, cpar, nfix, fix4, pix4) == NULL);
     fail_if((org_cal = read_calibration(ori_file, add_file, NULL)) == NULL);
     fail_unless (fabs(cal->ext_par.x0 - org_cal->ext_par.x0) +
             fabs(cal->ext_par.y0 - org_cal->ext_par.y0) +
@@ -76,7 +76,7 @@ START_TEST(test_raw_orient)
         pix4[i].y = pix4[i].y - 0.1;
     }
 
-    raw_orient (cal, cpar, nfix, fix4, pix4);
+    fail_if(raw_orient (cal, cpar, nfix, fix4, pix4) == NULL);
     printf("%f %f %f \n", cal->ext_par.x0, cal->ext_par.y0,
     cal->ext_par.z0);
     printf("%f %f %f \n", cal->ext_par.omega, cal->ext_par.phi,
@@ -148,7 +148,7 @@ START_TEST(test_orient)
     cal->ext_par.phi += 0.5;
     cal->ext_par.kappa += 0.5;
     
-    orient (cal, cpar, 64, fix, pix, opar, &sigmabeta);
+    fail_if(orient (cal, cpar, 64, fix, pix, opar, &sigmabeta) == NULL);
     fail_if((org_cal = read_calibration(ori_file, add_file, NULL)) == NULL);
     fail_unless (fabs(cal->ext_par.x0 - org_cal->ext_par.x0) +
             fabs(cal->ext_par.y0 - org_cal->ext_par.y0) +
@@ -171,7 +171,7 @@ START_TEST(test_orient)
     opar->ccflag = 1;
     opar->xhflag = 1;
         
-    orient (cal, cpar, 64, fix, pix, opar, &sigmabeta);
+    fail_if(orient (cal, cpar, 64, fix, pix, opar, &sigmabeta) == NULL);
     fail_unless (fabs(fabs(cal->ext_par.x0 - org_cal->ext_par.x0) +
             fabs(cal->ext_par.y0 - org_cal->ext_par.y0) +
             fabs(cal->ext_par.z0 - org_cal->ext_par.z0) +

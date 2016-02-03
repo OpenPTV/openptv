@@ -234,10 +234,11 @@ void num_deriv_exterior(Calibration* cal, control_par *cpar, double dpos, double
     the calibration structure, cal.
     double sigmabeta[] - array of deviations for each of the interior and exterior 
                         parameters and glass interface vector (19 in total) for user info
+    returns 1 for success, 0 for failure of convergence
 */
 
 
-void orient (Calibration* cal_in, control_par *cpar, int nfix, vec3d fix[],
+int orient (Calibration* cal_in, control_par *cpar, int nfix, vec3d fix[],
             target pix[], orient_par *flags, double sigmabeta[20]) {
     int  	i,j,n, itnum, stopflag, n_obs=0, maxsize;
     int  	intx1, intx2, inty1, inty2;
@@ -574,17 +575,6 @@ void orient (Calibration* cal_in, control_par *cpar, int nfix, vec3d fix[],
         sigmabeta[i] = sigmabeta[NPAR] * sqrt(XPX[i][i]);
     }
 
-
-    if (stopflag){
-        rotation_matrix(&(cal->ext_par));
-        memcpy(cal_in, cal, sizeof (Calibration));
-    }
-    else {
-        printf ("\n|||||||||||||||||||||||||||||||||||||||||||||||||||||||||||");
-        printf (" Orientation does not converge");
-        printf ("\n|||||||||||||||||||||||||||||||||||||||||||||||||||||||||||");
-    }
-
     free(X);
     free(P);
     free(y);
@@ -592,6 +582,14 @@ void orient (Calibration* cal_in, control_par *cpar, int nfix, vec3d fix[],
     free(Xh);
     free(resi);
 
+    if (stopflag){
+        rotation_matrix(&(cal->ext_par));
+        memcpy(cal_in, cal, sizeof (Calibration));
+        return 1;
+    }
+    else {
+        return 0;
+    }
 }
 
 /*  raw_orient() uses manually clicked points to setup the first raw orientation of the
@@ -609,10 +607,12 @@ void orient (Calibration* cal_in, control_par *cpar, int nfix, vec3d fix[],
     Output:
     Calibration *cal overwritten with the updated orientation, only 6 external parameters
                      being updated: x,y,z,omega,phi,kappa
+    returns 1 for success, 0 for failure of convergence
+
 */
 
 
-void raw_orient (Calibration* cal, control_par *cpar, int nfix, vec3d fix[], target pix[])
+int raw_orient (Calibration* cal, control_par *cpar, int nfix, vec3d fix[], target pix[])
 {
     double  X[10][6], y[10], XPX[6][6], XPy[6], beta[6];
     int     i, j, n, itnum, stopflag;
@@ -738,10 +738,11 @@ void raw_orient (Calibration* cal, control_par *cpar, int nfix, vec3d fix[], tar
     if (stopflag)
     {
         rotation_matrix(&(cal->ext_par));
+        return 1;
     }
     else
     {
-        puts ("raw orientation impossible");
+        return 0;
     }
 }
 

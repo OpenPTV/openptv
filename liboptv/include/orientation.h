@@ -37,9 +37,9 @@ double point_position(vec2d targets[], int num_cams, mm_np *multimed_pars,
 double weighted_dumbbell_precision(vec2d** targets, int num_targs, int num_cams,
     mm_np *multimed_pars, Calibration* cals[], int db_length, double db_weight);
 
-void orient(Calibration* cal, control_par *cpar, int nfix, vec3d fix[], target pix[], 
+int orient(Calibration* cal, control_par *cpar, int nfix, vec3d fix[], target pix[], 
             orient_par *flags, double sigmabeta[20]);
-void raw_orient(Calibration* cal, control_par *cpar, int nfix, vec3d fix[], target pix[]);
+int raw_orient(Calibration* cal, control_par *cpar, int nfix, vec3d fix[], target pix[]);
 
 int read_man_ori_fix(vec3d fix4[4], char* calblock_filename, char* man_ori_filename, 
     int cam);
