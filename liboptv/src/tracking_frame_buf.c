@@ -165,12 +165,9 @@ int compare_path_info(P *p1, P *p2) {
     int iter;
     if (!((p1->prev == p2->prev) && (p1->next == p2->next) && \
         (p1->prio == p2->prio) && (p1->finaldecis == p2->finaldecis) && \
-        (p1->inlist == p2->inlist)))
+        (p1->inlist == p2->inlist) && vec_cmp(p1->x, p2->x)))
         return 0;
 
-    for (iter = 0; iter < 3; iter++) {
-        if (p1->x[iter] != p2->x[iter]) return 0;
-    }
     for (iter = 0; iter < POSI; iter++) {
         if (p1->decis[iter] != p2->decis[iter]) return 0;
         if (p1->linkdecis[iter] != p2->linkdecis[iter]) return 0;
