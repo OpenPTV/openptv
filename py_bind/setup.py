@@ -17,7 +17,7 @@ ext_mods = [
     Extension("optv.calibration", ["optv/calibration.pyx"], 
         libraries=['optv'], include_dirs=inc_dirs,
         pyrex_include_dirs=['.']),
-    Extension("optv.trafo", ["optv/trafo.pyx"], 
+    Extension("optv.transforms", ["optv/transforms.pyx"], 
         libraries=['optv'], include_dirs=inc_dirs,
         pyrex_include_dirs=['.']),
 ]
