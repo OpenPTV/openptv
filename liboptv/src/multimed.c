@@ -69,6 +69,7 @@ double multimed_r_nlay (Calibration *cal, mm_np *mm, vec3d pos) {
     /* interpolation using the existing mmlut */
 	if (cal->mmlut.data != NULL) {
         mmf = get_mmf_from_mmlut(cal, pos);
+        printf("mmf %g\n", mmf);
         if (mmf > 0) return (mmf);
     }
     
@@ -225,7 +226,7 @@ void init_mmlut (volume_par *vpar, control_par *cpar, Calibration *cal) {
   int  i_cam;
   double X,Y,Z, R, Zmin, Rmax=0, Zmax;
   vec3d pos, a, xyz, xyz_t; 
-  double x,y, *Ri,*Zi;
+  double x,y, *Ri,*Zi, *data;
   double rw = 2.0; 
   Exterior Ex_t; /* A frame representing a point outside tank, middle of glass*/
   double X_t,Y_t,Z_t, Zmin_t,Zmax_t;
@@ -301,7 +302,7 @@ void init_mmlut (volume_par *vpar, control_par *cpar, Calibration *cal) {
   cal->mmlut.rw = rw;
   
   if (cal->mmlut.data == NULL) {
-      cal->mmlut.data = (double *) malloc (nr*nz * sizeof (double));
+      data = (double *) malloc (nr*nz * sizeof (double));
   
       /* fill mmlut structure */
       Ri = (double *) malloc (nr * sizeof (double));
@@ -315,12 +316,13 @@ void init_mmlut (volume_par *vpar, control_par *cpar, Calibration *cal) {
       for (i = 0; i < nr; i++) {
         for (j = 0; j < nz; j++) {
             vec_set(xyz, Ri[i] + Ex_t.x0, Ex_t.y0, Zi[j]);
-            cal->mmlut.data[i*nz + j] = multimed_r_nlay(cal, cpar->mm, xyz);
+            data[i*nz + j] = multimed_r_nlay(cal, cpar->mm, xyz);
         } /* nr */
       } /* nz */
     
       free (Ri);
       free (Zi);
+      cal->mmlut.data = data;
     }
 }
 
