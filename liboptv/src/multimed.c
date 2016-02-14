@@ -69,7 +69,6 @@ double multimed_r_nlay (Calibration *cal, mm_np *mm, vec3d pos) {
     /* interpolation using the existing mmlut */
 	if (cal->mmlut.data != NULL) {
         mmf = get_mmf_from_mmlut(cal, pos);
-        printf("mmf %g\n", mmf);
         if (mmf > 0) return (mmf);
     }
     
