@@ -188,7 +188,7 @@ vec3d* read_calblock(int *num_points, char* filename) {
     if (k == 0) {
         printf("Empty of badly formatted file: %s\n", filename);
         goto handle_error;
-      }
+    }
     
     fclose (fpp);
     *num_points = k;
@@ -196,5 +196,7 @@ vec3d* read_calblock(int *num_points, char* filename) {
 
 handle_error:
     if (fpp != NULL) fclose (fpp);
-    return 0;
+    *num_points = 0;
+    free(ret);
+    return NULL;
 }
