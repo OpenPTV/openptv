@@ -55,18 +55,16 @@ END_TEST
 START_TEST(test_read_calblock)
 {
     int num_points, correct_num_points = 5;
-    vec3d fix[100];
+    vec3d *fix;
     char calblock_file[] = "testing_fodder/cal/calblock.txt";
     
-
     ck_assert_msg (file_exists(calblock_file) == 1, 
         "\n File %s does not exist\n", calblock_file);
-    num_points = read_calblock(fix, calblock_file);   
-    fail_if (num_points == 0, "\n calblock file reading failed \n");
-
-    fail_unless(num_points == correct_num_points);
     
-
+    fix = read_calblock(&num_points, calblock_file);   
+    
+    fail_if (num_points == 0, "\n calblock file reading failed \n");
+    fail_unless(num_points == correct_num_points);
 }
 END_TEST
 
@@ -74,7 +72,7 @@ START_TEST(test_sortgrid)
 {
     Calibration *cal;
     control_par *cpar;
-    vec3d fix[100];
+    vec3d *fix;
     target pix[2];
     target *sorted_pix;
     int nfix, i;
@@ -96,10 +94,9 @@ START_TEST(test_sortgrid)
     char add_file[] = "testing_fodder/cal/cam1.tif.addpar";
 
     fail_if((cal = read_calibration(ori_file, add_file, NULL)) == 0);
-
     fail_if((cpar = read_control_par("testing_fodder/parameters/ptv.par")) == 0);
-
-    fail_if((nfix = read_calblock(fix,"testing_fodder/cal/calblock.txt")) != 5);   
+    fail_if((fix = read_calblock(&nfix,"testing_fodder/cal/calblock.txt")) == NULL);
+    fail_unless(nfix == 5);
 
     sorted_pix = sortgrid (cal, cpar, nfix, fix, targets_read, eps, pix);
     fail_unless(sorted_pix[0].pnr == -999);
