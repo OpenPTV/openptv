@@ -618,7 +618,7 @@ int raw_orient (Calibration* cal, control_par *cpar, int nfix, vec3d fix[], targ
 {
     double  X[10][6], y[10], XPX[6][6], XPy[6], beta[6];
     int     i, j, n, itnum, stopflag;
-    double  dm = 0.0001,  drad = 0.000001;
+    double  dm = 0.0001,  drad = 0.0001;
     double 	xp, yp, xpd, ypd, xc, yc, r, qq, p, sumP;
     vec3d   pos;
 
