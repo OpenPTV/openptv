@@ -64,7 +64,7 @@ int read_targets(target buffer[], char* file_base, int frame_num) {
         goto handle_error;
     }
     for (tix = 0; tix < num_targets; tix++)	{
-	  scanf_ok = fscanf (FILEIN, "%4d %lf %lf %d %d %d %d %d\n",
+	  scanf_ok = fscanf (FILEIN, "%d %lf %lf %d %d %d %d %d\n",
 		  &(buffer[tix].pnr),  &(buffer[tix].x),
 		  &(buffer[tix].y),    &(buffer[tix].n),
 		  &(buffer[tix].nx),   &(buffer[tix].ny),
