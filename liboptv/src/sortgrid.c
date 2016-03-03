@@ -161,9 +161,11 @@ handle_error:
    Returns:
    int number of valid calibration points. If reading failed for any reason, returns NULL.
 */
-int read_calblock(vec3d fix[], char* filename) {
-    FILE* fpp;
+vec3d* read_calblock(int *num_points, char* filename) {
+    FILE* fpp = NULL;
     int	dummy, k = 0;
+    vec3d fix;
+    vec3d *ret = (vec3d *) malloc(1); /* reallocated every line */
        
     fpp = fopen (filename, "r");
     if (! fpp) {
@@ -171,8 +173,14 @@ int read_calblock(vec3d fix[], char* filename) {
         goto handle_error;
     }
     
-    while (fscanf(fpp, "%d %lf %lf %lf\n", &(dummy),&(fix[k][0]),
-            &(fix[k][1]),&(fix[k][2])) == 4) k++;
+    /* Two passes: one counts lines and one allocates memory.*/
+    while (fscanf(fpp, "%d %lf %lf %lf\n", &(dummy),&(fix[0]),
+            &(fix[1]),&(fix[2])) == 4) 
+    {
+        ret = (vec3d *) realloc(ret, (k + 1) * sizeof(vec3d));
+        vec_copy(ret[k], fix);
+        k++;
+    }
     
     fclose (fpp);
 
@@ -180,12 +188,15 @@ int read_calblock(vec3d fix[], char* filename) {
     if (k == 0) {
         printf("Empty of badly formatted file: %s\n", filename);
         goto handle_error;
-      }
+    }
     
     fclose (fpp);
-	return k;
+    *num_points = k;
+	return ret;
 
 handle_error:
     if (fpp != NULL) fclose (fpp);
-    return 0;
+    *num_points = 0;
+    free(ret);
+    return NULL;
 }

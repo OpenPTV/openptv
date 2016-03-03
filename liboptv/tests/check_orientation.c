@@ -60,7 +60,6 @@ START_TEST(test_raw_orient)
         metric_to_pixel (&(pix4[i].x), &(pix4[i].y), xp, yp, cpar);
     }
 
-
     fail_if((org_cal = read_calibration(ori_file, add_file, NULL)) == NULL);
 
     /* fake the pix points by back-projection */

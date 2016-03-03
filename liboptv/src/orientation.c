@@ -3,6 +3,8 @@
 #include "calibration.h"
 #include "ray_tracing.h"
 #include "vec_utils.h"
+#include "sortgrid.h"
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -616,7 +618,7 @@ int raw_orient (Calibration* cal, control_par *cpar, int nfix, vec3d fix[], targ
 {
     double  X[10][6], y[10], XPX[6][6], XPy[6], beta[6];
     int     i, j, n, itnum, stopflag;
-    double  dm = 0.0001,  drad = 0.000001;
+    double  dm = 0.0001,  drad = 0.0001;
     double 	xp, yp, xpd, ypd, xc, yc, r, qq, p, sumP;
     vec3d   pos;
 
@@ -759,13 +761,13 @@ int raw_orient (Calibration* cal, control_par *cpar, int nfix, vec3d fix[], targ
    Returns:
    int number of points, should be 4. If reading failed for any reason, returns NULL.
 */
-int read_man_ori_fix(vec3d fix4[4], char* calblock_filename, char* man_ori_filename,
-                    int cam){
+int read_man_ori_fix(vec3d fix4[4], char* calblock_filename, 
+    char* man_ori_filename, int cam)
+{
     FILE* fpp;
-    int	dummy, pnr, k = 0, nr[4],i;
-    vec3d fix;
-
-
+    int	dummy, pnr, nr[4],i;
+    int num_fix, num_match;
+    vec3d *fix;
 
     fpp = fopen(man_ori_filename,"r");
     if (! fpp) {
@@ -778,31 +780,26 @@ int read_man_ori_fix(vec3d fix4[4], char* calblock_filename, char* man_ori_filen
     fscanf (fpp, "%d %d %d %d \n", &nr[0], &nr[1], &nr[2], &nr[3]);
     fclose (fpp);
 
-    fpp = fopen (calblock_filename, "r");
-    if (! fpp) {
-        printf("Can't open calibration block file: %s\n", calblock_filename);
+    /* read the id and positions of the fixed points, assign the pre-defined to fix4 */
+    fix = read_calblock(&num_fix, calblock_filename);
+    if (num_fix < 4) {
+        printf("Too few points or incompatible file: %s\n", calblock_filename);
         goto handle_error;
     }
-
-    /* read the id and positions of the fixed points, assign the pre-defined to fix4 */
-    while (fscanf(fpp, "%d %lf %lf %lf\n", &(pnr),&(fix[0]),
-            &(fix[1]),&(fix[2])) == 4){
-            if      (pnr == nr[0]) {vec_copy(fix4[0], fix); k++;}
-            else if (pnr == nr[1]) {vec_copy(fix4[1], fix); k++;}
-            else if (pnr == nr[2]) {vec_copy(fix4[2], fix); k++;}
-            else if (pnr == nr[3]) {vec_copy(fix4[3], fix); k++;}
+    
+    num_match = 0; /* count matches to needed numbers */
+    for (pnr = 0; pnr < num_fix; pnr++) {
+        for (i = 0; i < 4; i++) {
+            if (pnr == nr[i] - 1) {
+                vec_copy(fix4[i], fix[pnr]);
+                num_match++;
+                break;
+            }
         }
-
-    fclose (fpp);
-
-
-    if (k != 4) {
-        printf("Empty or incompatible file: %s\n", calblock_filename);
-        goto handle_error;
-      }
-
-    fclose (fpp);
-	return k;
+        if (num_match >= num_fix) break;
+    }
+    
+	return num_match;
 
 handle_error:
     if (fpp != NULL) fclose (fpp);
