@@ -212,7 +212,32 @@ cdef class Calibration:
         ret[0] = self._calibration[0].added_par.scx
         ret[1] = self._calibration[0].added_par.she
         return ret
-
+    
+    def set_glass_vec(self, cnp.ndarray gvec):
+        """
+        Sets the glass vector: a vector from the origin to the glass, directed
+        normal to the glass.
+        
+        Arguments:
+        gvec - a 3-element array, the glass vector.
+        """
+        if len(gvec) != 3:
+            raise ValueError("Expected a 3-element array")
+        
+        self._calibration[0].glass_par.vec_x = gvec[0]
+        self._calibration[0].glass_par.vec_y = gvec[1]
+        self._calibration[0].glass_par.vec_z = gvec[2]
+    
+    def get_glass_vec(self):
+        """
+        Returns the glass vector, a 3-element array.
+        """
+        ret = numpy.empty(3)
+        ret[0] = self._calibration[0].glass_par.vec_x
+        ret[1] = self._calibration[0].glass_par.vec_y
+        ret[2] = self._calibration[0].glass_par.vec_z
+        return ret
+    
     # Free memory
     def __dealloc__(self):
         free(self._calibration)
