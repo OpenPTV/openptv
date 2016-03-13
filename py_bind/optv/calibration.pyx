@@ -20,6 +20,7 @@ cdef extern from "optv/calibration.h":
 cdef class Calibration:
     def __init__(self):
         self._calibration = <calibration *> malloc(sizeof(calibration))
+        self._calibration.mmlut.data = NULL
         
     def from_file(self, ori_file, add_file=None, fallback_file=None):
         """
