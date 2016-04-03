@@ -32,6 +32,7 @@ cdef class Calibration:
         fallback_file - optional path to file used in case ``add_file`` fails
             to open.
         """
+        free(self._calibration);
         self._calibration = read_calibration(
             (<char *>ori_file if ori_file != None else < char *> 0),
             (<char *>add_file if add_file != None else < char *> 0), NULL)
