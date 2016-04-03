@@ -60,15 +60,22 @@ START_TEST(test_init_mmLUT)
     cpar->num_cams = 1;
              
     init_mmlut (vpar, cpar, cal);
+    
+    /* Data[0] Is the radial shift of a point directly on the glass vector */
+    fail_unless(cal->mmlut.data[0] == 1);
+    
+    /* Radial shift grows with radius */
+    fail_unless(cal->mmlut.data[0] < cal->mmlut.data[correct_mmlut[0].nz]);
+    fail_unless(
+        cal->mmlut.data[correct_mmlut[0].nz] < cal->mmlut.data[2*correct_mmlut[0].nz]);
+    
     ck_assert_msg( 
         fabs(cal->mmlut.origin[0] - correct_mmlut[0].origin[0]) < EPS &&
         fabs(cal->mmlut.origin[1]- correct_mmlut[0].origin[1]) < EPS && 
         fabs(cal->mmlut.origin[2] - correct_mmlut[0].origin[2])  < EPS &&
         cal->mmlut.nr == correct_mmlut[i].nr &&
         cal->mmlut.nz == correct_mmlut[i].nz &&
-        cal->mmlut.rw ==  correct_mmlut[i].rw &&
-        fabs(cal->mmlut.data[0] - 1.11089711) < EPS &&
-        fabs(cal->mmlut.data[200] - 1.09709147) < EPS,
+        cal->mmlut.rw ==  correct_mmlut[i].rw,
         "\n Expected different correct_mmlut values but found: \n \
         x,y,z = %10.8f %10.8f %10.8f \n nr,nz,rw = %d %d %d \n data = %10.8f %10.8f \
          in camera %d \n", 
@@ -222,25 +229,10 @@ START_TEST(test_get_mmf_mmLUT)
     correct_mmlut[0].rw = 2;
     
     init_mmlut (vpar, cpar, cal);
-     
-    ck_assert_msg( 
-        fabs(cal->mmlut.origin[0] - correct_mmlut[0].origin[0]) < EPS && 
-        fabs(cal->mmlut.origin[1] - correct_mmlut[0].origin[1]) < EPS && 
-        fabs(cal->mmlut.origin[2] - correct_mmlut[0].origin[2])  < EPS &&
-        cal->mmlut.nr == correct_mmlut[0].nr &&
-        cal->mmlut.nz == correct_mmlut[0].nz &&
-        cal->mmlut.rw ==  correct_mmlut[0].rw &&
-        fabs(cal->mmlut.data[0] - 1.11089711) < EPS &&
-        fabs(cal->mmlut.data[200] - 1.09709147) < EPS,
-        "\n Expected different correct_mmlut values but found: \n \
-        x,y,z = %10.8f %10.8f %10.8f \n nr,nz,rw = %d %d %d \n data = %10.8f %10.8f\n",
-        cal->mmlut.origin[0], cal->mmlut.origin[1], cal->mmlut.origin[2], \
-        cal->mmlut.nr, cal->mmlut.nz, cal->mmlut.rw, cal->mmlut.data[0], 
-        cal->mmlut.data[200]); 
     
     vec3d pos = {1.0, 1.0, 1.0}; 
     mmf = get_mmf_from_mmlut (cal, pos);
-    ck_assert_msg(fabs(mmf - 1.00363015) < EPS,
+    ck_assert_msg(fabs(mmf - 1.00382) < EPS,
         "\n Expected mmf  1.00363015 but found %10.8f\n", mmf);
 }
 END_TEST
@@ -275,23 +267,13 @@ START_TEST(test_multimed_nlay)
     
     cpar->num_cams = 1; // only one camera test
 
-    mmlut correct_mmlut[4];  
-     
-    vec_set(correct_mmlut[0].origin, 0.0, 0.0, -250.00003540);
-    
-    correct_mmlut[0].nr = 114;
-    correct_mmlut[0].nz = 177;
-    correct_mmlut[0].rw = 2;
-             
     init_mmlut (vpar, cpar, cal);
      
     vec3d pos = {1.23, 1.23, 1.23};
     double correct_Xq,correct_Yq, Xq, Yq;
-    correct_Xq = 0.85954957; 
-    correct_Yq = 0.86851375;   
+    correct_Xq = 0.74811917; 
+    correct_Yq = 0.75977975;   
      
-    i_cam = 0;
-                 
     multimed_nlay(cal, cpar->mm, pos, &Xq, &Yq);
         
     for (i=0; i < cpar->num_cams; i++){
