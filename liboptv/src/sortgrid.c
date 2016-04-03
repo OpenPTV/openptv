@@ -134,7 +134,7 @@ int nearest_neighbour_pix (target pix[], int num, double x, double y, double eps
    any reason, returns NULL.
 */
 int read_sortgrid_par(char *filename) {
-    FILE* fpp;
+    FILE* fpp = 0;
     int eps = 0;
     
     fpp = fopen(filename, "r");
@@ -146,7 +146,7 @@ int read_sortgrid_par(char *filename) {
 
 handle_error:
     printf("Error reading sortgrid parameter from %s\n", filename);
-    fclose (fpp);
+    if (fpp != NULL) fclose (fpp);
     return 0;
 }
 
@@ -173,7 +173,7 @@ vec3d* read_calblock(int *num_points, char* filename) {
         goto handle_error;
     }
     
-    /* Two passes: one counts lines and one allocates memory.*/
+    /* Single-pass read-reallocate.*/
     while (fscanf(fpp, "%d %lf %lf %lf\n", &(dummy),&(fix[0]),
             &(fix[1]),&(fix[2])) == 4) 
     {
@@ -182,9 +182,6 @@ vec3d* read_calblock(int *num_points, char* filename) {
         k++;
     }
     
-    fclose (fpp);
-
-
     if (k == 0) {
         printf("Empty of badly formatted file: %s\n", filename);
         goto handle_error;
@@ -192,7 +189,7 @@ vec3d* read_calblock(int *num_points, char* filename) {
     
     fclose (fpp);
     *num_points = k;
-	return ret;
+    return ret;
 
 handle_error:
     if (fpp != NULL) fclose (fpp);
