@@ -89,5 +89,14 @@ class Test_Calibration(unittest.TestCase):
         self.assertRaises(ValueError, self.cal.set_decentering, numpy.ones(3))
         self.assertRaises(ValueError, self.cal.set_decentering, numpy.ones(1))
     
+    def test_set_glass(self):
+        """Set glass vector, only for admissible values"""
+        new_gv = numpy.array([1., 2., 3.])
+        self.cal.set_glass_vec(new_gv)
+
+        numpy.testing.assert_array_equal(new_gv, self.cal.get_glass_vec())
+        self.assertRaises(ValueError, self.cal.set_glass_vec, numpy.ones(2))
+        self.assertRaises(ValueError, self.cal.set_glass_vec, numpy.ones(1))
+    
 if __name__ == "__main__":
     unittest.main()
