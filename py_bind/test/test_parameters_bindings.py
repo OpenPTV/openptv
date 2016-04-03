@@ -8,17 +8,25 @@ class Test_MultimediaParams(unittest.TestCase):
         n2_np = numpy.array([11, 22, 33])
         d_np = numpy.array([55, 66, 77])
         
-        m = MultimediaParams(nlay=3, n1=2, n2=n2_np, d=d_np, n3=4, lut=1)
+        # Initialize MultimediaParams object (uses all setters of MultimediaParams)
+        m = MultimediaParams(n1=2, n2=n2_np, d=d_np, n3=4)
         self.failUnlessEqual(m.get_nlay(), 3)
         self.failUnlessEqual(m.get_n1(), 2)
         self.failUnlessEqual(m.get_n3(), 4)
-        self.failUnlessEqual(m.get_lut(), 1)
+        self.failUnlessEqual(m.get_nlay(), len(d_np))
+        
         numpy.testing.assert_array_equal(m.get_d(), d_np)
         numpy.testing.assert_array_equal(m.get_n2(), n2_np)
         
-        self.failUnlessEqual(m.__str__(), "nlay=\t3 \nn1=\t2.0 \nn2=\t{11.0, 22.0, 33.0} \nd=\t{55.0, 66.0, 77.0} \nn3=\t4.0 \nlut=\t1 ")
+        self.failUnlessEqual(m.__str__(), "nlay=\t3 \nn1=\t2.0 \nn2=\t{11.0, 22.0, 33.0} \nd=\t{55.0, 66.0, 77.0} \nn3=\t4.0 ")
         
-        arr = m.get_n2(copy=False) # don't copy the values: link directly to memory 
+        # pass two arrays with different number of elements
+        new_arr = numpy.array([1, 2, 3, 4])
+        with self.assertRaises(ValueError):
+            m.set_layers(new_arr, d_np)
+        new_arr = numpy.array([1, 2, 3])
+        
+        arr = m.get_n2(copy=False)  # don't copy the values: link directly to memory 
         arr[0] = 77.77
         arr[1] = 88.88
         arr[2] = 99.99
@@ -262,13 +270,11 @@ class Test_ControlParams(unittest.TestCase):
         self.failUnless(self.cp_obj.get_cal_img_base_name(3) == "cal/cam4.tif")
         
         self.failUnless(self.cp_obj.get_num_cams() == 4)
-        self.failUnless(self.cp_obj.get_hp_flag() == 10)
-        self.failUnless(self.cp_obj.get_allCam_flag() == 11)
-        self.failUnless(self.cp_obj.get_tiff_flag() == 12)
-        self.failUnless(self.cp_obj.get_imx() == 1280)
-        self.failUnless(self.cp_obj.get_imy() == 1024)
-        self.failUnless(self.cp_obj.get_pix_x() == 15.15)
-        self.failUnless(self.cp_obj.get_pix_y() == 16.16)
+        self.failUnless(self.cp_obj.get_hp_flag())
+        self.failUnless(self.cp_obj.get_allCam_flag())
+        self.failUnless(self.cp_obj.get_tiff_flag())
+        self.failUnless(self.cp_obj.get_image_size(), (1280, 1024))
+        self.failUnless(self.cp_obj.get_pixel_size() == (15.15,16.16))
         self.failUnless(self.cp_obj.get_chfield() == 17)
         
         self.failUnless(self.cp_obj.get_multimedia_params().get_n1() == 18)
@@ -287,26 +293,26 @@ class Test_ControlParams(unittest.TestCase):
             self.cp_obj.set_cal_img_base_name(cam, new_str)
             self.failUnless(self.cp_obj.get_cal_img_base_name(cam) == new_str)
         
-        self.cp_obj.set_hp_flag(1)
-        self.failUnless(self.cp_obj.get_hp_flag() == 1)
+        self.cp_obj.set_hp_flag(True)
+        self.failUnless(self.cp_obj.get_hp_flag())
+        self.cp_obj.set_hp_flag(False)
+        self.failUnless(not self.cp_obj.get_hp_flag())
         
-        self.cp_obj.set_allCam_flag(2)
-        self.failUnless(self.cp_obj.get_allCam_flag() == 2)
+        self.cp_obj.set_allCam_flag(True)
+        self.failUnless(self.cp_obj.get_allCam_flag())
+        self.cp_obj.set_allCam_flag(False)
+        self.failUnless(not self.cp_obj.get_allCam_flag())
         
-        self.cp_obj.set_tiff_flag(3)
-        self.failUnless(self.cp_obj.get_tiff_flag() == 3)
+        self.cp_obj.set_tiff_flag(True)
+        self.failUnless(self.cp_obj.get_tiff_flag())
+        self.cp_obj.set_tiff_flag(False)
+        self.failUnless(not self.cp_obj.get_tiff_flag())
         
-        self.cp_obj.set_imx(4)
-        self.failUnless(self.cp_obj.get_imx() == 4)
-        
-        self.cp_obj.set_imy(5)
-        self.failUnless(self.cp_obj.get_imy() == 5)
-        
-        self.cp_obj.set_pix_x(6)
-        self.failUnless(self.cp_obj.get_pix_x() == 6)
-        
-        self.cp_obj.set_pix_y(7)
-        self.failUnless(self.cp_obj.get_pix_y() == 7)
+        self.cp_obj.set_image_size((4, 5))
+        self.failUnless(self.cp_obj.get_image_size()== (4, 5))
+        print self.cp_obj.get_pixel_size()
+        self.cp_obj.set_pixel_size((6.1, 7.0))
+        numpy.testing.assert_array_equal(self.cp_obj.get_pixel_size(), (6.1, 7))
         
         self.cp_obj.set_chfield(8)
         self.failUnless(self.cp_obj.get_chfield() == 8)
@@ -322,7 +328,7 @@ class Test_ControlParams(unittest.TestCase):
         self.failUnless(self.cp_obj2 == self.cp_obj3)
         self.failIf(self.cp_obj2 != self.cp_obj3)
            
-        self.cp_obj2.set_hp_flag(-999)
+        self.cp_obj2.set_hp_flag(False)
         self.failUnless(self.cp_obj2 != self.cp_obj3)
         self.failIf(self.cp_obj2 == self.cp_obj3)
         

@@ -292,26 +292,26 @@ control_par * new_control_par(int cams) {
     this order:
     
     1. num_cams - number of cameras in a frame.
-    2n (n = 1..num_cams). img_base_name
+    2n (n = 1..4). img_base_name
     2n + 1. cal_img_base_name
-    2n+2. hp_flag - high pass filter flag (0/1)
-    2n+3. allCam_flag - flag using the particles that are matched in all cameras
-    +4. tiff_flag, use TIFF headers or not (if RAW images) 0/1
-    +5. imx - horizontal size of the image/sensor in pixels, e.g. 1280
-    +6. imy - vertical size in pixels, e.g. 1024
-    +7. pix_x
-    +8 pix_y - pixel size of the sensor (one value per experiment means 
+    10 hp_flag - high pass filter flag (0/1)
+    11. allCam_flag - flag using the particles that are matched in all cameras
+    12. tiff_flag, use TIFF headers or not (if RAW images) 0/1
+    13. imx - horizontal size of the image/sensor in pixels, e.g. 1280
+    14. imy - vertical size in pixels, e.g. 1024
+    15. pix_x
+    16 pix_y - pixel size of the sensor (one value per experiment means 
    that all cameras are identical. TODO: allow for different cameras), in [mm], 
    e.g. 0.010 = 10 micron pixel
-   +9. chfield - 
-   +10. mmp.n1 - index of refraction of the first media (air = 1)
-   +11. mmp.n2[0] - index of refraction of the second media - glass windows, can
-   be different?
-   +12. mmp.n3 - index of refraction of the flowing media (air, liquid)
-   2n+13. mmp.d[0] - thickness of the glass/perspex windows (second media), can be
-   different ?
+    17. chfield - whether to use whole image (0), upper half (1) or lower (2).
+    18. mmp.n1 - index of refraction of the first media (air = 1)
+    19. mmp.n2[0] - index of refraction of the second media - glass windows, 
+        can be different?
+    20. mmp.n3 - index of refraction of the flowing media (air, liquid)
+    21. mmp.d[0] - thickness of the glass/perspex windows (second media), can be
+        different ?
     
-   (if n = 4, then 21 lines)
+    (21 lines overall, regardless of camera count)
     
     Arguments:
     char *filename - path to the text file containing the parameters.
@@ -344,6 +344,14 @@ control_par* read_control_par(char *filename) {
         if (fscanf(par_file, "%s\n", line) == 0) goto handle_error;
         strncpy(ret->cal_img_base_name[cam], line, SEQ_FNAME_MAX_LEN);
     }
+    
+    /*  backward compatibility: Tcl/Tk version will look for 8 rows of strings 
+        regardless of camera count.
+    */
+    for (cam = 0; cam < 2*(4 - ret->num_cams); cam++) {
+        if (fscanf(par_file, "%s\n", line) == 0) goto handle_error; 
+    }
+    
     if(fscanf(par_file, "%d\n", &(ret->hp_flag)) == 0) goto handle_error;
     if(fscanf(par_file, "%d\n", &(ret->allCam_flag)) == 0) goto handle_error;
     if(fscanf(par_file, "%d\n", &(ret->tiff_flag)) == 0) goto handle_error;

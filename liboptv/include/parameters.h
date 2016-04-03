@@ -47,7 +47,6 @@ typedef struct {
     double  n2[3];
     double  d[3];
     double  n3;
-    int     lut;
 } mm_np;
 
 /* Parameters that control general aspects in the setup and behaviour of
