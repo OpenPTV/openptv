@@ -799,10 +799,12 @@ int read_man_ori_fix(vec3d fix4[4], char* calblock_filename,
         if (num_match >= num_fix) break;
     }
     
-	return num_match;
+    free(fix);   
+    return num_match;
 
 handle_error:
     if (fpp != NULL) fclose (fpp);
+    free(fix);
     return 0;
 }
 

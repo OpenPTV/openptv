@@ -205,7 +205,9 @@ START_TEST(test_orient)
     printf ("glass_z        = %8.3f mm      +/- %8.3f\n", cal->glass_par.vec_z/nGl, \
                                                         (sigmabeta[16]+sigmabeta[17]));
     }    
-
+    
+    free(cal);
+    free_control_par(cpar);
 }
 END_TEST
 
@@ -277,6 +279,10 @@ START_TEST(test_point_position)
     fail_unless(fabs(skew_dist - jigged_correct) < 0.05);
     vec_subt(point, res, res);
     fail_unless(vec_norm(res) < 0.01);
+    
+    for (cam = 0; cam < num_cams; cam++) {
+        free(calib[cam]);
+    }
 }
 END_TEST
 
@@ -358,6 +364,14 @@ START_TEST(test_convergence_measure)
        has a 2*jigg_amp error because the cameras are moved in opposite
        directions. */
     fail_unless(fabs(jigged_skew_dist - jigged_correct) < 0.05 );
+    
+    for (cam = 0; cam < num_cams; cam++) {
+        free(calib[cam]);
+    }
+    for (cpt_ix = 0; cpt_ix < num_pts; cpt_ix++) {
+        free(targets[cpt_ix]);
+    }
+    free_control_par(cpar);
 }
 END_TEST
 
