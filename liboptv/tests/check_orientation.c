@@ -36,22 +36,19 @@ START_TEST(test_raw_orient)
     int nfix, i;
     int eps, correct_eps = 25;
     double xp, yp;
-
-
+    
     /* read 4 points manually selected from the calibration file */
     nfix = read_man_ori_fix(fix4, "testing_fodder/cal/calblock.txt",
                                     "testing_fodder/parameters/man_ori.par", 0);
     fail_unless(nfix == 4);
     fail_unless(fix4[3][2] == 8.0);
-
-
+    
     /* read the orientation and the parameters */
     char ori_file[] = "testing_fodder/cal/cam1.tif.ori";
     char add_file[] = "testing_fodder/cal/cam1.tif.addpar";
 
     fail_if((cal = read_calibration(ori_file, add_file, NULL)) == 0);
     fail_if((cpar = read_control_par("testing_fodder/parameters/ptv.par"))== 0);
-
 
     /* fake the pix points by back-projection */
     for (i=0; i<nfix; i++){
@@ -62,7 +59,7 @@ START_TEST(test_raw_orient)
 
     fail_if((org_cal = read_calibration(ori_file, add_file, NULL)) == NULL);
 
-    /* fake the pix points by back-projection */
+    /* Jigg the fake detections to give raw_orient some challenge. */
     for (i=0; i<nfix; i++){
         pix4[i].x = pix4[i].x + 0.0;
         pix4[i].y = pix4[i].y - 0.1;
@@ -104,22 +101,17 @@ START_TEST(test_orient)
         }
 
     /* read the orientation and the parameters */
-    // char ori_file[] = "testing_fodder/cal/cam1.tif.ori";
     char ori_file[] = "testing_fodder/cal/sym_cam1.tif.ori";
     char add_file[] = "testing_fodder/cal/cam1.tif.addpar";
 
     fail_if((cal = read_calibration(ori_file, add_file, NULL)) == 0);
     fail_if((cpar = read_control_par("testing_fodder/parameters/ptv.par"))== 0);
 
-
     /* fake the pix points by back-projection */
     for (i=0; i<64; i++){
         img_coord (fix[i], cal, cpar->mm, &xp, &yp);
         metric_to_pixel (&(pix[i].x), &(pix[i].y), xp, yp, cpar);
         pix[i].pnr = i;
-        // printf("%d %lf %lf %lf\n", i, fix[i][0],fix[i][1],fix[i][2]);
-        // printf("%d, %lf %lf\n", pix[i].pnr, pix[i].x,pix[i].y);
-        
     }
 
     /* read orientation parameters */
@@ -128,12 +120,12 @@ START_TEST(test_orient)
     /* perturb the orientation, orient, compare */
     cal->ext_par.x0 -= 15.0;
     cal->ext_par.y0 += 15.0;
-    cal->ext_par.z0 -= 115.0;
+    cal->ext_par.z0 -= 15.0;
     cal->ext_par.omega -= 0.5;
     cal->ext_par.phi += 0.5;
     cal->ext_par.kappa += 0.5;
     
-    fail_if(orient (cal, cpar, 64, fix, pix, opar, &sigmabeta) == NULL);
+    fail_if(orient (cal, cpar, 64, fix, pix, opar, &sigmabeta) == 0);
     fail_if((org_cal = read_calibration(ori_file, add_file, NULL)) == NULL);
     fail_unless (fabs(cal->ext_par.x0 - org_cal->ext_par.x0) +
             fabs(cal->ext_par.y0 - org_cal->ext_par.y0) +
@@ -145,7 +137,7 @@ START_TEST(test_orient)
     /* perturb the orientation with internal parameters too*/
     cal->ext_par.x0 -= 15.0;
     cal->ext_par.y0 += 15.0;
-    cal->ext_par.z0 -= 115.0;
+    cal->ext_par.z0 -= 15.0;
     cal->ext_par.omega -= 0.5;
     cal->ext_par.phi += 0.5;
     cal->ext_par.kappa += 0.5;
@@ -156,49 +148,13 @@ START_TEST(test_orient)
     opar->ccflag = 1;
     opar->xhflag = 1;
         
-    fail_if(orient (cal, cpar, 64, fix, pix, opar, &sigmabeta) == NULL);
+    fail_if(orient (cal, cpar, 64, fix, pix, opar, &sigmabeta) == 0);
     fail_unless (fabs(fabs(cal->ext_par.x0 - org_cal->ext_par.x0) +
             fabs(cal->ext_par.y0 - org_cal->ext_par.y0) +
             fabs(cal->ext_par.z0 - org_cal->ext_par.z0) +
             fabs(cal->ext_par.omega - org_cal->ext_par.omega)/180 +
             fabs(cal->ext_par.phi - org_cal->ext_par.phi)/180 +
             fabs(cal->ext_par.kappa - org_cal->ext_par.kappa)/180 - 19.495073)< 1E-6);
-            
-    /* print results */
-    printf ("sigma0         = %6.2f micron\n", sigmabeta[19]*1000);
-    printf ("X0             = %+8.3f mm     +/- %8.3f\n", cal->ext_par.x0, sigmabeta[0]);
-    printf ("Y0             = %+8.3f mm     +/- %8.3f\n", cal->ext_par.y0, sigmabeta[1]);
-    printf ("Z0             = %+8.3f mm     +/- %8.3f\n", cal->ext_par.z0, sigmabeta[2]);
-    printf ("omega          = %+8.4f deg    +/- %8.4f\n", cal->ext_par.omega*RO, 
-                                                                        sigmabeta[3]*RO);
-    printf ("phi            = %+8.4f deg    +/- %8.4f\n", cal->ext_par.phi*RO, 
-                                                                        sigmabeta[4]*RO);
-    printf ("kappa          = %+8.4f deg    +/- %8.4f\n", cal->ext_par.kappa*RO, 
-                                                                        sigmabeta[5]*RO);
-    
-    
-    printf ("camera const   = %+8.3f mm     +/- %8.3f\n", cal->int_par.cc, sigmabeta[6]);
-    printf ("xh             = %+8.3f mm     +/- %8.3f\n", cal->int_par.xh, sigmabeta[7]);
-    printf ("yh             = %+8.3f mm     +/- %8.3f\n", cal->int_par.yh, sigmabeta[8]);
-    printf ("k1             = %+8.3f        +/- %8.3f\n", cal->added_par.k1, sigmabeta[9]);
-    printf ("k2             = %+8.3f        +/- %8.3f\n", cal->added_par.k2, sigmabeta[10]);
-    printf ("k3             = %+8.3f        +/- %8.3f\n", cal->added_par.k3, sigmabeta[11]);
-    printf ("p1             = %+8.3f        +/- %8.3f\n", cal->added_par.p1, sigmabeta[12]);
-    printf ("p2             = %+8.3f        +/- %8.3f\n", cal->added_par.p2, sigmabeta[13]);
-    printf ("scale for x'   = %+8.3f        +/- %8.3f\n", cal->added_par.scx, sigmabeta[14]);
-    printf ("shearing       = %+8.3f        +/- %8.3f\n", cal->added_par.she*RO, \
-                                                                    sigmabeta[15]*RO);
-     
-    vec_set(pos, cal->glass_par.vec_x, cal->glass_par.vec_y, cal->glass_par.vec_z);
-    nGl = vec_norm(pos);                                                                
-    if(opar->interfflag){
-    printf ("glass_x        = %8.3f mm      +/- %8.3f\n", cal->glass_par.vec_x/nGl, \
-                                                        (sigmabeta[16]+sigmabeta[17]));
-    printf ("glass_y        = %8.3f mm      +/- %8.3f\n", cal->glass_par.vec_y/nGl, \
-                                                        (sigmabeta[16]+sigmabeta[17]));
-    printf ("glass_z        = %8.3f mm      +/- %8.3f\n", cal->glass_par.vec_z/nGl, \
-                                                        (sigmabeta[16]+sigmabeta[17]));
-    }    
     
     free(cal);
     free_control_par(cpar);
