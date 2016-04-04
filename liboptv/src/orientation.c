@@ -636,7 +636,7 @@ int raw_orient (Calibration* cal, control_par *cpar, int nfix, vec3d fix[], targ
     cal->added_par.k3 = 0;
     cal->added_par.p1 = 0;
     cal->added_par.p2 = 0;
-    cal->added_par.scx = 0;
+    cal->added_par.scx = 1;
     cal->added_par.she = 0;
 
 

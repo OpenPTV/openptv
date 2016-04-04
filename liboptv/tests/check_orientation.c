@@ -74,13 +74,7 @@ START_TEST(test_raw_orient)
             fabs(cal->ext_par.z0 - org_cal->ext_par.z0) +
             fabs(cal->ext_par.omega - org_cal->ext_par.omega) +
             fabs(cal->ext_par.phi - org_cal->ext_par.phi) +
-            fabs(cal->ext_par.kappa - org_cal->ext_par.kappa) - 0.713498)<1E-6);
-      
-
-
-
-
-
+            fabs(cal->ext_par.kappa - org_cal->ext_par.kappa)) < 1E-3);
 }
 END_TEST
 
