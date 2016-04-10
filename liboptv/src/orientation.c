@@ -1,3 +1,11 @@
+/* routines for determining the camera parameters used in a scene.
+ *
+ * References:
+ * [1] Maas, Gruen and Papantoniou. Particle tracking velocimetry in 
+ *     three-dimensional flows, Part 1: 
+ *     Photogrammetric determination of particle coordinates. Experiments in 
+ *     Fluids, vol. 15, pp. 133-146, 1993.     
+ */
 
 #include "orientation.h"
 #include "calibration.h"
@@ -199,7 +207,7 @@ void num_deriv_exterior(Calibration* cal, control_par *cpar, double dpos, double
     vars[5] = &(cal->ext_par.kappa);
     
     /* Starting image position */
-	rotation_matrix(&(cal->ext_par));
+    rotation_matrix(&(cal->ext_par));
     img_coord (pos, cal, cpar->mm, &xs, &ys);
     
     for (pd = 0; pd < 6; pd++) {
@@ -215,45 +223,48 @@ void num_deriv_exterior(Calibration* cal, control_par *cpar, double dpos, double
     rotation_matrix(&(cal->ext_par));
 }
 
-/*  orient() calculates orientation of the camera, updating its calibration structure
-    using the definitions and algorithms well described in: 
-    "Particle tracking velocimetry in three-dimensional flows Part 1. Photogrammetric 
-    determination of particle coordinates" by Maas, Gruen and Papantoniou, Experiments in 
-    Fluids, vol. 15, pp. 133-146, 1993.     
-
-    Calibration* cal_in  -      camera calibration object
-    control_par *cpar -     control parameters
-    int nfix	-	 # of object points
-    vec3d fix[]	-	 object point data obtained using read_calblock() function and
-                    represents the known calibration body 3D points
-    target pix[] -	image coordinates obtained from sortgrid(). The points
-    which are associated with fix[] have real pointer (=i), others have -999
-    orient_par flags - structure of all the flags of the parameters to be (un)changed, 
-        read from orient.par parameter file using read_orient_par(), defaults are zeros;
+/*  orient() calculates orientation of the camera, updating its calibration 
+    structure using the definitions and algorithms well described in [1].
+    
+    Arguments:
+    Calibration* cal_in - camera calibration object
+    control_par *cpar - control parameters
+    int nfix - number of 3D known points
+    vec3d fix[]	- each of nfix items is one 3D position of known point on
+        the calibration object.
+    target pix[] - image coordinates corresponding to each point in ``fix``.
+        can be obtained from the set of detected 2D points using 
+        sortgrid(). The points which are associated with fix[] have real 
+        pointer (.pnr attribute), others have -999.
+    orient_par flags - structure of all the flags of the parameters to be 
+        (un)changed, read from orient.par parameter file using 
+        read_orient_par(), defaults are zeros except for x_scale which is
+        by default 1.
+    
     Output:
     Calibration *cal_in - if the orientation routine converged, this structure
     is updated, otherwise, returned untouched. The routine works on a copy of
     the calibration structure, cal.
-    double sigmabeta[] - array of deviations for each of the interior and exterior 
-                        parameters and glass interface vector (19 in total) for user info
-    returns 1 for success, 0 for failure of convergence
+    double sigmabeta[] - array of deviations for each of the interior and 
+        exterior parameters and glass interface vector (19 in total).
+
+    Returns:
+    1 for success, 0 for failure of convergence
 */
-
-
 int orient (Calibration* cal_in, control_par *cpar, int nfix, vec3d fix[],
-            target pix[], orient_par *flags, double sigmabeta[20]) {
+            target pix[], orient_par *flags, double sigmabeta[20]) 
+{
     int  	i,j,n, itnum, stopflag, n_obs=0, maxsize;
     int  	intx1, intx2, inty1, inty2;
 
     double  ident[IDT], XPX[NPAR][NPAR], XPy[NPAR], beta[NPAR], omega=0;
     double  sigma0;
-    double 	xp, yp, xpd, ypd, xc, yc, r, qq, p, sumP;
+    double xp, yp, xpd, ypd, xc, yc, r, qq, p, sumP;
 
     int dummy, multi, numbers;
 
-    FILE *par_file;
     double al,be,ga,nGl,e1_x,e1_y,e1_z,e2_x,e2_y,e2_z,safety_x,safety_y,safety_z;
-    double *P, *y, *yh, *Xbeta, *resi, *pixnr;
+    double *P, *y, *yh, *Xbeta, *resi;
     vec3d glass_dir, tmp_vec, e1, e2, pos;
 
     Calibration *cal;
@@ -271,32 +282,30 @@ int orient (Calibration* cal_in, control_par *cpar, int nfix, vec3d fix[],
     yh = (double *) calloc(maxsize, sizeof(double));
     Xbeta = (double *) calloc(maxsize, sizeof(double));
     resi = (double *) calloc(maxsize, sizeof(double));
-    pixnr = (double *) calloc(maxsize, sizeof(double));
-        
-
 
     double (*X)[NPAR] = malloc(sizeof (*X) * maxsize);
     double (*Xh)[NPAR] = malloc(sizeof (*Xh) * maxsize);
 
-    for(i = 0; i < maxsize; i++){
-        for(j = 0; j < NPAR; j++){
-    	    X[i][j] = 0.0;
-    	    Xh[i][j] = 0.0;
-      }
-      y[i] = 0; P[i] = 1;
+    for(i = 0; i < maxsize; i++) {
+        for(j = 0; j < NPAR; j++) {
+    	      X[i][j] = 0.0;
+    	      Xh[i][j] = 0.0;
+        }
+        y[i] = 0;
+        P[i] = 1;
     }
     
-   for(i=0;i<NPAR;i++) sigmabeta[j] = 0.0;
-
+    for(i = 0; i < NPAR; i++)
+        sigmabeta[j] = 0.0;
 
     if(flags->interfflag){
         numbers = 18;
-    }
-    else{
+    } else{
         numbers = 16;
     }
 
-    vec_set(glass_dir, cal->glass_par.vec_x, cal->glass_par.vec_y, cal->glass_par.vec_z);
+    vec_set(glass_dir, 
+        cal->glass_par.vec_x, cal->glass_par.vec_y, cal->glass_par.vec_z);
     nGl = vec_norm(glass_dir);
 
     e1_x = 2*cal->glass_par.vec_z - 3*cal->glass_par.vec_x;
@@ -315,7 +324,6 @@ int orient (Calibration* cal_in, control_par *cpar, int nfix, vec3d fix[],
     be = 0;
     ga = 0;
 
-
     /* init identities */
     ident[0] = cal->int_par.cc;
     ident[1] = cal->int_par.xh;
@@ -333,42 +341,36 @@ int orient (Calibration* cal_in, control_par *cpar, int nfix, vec3d fix[],
     safety_z = cal->glass_par.vec_z;
     
     /* main loop, program runs through it, until none of the beta values
-     comes over a threshold and no more points are thrown out
-     because of their residuals */
+      comes over a threshold and no more points are thrown out
+      because of their residuals */
 
-    itnum = 0;  stopflag = 0;
-    while ((stopflag == 0) && (itnum < NUM_ITER))
-    {
+    itnum = 0;  
+    stopflag = 0;
+    while ((stopflag == 0) && (itnum < NUM_ITER)) {
       itnum++;
 
-      for (i=0, n=0; i<nfix; i++) if(pix[i].pnr == i)
-      {
-
-        switch (flags->useflag)
-        {
-        case 1: if ((i % 2) == 0)  continue;  break;
-        case 2: if ((i % 2) != 0)  continue;  break;
-        case 3: if ((i % 3) == 0)  continue;  break;
-        }
-
+      for (i = 0, n = 0; i < nfix; i++) {
         /* check for correct correspondence
         note that we do not use anymore pointer in fix, the points are read by
         the order of appearance and if we want to use every other point
         we use 'i', just check it is not -999 */
+        if(pix[i].pnr != i) continue;
         
-        if (pix[i].pnr != i) continue; 
+        switch (flags->useflag) {
+            case 1: if ((i % 2) == 0)  continue;  break;
+            case 2: if ((i % 2) != 0)  continue;  break;
+            case 3: if ((i % 3) == 0)  continue;  break;
+        }
 
-        /* every point from the image pace to the corrected mm position xc,yc*/
+        /* get metric flat-image coordinates of the detected point */
         pixel_to_metric (&xc, &yc, pix[i].x, pix[i].y, cpar);
         correct_brown_affin (xc, yc, cal->added_par, &xc, &yc);
 
-        pixnr[n/2] = i;		/* for drawing residuals */
-
-        /* every calibration dot to the projected mm position, xp,yp */
+        /* Projected 2D position on sensor of corresponding known point */
         rotation_matrix(&(cal->ext_par));
         img_coord (fix[i], cal, cpar->mm, &xp, &yp);
 
-        /* derivatives of additional parameters */
+        /* derivatives of distortion parameters */
 
         r = sqrt (xp*xp + yp*yp);
 
@@ -403,12 +405,12 @@ int orient (Calibration* cal_in, control_par *cpar, int nfix, vec3d fix[],
         X[n][15] = -cos(cal->added_par.she) * yp;
         X[n+1][15] = -sin(cal->added_par.she) * yp;
 
-
-        /* numeric derivatives of external parameters, 3D position and the angles */
+        /* numeric derivatives of projection coordinates over external 
+           parameters, 3D position and the angles */
         
         num_deriv_exterior(cal, cpar, dm, drad, fix[i], X[n], X[n + 1]);
-        
 
+        /* Num. deriv. of projection coords over sensor distance from PP */
         cal->int_par.cc += dm;
         rotation_matrix(&(cal->ext_par));
         img_coord (fix[i], cal, cpar->mm, &xpd, &ypd);
@@ -416,7 +418,7 @@ int orient (Calibration* cal_in, control_par *cpar, int nfix, vec3d fix[],
         X[n+1][6] = (ypd - yp) / dm;
         cal->int_par.cc -= dm;
 
-        /* water-glass-air interface position vector */
+        /* ditto, over water-glass-air interface position vector */
         al += dm;
         cal->glass_par.vec_x += e1[0]*nGl*al;
         cal->glass_par.vec_y += e1[1]*nGl*al;
@@ -463,15 +465,14 @@ int orient (Calibration* cal_in, control_par *cpar, int nfix, vec3d fix[],
         y[n+1] = yc - yp;
 
         n += 2;
-        }
+    }
     
-        n_obs = n;
+    n_obs = n;
                 
-        /* identities */
-
-        for (i=0; i<IDT; i++)  X[n_obs+i][6+i] = 1;
+    /* identities */
+    for (i = 0; i < IDT; i++)
+        X[n_obs + i][6 + i] = 1;
         
-
         y[n_obs+0] = ident[0] - cal->int_par.cc;
         y[n_obs+1] = ident[1] - cal->int_par.xh;
         y[n_obs+2] = ident[2] - cal->int_par.yh;
@@ -483,9 +484,9 @@ int orient (Calibration* cal_in, control_par *cpar, int nfix, vec3d fix[],
         y[n_obs+8] = ident[8] - cal->added_par.scx;
         y[n_obs+9] = ident[9] - cal->added_par.she;
 
-
         /* weights */
-        for (i=0; i<n_obs; i++)  P[i] = 1;
+        for (i = 0; i < n_obs; i++)
+            P[i] = 1;
 
         P[n_obs+0] = ( ! flags->ccflag) ?  POS_INF : 1;
         P[n_obs+1] = ( ! flags->xhflag) ?  POS_INF : 1;
@@ -498,28 +499,29 @@ int orient (Calibration* cal_in, control_par *cpar, int nfix, vec3d fix[],
         P[n_obs+8] = ( ! flags->scxflag) ?  POS_INF : 1;
         P[n_obs+9] = ( ! flags->sheflag) ?  POS_INF : 1;
 
-
-        n_obs += IDT;  sumP = 0;
-        for (i=0; i<n_obs; i++)	       	/* homogenize */
-        {
+        n_obs += IDT;
+        sumP = 0;
+        for (i = 0; i < n_obs; i++) {       	/* homogenize */
             p = sqrt (P[i]);
-            for (j=0; j<NPAR; j++)  Xh[i][j] = p * X[i][j];
-            yh[i] = p * y[i];  sumP += P[i];
+            for (j = 0; j < NPAR; j++)
+                Xh[i][j] = p * X[i][j];
+            
+            yh[i] = p * y[i];
+            sumP += P[i];
         }
         
         /* Gauss Markoff Model it is the least square adjustment 
         of the redundant information contained both in the spatial 
-        intersection and the resection, see Maas et al. 1993, eq. 23 */
+        intersection and the resection, see [1], eq. 23 */
         ata ((double *) Xh, (double *) XPX, n_obs, numbers, NPAR );
         matinv ((double *) XPX, numbers, NPAR);
         atl ((double *) XPy, (double *) Xh, yh, n_obs, numbers, NPAR);
-        matmul ((double *) beta, (double *) XPX, (double *) XPy, numbers, numbers,1, NPAR,
-                                                                                    NPAR);
+        matmul ((double *) beta, (double *) XPX, (double *) XPy, 
+            numbers, numbers,1, NPAR, NPAR);
 
         stopflag = 1;
-        for (i=0; i<numbers; i++)
-        {
-         if (fabs (beta[i]) > CONVERGENCE)  stopflag = 0;
+        for (i = 0; i < numbers; i++) {
+            if (fabs (beta[i]) > CONVERGENCE)  stopflag = 0;
         }
 
         if ( ! flags->ccflag) beta[6] = 0.0;
@@ -550,8 +552,7 @@ int orient (Calibration* cal_in, control_par *cpar, int nfix, vec3d fix[],
         cal->added_par.scx += beta[14];
         cal->added_par.she += beta[15];
 
-        if(flags->interfflag)
-        {
+        if (flags->interfflag) {
           cal->glass_par.vec_x += e1[0]*nGl*beta[16];
           cal->glass_par.vec_y += e1[1]*nGl*beta[16];
           cal->glass_par.vec_z += e1[2]*nGl*beta[16];
@@ -559,21 +560,19 @@ int orient (Calibration* cal_in, control_par *cpar, int nfix, vec3d fix[],
           cal->glass_par.vec_y += e2[1]*nGl*beta[17];
           cal->glass_par.vec_z += e2[2]*nGl*beta[17];
         }
-        // beta[0]=beta[0];
     }
 
     /* compute residuals etc. */
-    matmul ( (double *) Xbeta, (double *) X, (double *) beta, n_obs, numbers, 1, n_obs, 
-                                                                                    NPAR);
+    matmul ( (double *) Xbeta, (double *) X, (double *) beta, n_obs, 
+        numbers, 1, n_obs, NPAR);
     omega = 0;
-    for (i=0; i<n_obs; i++)
-    {
+    for (i = 0; i < n_obs; i++) {
         resi[i] = Xbeta[i] - y[i];
         omega += resi[i] * P[i] * resi[i];
     }
     sigmabeta[NPAR] = sqrt (omega / (n_obs - numbers));
 
-    for (i=0; i<numbers; i++){ 
+    for (i = 0; i < numbers; i++) { 
         sigmabeta[i] = sigmabeta[NPAR] * sqrt(XPX[i][i]);
     }
 
@@ -622,130 +621,81 @@ int raw_orient (Calibration* cal, control_par *cpar, int nfix, vec3d fix[], targ
     double 	xp, yp, xpd, ypd, xc, yc, r, qq, p, sumP;
     vec3d   pos;
 
-
     /* init X, y (set to zero) */
-    for (i=0; i<10; i++)
-    {
-      for (j=0; j<6; j++)  X[i][j] = 0;
+    for (i = 0; i < 10; i++) {
+      for (j = 0; j < 6; j++)
+        X[i][j] = 0;
       y[i] = 0;
     }
-
 
     cal->added_par.k1 = 0;
     cal->added_par.k2 = 0;
     cal->added_par.k3 = 0;
     cal->added_par.p1 = 0;
     cal->added_par.p2 = 0;
-    cal->added_par.scx = 0;
+    cal->added_par.scx = 1;
     cal->added_par.she = 0;
-
 
     /* main loop, program runs through it, until none of the beta values
      comes over a threshold and no more points are thrown out
      because of their residuals */
 
-    itnum = 0;  stopflag = 0;
+    itnum = 0;
+    stopflag = 0;
 
-    while ((stopflag == 0) && (itnum < 20))
-    {
-      ++itnum;
+    while ((stopflag == 0) && (itnum < 20)) {
+        ++itnum;
 
-        for (i=0, n=0; i<nfix; i++)
-        {
-
-        /* we do not check the order - trust the user to click the points
-           in the correct order of appearance in man_ori and in the calibration
-           parameters GUI
-        */
-        pixel_to_metric (&xc, &yc, pix[i].x, pix[i].y, cpar);
-        /* no corrections as additional parameters are neglected
-            correct_brown_affin (xc, yc, cal->added_par, &xc, &yc);
-        */
-
-        /* every calibration dot is projected to the mm position, xp, yp */
-        vec_set(pos, fix[i][0], fix[i][1], fix[i][2]);
-        rotation_matrix(&(cal->ext_par));
-        img_coord (pos, cal, cpar->mm, &xp, &yp);
-
-
-        /* numeric derivatives of internal camera coefficients */
-        cal->ext_par.x0 += dm;
-        img_coord (pos, cal, cpar->mm, &xpd, &ypd);
-        X[n][0]      = (xpd - xp) / dm;
-        X[n+1][0] = (ypd - yp) / dm;
-        cal->ext_par.x0 -= dm;
-
-        cal->ext_par.y0 += dm;
-        img_coord (pos, cal, cpar->mm, &xpd, &ypd);
-        X[n][1]   = (xpd - xp) / dm;
-        X[n+1][1] = (ypd - yp) / dm;
-        cal->ext_par.y0 -= dm;
-
-        cal->ext_par.z0 += dm;
-        img_coord (pos, cal, cpar->mm, &xpd, &ypd);
-        X[n][2]      = (xpd - xp) / dm;
-        X[n+1][2] = (ypd - yp) / dm;
-        cal->ext_par.z0 -= dm;
-
-        cal->ext_par.omega += drad;
-        rotation_matrix(&(cal->ext_par));
-        img_coord (pos, cal, cpar->mm, &xpd, &ypd);
-        X[n][3]      = (xpd - xp) / drad;
-        X[n+1][3] = (ypd - yp) / drad;
-        cal->ext_par.omega -= drad;
-
-        cal->ext_par.phi += drad;
-        rotation_matrix(&(cal->ext_par));
-        img_coord (pos, cal, cpar->mm, &xpd, &ypd);
-        X[n][4]      = (xpd - xp) / drad;
-        X[n+1][4] = (ypd - yp) / drad;
-        cal->ext_par.phi -= drad;
-
-        cal->ext_par.kappa += drad;
-        rotation_matrix(&(cal->ext_par));
-        img_coord (pos, cal, cpar->mm, &xpd, &ypd);
-        X[n][5]      = (xpd - xp) / drad;
-        X[n+1][5] = (ypd - yp) / drad;
-        cal->ext_par.kappa -= drad;
-
-        y[n]   = xc - xp;
-        y[n+1] = yc - yp;
-
-        n += 2;
+        for (i = 0, n = 0; i < nfix; i++) {
+            /* we do not check the order - trust the user to click the points
+               in the correct order of appearance in man_ori and in the calibration
+               parameters GUI
+            */
+            pixel_to_metric (&xc, &yc, pix[i].x, pix[i].y, cpar);
+            /* no corrections as additional parameters are neglected
+                correct_brown_affin (xc, yc, cal->added_par, &xc, &yc);
+            */
+    
+            /* every calibration dot is projected to the mm position, xp, yp */
+            vec_set(pos, fix[i][0], fix[i][1], fix[i][2]);
+            rotation_matrix(&(cal->ext_par));
+            img_coord (pos, cal, cpar->mm, &xp, &yp);
+    
+            /* numeric derivatives of internal camera coefficients */
+            num_deriv_exterior(cal, cpar, dm, drad, pos, X[n], X[n + 1]);
+    
+            y[n]   = xc - xp;
+            y[n+1] = yc - yp;
+    
+            n += 2;
         }
 
-    /* Gauss Markoff Model */
-
-    ata ((double *) X, (double *) XPX, n, 6, 6);
-    matinv ((double *) XPX, 6, 6);
-    atl ((double *) XPy, (double *) X, y, n, 6, 6);
-    matmul ((double *) beta, (double *) XPX, (double *) XPy, 6,6,1,6,6);
-
-    stopflag = 1;
-    for (i=0; i<6; i++){
-      if (fabs (beta[i]) > 0.1 )  stopflag = 0;
+        /* Gauss Markoff Model */
+    
+        ata ((double *) X, (double *) XPX, n, 6, 6);
+        matinv ((double *) XPX, 6, 6);
+        atl ((double *) XPy, (double *) X, y, n, 6, 6);
+        matmul ((double *) beta, (double *) XPX, (double *) XPy, 6,6,1,6,6);
+    
+        stopflag = 1;
+        for (i = 0; i < 6; i++) {
+          if (fabs (beta[i]) > 0.1 )
+            stopflag = 0;
+        }
+    
+        cal->ext_par.x0 += beta[0];
+        cal->ext_par.y0 += beta[1];
+        cal->ext_par.z0 += beta[2];
+        cal->ext_par.omega += beta[3];
+        cal->ext_par.phi += beta[4];
+        cal->ext_par.kappa += beta[5];
+    
     }
 
-    cal->ext_par.x0 += beta[0];
-    cal->ext_par.y0 += beta[1];
-    cal->ext_par.z0 += beta[2];
-    cal->ext_par.omega += beta[3];
-    cal->ext_par.phi += beta[4];
-    cal->ext_par.kappa += beta[5];
-
-    // stopflag = stopflag;
-
-    }
-
-    if (stopflag)
-    {
+    if (stopflag) {
         rotation_matrix(&(cal->ext_par));
-        return 1;
     }
-    else
-    {
-        return 0;
-    }
+    return stopflag;
 }
 
 /* read_man_ori_fix() reads the locations of the points selected for the manual
@@ -799,10 +749,12 @@ int read_man_ori_fix(vec3d fix4[4], char* calblock_filename,
         if (num_match >= num_fix) break;
     }
     
-	return num_match;
+    free(fix);   
+    return num_match;
 
 handle_error:
     if (fpp != NULL) fclose (fpp);
+    free(fix);
     return 0;
 }
 
