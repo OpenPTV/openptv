@@ -8,11 +8,13 @@ def convert_arr_pixel_to_metric(np.ndarray[ndim=2, dtype=np.float_t] input,
                                 np.ndarray[ndim=2, dtype=np.float_t] out=None):
     '''
     Convert NumPy 2d, Nx2 array from pixel coordinates to metric coordinates.
-    @param input: input Numpy ndarray of Nx2 shape.
-    @param control: ControlParams object that holds parameters needed for conversion.
-    @param out: OPTIONAL numpy ndarray, same shape as input.
+    Arguments:
+    input-  input Numpy ndarray of Nx2 shape.
+    control - ControlParams object that holds parameters needed for conversion.
+    out - OPTIONAL numpy ndarray, same shape as input.
     
-    @return: if no array was passed for output returns a new numpy ndarray with converted coordinates
+    Returns:
+    if no array was passed for output returns a new numpy ndarray with converted coordinates
     '''
     return convert_generic(input, control._control_par, out, pixel_to_metric)
   
@@ -21,11 +23,12 @@ def convert_arr_metric_to_pixel(np.ndarray[ndim=2, dtype=np.float_t] input,
                                 np.ndarray[ndim=2, dtype=np.float_t] out=None):
     '''
     Convert NumPy 2d, Nx2 array from metric coordinates to pixel coordinates.
-    @param input: input Numpy ndarray of Nx2 shape.
-    @param control: ControlParams object that holds parameters needed for conversion.
-    @param out: OPTIONAL Numpy ndarray, same shape as input.
+    input - input Numpy ndarray of Nx2 shape.
+    control - ControlParams object that holds parameters needed for conversion.
+    out - OPTIONAL Numpy ndarray, same shape as input.
     
-    @return: if no array was passed for output returns a new numpy ndarray with converted coordinates
+    Returns:
+    if no array was passed for output returns a new numpy ndarray with converted coordinates
     '''
     return convert_generic(input, control._control_par, out, metric_to_pixel)
 
@@ -55,32 +58,33 @@ cdef convert_generic(np.ndarray[ndim=2, dtype=np.float_t] input,
                         , c_control)
     return out
 
-# Affine #######################################################################
+# Affine #
 
-#TODO naming
 def correct_arr_brown_affine(np.ndarray[ndim=2, dtype=np.float_t] input,
                                 Calibration calibration,
                                 np.ndarray[ndim=2, dtype=np.float_t] out=None):
     '''
     Correct crd to geo with Brown + affine.
-    @param input: input Numpy ndarray of Nx2 shape.
-    @param control: Calibration object that holds parameters needed for transformation.
-    @param out: OPTIONAL numpy ndarray, same shape as input.
+    input - input Numpy ndarray of Nx2 shape.
+    control - Calibration object that holds parameters needed for transformation.
+    out - OPTIONAL numpy ndarray, same shape as input.
     
-    @return: if no array was passed for output - returns a new numpy ndarray with converted coordinates
+    Returns:
+    if no array was passed for output - returns a new numpy ndarray with converted coordinates
     '''
     return brown_affine_generic(input, calibration._calibration.added_par, out, correct_brown_affin)
   
-def distort_arr_brown_affine_(np.ndarray[ndim=2, dtype=np.float_t] input,
+def distort_arr_brown_affine(np.ndarray[ndim=2, dtype=np.float_t] input,
                                 Calibration calibration,
                                 np.ndarray[ndim=2, dtype=np.float_t] out=None):
     '''
     Transformation with Brown + affine. 
-    @param input: input Numpy ndarray of Nx2 shape.
-    @param control: Calibration object that holds parameters needed for transformation.
-    @param out: OPTIONAL Numpy ndarray, same shape as input.
+    input - input Numpy ndarray of Nx2 shape.
+    control - Calibration object that holds parameters needed for transformation.
+    out - OPTIONAL Numpy ndarray, same shape as input.
     
-    @return: if no array was passed for output - returns a new numpy ndarray with converted coordinates
+    Returns:
+    if no array was passed for output - returns a new numpy ndarray with converted coordinates
     '''
     return brown_affine_generic(input, calibration._calibration.added_par, out, distort_brown_affin)
 

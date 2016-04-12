@@ -1,8 +1,17 @@
 import unittest
-from optv.parameters import *
-from optv.transforms import *
-from optv.calibration import *
 import numpy as np, os, filecmp, shutil
+from optv.calibration import Calibration
+from optv.parameters import \
+    MultimediaParams, \
+    ControlParams, \
+    SequenceParams, \
+    TrackingParams, \
+    VolumeParams
+from optv.transforms import \
+    convert_arr_pixel_to_metric, \
+    convert_arr_metric_to_pixel, \
+    correct_arr_brown_affine, \
+    distort_arr_brown_affine
 
 class Test_transforms(unittest.TestCase):
     
@@ -60,13 +69,13 @@ class Test_transforms(unittest.TestCase):
         with self.assertRaises(TypeError):
             correct_arr_brown_affine(np.empty((10, 3)), self.calibration, out=None)
         with self.assertRaises(TypeError):
-            distort_arr_brown_affine_(np.empty((2, 1)), self.calibration, out=None)
+            distort_arr_brown_affine(np.empty((2, 1)), self.calibration, out=None)
         with self.assertRaises(TypeError):
-            distort_arr_brown_affine_(np.zeros((11, 2)), self.calibration, out=np.zeros((12, 2)))
+            distort_arr_brown_affine(np.zeros((11, 2)), self.calibration, out=np.zeros((12, 2)))
         
         input = np.full((3, 2), 100)
         output = np.zeros((3, 2))
-        correct_output_corr = [[ 100.,  100.],  #TODO!!
+        correct_output_corr = [[ 100.,  100.],
                                [ 100.,  100.],
                                [ 100.,  100.]]
         correct_output_dist= [[ 100.,  100.],
@@ -77,14 +86,14 @@ class Test_transforms(unittest.TestCase):
         correct_arr_brown_affine(input, self.calibration, out=output)
 #         np.testing.assert_array_almost_equal(output, correct_output_corr,decimal=7)
         output = np.zeros((3, 2))
-        distort_arr_brown_affine_(input, self.calibration, out=output)
+        distort_arr_brown_affine(input, self.calibration, out=output)
 #         np.testing.assert_array_almost_equal(output, correct_output_dist, decimal=7)
         
          # Test when NOT passing an array for output
         output=correct_arr_brown_affine(input, self.calibration, out=None)
         np.testing.assert_array_almost_equal(output, correct_output_corr,decimal=7)
         output = np.zeros((3, 2))
-        output=distort_arr_brown_affine_(input, self.calibration, out=None)
+        output=distort_arr_brown_affine(input, self.calibration, out=None)
         np.testing.assert_array_almost_equal(output, correct_output_dist, decimal=7)
         
 if __name__ == '__main__':
