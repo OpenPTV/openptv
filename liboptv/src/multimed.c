@@ -67,7 +67,7 @@ double multimed_r_nlay (Calibration *cal, mm_np *mm, vec3d pos) {
     
     
     /* interpolation using the existing mmlut */
-    if (mm->lut) {
+	if (cal->mmlut.data != NULL) {
         mmf = get_mmf_from_mmlut(cal, pos);
         if (mmf > 0) return (mmf);
     }
@@ -225,9 +225,12 @@ void init_mmlut (volume_par *vpar, control_par *cpar, Calibration *cal) {
   int  i_cam;
   double X,Y,Z, R, Zmin, Rmax=0, Zmax;
   vec3d pos, a, xyz, xyz_t; 
-  double x,y, *Ri,*Zi;
+  double x,y, *Ri,*Zi, *data;
   double rw = 2.0; 
-  Exterior Ex_t; /* A frame representing a point outside tank, middle of glass*/
+
+  /* A frame representing a point outside tank, middle of glass*/
+  Calibration cal_t;
+
   double X_t,Y_t,Z_t, Zmin_t,Zmax_t;
   double cross_p[3],cross_c[3]; 
   double xc[2], yc[2];  /* image corners */
@@ -251,6 +254,7 @@ void init_mmlut (volume_par *vpar, control_par *cpar, Calibration *cal) {
   Zmax_t=Zmax;
 
   /* intersect with image vertices rays */
+  cal_t = *cal;
 
   for (i = 0; i < 2; i ++) {
       for (j = 0; j < 2; j++) {
@@ -264,23 +268,23 @@ void init_mmlut (volume_par *vpar, control_par *cpar, Calibration *cal) {
           
           move_along_ray(Zmin, pos, a, xyz);
           trans_Cam_Point(cal->ext_par, *(cpar->mm), cal->glass_par, xyz, \
-            &Ex_t, xyz_t, (double *)cross_p, (double *)cross_c);
+            &(cal_t.ext_par), xyz_t, (double *)cross_p, (double *)cross_c);
 
           if( xyz_t[2] < Zmin_t ) Zmin_t = xyz_t[2];
           if( xyz_t[2] > Zmax_t ) Zmax_t = xyz_t[2];
 
-          R = norm((xyz_t[0] - Ex_t.x0), (xyz_t[1] - Ex_t.y0), 0);
+          R = norm((xyz_t[0] - cal_t.ext_par.x0), (xyz_t[1] - cal_t.ext_par.y0), 0);
           if (R > Rmax)
               Rmax = R;
            
           move_along_ray(Zmax, pos, a, xyz);
           trans_Cam_Point(cal->ext_par, *(cpar->mm), cal->glass_par, xyz,\
-              &Ex_t, xyz_t, (double *)cross_p, (double *)cross_c);
+              &(cal_t.ext_par), xyz_t, (double *)cross_p, (double *)cross_c);
   
           if( xyz_t[2] < Zmin_t ) Zmin_t = xyz_t[2];
           if( xyz_t[2] > Zmax_t ) Zmax_t = xyz_t[2];
 
-          R = norm((xyz_t[0] - Ex_t.x0), (xyz_t[1] - Ex_t.y0), 0);
+          R = norm((xyz_t[0] - cal_t.ext_par.x0), (xyz_t[1] - cal_t.ext_par.y0), 0);
           if (R > Rmax)
               Rmax = R;
       }
@@ -294,14 +298,14 @@ void init_mmlut (volume_par *vpar, control_par *cpar, Calibration *cal) {
   nz = (int)((Zmax_t-Zmin_t)/rw + 1);
 
   /* create two dimensional mmlut structure */
-  vec_set(cal->mmlut.origin, Ex_t.x0, Ex_t.y0, Zmin_t);
+  vec_set(cal->mmlut.origin, cal_t.ext_par.x0, cal_t.ext_par.y0, Zmin_t);
   
   cal->mmlut.nr = nr;
   cal->mmlut.nz = nz;
   cal->mmlut.rw = rw;
   
-  if (cpar->mm->lut == 0) {
-      cal->mmlut.data = (double *) malloc (nr*nz * sizeof (double));
+  if (cal->mmlut.data == NULL) {
+      data = (double *) malloc (nr*nz * sizeof (double));
   
       /* fill mmlut structure */
       Ri = (double *) malloc (nr * sizeof (double));
@@ -314,16 +318,14 @@ void init_mmlut (volume_par *vpar, control_par *cpar, Calibration *cal) {
 
       for (i = 0; i < nr; i++) {
         for (j = 0; j < nz; j++) {
-            vec_set(xyz, Ri[i] + Ex_t.x0, Ex_t.y0, Zi[j]);
-            cal->mmlut.data[i*nz + j] = multimed_r_nlay(cal, cpar->mm, xyz);
+            vec_set(xyz, Ri[i] + cal_t.ext_par.x0, cal_t.ext_par.y0, Zi[j]);
+            data[i*nz + j] = multimed_r_nlay(&cal_t, cpar->mm, xyz);
         } /* nr */
       } /* nz */
     
       free (Ri);
       free (Zi);
-
-      /* when finished initalization, change the setting of the LUT flag */
-      cpar->mm->lut = 1;
+      cal->mmlut.data = data;
     }
 }
 

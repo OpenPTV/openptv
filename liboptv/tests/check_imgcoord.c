@@ -28,8 +28,7 @@ START_TEST(test_flat_centered_cam)
         .n1 = 1,
         .n2 = {1,0,0},
         .n3 = 1,
-        .d = {1,0,0},
-        .lut = 1
+        .d = {1,0,0}
     };
     double x, y; /* Output variables */
     
@@ -57,8 +56,7 @@ START_TEST(test_shifted_sensor)
         .n1 = 1,
         .n2 = {1,0,0},
         .n3 = 1,
-        .d = {1,0,0},
-        .lut = 1
+        .d = {1,0,0}
     };
     double x, y; /* Output variables */
     
@@ -86,8 +84,7 @@ START_TEST(test_flat_decentered_cam)
         .n1 = 1,
         .n2 = {1,0,0},
         .n3 = 1,
-        .d = {1,0,0},
-        .lut = 1
+        .d = {1,0,0}
     };
     double x, y; /* Output variables */
     
@@ -119,8 +116,7 @@ START_TEST(test_flat_multilayer)
         .n1 = 1,
         .n2 = {1.5,0,0},
         .n3 = 1,
-        .d = {1,0,0},
-        .lut = 1
+        .d = {1,0,0}
     };
     double x, y; /* Output variables */
     
@@ -149,8 +145,7 @@ START_TEST(test_distorted_centered_cam)
         .n1 = 1,
         .n2 = {1,0,0},
         .n3 = 1,
-        .d = {1,0,0},
-        .lut = 1
+        .d = {1,0,0}
     };
     double x, y; /* Output variables */
     double r; /* radial distortion prediction */

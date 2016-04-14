@@ -10,49 +10,6 @@
 
 #define EPS 1E-5
 
-
-START_TEST(test_norm_cross)
-{
-
-    double n[3];
-
-    // test simple cross-product normalized to unity
-
-    double a[] = {1.0, 0.0, 0.0};
-    double b[] = {0.0, 2.0, 0.0};
-
-    norm_cross(a,b,n);
-    fail_unless( (n[0] == 0.0) && (n[1] == 0.0) && (n[2] == 1.0));
-
-
-    // test negative values in the output
-
-    norm_cross(b,a,n);
-    // fail_unless( (n[0] == 0.0) && (n[1] == 0.0) && (n[2] == -1.0));
-
-
-    ck_assert_msg( fabs(n[0] - 0.0) < EPS && 
-                   fabs(n[1] - 0.0) < EPS && 
-                   fabs(n[2] - -1.0)  < EPS,
-             "Was expecting n to be 0., 0., -1. but found %f %f %f\n", n[0],n[1],n[2]);
-         
-
-    // our norm_cross had a bug when multiplying the parallel vectors
-    // it was returning nan instead of 0.0
-    // fixed Aug. 3, 2013, see in ray_tracing.c
-
-    norm_cross(a,a,n);
-    // fail_unless( (n[0] == 0.0) && (n[1] == 0.0) && (n[2] == 0.0));
-
-    ck_assert_msg( fabs(n[0] - 0.0) < EPS && 
-                   fabs(n[1] - 0.0) < EPS && 
-                   fabs(n[2] - 0.0)  < EPS,
-             "Was expecting n to be 0., 0., 0. but found %f %f %f\n", n[0],n[1],n[2]);
-
-
-}
-END_TEST
-
 START_TEST(test_matmul)
 {
 
@@ -174,7 +131,6 @@ Suite* fb_suite(void) {
     Suite *s = suite_create ("lsqadj");
  
     TCase *tc = tcase_create ("lsadj test");
-    tcase_add_test(tc, test_norm_cross);
     tcase_add_test(tc, test_matmul);
     tcase_add_test(tc, test_ata);
     tcase_add_test(tc, test_atl);

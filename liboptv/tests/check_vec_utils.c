@@ -126,6 +126,20 @@ START_TEST(test_unit_vec)
 }
 END_TEST
 
+START_TEST(test_cross)
+{
+    vec3d v1 = {1., 0., 0.}, v2 = {0., 1., 0.}, res = {0., 0., 1.}, out;
+    
+    vec_cross(v1, v2, out);
+    fail_unless(vec_cmp(out, res));
+    
+    /* parallel vectors cross = 0 */
+    res[2] = 0;
+    vec_cross(v1, v1, out);
+    fail_unless(vec_cmp(out, res));
+}
+END_TEST
+
 Suite* fb_suite(void) {
     Suite *s = suite_create ("lsqadj");
  
@@ -167,6 +181,10 @@ Suite* fb_suite(void) {
     
     tc = tcase_create("Add vectors");
     tcase_add_test(tc, test_vec_add);
+    suite_add_tcase (s, tc);
+
+    tc = tcase_create("Cross product");
+    tcase_add_test(tc, test_cross);
     suite_add_tcase (s, tc);
 
     return s;
