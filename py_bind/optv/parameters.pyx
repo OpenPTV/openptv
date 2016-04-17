@@ -56,11 +56,12 @@ cdef class MultimediaParams:
         """
         self._mm_np = < mm_np *> malloc(sizeof(mm_np))
         
-        if kwargs.has_key('n1'):
+        if kwargs.has_key('n1') and kwargs['n1'] is not None:
             self.set_n1(kwargs['n1'])
-        if kwargs.has_key('n2') and kwargs.has_key('d'):
+        if kwargs.has_key('n2') and kwargs.has_key('d') \
+            and kwargs['n2'] is not None and kwargs['d'] is not None:
             self.set_layers(kwargs['n2'], kwargs['d'])
-        if kwargs.has_key('n3'):
+        if kwargs.has_key('n3') and kwargs['n3'] is not None:
             self.set_n3(kwargs['n3'])
              
     cdef void set_mm_np(self, mm_np * other_mm_np_c_struct):
@@ -470,15 +471,32 @@ cdef class ControlParams:
     pythonic access. Objects of this type can be checked for equality using 
     "==" and "!=" operators.
     """
-    def __init__(self, cams_num):
+    def __init__(self, cams, flags=[], image_size=None, pixel_size=None,
+        cam_side_n=None, wall_ns=None, wall_thicks=None, object_side_n=None):
         """
-        Arguments:
+        Arguments (all optional except num_cams):
         num_cams - number of camras used in the scene.
+        flags - a list containings name of set flags, select from 'hp', 
+            'allcam', 'headers'.
+        image_size - sequence, w,h image size in pixels.
+        pixel_size - sequence, w,h pixel size in mm.
+        cam_side_n, wall_ns, wall_thicks, object_side_n - see MultimediaParams
         """
-        self._control_par = c_new_control_par(cams_num)
+        self._control_par = c_new_control_par(cams)
+        self.set_hp_flag('hp' in flags)
+        self.set_allCam_flag('allcam' in flags)
+        self.set_tiff_flag('headers' in flags)
+        self.set_chfield(0) # legacy stuff.
         
-        self._multimedia_params = MultimediaParams()
-        self._multimedia_params.set_mm_np(self._control_par[0].mm)
+        if image_size is not None:
+            self.set_image_size(image_size)
+        if pixel_size is not None:
+            self.set_pixel_size(pixel_size)
+        
+        self._multimedia_params = MultimediaParams(
+            n1=cam_side_n, n2=wall_ns, d=wall_thicks, n3=object_side_n)
+        free(self._control_par[0].mm)
+        self._control_par[0].mm = self._multimedia_params._mm_np
         
     # Getters and setters
     def get_num_cams(self):
