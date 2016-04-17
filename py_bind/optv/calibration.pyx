@@ -18,9 +18,48 @@ cdef extern from "optv/calibration.h":
     void rotation_matrix(Exterior *ex)
     
 cdef class Calibration:
-    def __init__(self):
+    def __init__(self, pos=None, angs=None, prim_point=None, rad_dist=None,
+        decent=None, affine=None, glass=None):
+        """
+        All arguments are optional arrays, default for all is zeros except 
+        affine that defaults to [1, 0].
+        
+        Arguments:
+        pos - camera external position (world position of promary point).
+        angs - in radians CCW around the x,y,z axes respectively.
+        prim_point - position of primary point rel. image plan. Object is 
+            assumed to be in negative Z, and image plan in 0, so use positive
+            Z coordinate.
+        rad_dist - 3 radial distortion parameters, see [1].
+        decent - 2 decentering parameters, see [1].
+        affine - 2 parameters: scaling and x-shearing.
+        glass - vector from world origin to glass, normal to glass.
+        """
         self._calibration = <calibration *> malloc(sizeof(calibration))
         self._calibration.mmlut.data = NULL
+        
+        if pos is None:
+            pos = numpy.zeros(3)
+        if angs is None:
+            angs = numpy.zeros(3)
+        if prim_point is None:
+            prim_point = numpy.zeros(3)
+        if rad_dist is None:
+            rad_dist = numpy.zeros(3)
+        if decent is None:
+            decent = numpy.zeros(2)
+        if affine is None:
+            affine = numpy.r_[1, 0]
+        if glass is None:
+            glass = numpy.zeros(3)
+        
+        self.set_pos(pos)
+        self.set_angles(angs)
+        self.set_primary_point(prim_point)
+        self.set_radial_distortion(rad_dist)
+        self.set_decentering(decent)
+        self.set_affine_trans(affine)
+        self.set_glass_vec(glass)
         
     def from_file(self, ori_file, add_file=None, fallback_file=None):
         """

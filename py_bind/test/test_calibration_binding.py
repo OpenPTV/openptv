@@ -15,6 +15,26 @@ class Test_Calibration(unittest.TestCase):
         # create an instance of Calibration wrapper class
         self.cal = Calibration()
             
+    def test_full_instantiate(self):
+        pos = numpy.r_[1., 3., 5.]
+        angs = numpy.r_[2., 4., 6.]
+        prim_point = pos * 3
+        rad_dist = pos * 4
+        decent = pos[:2] * 5
+        affine = decent * 1.5
+        glass = pos * 7
+        
+        cal = Calibration(pos, angs, prim_point, rad_dist, decent, affine, 
+            glass)
+        
+        numpy.testing.assert_array_equal(pos, cal.get_pos())
+        numpy.testing.assert_array_equal(angs, cal.get_angles())
+        numpy.testing.assert_array_equal(prim_point, cal.get_primary_point())
+        numpy.testing.assert_array_equal(rad_dist, cal.get_radial_distortion())
+        numpy.testing.assert_array_equal(decent, cal.get_decentering())
+        numpy.testing.assert_array_equal(affine, cal.get_affine())
+        numpy.testing.assert_array_equal(glass, cal.get_glass_vec())
+        
     def test_Calibration_instantiation(self):
         """Filling a calibration object by reading ori files"""
         self.output_ori_file_name = self.output_directory + "output_ori"
