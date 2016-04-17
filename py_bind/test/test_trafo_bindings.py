@@ -35,7 +35,7 @@ class Test_transforms(unittest.TestCase):
 
     def test_transforms_regress(self):
         """Transformed values are as before."""
-        input = np.full((3, 2), 100)
+        input = np.full((3, 2), 100.)
         output = np.zeros((3, 2))
         correct_output_pixel_to_metric = [[-8181.  ,  6657.92],
                                           [-8181.  ,  6657.92],
@@ -93,7 +93,7 @@ class Test_transforms(unittest.TestCase):
             distort_arr_brown_affine(np.zeros((11, 2)), self.calibration, out=np.zeros((12, 2)))
         
     def test_brown_affine_regress(self):
-        input = np.full((3, 2), 100)
+        input = np.full((3, 2), 100.)
         output = np.zeros((3, 2))
         correct_output_corr = [[ 100.,  100.],
                                [ 100.,  100.],

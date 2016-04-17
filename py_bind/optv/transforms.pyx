@@ -38,9 +38,9 @@ cdef convert_generic(np.ndarray[ndim=2, dtype=np.float_t] input,
                         void convert_function(double * , double * , double, double , control_par *)):
     # Raise exception if received non Nx2 shaped ndarray
     # or if output and input arrays' shapes do not match.
-    if input.shape[1] != 2 or (out != None and out.shape[1] != 2):
+    if input.shape[1] != 2 or ((out is not None) and (out.shape[1] != 2)):
         raise TypeError("Only two-column matrices accepted for conversion.")
-    if out != None:
+    if out is not None:
         if not(input.shape[0] == out.shape[0] and input.shape[1] == out.shape[1]):
             raise TypeError("Unmatching shape of input and output arrays: (" 
                             + str(input.shape[0]) + "," + str(input.shape[1]) 
@@ -70,9 +70,11 @@ def correct_arr_brown_affine(np.ndarray[ndim=2, dtype=np.float_t] input,
     out - OPTIONAL numpy ndarray, same shape as input.
     
     Returns:
-    if no array was passed for output - returns a new numpy ndarray with converted coordinates
+    if no array was passed for output - returns a new numpy ndarray with 
+    converted coordinates
     '''
-    return brown_affine_generic(input, calibration._calibration.added_par, out, correct_brown_affin)
+    return brown_affine_generic(input, calibration._calibration.added_par, out,
+        correct_brown_affin)
   
 def distort_arr_brown_affine(np.ndarray[ndim=2, dtype=np.float_t] input,
                                 Calibration calibration,
@@ -86,7 +88,8 @@ def distort_arr_brown_affine(np.ndarray[ndim=2, dtype=np.float_t] input,
     Returns:
     if no array was passed for output - returns a new numpy ndarray with converted coordinates
     '''
-    return brown_affine_generic(input, calibration._calibration.added_par, out, distort_brown_affin)
+    return brown_affine_generic(input, calibration._calibration.added_par, out,
+        distort_brown_affin)
 
 cdef brown_affine_generic(np.ndarray[ndim=2, dtype=np.float_t] input,
                         ap_52 c_ap_52,
@@ -94,9 +97,9 @@ cdef brown_affine_generic(np.ndarray[ndim=2, dtype=np.float_t] input,
                         void affine_function(double, double, ap_52 , double * , double *)):
     # Raise exception if received non Nx2 shaped ndarray
     # or if output and input arrays' shapes do not match.
-    if input.shape[1] != 2 or (out != None and out.shape[1] != 2):
+    if input.shape[1] != 2 or ((out is not None) and (out.shape[1] != 2)):
         raise TypeError("Only two-column matrices accepted for conversion.")
-    if out != None:
+    if out is not None:
         if not(input.shape[0] == out.shape[0] and input.shape[1] == out.shape[1]):
             raise TypeError("Unmatching shape of input and output arrays: (" 
                             + str(input.shape[0]) + "," + str(input.shape[1]) 
