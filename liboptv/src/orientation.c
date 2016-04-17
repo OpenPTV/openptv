@@ -255,17 +255,15 @@ int orient (Calibration* cal_in, control_par *cpar, int nfix, vec3d fix[],
             target pix[], orient_par *flags, double sigmabeta[20]) 
 {
     int  	i,j,n, itnum, stopflag, n_obs=0, maxsize;
-    int  	intx1, intx2, inty1, inty2;
 
     double  ident[IDT], XPX[NPAR][NPAR], XPy[NPAR], beta[NPAR], omega=0;
-    double  sigma0;
     double xp, yp, xpd, ypd, xc, yc, r, qq, p, sumP;
 
-    int dummy, multi, numbers;
+    int numbers;
 
     double al,be,ga,nGl,e1_x,e1_y,e1_z,e2_x,e2_y,e2_z,safety_x,safety_y,safety_z;
     double *P, *y, *yh, *Xbeta, *resi;
-    vec3d glass_dir, tmp_vec, e1, e2, pos;
+    vec3d glass_dir, tmp_vec, e1, e2;
 
     Calibration *cal;
 
@@ -618,7 +616,7 @@ int raw_orient (Calibration* cal, control_par *cpar, int nfix, vec3d fix[], targ
     double  X[10][6], y[10], XPX[6][6], XPy[6], beta[6];
     int     i, j, n, itnum, stopflag;
     double  dm = 0.0001,  drad = 0.0001;
-    double 	xp, yp, xpd, ypd, xc, yc, r, qq, p, sumP;
+    double 	xp, yp, xc, yc;
     vec3d   pos;
 
     /* init X, y (set to zero) */
@@ -774,7 +772,7 @@ orient_par* read_orient_par(char *filename) {
     ret = malloc(sizeof(orient_par));
 
     if (   !(fscanf(file, "%d", &ret->useflag)==1)  /* use every point or every other pt */
-        || !(fscanf(file, "%d", &ret->ccflag)==1)   /* flag to change back focal distance */
+        || !(fscanf(file, "%d", &ret->ccflag)==1)   /* change back focal distance */
         || !(fscanf(file, "%d", &ret->xhflag)==1)   /* change xh point, 1-yes, 0-no */
         || !(fscanf(file, "%d", &ret->yhflag)==1)   /* change yh point */
         || !(fscanf(file, "%d", &ret->k1flag)==1)   /* change k1 */
@@ -784,7 +782,7 @@ orient_par* read_orient_par(char *filename) {
         || !(fscanf(file, "%d", &ret->p2flag)==1)     /* p2 */
         || !(fscanf(file, "%d", &ret->scxflag)==1)   /* scx - scaling  */
         || !(fscanf(file, "%d", &ret->sheflag)==1)    /* she - shearing  */
-        || !(fscanf(file, "%d", &ret->interfflag))==1)  /* interface glass vector */
+        || !(fscanf(file, "%d", &ret->interfflag)==1))  /* interface glass vector */
     {
         printf("Error reading orientation parameters from %s\n", filename);
         free(ret);

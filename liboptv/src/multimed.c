@@ -134,7 +134,6 @@ void trans_Cam_Point(Exterior ex, mm_np mm, Glass gl, vec3d pos,
     Exterior *ex_t, vec3d pos_t, double cross_p[3], double cross_c[3])
 {
     double dist_cam_glas,dist_point_glas,dist_o_glas; //glas inside at water 
-    int row, col;
     vec3d glass_dir, primary_pt, renorm_glass, temp;
     
     vec_set(glass_dir, gl.vec_x, gl.vec_y, gl.vec_z);
@@ -222,8 +221,7 @@ void move_along_ray(double glob_Z, vec3d vertex, vec3d direct, vec3d out) {
 */ 
 void init_mmlut (volume_par *vpar, control_par *cpar, Calibration *cal) {
   register int  i,j, nr, nz;
-  int  i_cam;
-  double X,Y,Z, R, Zmin, Rmax=0, Zmax;
+  double R, Zmin, Rmax=0, Zmax;
   vec3d pos, a, xyz, xyz_t; 
   double x,y, *Ri,*Zi, *data;
   double rw = 2.0; 
@@ -231,7 +229,7 @@ void init_mmlut (volume_par *vpar, control_par *cpar, Calibration *cal) {
   /* A frame representing a point outside tank, middle of glass*/
   Calibration cal_t;
 
-  double X_t,Y_t,Z_t, Zmin_t,Zmax_t;
+  double Zmin_t, Zmax_t;
   double cross_p[3],cross_c[3]; 
   double xc[2], yc[2];  /* image corners */
   
@@ -340,7 +338,6 @@ void init_mmlut (volume_par *vpar, control_par *cpar, Calibration *cal) {
 double get_mmf_from_mmlut (Calibration *cal, vec3d pos){
     int i, ir,iz, nr,nz, rw, v4[4];
     double R, sr, sz, mmf = 1.0;
-    double X,Y,Z;
     vec3d temp;
     
     rw = cal->mmlut.rw;
@@ -407,13 +404,11 @@ void volumedimension (double *xmax, double *xmin,
     volume_par *vpar, control_par *cpar, Calibration *cal)
 {
   int i_cam, i, j;
-  double X, Y, Z, R, Rmax=0, Zmin, Zmax;
-  vec3d pos, a, xyz, xyz_t;
+  double X, Y;
+  vec3d pos, a;
   double x,y;  
   double xc[2], yc[2];  /* image corners */
-  Exterior Ex_t;
-  double X_t, Y_t, Z_t, Zmin_t,Zmax_t;
-  double cross_p[3],cross_c[3];
+  double Zmin, Zmax;
   
   xc[0] = 0.0;
   xc[1] = (double) cpar->imx;

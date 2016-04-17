@@ -480,7 +480,7 @@ target_par* read_target_par(char *filename) {
         || !(fscanf(file, "%d  %d", &ret->nxmin, &ret->nxmax)==2) /* pixels per target,  */
         || !(fscanf(file, "%d  %d", &ret->nymin, &ret->nymax)==2) /* abs, in x, in y     */
         || !(fscanf(file, "%d", &ret->sumg_min)==1)               /* min. sumg */
-        || !(fscanf(file, "%d", &ret->cr_sz))==1)                 /* size of crosses */
+        || !(fscanf(file, "%d", &ret->cr_sz)==1))                 /* size of crosses */
     {
         printf("Error reading target recognition parameters from %s\n", filename);
         free(ret);

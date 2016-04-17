@@ -380,8 +380,6 @@ int prepare_image(unsigned char  *img, unsigned char  *img_hp, int dim_lp,
   int image_size = cpar->imx * cpar->imy;
   filter_t filt; /* for when filter_hp == 2 */
 
-  register unsigned char *ptr1, *ptr2, *ptr3;
-
   img_lp = (unsigned char *) calloc (image_size, 1);
   if ( ! img_lp) {
       puts ("calloc for img_lp --> error");
