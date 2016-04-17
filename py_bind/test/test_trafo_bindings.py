@@ -104,10 +104,10 @@ class Test_transforms(unittest.TestCase):
         
         # Test when passing an array for output
         correct_arr_brown_affine(input, self.calibration, out=output)
-#         np.testing.assert_array_almost_equal(output, correct_output_corr,decimal=7)
+        np.testing.assert_array_almost_equal(output, correct_output_corr,decimal=7)
         output = np.zeros((3, 2))
         distort_arr_brown_affine(input, self.calibration, out=output)
-#         np.testing.assert_array_almost_equal(output, correct_output_dist, decimal=7)
+        np.testing.assert_array_almost_equal(output, correct_output_dist, decimal=7)
         
          # Test when NOT passing an array for output
         output=correct_arr_brown_affine(input, self.calibration, out=None)
