@@ -43,6 +43,9 @@ add_dependencies(check_orientation optv)
 add_executable(check_epi EXCLUDE_FROM_ALL check_epi.c)
 add_dependencies(check_epi optv)
 
+add_executable(check_peakfitting EXCLUDE_FROM_ALL check_peakfitting.c)
+add_dependencies(check_peakfitting optv)
+
 get_property(OPTV_LIBRARY TARGET optv PROPERTY LOCATION)
 set(LIBS ${LIBS} ${CHECK_LIBRARIES} ${OPTV_LIBRARY})
 
@@ -137,8 +140,15 @@ add_custom_command(TARGET check_orientation PRE_BUILD
     COMMAND ${CMAKE_COMMAND} -E copy_directory
     ${CMAKE_CURRENT_SOURCE_DIR}/testing_fodder $<TARGET_FILE_DIR:check_orientation>/testing_fodder)
     
+target_link_libraries(check_peakfitting ${LIBS})
+add_test(check_peakfitting ${CMAKE_CURRENT_BINARY_DIR}/check_peakfitting)
+ 
+add_custom_command(TARGET check_peakfitting PRE_BUILD
+    COMMAND ${CMAKE_COMMAND} -E copy_directory
+    ${CMAKE_CURRENT_SOURCE_DIR}/testing_fodder $<TARGET_FILE_DIR:check_peakfitting>/testing_fodder)
+    
 add_custom_target(verify COMMAND ${CMAKE_CTEST_COMMAND})
 add_dependencies(verify check_fb check_calibration check_parameters check_lsqadj \ 
 check_ray_tracing check_trafo check_vec_utils check_image_proc check_multimed \ 
-check_imgcoord check_orientation check_epi check_sortgrid)
+check_imgcoord check_orientation check_epi check_sortgrid check_peakfitting)
 
