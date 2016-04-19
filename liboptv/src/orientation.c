@@ -249,9 +249,14 @@ void num_deriv_exterior(Calibration* cal, control_par *cpar, double dpos, double
         exterior parameters and glass interface vector (19 in total).
 
     Returns:
-    1 for success, 0 for failure of convergence
+    On success, a pointer to an array of residuals. For each observation point
+    i = 0..n-1, residual 2*i is the Gauss-Markof residual for the x coordinate
+    and residual 2*i + 1 is for the y. Then come 10 cells with the delta 
+    between initial guess and final solution for internal and distortion 
+    parameters, which are also part of the G-M model and described in it.
+    On failure returns NULL.
 */
-int orient (Calibration* cal_in, control_par *cpar, int nfix, vec3d fix[],
+double* orient (Calibration* cal_in, control_par *cpar, int nfix, vec3d fix[],
             target pix[], orient_par *flags, double sigmabeta[20]) 
 {
     int  	i,j,n, itnum, stopflag, n_obs=0, maxsize;
@@ -581,15 +586,15 @@ int orient (Calibration* cal_in, control_par *cpar, int nfix, vec3d fix[],
     free(y);
     free(Xbeta);
     free(Xh);
-    free(resi);
 
     if (stopflag){
         rotation_matrix(&(cal->ext_par));
         memcpy(cal_in, cal, sizeof (Calibration));
-        return 1;
+        return resi;
     }
     else {
-        return 0;
+        free(resi);
+        return NULL;
     }
 }
 
