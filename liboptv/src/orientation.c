@@ -22,8 +22,6 @@
 #define PT_UNUSED -999
 #define NUM_ITER  80
 #define POS_INF 1E20
-#define IDT 10
-#define NPAR 19
 #define CONVERGENCE 0.00001
 
 /*  skew_midpoint() finds the middle of the minimal distance segment between

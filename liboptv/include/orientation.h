@@ -10,6 +10,10 @@
 #include "imgcoord.h"
 #include "trafo.h"
 
+/* These define the structure of the sigma array returned from orient() */
+#define IDT 10
+#define NPAR 19
+
 /* Parameters for orientation */
 typedef struct {
     unsigned useflag;
