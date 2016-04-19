@@ -16,20 +16,23 @@ Description:
 
 #include "peakfitting.h"
 
-int peak_fit_new ( img, par_file, xmin,xmax,ymin,ymax, pix, nr, cpar)
 
-//Tcl_Interp* interp;
-unsigned char	*img;		       	/* image data */
-char	       	par_file[];	       	/* name of parameter file */
-int	       	xmin,xmax,ymin,ymax;	/* search area */
-target	       	pix[];		       	/* pixel coord array, global */
-int	       	nr;		       	/* image number for display */
+/* 
+  newest peak fitting technique for particle coordinate determination  
+  labeling with discontinuity,
+	reunification with distance and profile criteria 
+	
+Arguments:
+unsigned char	*img;		       	 image data 
+char	       	par_file[];	        name of parameter file
+int	       	xmin,xmax,ymin,ymax;	 search area 
+target	       	pix[];		       	 pixel coord array, global
+int	       	nr;		       	 image number for display 
 control_par *cpar;
+*/
 
-/*  newest peak fitting technique for particle coordinate determination  */
-/*  labeling with discontinuity,
-	reunification with distance and profile criteria  */
-{
+int peak_fit_new ( unsigned char *img, char *par_file, int xmin, int xmax, int ymin, 
+int ymax, target pix[], int nr, control_par *cpar){
   int imx, imy; /* save dereferencing of same in cpar */
   int	       	n_peaks=0;	      /* # of peaks detected */
   int     		n_wait;	      	      /* size of waitlist for connectivity */
@@ -50,6 +53,9 @@ control_par *cpar;
   double       	x1,x2,y1,y2,s12;	/* values for profile test */
   double       	x, y;	              /* preliminary coordinates */
   short	    	*label_img;           /* target number labeling */
+  /* the following were not assigned, probably from globals */ 
+  int           cr_sz; 
+  int           imgsize, nmax, examine; 
   peak	       	*peaks, *ptr_peak;    /* detected peaks */
   targpix       waitlist[2048];     /* pix to be tested for connectivity */
   FILE   	*fpp;	       	/* parameter file pointer */
@@ -63,8 +69,7 @@ control_par *cpar;
   printf("inside peak_fit_new\n");
   fpp = fopen(par_file,"r");
   if (fpp){
-  	printf("opened file %s", &par_file);
-  	printf("assigned file header %d", fpp);
+  	printf("opened file %s", par_file);
   	fscanf (fpp, "%d", &gvthres[0]);      /* threshold for binarization 1.image */
   	fscanf (fpp, "%d", &gvthres[1]);      /* threshold for binarization 2.image */
   	fscanf (fpp, "%d", &gvthres[2]);      /* threshold for binarization 3.image */
@@ -78,7 +83,7 @@ control_par *cpar;
   	fclose (fpp);
   }
   else{
-  	printf("problem opening %s\n", &par_file);
+  	printf("problem opening %s\n", par_file);
   }
   
   /* give thres value refering to image number */

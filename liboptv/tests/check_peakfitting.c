@@ -1,9 +1,6 @@
 /* Unit tests for reading and writing parameter files. */
 
 #include <check.h>
-#include <stdlib.h>
-#include <stdio.h>
-#include "parameters.h"
 #include "peakfitting.h"
 
 START_TEST(test_peak_fit_new)
