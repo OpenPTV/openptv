@@ -36,18 +36,14 @@ typedef struct
 targpix;
 
 
-int peak_fit_new ( unsigned char *img, target_par *trgtpar, int xmin, int xmax, int ymin, 
+int peak_fit_new ( unsigned char *img, int threshold, int xmin, int xmax, int ymin, 
 int ymax, target pix[], int nr, control_par *cpar); 
 
 void check_touch (peak *tpeak, int p1, int p2);
 
-void simple_connectivity(unsigned char *img, char par_file[],
+int targ_rec (unsigned char *img, int thres, 
     int xmin, int xmax, int ymin, int ymax,
-    target pix[], int nr, int *num, control_par *cpar);
-
-void targ_rec (unsigned char *img, char par_file[], 
-    int xmin, int xmax, int ymin, int ymax,
-    target pix[], int nr, int *num, control_par *cpar);
+    target pix[], int nr, control_par *cpar);
 
 #endif
 
