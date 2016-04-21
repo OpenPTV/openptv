@@ -14,6 +14,7 @@
 #include "parameters.h" 
 #include <stdlib.h>
 #include <stdio.h>
+#include <string.h>
 
 
 typedef struct
@@ -40,12 +41,11 @@ int ymax, target pix[], int nr, control_par *cpar);
 
 void check_touch (peak *tpeak, int p1, int p2);
 
-void simple_connectivity(unsigned char *img0,
-    unsigned char *img, char par_file[],
+void simple_connectivity(unsigned char *img, char par_file[],
     int xmin, int xmax, int ymin, int ymax,
     target pix[], int nr, int *num, control_par *cpar);
 
-void targ_rec (unsigned char *img0, unsigned char *img, char par_file[], 
+void targ_rec (unsigned char *img, char par_file[], 
     int xmin, int xmax, int ymin, int ymax,
     target pix[], int nr, int *num, control_par *cpar);
 

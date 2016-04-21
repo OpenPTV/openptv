@@ -19,7 +19,7 @@ Description:
 /*  thresholding and center of gravity with a peak fitting technique  */
 /*  uses 4 neighbours for connectivity and 8 to find local maxima     */
 
-void targ_rec (unsigned char *img0, unsigned char *img, char *par_file, int xmin, 
+void targ_rec (unsigned char *img, char *par_file, int xmin, 
 int xmax, int ymin, int ymax, target pix[], int nr, int *num, control_par *cpar){
   register int	i, j, m;
   int	      	n=0, n_wait=0, n_targets=0, sumg, sumg_min;
@@ -30,15 +30,24 @@ int xmax, int ymin, int ymax, target pix[], int nr, int *num, control_par *cpar)
   int	       	xa,ya,xb,yb, x4[4],y4[4], xn,yn;
   double	       	x, y;
   FILE	       	*fpp;
-
+  unsigned char *img0;
+  
   register unsigned char	gv, gvref;
 
   targpix	       	waitlist[2048];
   
+  
+  
+
+
   /* avoid many dereferences */
   int imx, imy;
   imx = cpar->imx;
   imy = cpar->imy;
+  
+  memcpy(img0, img, imx*imy);
+  
+  
 
   /* read image name, filter dimension and threshold from parameter file */
  //  printf("inside targ_rec (segmentation.c) \n");
@@ -92,45 +101,45 @@ int xmax, int ymin, int ymax, target pix[], int nr, int *num, control_par *cpar)
 	    waitlist[0].x = j;  waitlist[0].y = i;  n_wait = 1;
 
 	    while (n_wait > 0)
-	      {
-		gvref = *(img0 + imx*(waitlist[0].y) + (waitlist[0].x));
+        {
+            gvref = *(img0 + imx*(waitlist[0].y) + (waitlist[0].x));
 
-		x4[0] = waitlist[0].x - 1;  y4[0] = waitlist[0].y;
-		x4[1] = waitlist[0].x + 1;  y4[1] = waitlist[0].y;
-		x4[2] = waitlist[0].x;  y4[2] = waitlist[0].y - 1;
-		x4[3] = waitlist[0].x;  y4[3] = waitlist[0].y + 1;
+            x4[0] = waitlist[0].x - 1;  y4[0] = waitlist[0].y;
+            x4[1] = waitlist[0].x + 1;  y4[1] = waitlist[0].y;
+            x4[2] = waitlist[0].x;  y4[2] = waitlist[0].y - 1;
+            x4[3] = waitlist[0].x;  y4[3] = waitlist[0].y + 1;
 
-		for (n=0; n<4; n++)
-		  {
-		    xn = x4[n];  yn = y4[n];
-		    xn = xn;
-		    gv = *(img + imx*yn + xn);
+            for (n=0; n<4; n++)
+              {
+                xn = x4[n];  yn = y4[n];
+                xn = xn;
+                gv = *(img + imx*yn + xn);
 
-		    /* conditions for threshold, discontinuity, image borders */
-		    /* and peak fitting */
-		    if (   (gv > thres)
-			   && (xn>=xmin)&&(xn<xmax) && (yn>=ymin)&&(yn<ymax)
-			   && (gv <= gvref+disco)
-			   && (gvref + disco >= *(img0 + imx*(yn-1) + xn))
-			   && (gvref + disco >= *(img0 + imx*(yn+1) + xn))
-			   && (gvref + disco >= *(img0 + imx*yn + (xn-1)))
-			   && (gvref + disco >= *(img0 + imx*yn + (xn+1)))  )
-		      {
-			sumg += gv;  *(img + imx*yn + xn) = 0;
-			if (xn < xa)	xa = xn;	if (xn > xb)	xb = xn;
-			if (yn < ya)	ya = yn;	if (yn > yb)	yb = yn;
-			waitlist[n_wait].x = xn;	waitlist[n_wait].y = yn;
-			x = x + (xn) * (gv - thres);
-			y = y + yn * (gv - thres);
-			numpix++;	n_wait++;
-		      }
-		  }
+                /* conditions for threshold, discontinuity, image borders */
+                /* and peak fitting */
+                if (   (gv > thres)
+                   && (xn>=xmin)&&(xn<xmax) && (yn>=ymin)&&(yn<ymax)
+                   && (gv <= gvref+disco)
+                   && (gvref + disco >= *(img0 + imx*(yn-1) + xn))
+                   && (gvref + disco >= *(img0 + imx*(yn+1) + xn))
+                   && (gvref + disco >= *(img0 + imx*yn + (xn-1)))
+                   && (gvref + disco >= *(img0 + imx*yn + (xn+1)))  )
+                  {
+                sumg += gv;  *(img + imx*yn + xn) = 0;
+                if (xn < xa)	xa = xn;	if (xn > xb)	xb = xn;
+                if (yn < ya)	ya = yn;	if (yn > yb)	yb = yn;
+                waitlist[n_wait].x = xn;	waitlist[n_wait].y = yn;
+                x = x + (xn) * (gv - thres);
+                y = y + yn * (gv - thres);
+                numpix++;	n_wait++;
+                  }
+              }
 
-		n_wait--;
-		for (m=0; m<n_wait; m++)  waitlist[m] = waitlist[m+1];
-		waitlist[n_wait].x = 0;  waitlist[n_wait].y = 0;
+            n_wait--;
+            for (m=0; m<n_wait; m++)  waitlist[m] = waitlist[m+1];
+            waitlist[n_wait].x = 0;  waitlist[n_wait].y = 0;
 
-	      }	/*  end of while-loop  */
+        }	/*  end of while-loop  */
 
 
 	    /* check whether target touches image borders */
@@ -157,31 +166,23 @@ int xmax, int ymin, int ymax, target pix[], int nr, int *num, control_par *cpar)
 		n_targets++;
 
 		xn = x;  yn = y;
-	//	drawcross (interp, (int) xn, (int) yn, cr_sz, nr, "Blue");
-
+		
 	      }
 	  }	/*  end of if-loop  */
     }
   *num = n_targets;
+  free(img0);
 }
 
 
 
 
-
-void simple_connectivity (img0, img, par_file, xmin,xmax,ymin,ymax, pix, nr, num, cpar)
-unsigned char	*img, *img0;   	/* image data, image to be set to zero */
-char	       	par_file[];    	/* name of parameter file */
-int	       	xmin,xmax,ymin,ymax;	/* search area */
-target	       	pix[];        	/* pixel coord array, global */
-int    	       	nr;    	       	/* image number for display */
-int	       	*num;	       	/* number of detections */
-control_par *cpar;
-
 /*  thresholding and center of gravity with a peak fitting technique  */
 /*  uses 4 neighbours for connectivity and 8 to find local maxima     */
 
-{
+
+void simple_connectivity (unsigned char *img, char par_file[], int xmin,int xmax, int ymin,
+int ymax, target pix[], int nr, int *num, control_par *cpar){
   register int	i, j, m;
   int         	n=0, n_wait=0, n_targets=0, sumg, sumg_min;
   int	       	numpix;
@@ -191,6 +192,7 @@ control_par *cpar;
   int	       	xa,ya,xb,yb, x4[4],y4[4], xn,yn;
   double       	x, y;
   FILE	       	*fpp;
+  unsigned char	*img0;   	/* image data, image to be set to zero */
 
   register unsigned char  gv, gvref;
 
@@ -200,6 +202,8 @@ control_par *cpar;
   int imx, imy;
   imx = cpar->imx;
   imy = cpar->imy;
+  
+  memcpy(img0, img, imx*imy);
 
   /* read image name, threshold and shape limits from parameter file */
   // fpp = fopen_r (par_file);
@@ -291,6 +295,7 @@ control_par *cpar;
     }
 
   *num = n_targets;
+  free(img0);
 }
 
 
