@@ -37,8 +37,7 @@ START_TEST(test_peak_fit_new)
    ntargets = peak_fit_new (img, &targ_par, 0, cpar.imx, 0, cpar.imy, &cpar, 0, pix);
    fail_unless(ntargets == 1);
    fail_unless(pix[0].n == 9);
-   //printf("ntargets = %d\n", ntargets);
-   //printf("pix[0].npix = %d\n", pix[0].n);
+
    
    /* test the two objects */
      unsigned char img1[5][5] = {
@@ -50,12 +49,10 @@ START_TEST(test_peak_fit_new)
     };
    ntargets = peak_fit_new (img1, &targ_par, 0, cpar.imx, 0, cpar.imy, &cpar, 1, pix);
    fail_unless(ntargets == 2);
-   //printf("ntargets = %d\n", ntargets);
    
    targ_par.gvthres[1] = 252; 
    ntargets = peak_fit_new ((unsigned char *)img1, &targ_par, 0, cpar.imx, 0, cpar.imy, &cpar, 1, pix);
    fail_unless(ntargets == 1);
-   //printf("ntargets = %d\n", ntargets);
 
 }
 END_TEST
