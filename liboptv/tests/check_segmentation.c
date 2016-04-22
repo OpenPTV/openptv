@@ -74,7 +74,6 @@ START_TEST(test_targ_rec)
    ntargets = targ_rec (img, &targ_par, 0, cpar.imx, 0, cpar.imy, &cpar, 0, pix);
    fail_unless(ntargets == 1);
    fail_unless(pix[0].n == 9);
-   printf(" ntargets = %d\n", ntargets);
    
    /* test the two objects */
      unsigned char img1[5][5] = {
@@ -85,16 +84,12 @@ START_TEST(test_targ_rec)
         { 0,   0,   0,   0, 0}
     };
    ntargets = targ_rec (img1, &targ_par, 0, cpar.imx, 0, cpar.imy, &cpar, 1, pix);
-   //fail_unless(ntargets == 2);
-   printf(" ntargets = %d\n", ntargets);
+   fail_unless(ntargets == 2);
    
    targ_par.gvthres[1] = 252; 
    ntargets = targ_rec ((unsigned char *)img1, &targ_par, 0, cpar.imx, 0, cpar.imy, &cpar, 1, pix);
-   printf(" ntargets = %d\n", ntargets);
-   //fail_unless(ntargets == 1);
-   ntargets = targ_rec ((unsigned char *)img1, &targ_par, 0, cpar.imx, 0, cpar.imy, &cpar, 1, pix);
-   printf(" ntargets = %d\n", ntargets);
-   //   fail_unless(ntargets == 1);
+   fail_unless(ntargets == 1);
+
 
 }
 END_TEST

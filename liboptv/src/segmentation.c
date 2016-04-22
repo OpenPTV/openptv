@@ -42,9 +42,7 @@ int xmax, int ymin, int ymax, control_par *cpar, int num_cam, target pix[]){
   unsigned char *img0;
   
   register unsigned char	gv, gvref;
-  
-  printf("entered targ_rec \n");
-  
+    
   targpix	       	waitlist[2048];
 
   /* avoid many dereferences */
@@ -61,26 +59,24 @@ int xmax, int ymin, int ymax, control_par *cpar, int num_cam, target pix[]){
   memcpy(img0, img, imx*imy);
 
   /*  thresholding and connectivity analysis in image  */
-
   for (i=ymin; i<ymax; i++)  for (j=xmin; j<xmax; j++)
     {
-      gv = *(img + i*imx + j);
-      printf ("gv = %d\n", gv);
+      gv = *(img0 + i*imx + j);
       if ( gv > thres)
-	if (	gv >= *(img + i*imx + j-1)
-		&&	gv >= *(img + i*imx + j+1)
-		&&	gv >= *(img + (i-1)*imx + j)
-		&&	gv >= *(img + (i+1)*imx + j)
-		&&	gv >= *(img + (i-1)*imx + j-1)
-		&&	gv >= *(img + (i+1)*imx + j-1)
-		&&	gv >= *(img + (i-1)*imx + j+1)
-		&&	gv >= *(img + (i+1)*imx + j+1) )
+	if (	gv >= *(img0 + i*imx + j-1)
+		&&	gv >= *(img0 + i*imx + j+1)
+		&&	gv >= *(img0 + (i-1)*imx + j)
+		&&	gv >= *(img0 + (i+1)*imx + j)
+		&&	gv >= *(img0 + (i-1)*imx + j-1)
+		&&	gv >= *(img0 + (i+1)*imx + j-1)
+		&&	gv >= *(img0 + (i-1)*imx + j+1)
+		&&	gv >= *(img0 + (i+1)*imx + j+1) )
 
 	  /* => local maximum, 'peak' */
 	  {
 	    yn=i;  xn=j;
 	    xn = xn;
-	    sumg = gv;  *(img + i*imx + j) = 0;
+	    sumg = gv;  *(img0 + i*imx + j) = 0;
 	    xa = xn;  xb = xn;  ya = yn;  yb = yn;
 	    gv -= thres;
 	    x = (xn) * gv;
@@ -88,11 +84,10 @@ int xmax, int ymin, int ymax, control_par *cpar, int num_cam, target pix[]){
 	    numpix = 1;
 	    waitlist[0].x = j;  waitlist[0].y = i;  n_wait = 1;
 	    
-	    printf("yn=%d,xn=%d,sumg=%d\n",yn,xn,sumg);
 
 	    while (n_wait > 0)
         {
-            gvref = *(img0 + imx*(waitlist[0].y) + (waitlist[0].x));
+            gvref = *(img + imx*(waitlist[0].y) + (waitlist[0].x));
 
             x4[0] = waitlist[0].x - 1;  y4[0] = waitlist[0].y;
             x4[1] = waitlist[0].x + 1;  y4[1] = waitlist[0].y;
@@ -104,26 +99,25 @@ int xmax, int ymin, int ymax, control_par *cpar, int num_cam, target pix[]){
               {
                 xn = x4[n];  yn = y4[n];
                 // xn = xn;             Alex - why is it here? 
-                gv = *(img + imx*yn + xn);
+                gv = *(img0 + imx*yn + xn);
 
                 /* conditions for threshold, discontinuity, image borders */
                 /* and peak fitting */
                 if (   (gv > thres)
                    && (xn>=xmin)&&(xn<xmax) && (yn>=ymin)&&(yn<ymax)
                    && (gv <= gvref+disco)
-                   && (gvref + disco >= *(img0 + imx*(yn-1) + xn))
-                   && (gvref + disco >= *(img0 + imx*(yn+1) + xn))
-                   && (gvref + disco >= *(img0 + imx*yn + (xn-1)))
-                   && (gvref + disco >= *(img0 + imx*yn + (xn+1)))  )
+                   && (gvref + disco >= *(img + imx*(yn-1) + xn))
+                   && (gvref + disco >= *(img + imx*(yn+1) + xn))
+                   && (gvref + disco >= *(img + imx*yn + (xn-1)))
+                   && (gvref + disco >= *(img + imx*yn + (xn+1)))  )
                   {
-                sumg += gv;  *(img + imx*yn + xn) = 0;
+                sumg += gv;  *(img0 + imx*yn + xn) = 0;
                 if (xn < xa)	xa = xn;	if (xn > xb)	xb = xn;
                 if (yn < ya)	ya = yn;	if (yn > yb)	yb = yn;
                 waitlist[n_wait].x = xn;	waitlist[n_wait].y = yn;
                 x = x + (xn) * (gv - thres);
                 y = y + yn * (gv - thres);
                 numpix++;	n_wait++;
-                printf("xn=%d,yn=%d,n_wait=%d\n",xn,yn,n_wait);
                   }
               }
 
@@ -133,16 +127,13 @@ int xmax, int ymin, int ymax, control_par *cpar, int num_cam, target pix[]){
 
         }	/*  end of while-loop  */
 
-        printf("n_wait=%d,xa=%d,ya=%d,numpix=%d\n", n_wait,xa,ya,numpix);
 	    /* check whether target touches image borders */
 	    if (xa==xmin || ya==ymin || xb==xmax-1 || yb==ymax-1)	continue;
 
 
 	    /* get targets extensions in x and y */
 	    nx = xb - xa + 1;  ny = yb - ya + 1;
-	    
-	    printf("nx=%d,ny=%d,numpix=%d\n", nx,ny,numpix);
-	    
+	    	    
 
 	    if (   (numpix >= targ_par->nnmin) && (numpix <= targ_par->nnmax)
 		   && (nx >= targ_par->nxmin) && (nx <= targ_par->nxmax)
@@ -165,7 +156,6 @@ int xmax, int ymin, int ymax, control_par *cpar, int num_cam, target pix[]){
 	      }
 	  }	/*  end of if-loop  */
     }
-  memcpy(img, img0, imx*imy);
   free(img0);
   return(n_targets);
 
