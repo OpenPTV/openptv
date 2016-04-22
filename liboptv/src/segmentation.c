@@ -17,7 +17,7 @@ Description:
 #include "segmentation.h"
 
 /*  targ_rec( ) thresholding and center of gravity with a peak fitting technique  
-/*  uses 4 neighbours for connectivity and 8 to find local maxima     
+      uses 4 neighbours for connectivity and 8 to find local maxima     
 Arguments:
     unsigned char	*img;		       	 image
     int         threshold                grey scale threshold 
@@ -30,37 +30,42 @@ Output:
 
 */
 
-int targ_rec (unsigned char *img, int thres, int xmin, 
-int xmax, int ymin, int ymax, target pix[], int nr, control_par *cpar){
+int targ_rec (unsigned char *img, target_par *targ_par, int xmin, 
+int xmax, int ymin, int ymax, control_par *cpar, int num_cam, target pix[]){
   register int	i, j, m;
   int	      	n=0, n_wait=0, n_targets=0, sumg, sumg_min;
   int	        numpix;
-  int	       	thres, gvthres[4], disco;
+  int	        thres, disco;
   int	       	cr_sz;			       /* size of crosses to be drawn */
-  int	       	nnmin,nnmax, nx,ny, nxmin,nxmax, nymin,nymax;
-  int	       	xa,ya,xb,yb, x4[4],y4[4], xn,yn;
+  int	       	xa,ya,xb,yb, x4[4],y4[4], xn,yn, nx, ny; 
   double	       	x, y;
   unsigned char *img0;
   
   register unsigned char	gv, gvref;
-
+  
+  printf("entered targ_rec \n");
+  
   targpix	       	waitlist[2048];
 
   /* avoid many dereferences */
   int imx, imy;
   imx = cpar->imx;
   imy = cpar->imy;
-  
+
+  thres = targ_par->gvthres[num_cam];
+  disco = targ_par->discont;
+   
+   
+  img0 = (unsigned char *) calloc (imx*imy, 1);
   /* copy image to a temporary mask */
   memcpy(img0, img, imx*imy);
-  
-  
 
   /*  thresholding and connectivity analysis in image  */
 
   for (i=ymin; i<ymax; i++)  for (j=xmin; j<xmax; j++)
     {
       gv = *(img + i*imx + j);
+      printf ("gv = %d\n", gv);
       if ( gv > thres)
 	if (	gv >= *(img + i*imx + j-1)
 		&&	gv >= *(img + i*imx + j+1)
@@ -82,6 +87,8 @@ int xmax, int ymin, int ymax, target pix[], int nr, control_par *cpar){
 	    y = yn * gv;
 	    numpix = 1;
 	    waitlist[0].x = j;  waitlist[0].y = i;  n_wait = 1;
+	    
+	    printf("yn=%d,xn=%d,sumg=%d\n",yn,xn,sumg);
 
 	    while (n_wait > 0)
         {
@@ -91,11 +98,12 @@ int xmax, int ymin, int ymax, target pix[], int nr, control_par *cpar){
             x4[1] = waitlist[0].x + 1;  y4[1] = waitlist[0].y;
             x4[2] = waitlist[0].x;  y4[2] = waitlist[0].y - 1;
             x4[3] = waitlist[0].x;  y4[3] = waitlist[0].y + 1;
+            
 
             for (n=0; n<4; n++)
               {
                 xn = x4[n];  yn = y4[n];
-                xn = xn;
+                // xn = xn;             Alex - why is it here? 
                 gv = *(img + imx*yn + xn);
 
                 /* conditions for threshold, discontinuity, image borders */
@@ -115,6 +123,7 @@ int xmax, int ymin, int ymax, target pix[], int nr, control_par *cpar){
                 x = x + (xn) * (gv - thres);
                 y = y + yn * (gv - thres);
                 numpix++;	n_wait++;
+                printf("xn=%d,yn=%d,n_wait=%d\n",xn,yn,n_wait);
                   }
               }
 
@@ -124,18 +133,21 @@ int xmax, int ymin, int ymax, target pix[], int nr, control_par *cpar){
 
         }	/*  end of while-loop  */
 
-
+        printf("n_wait=%d,xa=%d,ya=%d,numpix=%d\n", n_wait,xa,ya,numpix);
 	    /* check whether target touches image borders */
 	    if (xa==xmin || ya==ymin || xb==xmax-1 || yb==ymax-1)	continue;
 
 
 	    /* get targets extensions in x and y */
 	    nx = xb - xa + 1;  ny = yb - ya + 1;
+	    
+	    printf("nx=%d,ny=%d,numpix=%d\n", nx,ny,numpix);
+	    
 
-	    if (   (numpix >= nnmin) && (numpix <= nnmax)
-		   && (nx >= nxmin) && (nx <= nxmax)
-		   && (ny >= nymin) && (ny <= nymax)
-		   && (sumg > sumg_min)			 )
+	    if (   (numpix >= targ_par->nnmin) && (numpix <= targ_par->nnmax)
+		   && (nx >= targ_par->nxmin) && (nx <= targ_par->nxmax)
+		   && (ny >= targ_par->nymin) && (ny <= targ_par->nymax)
+		   && (sumg > targ_par->sumg_min) )
 	      {
 		pix[n_targets].n = numpix;
 		pix[n_targets].nx = nx;
@@ -153,6 +165,7 @@ int xmax, int ymin, int ymax, target pix[], int nr, control_par *cpar){
 	      }
 	  }	/*  end of if-loop  */
     }
+  memcpy(img, img0, imx*imy);
   free(img0);
   return(n_targets);
 
@@ -178,8 +191,8 @@ Output:
 
 */
 
-int peak_fit_new (unsigned char *img, int threshold, int xmin, int xmax, int ymin, 
-int ymax, target pix[], int nr, control_par *cpar){
+int peak_fit_new (unsigned char *img, int threshold, int discont, int xmin, int xmax, 
+int ymin, int ymax, target pix[], control_par *cpar){
   int imx, imy; /* save dereferencing of same in cpar */
   int	       	n_peaks=0;	      /* # of peaks detected */
   int     		n_wait;	      	      /* size of waitlist for connectivity */
@@ -187,7 +200,7 @@ int ymax, target pix[], int nr, control_par *cpar){
   int	       	p2;	       	      /* considered point number */
   int	      	sumg_min, thres, disco, nxmin,nxmax, nymin,nymax, nnmin, nnmax;
   /* parameters for target acceptance */
-  int           pnr, sumg, xn, yn;	/* collecting variables for center of gravity */
+  int           pnr, sumg, xn, yn, nx, ny;	/* collecting variables for center of gravity */
   int         	n_target=0;	/* # of targets detected */
   int		intx1, inty1;		/* pixels for profile test and crosses */
   int          	unify;		       	/* flag for unification of targets */
@@ -209,11 +222,6 @@ int ymax, target pix[], int nr, control_par *cpar){
   imx = cpar->imx;
   imy = cpar->imy;
   
-
-  
-  /* give thres value refering to image number 
-  thres = trgtpar->gvthres[nr];
-   */
 
   /* allocate memory */
   label_img = (short *) calloc (imx*imy, sizeof(short));

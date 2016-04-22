@@ -30,20 +30,18 @@ peak;
 typedef struct
 {
   short	       	x,y;
-  unsigned char	g;
-  short	       	tnr;
 }
 targpix;
 
 
-int peak_fit_new ( unsigned char *img, int threshold, int xmin, int xmax, int ymin, 
-int ymax, target pix[], int nr, control_par *cpar); 
+int peak_fit_new ( unsigned char *img, int threshold, int discont, 
+int xmin, int xmax, int ymin, int ymax, target pix[], control_par *cpar); 
 
 void check_touch (peak *tpeak, int p1, int p2);
 
-int targ_rec (unsigned char *img, int thres, 
-    int xmin, int xmax, int ymin, int ymax,
-    target pix[], int nr, control_par *cpar);
+int targ_rec (unsigned char *img, target_par *targ_par, int xmin, 
+int xmax, int ymin, int ymax, control_par *cpar, int num_cam, target pix[]);
+    
 
 #endif
 

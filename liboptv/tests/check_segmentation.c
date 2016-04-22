@@ -2,80 +2,117 @@
 
 #include <check.h>
 #include "segmentation.h"
+#include "tracking_frame_buf.h"
+
 
 START_TEST(test_peak_fit_new)
 {
-    char 
-    filename_read[]  = "testing_fodder/parameters/targ_rec_all_different_fields.par",
-    filename_write[] = "testing_fodder/parameters/targ_out_read.par";
+    int ntargets, ntargets_correct = 1; 
+    unsigned char img[5][5] = {
+        { 0,   0,   0,   0, 0},
+        { 0, 255, 255, 255, 0},
+        { 0, 255, 255, 255, 0},
+        { 0, 255, 255, 255, 0},
+        { 0,   0,   0,   0, 0}
+    };
+    
+    target *pix;
+    
+    control_par cpar = {
+        .imx = 5,
+        .imy = 5,
+    }; 
 
-    target_par targ_correct= { 
-        .gvthres = {1, 2, 3, 4}, 
+
+    target_par targ_par= { 
+        .gvthres = {10, 2, 3, 4}, 
         .discont = 5,
-        .nnmin = 6, .nnmax = 7,
-        .nxmin = 8, .nxmax = 9,
-        .nymin = 10, .nymax = 11, 
+        .nnmin = 1, .nnmax = 10,
+        .nxmin = 1, .nxmax = 10,
+        .nymin = 1, .nymax = 10, 
         .sumg_min = 12, 
         .cr_sz = 13 };
-        
-    int threshhold; 
     
-    threshold = targ_correct.gvthres[0];
-    
-    target_par *targ_read = read_target_par(filename_read);
-    fail_unless(compare_target_par(&targ_correct, targ_read));
+                
+   ntargets = peak_fit_new ((unsigned char *) img, &targ_par, 
+   0, cpar.imx, 0, cpar.imy, &cpar, 0, pix);
+   // fail_unless(ntargets == ntargets_correct);
+   printf(" ntargets = %d\n", ntargets);
 
-    write_target_par(targ_read, filename_write);
-    fail_unless(compare_target_par(&targ_correct, read_target_par(filename_write)));
-    
-    /* call peak_fit_new */
-    peak_fit_new (unsigned char *img, targ_correct.gvthres[0], int xmin, int xmax, int ymin, 
-int ymax, target pix[], control_par *cpar)
-
-    remove(filename_write);
 }
 END_TEST
 
 START_TEST(test_targ_rec)
 {
-    char
-    filename_read[]  = "testing_fodder/parameters/targ_rec_all_different_fields.par",
-    filename_write[] = "testing_fodder/parameters/targ_out_read.par";
+    int ntargets; 
+    unsigned char img[5][5] = {
+        { 0,   0,   0,   0, 0},
+        { 0, 255, 255, 255, 0},
+        { 0, 255, 255, 255, 0},
+        { 0, 255, 255, 255, 0},
+        { 0,   0,   0,   0, 0}
+    };
+    
+    target pix[1024];
+    
+    control_par cpar = {
+        .imx = 5,
+        .imy = 5,
+    }; 
 
-    target_par targ_correct= { 
-        .gvthres = {1, 2, 3, 4}, 
+
+    target_par targ_par= { 
+        .gvthres = {250, 100, 20, 20}, 
         .discont = 5,
-        .nnmin = 6, .nnmax = 7,
-        .nxmin = 8, .nxmax = 9,
-        .nymin = 10, .nymax = 11, 
+        .nnmin = 1, .nnmax = 10,
+        .nxmin = 1, .nxmax = 10,
+        .nymin = 1, .nymax = 10, 
         .sumg_min = 12, 
         .cr_sz = 13 };
     
-    target_par *targ_read = read_target_par(filename_read);
-    fail_unless(compare_target_par(&targ_correct, targ_read));
+                
+   ntargets = targ_rec (img, &targ_par, 0, cpar.imx, 0, cpar.imy, &cpar, 0, pix);
+   fail_unless(ntargets == 1);
+   fail_unless(pix[0].n == 9);
+   printf(" ntargets = %d\n", ntargets);
+   
+   /* test the two objects */
+     unsigned char img1[5][5] = {
+        { 0,   0,   0,   0, 0},
+        { 0, 255, 0, 0, 0},
+        { 0, 0, 0, 0, 0},
+        { 0, 0, 0, 251, 0},
+        { 0,   0,   0,   0, 0}
+    };
+   ntargets = targ_rec (img1, &targ_par, 0, cpar.imx, 0, cpar.imy, &cpar, 1, pix);
+   //fail_unless(ntargets == 2);
+   printf(" ntargets = %d\n", ntargets);
+   
+   targ_par.gvthres[1] = 252; 
+   ntargets = targ_rec ((unsigned char *)img1, &targ_par, 0, cpar.imx, 0, cpar.imy, &cpar, 1, pix);
+   printf(" ntargets = %d\n", ntargets);
+   //fail_unless(ntargets == 1);
+   ntargets = targ_rec ((unsigned char *)img1, &targ_par, 0, cpar.imx, 0, cpar.imy, &cpar, 1, pix);
+   printf(" ntargets = %d\n", ntargets);
+   //   fail_unless(ntargets == 1);
 
-    write_target_par(targ_read, filename_write);
-    fail_unless(compare_target_par(&targ_correct, read_target_par(filename_write)));
-
-    remove(filename_write);
 }
 END_TEST
 
 
 
 Suite* fb_suite(void) {
-    Suite *s = suite_create ("Peak fitting");
-
-    TCase *tc = tcase_create ("check peak_fit_new");
-    tcase_add_test(tc, test_peak_fit_new);
-    suite_add_tcase (s, tc);
+    Suite *s = suite_create ("Segmentation");
     
-    
-    tc = tcase_create ("Target recording");
+    TCase *tc = tcase_create ("Target recording");
     tcase_add_test(tc, test_targ_rec);
     suite_add_tcase (s, tc);
 
-
+//     tc = tcase_create ("check peak_fit_new");
+//     tcase_add_test(tc, test_peak_fit_new);
+//     suite_add_tcase (s, tc);
+    
+    
     return s;
 }
 
