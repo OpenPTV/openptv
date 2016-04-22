@@ -37,7 +37,6 @@ START_TEST(test_peak_fit_new)
    ntargets = peak_fit_new (img, &targ_par, 0, cpar.imx, 0, cpar.imy, &cpar, 0, pix);
    fail_unless(ntargets == 1);
    fail_unless(pix[0].n == 9);
-
    
    /* test the two objects */
      unsigned char img1[5][5] = {
