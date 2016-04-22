@@ -34,8 +34,8 @@ typedef struct
 targpix;
 
 
-int peak_fit_new ( unsigned char *img, int threshold, int discont, 
-int xmin, int xmax, int ymin, int ymax, target pix[], control_par *cpar); 
+int peak_fit_new ( unsigned char *img, target_par *targ_par, 
+int xmin, int xmax, int ymin, int ymax, control_par *cpar, int num_cam, target pix[]); 
 
 void check_touch (peak *tpeak, int p1, int p2);
 

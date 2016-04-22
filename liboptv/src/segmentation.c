@@ -181,44 +181,46 @@ Output:
 
 */
 
-int peak_fit_new (unsigned char *img, int threshold, int discont, int xmin, int xmax, 
-int ymin, int ymax, target pix[], control_par *cpar){
+int peak_fit_new (unsigned char *img, target_par *targ_par, int xmin, int xmax, 
+int ymin, int ymax, control_par *cpar, int num_cam, target pix[]){
   int imx, imy; /* save dereferencing of same in cpar */
   int	       	n_peaks=0;	      /* # of peaks detected */
   int     		n_wait;	      	      /* size of waitlist for connectivity */
-  int	       	x8[8], y8[8];  	      /* neighbours for connectivity */
+  int	       	x8[4], y8[4];  	      /* neighbours for connectivity */
   int	       	p2;	       	      /* considered point number */
-  int	      	sumg_min, thres, disco, nxmin,nxmax, nymin,nymax, nnmin, nnmax;
+  int	      	thres, disco;
   /* parameters for target acceptance */
   int           pnr, sumg, xn, yn, nx, ny;	/* collecting variables for center of gravity */
-  int         	n_target=0;	/* # of targets detected */
-  int		intx1, inty1;		/* pixels for profile test and crosses */
+  int         	n_target=0;	        /* # of targets detected */
+  int		    intx1, inty1;		/* pixels for profile test and crosses */
   int          	unify;		       	/* flag for unification of targets */
   int	       	unified=0;	       	/* # of unified targets */
-  int		non_unified=0;		/* # of tested, but not unified targets */
+  int		non_unified=0;		    /* # of tested, but not unified targets */
   register int	i, j, k, l, m, n;     /* loop variables */
   unsigned char	gv, gvref;     	/* current and reference greyvalue */
   unsigned char	gv1, gv2;	       	/* greyvalues for profile test */
-  void	       	check_touch ();		/* marks touch events */
   double       	x1,x2,y1,y2,s12;	/* values for profile test */
   double       	x, y;	              /* preliminary coordinates */
   short	    	*label_img;           /* target number labeling */
-  /* the following were not assigned, probably from globals */ 
-  int           cr_sz; 
-  int           nmax, examine; 
+  /* the following were not assigned, probably from globals */
+  int nmax = 1024; 
   peak	       	*peaks, *ptr_peak;    /* detected peaks */
   targpix       waitlist[2048];     /* pix to be tested for connectivity */
+  
   
   imx = cpar->imx;
   imy = cpar->imy;
   
+  thres = targ_par->gvthres[num_cam];
+  disco = targ_par->discont;
+   
+
 
   /* allocate memory */
   label_img = (short *) calloc (imx*imy, sizeof(short));
-  peaks = (peak *) malloc (4*nmax * sizeof(peak));
+  peaks = (peak *) calloc (4*nmax, sizeof(peak));
   ptr_peak = peaks;
-
-
+  
   /*------------------------------------------------------------------------*/
 
   /* 1.: connectivity analysis with peak search and discontinuity criterion */
@@ -232,7 +234,8 @@ int ymin, int ymax, target pix[], control_par *cpar){
       n = i*imx + j;
 
       /* compare with threshold */
-      gv = *(img + n);   if (gv <= 2*thres)	continue;
+      // gv = *(img + n);   if (gv <= 2*thres)	continue;
+      gv = *(img + n);   if (gv <= thres)	continue;
 
       /* skip already labeled pixel */
       if (*(label_img + n) != 0)	continue;
@@ -449,13 +452,13 @@ int ymin, int ymax, target pix[], control_par *cpar){
       if (peaks[i].ymax == ymax-1  &&  (xmax-xmin) > 32)	continue;
 
       if (   peaks[i].unr == 0
-	     && peaks[i].sumg > sumg_min
-	     && (peaks[i].xmax - peaks[i].xmin + 1) >= nxmin
-	     && (peaks[i].ymax - peaks[i].ymin + 1) >= nymin
-	     && (peaks[i].xmax - peaks[i].xmin) < nxmax
-	     && (peaks[i].ymax - peaks[i].ymin) < nymax
-	     && peaks[i].n >= nnmin
-	     && peaks[i].n <= nnmax)
+	     && peaks[i].sumg > targ_par->sumg_min
+	     && (peaks[i].xmax - peaks[i].xmin + 1) >= targ_par->nxmin
+	     && (peaks[i].ymax - peaks[i].ymin + 1) >= targ_par->nymin
+	     && (peaks[i].xmax - peaks[i].xmin) < targ_par->nxmax
+	     && (peaks[i].ymax - peaks[i].ymin) < targ_par->nymax
+	     && peaks[i].n >= targ_par->nnmin
+	     && peaks[i].n <= targ_par->nnmax)
         {
           sumg = peaks[i].sumg;
 
@@ -479,24 +482,24 @@ int ymin, int ymax, target pix[], control_par *cpar){
 
 
   /* get number of touch events */
-  if (examine==10)
-    {
-      for (x=0,i=0; i<n_target; i++)
-	{
-	  x += pix[i].n;
-	}
-      x /= n_target;
-      printf ("Average number of pix per target: %6.3f\n", x);
-
-      for (sumg=0,i=0; i<n_peaks; i++)
-	{
-	  sumg += peaks[i].n_touch;
-	}
-      printf ("Number of touch events: %d\n", sumg/2);
-
-      y = 2*n_target*n_target*x/(imx*imy);
-      printf ("expected number of touch events: %6.0f\n", y);
-    }
+//   if (examine==10)
+//     {
+//       for (x=0,i=0; i<n_target; i++)
+// 	{
+// 	  x += pix[i].n;
+// 	}
+//       x /= n_target;
+//       printf ("Average number of pix per target: %6.3f\n", x);
+// 
+//       for (sumg=0,i=0; i<n_peaks; i++)
+// 	{
+// 	  sumg += peaks[i].n_touch;
+// 	}
+//       printf ("Number of touch events: %d\n", sumg/2);
+// 
+//       y = 2*n_target*n_target*x/(imx*imy);
+//       printf ("expected number of touch events: %6.0f\n", y);
+//     }
 
   free (label_img);
   free (peaks);
