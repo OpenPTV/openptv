@@ -296,7 +296,7 @@ START_TEST(test_find_candidate)
     fail_unless(test_cand[0].tol < EPS);
 
     /* regression guard */
-    double sum_corr;
+    double sum_corr = 0;
     for (i = 0; i < count; i++) {
     	sum_corr += test_cand[i].corr;
     }	
