@@ -27,7 +27,7 @@ void flat_image_coord (vec3d orig_pos, Calibration *cal, mm_np *mm,
 {
     double deno;
     Calibration cal_t;
-    double X_t,Y_t,Z_t,cross_p[3],cross_c[3];
+    double X_t, Y_t, cross_p[3], cross_c[3];
     vec3d pos_t, pos;
   
     cal_t.mmlut = cal->mmlut;

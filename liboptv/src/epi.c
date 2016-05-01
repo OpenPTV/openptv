@@ -130,7 +130,7 @@ int find_candidate (coord_2d *crd, target *pix, int num,
   register int	j;
   int	       	j0, dj, p2, count = 0;
   double      	m, b, d, temp, qn, qnx, qny, qsumg, corr;
-  double       	xmin, xmax, ymin, ymax,particle_size;
+  double       	xmin, xmax, ymin, ymax;
   double 		tol_band_width;
   
   tol_band_width = vpar->eps0;

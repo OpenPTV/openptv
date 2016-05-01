@@ -29,6 +29,7 @@ Description:	       	reads objects, detected by detection etc.,
     calibration process is based on. The nearest neighbour search is a primitive 
     minimum distance search within a pre-defined radius (default = 10) read from the 
     `sortgrid.par` parameter file (radius is given in pixels).
+    
     Arguments: 
     Calibration *cal pointer to calibration parameters
     Control *cpar pointer to control parameters
@@ -36,6 +37,7 @@ Description:	       	reads objects, detected by detection etc.,
     vec3d fix[] structure 3d positions and integer identification pointers of 
     the calibration target points in the calibration file
     num is the number of detected (by image processing) dots on the calibration image
+    
     Output:
     target sorted_pix[] is the array of targets or detected dots that have an ID (pnr), 
     pixel position, size of the dot, sum of grey values and another identification (tnr)
@@ -45,8 +47,6 @@ target* sortgrid (Calibration* cal, control_par *cpar, int nfix, vec3d fix[], in
                 int eps, target pix[])
 {
   int	       	i, j;
-  int	       	intx, inty;
-  int           tmp;
   target       	*sorted_pix;
   vec2d         calib_point;
   double        xp,yp;
