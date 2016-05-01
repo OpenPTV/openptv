@@ -282,6 +282,26 @@ class Test_ControlParams(unittest.TestCase):
         self.failUnless(self.cp_obj.get_multimedia_params().get_n3() == 20.20)
         self.failUnless(self.cp_obj.get_multimedia_params().get_d()[0] == 21.21)
      
+    def test_instantiate_fast(self):
+        """ControlParams instantiation through constructor"""
+        cp = ControlParams(4, ['headers', 'hp', 'allcam'], (1280, 1024), 
+            (15.15,16.16), 18, [19.19], [21.21], 20.20)
+        
+        self.failUnless(cp.get_num_cams() == 4)
+        self.failUnless(cp.get_hp_flag())
+        self.failUnless(cp.get_allCam_flag())
+        self.failUnless(cp.get_tiff_flag())
+        self.failUnless(cp.get_image_size(), (1280, 1024))
+        self.failUnless(cp.get_pixel_size() == (15.15,16.16))
+        self.failUnless(cp.get_chfield() == 0)
+        
+        mm = cp.get_multimedia_params()
+        self.failUnless(mm.get_n1() == 18)
+        self.failUnless(mm.get_n2()[0] == 19.19)
+        self.failUnless(mm.get_n3() == 20.20)
+        self.failUnless(mm.get_d()[0] == 21.21)
+        
+        
     def test_getters_setters(self):
         cams_num = 4
         for cam in range(cams_num):
