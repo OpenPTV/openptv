@@ -65,7 +65,7 @@ START_TEST(test_raw_orient)
         pix4[i].y = pix4[i].y - 0.1;
     }
 
-    fail_if(raw_orient (cal, cpar, nfix, fix4, pix4) == NULL);
+    fail_if(raw_orient (cal, cpar, nfix, fix4, pix4) == 0);
     fail_unless (fabs(fabs(cal->ext_par.x0 - org_cal->ext_par.x0) +
             fabs(cal->ext_par.y0 - org_cal->ext_par.y0) +
             fabs(cal->ext_par.z0 - org_cal->ext_par.z0) +
@@ -84,7 +84,7 @@ START_TEST(test_orient)
     orient_par *opar;
     vec3d fix[64], pos;
     target pix[64];
-    double sigmabeta[20], nGl;
+    double sigmabeta[20], nGl, *resi;
     int nfix, i, k=0, pnr, ix, iy, iz, pt_id;
     int eps, correct_eps = 25;
     double xp, yp;
@@ -125,7 +125,8 @@ START_TEST(test_orient)
     cal->ext_par.phi += 0.5;
     cal->ext_par.kappa += 0.5;
     
-    fail_if(orient (cal, cpar, 64, fix, pix, opar, &sigmabeta) == 0);
+    fail_if((resi = orient (cal, cpar, 64, fix, pix, opar, sigmabeta)) == NULL);
+    free(resi);
     fail_if((org_cal = read_calibration(ori_file, add_file, NULL)) == NULL);
     fail_unless (fabs(cal->ext_par.x0 - org_cal->ext_par.x0) +
             fabs(cal->ext_par.y0 - org_cal->ext_par.y0) +
@@ -148,7 +149,8 @@ START_TEST(test_orient)
     opar->ccflag = 1;
     opar->xhflag = 1;
         
-    fail_if(orient (cal, cpar, 64, fix, pix, opar, &sigmabeta) == 0);
+    fail_if((resi = orient (cal, cpar, 64, fix, pix, opar, sigmabeta)) == NULL);
+    free(resi);
     fail_unless (fabs(fabs(cal->ext_par.x0 - org_cal->ext_par.x0) +
             fabs(cal->ext_par.y0 - org_cal->ext_par.y0) +
             fabs(cal->ext_par.z0 - org_cal->ext_par.z0) +
@@ -348,8 +350,6 @@ Suite* orient_suite(void) {
     tc = tcase_create ("Orientation");
     tcase_add_test(tc, test_orient);
     suite_add_tcase (s, tc);
-
-
 
     return s;
 }

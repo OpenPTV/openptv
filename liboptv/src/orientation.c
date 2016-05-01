@@ -22,8 +22,6 @@
 #define PT_UNUSED -999
 #define NUM_ITER  80
 #define POS_INF 1E20
-#define IDT 10
-#define NPAR 19
 #define CONVERGENCE 0.00001
 
 /*  skew_midpoint() finds the middle of the minimal distance segment between
@@ -249,9 +247,14 @@ void num_deriv_exterior(Calibration* cal, control_par *cpar, double dpos, double
         exterior parameters and glass interface vector (19 in total).
 
     Returns:
-    1 for success, 0 for failure of convergence
+    On success, a pointer to an array of residuals. For each observation point
+    i = 0..n-1, residual 2*i is the Gauss-Markof residual for the x coordinate
+    and residual 2*i + 1 is for the y. Then come 10 cells with the delta 
+    between initial guess and final solution for internal and distortion 
+    parameters, which are also part of the G-M model and described in it.
+    On failure returns NULL.
 */
-int orient (Calibration* cal_in, control_par *cpar, int nfix, vec3d fix[],
+double* orient (Calibration* cal_in, control_par *cpar, int nfix, vec3d fix[],
             target pix[], orient_par *flags, double sigmabeta[20]) 
 {
     int  	i,j,n, itnum, stopflag, n_obs=0, maxsize;
@@ -463,101 +466,101 @@ int orient (Calibration* cal_in, control_par *cpar, int nfix, vec3d fix[],
         y[n+1] = yc - yp;
 
         n += 2;
-    }
-    
-    n_obs = n;
-                
-    /* identities */
-    for (i = 0; i < IDT; i++)
+      }
+      
+      n_obs = n;
+      
+      /* identities */
+      for (i = 0; i < IDT; i++)
         X[n_obs + i][6 + i] = 1;
         
-        y[n_obs+0] = ident[0] - cal->int_par.cc;
-        y[n_obs+1] = ident[1] - cal->int_par.xh;
-        y[n_obs+2] = ident[2] - cal->int_par.yh;
-        y[n_obs+3] = ident[3] - cal->added_par.k1;
-        y[n_obs+4] = ident[4] - cal->added_par.k2;
-        y[n_obs+5] = ident[5] - cal->added_par.k3;
-        y[n_obs+6] = ident[6] - cal->added_par.p1;
-        y[n_obs+7] = ident[7] - cal->added_par.p2;
-        y[n_obs+8] = ident[8] - cal->added_par.scx;
-        y[n_obs+9] = ident[9] - cal->added_par.she;
+      y[n_obs+0] = ident[0] - cal->int_par.cc;
+      y[n_obs+1] = ident[1] - cal->int_par.xh;
+      y[n_obs+2] = ident[2] - cal->int_par.yh;
+      y[n_obs+3] = ident[3] - cal->added_par.k1;
+      y[n_obs+4] = ident[4] - cal->added_par.k2;
+      y[n_obs+5] = ident[5] - cal->added_par.k3;
+      y[n_obs+6] = ident[6] - cal->added_par.p1;
+      y[n_obs+7] = ident[7] - cal->added_par.p2;
+      y[n_obs+8] = ident[8] - cal->added_par.scx;
+      y[n_obs+9] = ident[9] - cal->added_par.she;
 
-        /* weights */
-        for (i = 0; i < n_obs; i++)
-            P[i] = 1;
+      /* weights */
+      for (i = 0; i < n_obs; i++)
+          P[i] = 1;
 
-        P[n_obs+0] = ( ! flags->ccflag) ?  POS_INF : 1;
-        P[n_obs+1] = ( ! flags->xhflag) ?  POS_INF : 1;
-        P[n_obs+2] = ( ! flags->yhflag) ?  POS_INF : 1;
-        P[n_obs+3] = ( ! flags->k1flag) ?  POS_INF : 1;
-        P[n_obs+4] = ( ! flags->k2flag) ?  POS_INF : 1;
-        P[n_obs+5] = ( ! flags->k3flag) ?  POS_INF : 1;
-        P[n_obs+6] = ( ! flags->p1flag) ?  POS_INF : 1;
-        P[n_obs+7] = ( ! flags->p2flag) ?  POS_INF : 1;
-        P[n_obs+8] = ( ! flags->scxflag) ?  POS_INF : 1;
-        P[n_obs+9] = ( ! flags->sheflag) ?  POS_INF : 1;
+      P[n_obs+0] = ( ! flags->ccflag) ?  POS_INF : 1;
+      P[n_obs+1] = ( ! flags->xhflag) ?  POS_INF : 1;
+      P[n_obs+2] = ( ! flags->yhflag) ?  POS_INF : 1;
+      P[n_obs+3] = ( ! flags->k1flag) ?  POS_INF : 1;
+      P[n_obs+4] = ( ! flags->k2flag) ?  POS_INF : 1;
+      P[n_obs+5] = ( ! flags->k3flag) ?  POS_INF : 1;
+      P[n_obs+6] = ( ! flags->p1flag) ?  POS_INF : 1;
+      P[n_obs+7] = ( ! flags->p2flag) ?  POS_INF : 1;
+      P[n_obs+8] = ( ! flags->scxflag) ?  POS_INF : 1;
+      P[n_obs+9] = ( ! flags->sheflag) ?  POS_INF : 1;
 
-        n_obs += IDT;
-        sumP = 0;
-        for (i = 0; i < n_obs; i++) {       	/* homogenize */
-            p = sqrt (P[i]);
-            for (j = 0; j < NPAR; j++)
-                Xh[i][j] = p * X[i][j];
+      n_obs += IDT;
+      sumP = 0;
+      for (i = 0; i < n_obs; i++) {       	/* homogenize */
+          p = sqrt (P[i]);
+          for (j = 0; j < NPAR; j++)
+              Xh[i][j] = p * X[i][j];
             
-            yh[i] = p * y[i];
-            sumP += P[i];
-        }
+          yh[i] = p * y[i];
+          sumP += P[i];
+      }
         
-        /* Gauss Markoff Model it is the least square adjustment 
-        of the redundant information contained both in the spatial 
-        intersection and the resection, see [1], eq. 23 */
-        ata ((double *) Xh, (double *) XPX, n_obs, numbers, NPAR );
-        matinv ((double *) XPX, numbers, NPAR);
-        atl ((double *) XPy, (double *) Xh, yh, n_obs, numbers, NPAR);
-        matmul ((double *) beta, (double *) XPX, (double *) XPy, 
-            numbers, numbers,1, NPAR, NPAR);
+      /* Gauss Markoff Model it is the least square adjustment 
+         of the redundant information contained both in the spatial 
+         intersection and the resection, see [1], eq. 23 */
+      ata ((double *) Xh, (double *) XPX, n_obs, numbers, NPAR );
+      matinv ((double *) XPX, numbers, NPAR);
+      atl ((double *) XPy, (double *) Xh, yh, n_obs, numbers, NPAR);
+      matmul ((double *) beta, (double *) XPX, (double *) XPy, 
+          numbers, numbers,1, NPAR, NPAR);
 
-        stopflag = 1;
-        for (i = 0; i < numbers; i++) {
-            if (fabs (beta[i]) > CONVERGENCE)  stopflag = 0;
-        }
+      stopflag = 1;
+      for (i = 0; i < numbers; i++) {
+          if (fabs (beta[i]) > CONVERGENCE)  stopflag = 0;
+      }
 
-        if ( ! flags->ccflag) beta[6] = 0.0;
-        if ( ! flags->xhflag) beta[7] = 0.0;
-        if ( ! flags->yhflag) beta[8] = 0.0;
-        if ( ! flags->k1flag) beta[9] = 0.0;
-        if ( ! flags->k2flag) beta[10] = 0.0;
-        if ( ! flags->k3flag) beta[11] = 0.0;
-        if ( ! flags->p1flag) beta[12] = 0.0;
-        if ( ! flags->p2flag) beta[13] = 0.0;
-        if ( ! flags->scxflag)beta[14] = 0.0;
-        if ( ! flags->sheflag) beta[15] = 0.0;
+      if ( ! flags->ccflag) beta[6] = 0.0;
+      if ( ! flags->xhflag) beta[7] = 0.0;
+      if ( ! flags->yhflag) beta[8] = 0.0;
+      if ( ! flags->k1flag) beta[9] = 0.0;
+      if ( ! flags->k2flag) beta[10] = 0.0;
+      if ( ! flags->k3flag) beta[11] = 0.0;
+      if ( ! flags->p1flag) beta[12] = 0.0;
+      if ( ! flags->p2flag) beta[13] = 0.0;
+      if ( ! flags->scxflag)beta[14] = 0.0;
+      if ( ! flags->sheflag) beta[15] = 0.0;
 
-        cal->ext_par.x0 += beta[0];
-        cal->ext_par.y0 += beta[1];
-        cal->ext_par.z0 += beta[2];
-        cal->ext_par.omega += beta[3];
-        cal->ext_par.phi += beta[4];
-        cal->ext_par.kappa += beta[5];
-        cal->int_par.cc += beta[6];
-        cal->int_par.xh += beta[7];
-        cal->int_par.yh += beta[8];
-        cal->added_par.k1 += beta[9];
-        cal->added_par.k2 += beta[10];
-        cal->added_par.k3 += beta[11];
-        cal->added_par.p1 += beta[12];
-        cal->added_par.p2 += beta[13];
-        cal->added_par.scx += beta[14];
-        cal->added_par.she += beta[15];
+      cal->ext_par.x0 += beta[0];
+      cal->ext_par.y0 += beta[1];
+      cal->ext_par.z0 += beta[2];
+      cal->ext_par.omega += beta[3];
+      cal->ext_par.phi += beta[4];
+      cal->ext_par.kappa += beta[5];
+      cal->int_par.cc += beta[6];
+      cal->int_par.xh += beta[7];
+      cal->int_par.yh += beta[8];
+      cal->added_par.k1 += beta[9];
+      cal->added_par.k2 += beta[10];
+      cal->added_par.k3 += beta[11];
+      cal->added_par.p1 += beta[12];
+      cal->added_par.p2 += beta[13];
+      cal->added_par.scx += beta[14];
+      cal->added_par.she += beta[15];
 
-        if (flags->interfflag) {
+      if (flags->interfflag) {
           cal->glass_par.vec_x += e1[0]*nGl*beta[16];
           cal->glass_par.vec_y += e1[1]*nGl*beta[16];
           cal->glass_par.vec_z += e1[2]*nGl*beta[16];
           cal->glass_par.vec_x += e2[0]*nGl*beta[17];
           cal->glass_par.vec_y += e2[1]*nGl*beta[17];
           cal->glass_par.vec_z += e2[2]*nGl*beta[17];
-        }
+      }
     }
 
     /* compute residuals etc. */
@@ -579,15 +582,15 @@ int orient (Calibration* cal_in, control_par *cpar, int nfix, vec3d fix[],
     free(y);
     free(Xbeta);
     free(Xh);
-    free(resi);
 
     if (stopflag){
         rotation_matrix(&(cal->ext_par));
         memcpy(cal_in, cal, sizeof (Calibration));
-        return 1;
+        return resi;
     }
     else {
-        return 0;
+        free(resi);
+        return NULL;
     }
 }
 
