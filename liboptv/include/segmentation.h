@@ -13,8 +13,6 @@
 #include "tracking_frame_buf.h"
 #include "parameters.h" 
 #include <stdlib.h>
-#include <stdio.h>
-#include <string.h>
 
 
 typedef struct
@@ -27,11 +25,6 @@ typedef struct
 }
 peak;
 
-typedef struct
-{
-  short	       	x,y;
-}
-targpix;
 
 
 int peak_fit_new ( unsigned char *img, target_par *targ_par, 

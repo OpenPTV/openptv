@@ -15,6 +15,10 @@ Description:
 ****************************************************************************/
 
 #include "segmentation.h"
+#include <string.h>
+
+typedef short targpix[2];
+
 
 /*  targ_rec( ) thresholding and center of gravity with a peak fitting technique  
       uses 4 neighbours for connectivity and 8 to find local maxima     
@@ -82,17 +86,17 @@ int xmax, int ymin, int ymax, control_par *cpar, int num_cam, target pix[]){
 	    x = (xn) * gv;
 	    y = yn * gv;
 	    numpix = 1;
-	    waitlist[0].x = j;  waitlist[0].y = i;  n_wait = 1;
+	    waitlist[0][0] = j;  waitlist[0][1] = i;  n_wait = 1;
 	    
 
 	    while (n_wait > 0)
         {
-            gvref = *(img + imx*(waitlist[0].y) + (waitlist[0].x));
+            gvref = *(img + imx*(waitlist[0][1]) + (waitlist[0][0]));
 
-            x4[0] = waitlist[0].x - 1;  y4[0] = waitlist[0].y;
-            x4[1] = waitlist[0].x + 1;  y4[1] = waitlist[0].y;
-            x4[2] = waitlist[0].x;  y4[2] = waitlist[0].y - 1;
-            x4[3] = waitlist[0].x;  y4[3] = waitlist[0].y + 1;
+            x4[0] = waitlist[0][0] - 1;  y4[0] = waitlist[0][1];
+            x4[1] = waitlist[0][0] + 1;  y4[1] = waitlist[0][1];
+            x4[2] = waitlist[0][0];  y4[2] = waitlist[0][1] - 1;
+            x4[3] = waitlist[0][0];  y4[3] = waitlist[0][1] + 1;
             
 
             for (n=0; n<4; n++)
@@ -114,7 +118,7 @@ int xmax, int ymin, int ymax, control_par *cpar, int num_cam, target pix[]){
                 sumg += gv;  *(img0 + imx*yn + xn) = 0;
                 if (xn < xa)	xa = xn;	if (xn > xb)	xb = xn;
                 if (yn < ya)	ya = yn;	if (yn > yb)	yb = yn;
-                waitlist[n_wait].x = xn;	waitlist[n_wait].y = yn;
+                waitlist[n_wait][0] = xn;	waitlist[n_wait][1] = yn;
                 x = x + (xn) * (gv - thres);
                 y = y + yn * (gv - thres);
                 numpix++;	n_wait++;
@@ -122,8 +126,11 @@ int xmax, int ymin, int ymax, control_par *cpar, int num_cam, target pix[]){
               }
 
             n_wait--;
-            for (m=0; m<n_wait; m++)  waitlist[m] = waitlist[m+1];
-            waitlist[n_wait].x = 0;  waitlist[n_wait].y = 0;
+            for (m=0; m<n_wait; m++){  
+                waitlist[m][0] = waitlist[m+1][0];
+                waitlist[m][1] = waitlist[m+1][1];
+            }
+            waitlist[n_wait][0] = 0;  waitlist[n_wait][1] = 0;
 
         }	/*  end of while-loop  */
 
@@ -266,21 +273,21 @@ int ymin, int ymax, control_par *cpar, int num_cam, target pix[]){
           for (k=0; k<4; k++)	ptr_peak->touch[k] = 0;
           ptr_peak++;
 
-          waitlist[0].x = j;  waitlist[0].y = i;  n_wait = 1;
+          waitlist[0][0] = j;  waitlist[0][1] = i;  n_wait = 1;
 
           while (n_wait > 0)
             {
-              gvref = *(img + imx*(waitlist[0].y) + (waitlist[0].x));
+              gvref = *(img + imx*(waitlist[0][1]) + (waitlist[0][0]));
 
-              x8[0] = waitlist[0].x - 1;	y8[0] = waitlist[0].y;
-              x8[1] = waitlist[0].x + 1;	y8[1] = waitlist[0].y;
-              x8[2] = waitlist[0].x;		y8[2] = waitlist[0].y - 1;
-              x8[3] = waitlist[0].x;		y8[3] = waitlist[0].y + 1;
+              x8[0] = waitlist[0][0] - 1;	y8[0] = waitlist[0][1];
+              x8[1] = waitlist[0][0] + 1;	y8[1] = waitlist[0][1];
+              x8[2] = waitlist[0][0];		y8[2] = waitlist[0][1] - 1;
+              x8[3] = waitlist[0][0];		y8[3] = waitlist[0][1] + 1;
               /*
-            x8[4] = waitlist[0].x - 1;	y8[4] = waitlist[0].y - 1;
-            x8[5] = waitlist[0].x + 1;	y8[5] = waitlist[0].y - 1;
-            x8[6] = waitlist[0].x - 1;	y8[6] = waitlist[0].y + 1;
-            x8[7] = waitlist[0].x + 1;	y8[7] = waitlist[0].y + 1;
+            x8[4] = waitlist[0][0] - 1;	y8[4] = waitlist[0][1] - 1;
+            x8[5] = waitlist[0][0] + 1;	y8[5] = waitlist[0][1] - 1;
+            x8[6] = waitlist[0][0] - 1;	y8[6] = waitlist[0][1] + 1;
+            x8[7] = waitlist[0][0] + 1;	y8[7] = waitlist[0][1] + 1;
             */
 
               /*
@@ -313,14 +320,17 @@ int ymin, int ymax, control_par *cpar, int num_cam, target pix[]){
                     {
                       *(label_img + imx*yn + xn) = n_peaks;
 
-                      waitlist[n_wait].x = xn;	waitlist[n_wait].y = yn;
+                      waitlist[n_wait][0] = xn;	waitlist[n_wait][1] = yn;
                       n_wait++;
                     }
                 }
 
               n_wait--;
-              for (m=0; m<n_wait; m++)  waitlist[m] = waitlist[m+1];
-              waitlist[n_wait].x = 0;  waitlist[n_wait].y = 0;
+            for (m=0; m<n_wait; m++){  
+                waitlist[m][0] = waitlist[m+1][0];
+                waitlist[m][1] = waitlist[m+1][1];
+            }
+            waitlist[n_wait][0] = 0;  waitlist[n_wait][1] = 0;
             }	/*  end of while-loop  */
         }
 
