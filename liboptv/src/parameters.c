@@ -6,19 +6,20 @@
 #include <string.h>
 
 /* read_sequence_par() reads sequence parameters from a config file with the
-   following format: each line is a value, first 4 values are image names,
-   5th is the first number in the sequence, 6th line is the last value in the
-   sequence.
+   following format: each line is a value, first num_cams values are image 
+   names, (num_cams+1)th is the first number in the sequence, (num_cams+2)th 
+   line is the last value in the sequence.
    
    Arguments:
    char *filename - path to the text file containing the parameters.
+   int num_cams - number of cameras
    
    Returns:
    Pointer to a newly-allocated sequence_par structure. Don't forget to free
-   the new memory that is allocated for the image names. If reading failed for 
+   the new memory using free_sequence_par(sp*) function. If reading failed for
    any reason, returns NULL.
 */
-sequence_par* read_sequence_par(char *filename) {
+sequence_par* read_sequence_par(char *filename, int num_cams) {
     char line[SEQ_FNAME_MAX_LEN];
     FILE* par_file;
     int cam, read_ok;
@@ -29,16 +30,13 @@ sequence_par* read_sequence_par(char *filename) {
         return NULL;
     }
     
-    ret = (sequence_par *) malloc(sizeof(sequence_par));
-    ret->img_base_name = (char **) calloc(4, sizeof(char *));
-    
-    /* Note the assumption of 4 cameras. Fixing this requires changing the
-       file format. */
-    for (cam = 0; cam < 4; cam++) {
+    /* create new sequence_par struct with memory allocated to all its inner pointers*/
+    ret = new_sequence_par(num_cams);
+
+    for (cam = 0; cam < num_cams; cam++) {
         read_ok = fscanf(par_file, "%s\n", line);
         if (read_ok == 0) goto handle_error;
         
-        ret->img_base_name[cam] = (char *) malloc(SEQ_FNAME_MAX_LEN);
         strncpy(ret->img_base_name[cam], line, SEQ_FNAME_MAX_LEN);
     }
     
@@ -52,9 +50,78 @@ sequence_par* read_sequence_par(char *filename) {
     
 handle_error:
     printf("Error reading sequence parameters from %s\n", filename);
-    free(ret);
+    free_sequence_par(ret);
     fclose(par_file);
     return NULL;
+}
+
+/*  new_sequence_par() creates a new sequence_par struct and allocates memory 
+    for its inner pointers.
+    
+    Arguments:
+    int num_cams - number of cameras
+    
+    Returns:
+    Pointer to a newly-allocated sequence_par structure. Don't forget to free
+    the new memory using free_sequence_par(sp*) function. If reading failed for
+    any reason, returns NULL.
+*/
+sequence_par * new_sequence_par(int num_cams) {
+    int cam;
+    sequence_par *ret;
+
+    ret = (sequence_par *) malloc(sizeof(sequence_par));
+    ret->img_base_name = (char **) calloc(num_cams, sizeof(char *));
+
+    ret->num_cams = num_cams;
+    for (cam = 0; cam < num_cams; cam++) {
+        ret->img_base_name[cam] = (char *) malloc(SEQ_FNAME_MAX_LEN);
+    }
+    return ret;
+}
+
+/* compare_sequence_par() checks that all fields of two sequence_par objects are
+   equal.
+
+   Arguments:
+   sequence_par *sp1, track_par *sp2- addresses of the objects for comparison.
+
+   Returns:
+   True if equal, false otherwise. */
+int compare_sequence_par(sequence_par *sp1, sequence_par *sp2) {
+    int cam;
+    
+    if (sp1->first != sp2->first || sp1->last != sp2->last
+            || sp1->num_cams != sp2->num_cams)
+        return 0; /*not equal*/
+
+    for (cam = 0; cam < sp1->num_cams; cam++) {
+        if (strcmp(sp1->img_base_name[cam],sp1->img_base_name[cam]) !=0){
+            return 0; /*not equal*/
+        }
+    }
+    return 1; /*equal*/
+}
+
+/* free_sequence_par() frees the memory allocated for sequence_par struct 
+   pointed to by sp and its inner pointers, setting freed pointers to NULL.
+   
+   Arguments:
+   sequence_par *sp - the sequence_par struct to free with the other memory 
+      it owns.
+*/
+void free_sequence_par(sequence_par * sp) {
+    int cam;
+
+    for (cam = 0; cam < sp->num_cams; cam++) {
+        free(sp->img_base_name[cam]);
+        sp->img_base_name[cam] = NULL;
+    }
+    free(sp->img_base_name);
+    sp->img_base_name = NULL;
+
+    free(sp);
+    sp = NULL;
 }
 
 /* read_track_par() reads tracking parameters from a config file with the
@@ -96,6 +163,7 @@ track_par* read_track_par(char *filename) {
     return ret;
 
 handle_error:
+    printf("Error reading tracking parameters from %s\n", filename);
     free(ret);
     fclose (fpp);
     return NULL;
@@ -127,6 +195,11 @@ int compare_track_par(track_par *t1, track_par *t2) {
    4. X_lay[1]
    5. Zmin_lay[1]
    6. Zmax_lay[1]
+   7. cnx
+   8. cny
+   9. cn
+   10.csumg
+   11.corrmin
    
    Arguments:
    char *filename - path to the text file containing the parameters.
@@ -158,6 +231,7 @@ volume_par* read_volume_par(char *filename) {
     return ret;
 
 handle_error:
+    printf("Error reading volume parameters from %s\n", filename);
     free(ret);
     fclose(fpp);
     return NULL;
@@ -185,31 +259,59 @@ int compare_volume_par(volume_par *v1, volume_par *v2) {
         (v1->corrmin == v2->corrmin) && (v1->eps0 == v2->eps0) );
 }
 
+/* new_control_par() allocates memory for a control_par struct and the other 
+   memory it owns.
+   
+   Arguments:
+   int cams - number of cameras for whose data we need memory allocation.
+   
+   Returns:
+   Pointer to the newly allocated memory for the control_par struct.
+*/
+control_par * new_control_par(int cams) {
+    int cam;
+    control_par *ret = (control_par *) malloc(sizeof(control_par));
+
+    ret->num_cams = cams;
+
+    ret->img_base_name = (char **) calloc(ret->num_cams, sizeof(char*));
+    ret->cal_img_base_name = (char **) calloc(ret->num_cams, sizeof(char *));
+
+    for (cam = 0; cam < ret->num_cams; cam++) {
+        ret->img_base_name[cam] = (char *) malloc(SEQ_FNAME_MAX_LEN);
+        ret->cal_img_base_name[cam] = (char *) malloc(SEQ_FNAME_MAX_LEN);
+    }
+
+    ret->mm = (mm_np *) malloc(sizeof(mm_np));
+
+    return ret;
+}
+
 /*  read_control_par() reads general control parameters that are not present in
     other config files but are needed generally. The arguments are read in
     this order:
     
     1. num_cams - number of cameras in a frame.
-    2n (n = 1..num_cams). img_base_name
+    2n (n = 1..4). img_base_name
     2n + 1. cal_img_base_name
-    2n+2. hp_flag - high pass filter flag (0/1)
-    2n+3. allCam_flag - flag using the particles that are matched in all cameras
-    +4. tiff_flag, use TIFF headers or not (if RAW images) 0/1
-    +5. imx - horizontal size of the image/sensor in pixels, e.g. 1280
-    +6. imy - vertical size in pixels, e.g. 1024
-    +7. pix_x
-    +8 pix_y - pixel size of the sensor (one value per experiment means 
+    10 hp_flag - high pass filter flag (0/1)
+    11. allCam_flag - flag using the particles that are matched in all cameras
+    12. tiff_flag, use TIFF headers or not (if RAW images) 0/1
+    13. imx - horizontal size of the image/sensor in pixels, e.g. 1280
+    14. imy - vertical size in pixels, e.g. 1024
+    15. pix_x
+    16 pix_y - pixel size of the sensor (one value per experiment means 
    that all cameras are identical. TODO: allow for different cameras), in [mm], 
    e.g. 0.010 = 10 micron pixel
-   +9. chfield - 
-   +10. mmp.n1 - index of refraction of the first media (air = 1)
-   +11. mmp.n2[0] - index of refraction of the second media - glass windows, can
-   be different?
-   +12. mmp.n3 - index of refraction of the flowing media (air, liquid)
-   2n+13. mmp.d[0] - thickness of the glass/perspex windows (second media), can be
-   different ?
+    17. chfield - whether to use whole image (0), upper half (1) or lower (2).
+    18. mmp.n1 - index of refraction of the first media (air = 1)
+    19. mmp.n2[0] - index of refraction of the second media - glass windows, 
+        can be different?
+    20. mmp.n3 - index of refraction of the flowing media (air, liquid)
+    21. mmp.d[0] - thickness of the glass/perspex windows (second media), can be
+        different ?
     
-   (if n = 4, then 21 lines)
+    (21 lines overall, regardless of camera count)
     
     Arguments:
     char *filename - path to the text file containing the parameters.
@@ -222,25 +324,34 @@ control_par* read_control_par(char *filename) {
     char line[SEQ_FNAME_MAX_LEN];
     FILE* par_file;
     int cam;
-    control_par *ret = (control_par *) malloc(sizeof(control_par));
-    
-    par_file = fopen(filename, "r");
-    if(fscanf(par_file, "%d\n", &(ret->num_cams)) == 0) goto handle_error;
-    
-    ret->img_base_name = (char **) calloc(ret->num_cams, sizeof(char*));
-    ret->cal_img_base_name = (char **) calloc(ret->num_cams, sizeof(char *));
-    ret->mm = (mm_np *) malloc(sizeof(mm_np));
-    
-    
+    int num_cams;
+    control_par *ret;
+
+    if ((par_file = fopen(filename, "r")) == NULL) {
+        printf("Could not open file %s", filename);
+        return NULL;
+    }
+
+    if (fscanf(par_file, "%d\n", &num_cams) != 1) {
+        printf("Could not read number of cameras from %s", filename);
+        return NULL;
+    }
+    ret = new_control_par(num_cams);
     for (cam = 0; cam < ret->num_cams; cam++) {
         if (fscanf(par_file, "%s\n", line) == 0) goto handle_error;
-        ret->img_base_name[cam] = (char *) malloc(SEQ_FNAME_MAX_LEN);
         strncpy(ret->img_base_name[cam], line, SEQ_FNAME_MAX_LEN);
         
         if (fscanf(par_file, "%s\n", line) == 0) goto handle_error;
-        ret->cal_img_base_name[cam] = (char *) malloc(SEQ_FNAME_MAX_LEN);
         strncpy(ret->cal_img_base_name[cam], line, SEQ_FNAME_MAX_LEN);
     }
+    
+    /*  backward compatibility: Tcl/Tk version will look for 8 rows of strings 
+        regardless of camera count.
+    */
+    for (cam = 0; cam < 2*(4 - ret->num_cams); cam++) {
+        if (fscanf(par_file, "%s\n", line) == 0) goto handle_error; 
+    }
+    
     if(fscanf(par_file, "%d\n", &(ret->hp_flag)) == 0) goto handle_error;
     if(fscanf(par_file, "%d\n", &(ret->allCam_flag)) == 0) goto handle_error;
     if(fscanf(par_file, "%d\n", &(ret->tiff_flag)) == 0) goto handle_error;
@@ -259,29 +370,37 @@ control_par* read_control_par(char *filename) {
     return ret;
 
 handle_error:
+    printf("Error reading control parameters from %s\n", filename);
     fclose(par_file);
     free_control_par(ret);    
     return NULL;
 }
 
 /*  free_control_par() frees a control_par pointer and the memory allocated
-    under it fro image namew etc.
+    under it for image names etc.
     
     Arguments:
     control_par *cp - pointer to the control_par object to destroy.
 */
 void free_control_par(control_par *cp) {
-    
     int cam;
-    
     for (cam = 0; cam < cp->num_cams; cam++) {
-        if (cp->img_base_name[cam] == NULL) break;
         free(cp->img_base_name[cam]);
-        
-        if (cp->cal_img_base_name[cam] == NULL) break;
+        cp->img_base_name[cam] = NULL;
         free(cp->cal_img_base_name[cam]);
+        cp->cal_img_base_name[cam] = NULL;
     }
+    free(cp->img_base_name);
+    cp->img_base_name = NULL;
+
+    free(cp->cal_img_base_name);
+    cp->cal_img_base_name = NULL;
+
+    free(cp->mm);
+    cp->mm = NULL;
+
     free(cp);
+    cp = NULL;
 }
 
 /* compare_control_par() checks that two control_par objects are deeply-equal,
@@ -352,24 +471,16 @@ target_par* read_target_par(char *filename) {
     target_par *ret;
     ret = malloc(sizeof(target_par));
 
-    int discont;
-    int gvthres[4];
-    int nnmin, nnmax;
-    int nxmin, nxmax;
-    int nymin, nymax;
-    int sumg_min;
-    int cr_sz;
-
-    if (   !(fscanf(file, "%d", &ret->discont)==1)      /* max discontinuity */
-        || !(fscanf(file, "%d", &ret->gvthres[0])==1)   /* threshold for binarization 1.image */
+    if (   !(fscanf(file, "%d", &ret->gvthres[0])==1)   /* threshold for binarization 1.image */
         || !(fscanf(file, "%d", &ret->gvthres[1])==1)   /* threshold for binarization 2.image */
         || !(fscanf(file, "%d", &ret->gvthres[2])==1)   /* threshold for binarization 3.image */
         || !(fscanf(file, "%d", &ret->gvthres[3])==1)   /* threshold for binarization 4.image */
+        || !(fscanf(file, "%d", &ret->discont)==1)      /* max discontinuity */
         || !(fscanf(file, "%d  %d", &ret->nnmin, &ret->nnmax)==2) /* min. and max. number of */
         || !(fscanf(file, "%d  %d", &ret->nxmin, &ret->nxmax)==2) /* pixels per target,  */
         || !(fscanf(file, "%d  %d", &ret->nymin, &ret->nymax)==2) /* abs, in x, in y     */
         || !(fscanf(file, "%d", &ret->sumg_min)==1)               /* min. sumg */
-        || !(fscanf(file, "%d", &ret->cr_sz))==1)                 /* size of crosses */
+        || !(fscanf(file, "%d", &ret->cr_sz)==1))                 /* size of crosses */
     {
         printf("Error reading target recognition parameters from %s\n", filename);
         free(ret);
@@ -411,11 +522,11 @@ void write_target_par(target_par *targ, char *filename) {
         printf("Can't create file: %s\n", filename);
 
     fprintf(file, "%d\n%d\n%d\n%d\n%d\n%d\n%d\n%d\n%d\n%d\n%d\n%d\n%d",
-            targ->discont,
             targ->gvthres[0],
             targ->gvthres[1],
             targ->gvthres[2],
             targ->gvthres[3],
+            targ->discont,
             targ->nnmin,
             targ->nnmax,
             targ->nxmin,

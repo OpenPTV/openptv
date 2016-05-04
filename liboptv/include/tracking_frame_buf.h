@@ -6,6 +6,9 @@ for all cameras, correspondence information and path links information.
 #ifndef TRACKING_FRAME_BUF_H
 #define TRACKING_FRAME_BUF_H
 
+/* For point positions */
+#include "vec_utils.h"
+
 #define POSI 80
 #define STR_MAX_LEN 255
 
@@ -33,12 +36,11 @@ corres;
 int compare_corres(corres *c1, corres *c2);
 #define CORRES_NONE -1
 
-typedef double coord_t;
 typedef float fitness_t;
 
 typedef struct Pstruct
 {
-  coord_t x[3]; /*coordinates*/
+  vec3d x; /*coordinates*/
   int prev, next; /*pointer to prev or next link*/
   int prio; /*Prority of link is used for differen levels*/
   fitness_t decis[POSI]; /*Bin for decision critera of possible links to next dataset*/

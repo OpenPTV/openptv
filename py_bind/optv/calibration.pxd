@@ -1,3 +1,4 @@
+from vec_utils cimport vec3d
 
 cdef extern from "optv/calibration.h":
     ctypedef double Dmatrix [3][3]
@@ -17,11 +18,17 @@ cdef extern from "optv/calibration.h":
     ctypedef struct ap_52:
         double k1, k2, k3, p1, p2, scx, she
         
-    ctypedef struct c_calibration "Calibration":
+    ctypedef struct mmlut:
+        vec3d origin;
+        int nr, nz, rw
+        double *data
+    
+    ctypedef struct calibration "Calibration":
         Exterior ext_par
         Interior int_par
         Glass glass_par
         ap_52 added_par
+        mmlut mmlut
         
 cdef class Calibration:
-    cdef c_calibration * _calibration
+    cdef calibration * _calibration

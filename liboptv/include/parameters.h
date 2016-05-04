@@ -10,11 +10,15 @@
 #define SEQ_FNAME_MAX_LEN 240
 
 typedef struct {
+    int num_cams;
     char **img_base_name;
     int first, last;
 } sequence_par;
 
-sequence_par* read_sequence_par(char *filename);
+sequence_par* read_sequence_par(char *filename, int num_cams);
+sequence_par* new_sequence_par(int num_cams);
+void free_sequence_par(sequence_par * sp);
+int compare_sequence_par(sequence_par *sp1, sequence_par *sp2);
 
 typedef struct
 {
@@ -43,7 +47,6 @@ typedef struct {
     double  n2[3];
     double  d[3];
     double  n3;
-    int     lut;
 } mm_np;
 
 /* Parameters that control general aspects in the setup and behaviour of
@@ -63,6 +66,7 @@ typedef struct {
     mm_np *mm;
 } control_par;
 
+control_par * new_control_par(int cams);
 control_par * read_control_par(char *filename);
 void free_control_par(control_par *cp);
 

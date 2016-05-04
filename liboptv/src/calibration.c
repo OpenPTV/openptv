@@ -33,7 +33,7 @@ int write_ori (Exterior Ex, Interior I, Glass G, ap_52 ap, \
         goto finalize;
   }
     
-  fprintf (fp, "%11.4f %11.4f %11.4f\n    %10.7f  %10.7f  %10.7f\n\n",
+  fprintf (fp, "%11.8f %11.8f %11.8f\n    %10.8f  %10.8f  %10.8f\n\n",
 	   Ex.x0, Ex.y0, Ex.z0, Ex.omega, Ex.phi, Ex.kappa);
   for (i=0; i<3; i++)  fprintf (fp, "    %10.7f %10.7f %10.7f\n",
 				Ex.dm[i][0], Ex.dm[i][1], Ex.dm[i][2]);
@@ -49,7 +49,7 @@ int write_ori (Exterior Ex, Interior I, Glass G, ap_52 ap, \
         printf("Can't open ascii file: %s\n", add_file);
         goto finalize;
   }
-  fprintf (fp, "%f %f %f %f %f %f %f", ap.k1, ap.k2, ap.k3, ap.p1, ap.p2,
+  fprintf (fp, "%.8f %.8f %.8f %.8f %.8f %.8f %.8f", ap.k1, ap.k2, ap.k3, ap.p1, ap.p2,
     ap.scx, ap.she);
   success = 1;
   
@@ -225,7 +225,7 @@ int compare_calib(Calibration *c1, Calibration *c2) {
 }
 
 /**************************************************
- * read_calibration() reads orientation fiels and creates a Calibration object
+ * read_calibration() reads orientation files and creates a Calibration object
  * that represents the files' data.
  * 
  * Note: for now it uses read_ori(). This is scheduled to change soon.
@@ -233,8 +233,7 @@ int compare_calib(Calibration *c1, Calibration *c2) {
  * Arguments:
  * char *ori_file - name of the file containing interior, exterior, and glass
  *   parameters.
- * char *add_file - name of the file containing additional orientation
- *   parameters.
+ * char *add_file - name of the file containing distortion parameters.
  * char *fallback_file - name of file to use if add_file can't be opened.
  *
  * Returns:
@@ -244,7 +243,9 @@ Calibration *read_calibration(char *ori_file, char *add_file,
     char *fallback_file)
 {
     Calibration *ret = (Calibration *) malloc(sizeof(Calibration));
-    
+    /* indicate that data is not set yet */
+    ret->mmlut.data=NULL;
+
     if (read_ori(&(ret->ext_par), &(ret->int_par), &(ret->glass_par), ori_file,
         &(ret->added_par), add_file, fallback_file))
     {
@@ -256,6 +257,26 @@ Calibration *read_calibration(char *ori_file, char *add_file,
     }
 }
 
+
+/**************************************************
+ * write_calibration() writes to orientation files the data in a Calibration 
+ * object.
+ * 
+ * Note: for now it uses write_ori(). This is scheduled to change soon.
+ * 
+ * Arguments:
+ * Calibration *cal - the calibration data to write.
+ * char *ori_file - name of the file to hold interior, exterior, and glass
+ *   parameters.
+ * char *add_file - name of the file to hold distortion parameters.
+ *
+ * Returns:
+ * True value on success, False otherwise.
+ */
+int write_calibration(Calibration *cal, char *ori_file, char *add_file) {
+    return write_ori(cal->ext_par, cal->int_par, cal->glass_par, 
+        cal->added_par, ori_file, add_file);
+}
 
 /* rotation_matrix() rotates the Dmatrix of Exterior Ex using
 *  three angles of the camera

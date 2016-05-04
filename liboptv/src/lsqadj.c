@@ -155,32 +155,3 @@ for (i=0; i<k; i++) {
   }
 }
 
-
-/* Cross product of two vectors of 3 x 1 
-* Arguments
-* a - vector of doubles 3x1
-* b - vector of doubles 3x1
-* n - output, vector of doubles 3x1
-*/
-
-void norm_cross(double a[3], double b[3], double n[3]) {
-
-    double dummy, rnorm;
-    vec3d res;
-
-    res[0]=a[1]*b[2]-a[2]*b[1];
-    res[1]=a[2]*b[0]-a[0]*b[2];
-    res[2]=a[0]*b[1]-a[1]*b[0];
-    
-    rnorm = vec_norm(res);
-    
-    if (rnorm == 0.0){ // avoids zero length vector bug
-        n[0] = res[0];
-        n[1] = res[0];
-        n[2] = res[0];
-    } else {    
-    n[0]=res[0]/rnorm;
-    n[1]=res[1]/rnorm;
-    n[2]=res[2]/rnorm;
-    }
-}
