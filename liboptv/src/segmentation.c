@@ -21,17 +21,18 @@ typedef short targpix[2];
 
 
 /*  targ_rec( ) thresholding and center of gravity with a peak fitting technique  
-      uses 4 neighbours for connectivity and 8 to find local maxima     
+      uses 4 neighbours for connectivity and 8 to find local maxima
+      https://en.wikipedia.org/wiki/Connected-component_labeling     
 Arguments:
-    unsigned char	*img;		       	 image
-    int         threshold                grey scale threshold 
-    int	       	xmin,xmax,ymin,ymax;	 search area, size of the blog
-    control_par *cpar                   control parameters
-
+    unsigned char	*img	    image
+    target_par *targ_par        target dots parameters: size limits, sum of grey values
+                                intensity thresholds, etc.
+    int xmin,xmax,ymin,ymax	    search area, limits of the field of view
+    control_par *cpar           control parameters
+    int num_cam                 number of the camera (0... cal_par->num_cams)
 Output:
-    target	       	pix[];		       	 pixel coord array
-    int             n_targets           number of targets found
-
+    target	       	pix[];		array of found dots of centroids, sum of grey values and 
+                                a pointer (number of the dot)
 */
 
 int targ_rec (unsigned char *img, target_par *targ_par, int xmin, 
@@ -40,7 +41,6 @@ int xmax, int ymin, int ymax, control_par *cpar, int num_cam, target pix[]){
   int	      	n=0, n_wait=0, n_targets=0, sumg, sumg_min;
   int	        numpix;
   int	        thres, disco;
-  int	       	cr_sz;			       /* size of crosses to be drawn */
   int	       	xa,ya,xb,yb, x4[4],y4[4], xn,yn, nx, ny; 
   double	       	x, y;
   unsigned char *img0;
@@ -177,14 +177,15 @@ int xmax, int ymin, int ymax, control_par *cpar, int num_cam, target pix[]){
   the threshold and searches for local maximum. 
 	
 Arguments:
-    unsigned char	*img;		       	 image
-    int         threshold                grey scale threshold 
-    int	       	xmin,xmax,ymin,ymax;	 search area, size of the blog
-    control_par *cpar                   control parameters
-
+    unsigned char	*img	    image
+    target_par *targ_par        target dots parameters: size limits, sum of grey values
+                                intensity thresholds, etc.
+    int xmin,xmax,ymin,ymax	    search area, limits of the field of view
+    control_par *cpar           control parameters
+    int num_cam                 number of the camera (0... cal_par->num_cams)
 Output:
-    target	       	pix[];		       	 pixel coord array
-    int             n_targets           number of targets found
+    target	       	pix[];		array of found dots of centroids, sum of grey values and 
+                                a pointer (number of the dot)
 
 */
 
@@ -228,20 +229,14 @@ int ymin, int ymax, control_par *cpar, int num_cam, target pix[]){
   peaks = (peak *) calloc (4*nmax, sizeof(peak));
   ptr_peak = peaks;
   
-  /*------------------------------------------------------------------------*/
 
-  /* 1.: connectivity analysis with peak search and discontinuity criterion */
+  /* connectivity analysis with peak search and discontinuity criterion */
 
-  /*------------------------------------------------------------------------*/
-
-  // puts("Searching local maxima, connectivity analysis, peak factor 2 set");
-
-  for (i=ymin; i<ymax-1; i++)  for (j=xmin; j<xmax; j++)//Beat Lüthi Jan 09 I changed to (i=ymin; i<ymax-1; i++), new:-1
+  for (i=ymin; i<ymax-1; i++)  for (j=xmin; j<xmax; j++)
     {
       n = i*imx + j;
 
       /* compare with threshold */
-      // gv = *(img + n);   if (gv <= 2*thres)	continue;
       gv = *(img + n);   if (gv <= thres)	continue;
 
       /* skip already labeled pixel */
@@ -305,17 +300,12 @@ int ymin, int ymax, control_par *cpar, int num_cam, target pix[]){
                   /* conditions for threshold, discontinuity, image borders */
                   /* and peak fitting */
                   if (   (gv > thres)
-                     && (xn>=xmin)&&(xn<xmax) && (yn>=ymin)&&(yn<ymax-1)//Beat Lüthi Jan 09 I changed to (i=ymin; i<ymax-1; i++), new:-1
+                     && (xn>=xmin)&&(xn<xmax) && (yn>=ymin)&&(yn<ymax-1)
                      && (gv <= gvref+disco)
                      && (gvref + disco >= *(img + imx*(yn-1) + xn))
                      && (gvref + disco >= *(img + imx*(yn+1) + xn))
                      && (gvref + disco >= *(img + imx*yn + (xn-1)))
                      && (gvref + disco >= *(img + imx*yn + (xn+1)))
-                     /*
-                     && (gvref + disco >= *(img + imx*(yn-1) + xn-1))
-                     && (gvref + disco >= *(img + imx*(yn-1) + xn+1))
-                     && (gvref + disco >= *(img + imx*(yn+1) + (xn-1)))
-                     && (gvref + disco >= *(img + imx*(yn+1) + (xn+1)))  */
                      )
                     {
                       *(label_img + imx*yn + xn) = n_peaks;
@@ -336,15 +326,9 @@ int ymin, int ymax, control_par *cpar, int num_cam, target pix[]){
 
     }
 
-
-
-  /*------------------------------------------------------------------------*/
-
   /* 2.:	process label image */
   /* 		(collect data for center of gravity, shape and brightness parameters) */
   /*		get touch events */
-
-  /*------------------------------------------------------------------------*/
 
   for (i=ymin; i<ymax; i++)  for (j=xmin; j<xmax; j++)
         {
@@ -381,11 +365,7 @@ int ymin, int ymax, control_par *cpar, int num_cam, target pix[]){
             }
         }
 
-  /*------------------------------------------------------------------------*/
-
   /* 3.:	reunification test: profile and distance */
-
-  /*------------------------------------------------------------------------*/
 
   for (i=0; i<n_peaks; i++)
     {
@@ -404,8 +384,8 @@ int ymin, int ymax, control_par *cpar, int num_cam, target pix[]){
         {
           p2 = peaks[i].touch[j] - 1;
 
-          if (p2 >= n_peaks) continue; /* workaround memory overwrite problem */
-          if ( p2 <0) continue;  /*  workaround memory overwrite problem */
+          if (p2 >= n_peaks) continue;  /* workaround memory overwrite problem */
+          if ( p2 <0) continue;         /*  workaround memory overwrite problem */
           if (peaks[p2].unr != 0)      	continue; /* target already unified */
 
           /* point 2 */
@@ -447,12 +427,8 @@ int ymin, int ymax, control_par *cpar, int num_cam, target pix[]){
         }
     }
 
-  /*------------------------------------------------------------------------*/
-
-  /* 4.:	process targets */
-
-  /*------------------------------------------------------------------------*/
-
+      /* 4.:	process targets */
+    
   for (i=0; i<n_peaks; i++)
     {
       /* check whether target touches image borders */
@@ -488,29 +464,7 @@ int ymin, int ymax, control_par *cpar, int num_cam, target pix[]){
           n_target++;
         }
     }
-
-
-
-  /* get number of touch events */
-//   if (examine==10)
-//     {
-//       for (x=0,i=0; i<n_target; i++)
-// 	{
-// 	  x += pix[i].n;
-// 	}
-//       x /= n_target;
-//       printf ("Average number of pix per target: %6.3f\n", x);
-// 
-//       for (sumg=0,i=0; i<n_peaks; i++)
-// 	{
-// 	  sumg += peaks[i].n_touch;
-// 	}
-//       printf ("Number of touch events: %d\n", sumg/2);
-// 
-//       y = 2*n_target*n_target*x/(imx*imy);
-//       printf ("expected number of touch events: %6.0f\n", y);
-//     }
-
+        
   free (label_img);
   free (peaks);
 
@@ -518,8 +472,14 @@ int ymin, int ymax, control_par *cpar, int num_cam, target pix[]){
 
 }
 
-/* check wether p1, p2 are already marked as touching and mark them otherwise */
-
+/* check_touch () checks wether p1, p2 are already marked as touching 
+    and mark them otherwise 
+Arguments:
+    peak *tpeak     array of peaks 
+    int p1, p2      pointers to two dots that might be touching
+Output:
+    tpeak->n_touch will hold a pointer or a flag of touch events
+*/
 void check_touch (peak *tpeak, int p1, int p2){
   int	m, done;
 
