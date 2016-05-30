@@ -7,19 +7,16 @@ import numpy as np
 import os
 inc_dirs = [np.get_include(), '.']
 
+def mk_ext(name, files):
+    return Extension(name, files, libraries=['optv'], include_dirs=inc_dirs,
+        pyrex_include_dirs=['.'])
+
 ext_mods = [
-    Extension("optv.tracking_framebuf", ["optv/tracking_framebuf.pyx"], 
-        libraries=['optv'], include_dirs=inc_dirs,
-        pyrex_include_dirs=['.']),
-    Extension("optv.parameters", ["optv/parameters.pyx"], 
-        libraries=['optv'], include_dirs=inc_dirs,
-        pyrex_include_dirs=['.']),
-    Extension("optv.calibration", ["optv/calibration.pyx"], 
-        libraries=['optv'], include_dirs=inc_dirs,
-        pyrex_include_dirs=['.']),
-    Extension("optv.transforms", ["optv/transforms.pyx"], 
-        libraries=['optv'], include_dirs=inc_dirs,
-        pyrex_include_dirs=['.']),
+    mk_ext("optv.tracking_framebuf", ["optv/tracking_framebuf.pyx"]),
+    mk_ext("optv.parameters", ["optv/parameters.pyx"]),
+    mk_ext("optv.calibration", ["optv/calibration.pyx"]),
+    mk_ext("optv.transforms", ["optv/transforms.pyx"]),
+    mk_ext("optv.imgcoord", ["optv/imgcoord.pyx"])
 ]
 
 setup(
