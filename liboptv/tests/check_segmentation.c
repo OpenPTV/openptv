@@ -5,7 +5,7 @@
 #include "tracking_frame_buf.h"
 
 
-START_TEST(test_peak_fit_new)
+START_TEST(test_peak_fit)
 {
     int ntargets; 
     unsigned char img[5][5] = {
@@ -34,7 +34,7 @@ START_TEST(test_peak_fit_new)
         .cr_sz = 13 };
     
                 
-   ntargets = peak_fit_new (img, &targ_par, 0, cpar.imx, 0, cpar.imy, &cpar, 0, pix);
+   ntargets = peak_fit(img, &targ_par, 0, cpar.imx, 0, cpar.imy, &cpar, 0, pix);
    fail_unless(ntargets == 1);
    fail_unless(pix[0].n == 9);
    
@@ -46,11 +46,13 @@ START_TEST(test_peak_fit_new)
         { 0, 0, 0, 251, 0},
         { 0,   0,   0,   0, 0}
     };
-   ntargets = peak_fit_new (img1, &targ_par, 0, cpar.imx, 0, cpar.imy, &cpar, 1, pix);
+   ntargets = peak_fit(img1, &targ_par, 0, cpar.imx, 0, cpar.imy, &cpar, 1, 
+        pix);
    fail_unless(ntargets == 2);
    
    targ_par.gvthres[1] = 252; 
-   ntargets = peak_fit_new ((unsigned char *)img1, &targ_par, 0, cpar.imx, 0, cpar.imy, &cpar, 1, pix);
+   ntargets = peak_fit((unsigned char *)img1, &targ_par, 0, cpar.imx, 
+        0, cpar.imy, &cpar, 1, pix);
    fail_unless(ntargets == 1);
 
 }
@@ -97,11 +99,13 @@ START_TEST(test_targ_rec)
         { 0, 0, 0, 251, 0},
         { 0,   0,   0,   0, 0}
     };
-   ntargets = targ_rec (img1, &targ_par, 0, cpar.imx, 0, cpar.imy, &cpar, 1, pix);
+   ntargets = targ_rec (img1, &targ_par, 0, cpar.imx, 0, cpar.imy, &cpar, 1, 
+        pix);
    fail_unless(ntargets == 2);
    
    targ_par.gvthres[1] = 252; 
-   ntargets = targ_rec ((unsigned char *)img1, &targ_par, 0, cpar.imx, 0, cpar.imy, &cpar, 1, pix);
+   ntargets = targ_rec ((unsigned char *)img1, &targ_par, 0, cpar.imx, 
+        0, cpar.imy, &cpar, 1, pix);
    fail_unless(ntargets == 1);
 
 
@@ -117,8 +121,8 @@ Suite* fb_suite(void) {
     tcase_add_test(tc, test_targ_rec);
     suite_add_tcase (s, tc);
 
-    tc = tcase_create ("check peak_fit_new");
-    tcase_add_test(tc, test_peak_fit_new);
+    tc = tcase_create ("Peak Fitting");
+    tcase_add_test(tc, test_peak_fit);
     suite_add_tcase (s, tc);
     
     
