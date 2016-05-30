@@ -50,7 +50,7 @@ class Test_image_coordinates(unittest.TestCase):
         flat_image_coordinates(input=input, cal=self.calibration, mult_params=self.mult, output=output)
         np.testing.assert_array_equal(output, correct_output)
         
-        output=np.full((2,2), 999)
+        output=np.full((2,2), 999.)
         image_coordinates(input=input, cal=self.calibration, mult_params=self.mult, output=output)
 
         np.testing.assert_array_equal(output, correct_output)

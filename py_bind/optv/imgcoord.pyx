@@ -15,19 +15,20 @@ def flat_image_coordinates(np.ndarray[ndim=2, dtype=np.float_t] input,
     
     Arguments:
     input - a numpy array of vectors of position in 3D (X,Y,Z real space)
-    Calibration cal- parameters of the camera on which to project.
+    Calibration cal - parameters of the camera on which to project.
     MultimediaParams mult_params- layer thickness and refractive index parameters.
-    output (optional) - a numpy array of input length containing x,y pixel coordinates of
-    projection in the image space. New array is created if output=None. 
+    output (optional) - a numpy array of input length containing x,y pixel 
+        coordinates of projection in the image space. New array is created if
+        ``output`` is ``None``. 
     '''
     check_arrays(input, output)
     
     # If no array was passed for output:
     # create new array with same number of rows as in input 
     # with only 2 columns    
-    if output==None:        
+    if output is None:        
         output = np.empty((input.shape[0], 2))
-    input=np.ascontiguousarray(input)
+    input = np.ascontiguousarray(input)
      
     for i in range(input.shape[0]):
         flat_image_coord(<vec3d>np.PyArray_GETPTR2(input, i, 0),
@@ -54,12 +55,13 @@ def image_coordinates(np.ndarray[ndim=2, dtype=np.float_t] input,
     projection in the image space. New array is created if output=None. 
     '''
     check_arrays(input, output)
+    
     # If no array was passed for output:
     # create new array with same number of rows as in input 
     # with only 2 columns    
-    if output==None:        
+    if output is None:        
         output = np.empty((input.shape[0], 2))
-    input=np.ascontiguousarray(input)
+    input = np.ascontiguousarray(input)
      
     for i in range(input.shape[0]):
         img_coord(<vec3d>np.PyArray_GETPTR2(input, i, 0),
@@ -76,7 +78,7 @@ def check_arrays(np.ndarray[ndim=2, dtype=np.float_t] input,
     # or if output and input arrays' number of rows do not match.
     if input.shape[1] != 3:
         raise TypeError("Input matrix must have three columns (each row for 3d coordinate).")
-    if output != None:
+    if output is not None:
         if output.shape[1] != 2:
             raise TypeError("Output matrix must have two columns (each row for 2d coordinate).")
         if input.shape[0] != output.shape[0]:
