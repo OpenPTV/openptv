@@ -220,7 +220,7 @@ END_TEST
 
 
 
-START_TEST(test_distort_brown_affin)
+START_TEST(test_shear)
 {
     /* input */
     double x = 1.0; // [mm]
@@ -242,7 +242,7 @@ START_TEST(test_distort_brown_affin)
 END_TEST
 
 
-START_TEST(test_correct_brown_affin)
+START_TEST(shear_round_trip)
 {
     /* input */
     double x = -1.0; // [mm]
@@ -257,17 +257,52 @@ START_TEST(test_correct_brown_affin)
     distort_brown_affin (x, y, ap, &xp, &yp);
     correct_brown_affin (xp, yp, ap, &x1, &y1);
         
-     ck_assert_msg( fabs(x1 - x) < EPS && 
-                    fabs(y1 - y) < EPS,
+    ck_assert_msg( fabs(x1 - x) < EPS && 
+                   fabs(y1 - y) < EPS,
          "Expected %f, %f, but got %f %f\n", x,y,x1,y1);
            
 }
 END_TEST
 
+START_TEST(dummy_distortion_round_trip)
+{
+    /* This is the most basic distortion test: if there is no distortion, 
+       a point distorted/corrected would come back as the same point, up to
+       floating point errors. 
+    */
+    double x=1., y=1.;
+    double xres, yres;
+    ap_52 ap = {0.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0}; /* no distortion */
+    
+    distort_brown_affin (x, y, ap, &xres, &yres);
+    correct_brown_affin (xres, yres, ap, &xres, &yres);
+    
+    ck_assert_msg( fabs(xres - x) < EPS && 
+                   fabs(yres - y) < EPS,
+         "Expected %f, %f, but got %f %f\n", x, y, xres, yres);
+}
+END_TEST
 
-
-
-
+START_TEST(radial_distortion_round_trip)
+{
+    /* Less basic distortion test: with radial distortion, a point 
+       distorted/corrected would come back as the same point, up to floating 
+       point errors and an error from the short iteration. 
+    */
+    double x=1., y=1.;
+    double xres, yres;
+    double iter_eps = 1e-2; /* Verified manually with calculator */
+    
+    /* huge radial distortion */
+    ap_52 ap = {0.05, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0};
+    distort_brown_affin (x, y, ap, &xres, &yres);
+    correct_brown_affin (xres, yres, ap, &xres, &yres);
+    
+    ck_assert_msg( fabs(xres - x) < iter_eps && 
+                   fabs(yres - y) < iter_eps,
+         "Expected %f, %f, but got %f %f\n", x, y, xres, yres);
+}
+END_TEST
 
 Suite* fb_suite(void) {
     Suite *s = suite_create ("trafo");
@@ -276,8 +311,10 @@ Suite* fb_suite(void) {
     tcase_add_test(tc, test_metric_to_pixel);
     tcase_add_test(tc, test_pixel_to_metric );
     tcase_add_test(tc, test_old_pixel_to_metric);
-    tcase_add_test(tc, test_distort_brown_affin);
-    tcase_add_test(tc, test_correct_brown_affin);
+    tcase_add_test(tc, test_shear);
+    tcase_add_test(tc, shear_round_trip);
+    tcase_add_test(tc, dummy_distortion_round_trip);
+    tcase_add_test(tc, radial_distortion_round_trip);
     suite_add_tcase (s, tc);   
     return s;
 }
