@@ -1,19 +1,16 @@
 /****************************************************************************
-
-Routine:	       		trafo.c
-
-Author/Copyright:		Hans-Gerd Maas
-
-Address:	       		Institute of Geodesy and Photogrammetry
-		       	        ETH - Hoenggerberg
-			       	CH - 8093 Zurich
-
-Creation Date:			25.5.88
+Based on initial code from Hans-Gerd Maas, creation date 25.5.88
 	
-Description:			diverse transformations
+Description: transformations between 2D coordinate systems: pixel coordinates
+on the image plane; metric representation where max x,y are sensor width/height
+in mm; and flat-image coordinates, where metric coordinates are cleaned of
+distortion and sensor shift so they may be used for ray tracing in a simple
+pinhole-camera model.
 	
-Routines contained:		pix_crd, crd_pix, affin_trafo, affin_retour
-
+References:
+[1] Dracos, Th. (ed.), Three-Dimensional Velocity and Vorticity Measurements
+    and Image Analysis Techniques. Kluwer Academic Publishers, 1996.
+    
 ****************************************************************************/
 
 #include "trafo.h"
@@ -178,4 +175,47 @@ void correct_brown_affin (double x, double y, ap_52 ap, double *x1, double *y1){
 }
 
 
+
+/*  the following 2 functions may seem trivial, but history proved that
+    it's easy to confuse the order of operations here. 
+*/
+
+
+/*  flat_to_dist() Converts 2D metric coordinates from flat-image, 
+    centered-sensor representation of ideal camera (representing e.g. ray 
+    tracing results from 3D coordinates to camera plane) to real (metric) image
+    coordinates in a camera with sensor shift and radial/decentering distortions.
+    
+    Arguments:
+    double flat_x, flat_y - input metric flat-image coordinates.
+    Calibration *cal - camera parameters including sensor shift and distortions.
+    double *dist_x, *dist_y - output metric real-image coordinates.
+*/
+void flat_to_dist(double flat_x, double flat_y, Calibration *cal, 
+    double *dist_x, double *dist_y)
+{
+    /* Make coordinates relative to sessor center rather than primary point
+       image coordinates, because distortion formula assumes it, [1] p.180 */
+    flat_x += cal->int_par.xh;
+    flat_y += cal->int_par.yh;
+    
+    distort_brown_affin(flat_x, flat_y, cal->added_par, dist_x, dist_y);
+}
+
+/*  dist_to_flat() attempts to restore metric flat-image positions from metric 
+    real-image coordinates. This is an inverse problem so some error is to be
+    expected, but for small enough distortions it's bearable.
+    
+    Arguments:
+    double dist_x, dist_y - input metric real-image coordinates.
+    Calibration *cal - camera parameters including sensor shift and distortions.
+    double *flat_x, *flat_y - output metric flat-image coordinates.
+*/
+void dist_to_flat(double dist_x, double dist_y, Calibration *cal,
+    double *flat_x, double *flat_y) 
+{
+    correct_brown_affin(dist_x, dist_y, cal->added_par, flat_x, flat_y);
+    *flat_x -= cal->int_par.xh;
+    *flat_y -= cal->int_par.yh;
+}
 

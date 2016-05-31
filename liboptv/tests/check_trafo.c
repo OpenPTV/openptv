@@ -304,6 +304,34 @@ START_TEST(radial_distortion_round_trip)
 }
 END_TEST
 
+START_TEST(dist_flat_round_trip)
+{
+    /*  Cheks that the order of operations in converting metric flat image to
+        distorted image coordinates and vice-versa is correct. 
+        
+        Distortion value in this one is kept to a level suitable (marginally)
+        to an Rmax = 10 mm sensor. The allowed round-trip error is adjusted
+        accordingly. Note that the higher the distortion parameter, the worse
+        will the round-trip error be, at least unless we introduce more iteration
+    */
+    double x=1., y=1.;
+    double xres, yres;
+    double iter_eps = 1e-5; 
+    
+    Calibration cal = {
+        .int_par = {1.5, 1.5, 60.},
+        .added_par = {0.0005, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0}
+    };
+    
+    flat_to_dist(x, y, &cal, &xres, &yres);
+    dist_to_flat(xres, yres, &cal, &xres, &yres);
+    
+    ck_assert_msg( fabs(xres - x) < iter_eps &&
+                   fabs(yres - y) < iter_eps,
+         "Expected %f, %f, but got %f %f\n", x, y, xres, yres);
+}
+END_TEST
+
 Suite* fb_suite(void) {
     Suite *s = suite_create ("trafo");
     TCase *tc = tcase_create ("trafo_test");
@@ -315,6 +343,7 @@ Suite* fb_suite(void) {
     tcase_add_test(tc, shear_round_trip);
     tcase_add_test(tc, dummy_distortion_round_trip);
     tcase_add_test(tc, radial_distortion_round_trip);
+    tcase_add_test(tc, dist_flat_round_trip);
     suite_add_tcase (s, tc);   
     return s;
 }
