@@ -15,6 +15,9 @@ References:
 
 #include "trafo.h"
 
+/* for the correction routine: */
+#include <math.h>
+
 void old_pixel_to_metric();
 void old_metric_to_pixel();
 
@@ -144,34 +147,54 @@ void distort_brown_affin (double x, double y, ap_52 ap, double *x1, double *y1){
     }
 }
 
-
-
 /*  correct crd to geo with Brown + affine  */
-void correct_brown_affin (double x, double y, ap_52 ap, double *x1, double *y1){
+void correct_brown_affin (double x, double y, ap_52 ap, double *x1, double *y1)
+{
+    correct_brown_affine_exact(x, y, ap, x1, y1, 100000);
+}
 
-  double  r, xq, yq;
-	
-
-  r = sqrt (x*x + y*y);
-  if (r != 0)
-    {
-      xq = (x + y*sin(ap.she))/ap.scx
-	- x * (ap.k1*r*r + ap.k2*r*r*r*r + ap.k3*r*r*r*r*r*r)
-	- ap.p1 * (r*r + 2*x*x) - 2*ap.p2*x*y;
-      yq = y/cos(ap.she)
-	- y * (ap.k1*r*r + ap.k2*r*r*r*r + ap.k3*r*r*r*r*r*r)
-	- ap.p2 * (r*r + 2*y*y) - 2*ap.p1*x*y;
-    }
-  r = sqrt (xq*xq + yq*yq);		/* one iteration */
-  if (r != 0)
-    {
-      *x1 = (x + yq*sin(ap.she))/ap.scx
-	- xq * (ap.k1*r*r + ap.k2*r*r*r*r + ap.k3*r*r*r*r*r*r)
-	- ap.p1 * (r*r + 2*xq*xq) - 2*ap.p2*xq*yq;
-      *y1 = y/cos(ap.she)
-	- yq * (ap.k1*r*r + ap.k2*r*r*r*r + ap.k3*r*r*r*r*r*r)
-	- ap.p2 * (r*r + 2*yq*yq) - 2*ap.p1*xq*yq;
-    }
+/*  correct_brown_affine_exact() attempts to iteratively solve the inverse
+    problem of what flat-image coordinate yielded the given distorted 
+    coordinates.
+    
+    Arguments:
+    double x, y - input metric shifted real-image coordinates.
+    ap_52 ap - distortion parameters used in the distorting step.
+    double *x1, *y1 - output metric shifted flat-image coordinates. Still needs
+        unshifting to get pinhole-equivalent coordinates.
+*/
+void correct_brown_affine_exact(double x, double y, ap_52 ap, 
+    double *x1, double *y1, double tol)
+{
+    double  r, rq, xq, yq;
+  
+    if ((x == 0) && (y == 0)) return;
+    
+    /* Initial guess for the flat point is the distorted point, assuming 
+       distortion is small. */
+    rq = sqrt (x*x + y*y);
+    xq = x; yq = y;
+    
+    do {
+        r = rq;
+        xq = (x + yq*sin(ap.she))/ap.scx
+            - xq * (ap.k1*r*r + ap.k2*r*r*r*r + ap.k3*r*r*r*r*r*r)
+            - ap.p1 * (r*r + 2*xq*xq) - 2*ap.p2*xq*yq;
+        yq = y/cos(ap.she)
+            - yq * (ap.k1*r*r + ap.k2*r*r*r*r + ap.k3*r*r*r*r*r*r)
+            - ap.p2 * (r*r + 2*yq*yq) - 2*ap.p1*xq*yq;
+        rq = sqrt (xq*xq + yq*yq);
+    } while (fabs(rq - r)/r > tol);
+    
+    /* Final step uses the iteratively-found R and x, y to apply the exact
+       correction, equivalent to one more iteration. */
+    r = rq;
+    *x1 = (x + yq*sin(ap.she))/ap.scx
+	    - xq * (ap.k1*r*r + ap.k2*r*r*r*r + ap.k3*r*r*r*r*r*r)
+    	- ap.p1 * (r*r + 2*xq*xq) - 2*ap.p2*xq*yq;
+    *y1 = y/cos(ap.she)
+	    - yq * (ap.k1*r*r + ap.k2*r*r*r*r + ap.k3*r*r*r*r*r*r)
+    	- ap.p2 * (r*r + 2*yq*yq) - 2*ap.p1*xq*yq;
 }
 
 
@@ -210,11 +233,15 @@ void flat_to_dist(double flat_x, double flat_y, Calibration *cal,
     double dist_x, dist_y - input metric real-image coordinates.
     Calibration *cal - camera parameters including sensor shift and distortions.
     double *flat_x, *flat_y - output metric flat-image coordinates.
+    double tol - tolerance of the radial distance of found point from image 
+        center as acceptable percentage of improvement between iterations, 
+        under which we can stop.
 */
 void dist_to_flat(double dist_x, double dist_y, Calibration *cal,
-    double *flat_x, double *flat_y) 
+    double *flat_x, double *flat_y, double tol) 
 {
-    correct_brown_affin(dist_x, dist_y, cal->added_par, flat_x, flat_y);
+    correct_brown_affine_exact(dist_x, dist_y, cal->added_par, flat_x, flat_y,
+        tol);
     *flat_x -= cal->int_par.xh;
     *flat_y -= cal->int_par.yh;
 }

@@ -314,7 +314,7 @@ START_TEST(dist_flat_round_trip)
         accordingly. Note that the higher the distortion parameter, the worse
         will the round-trip error be, at least unless we introduce more iteration
     */
-    double x=1., y=1.;
+    double x=10., y=10.;
     double xres, yres;
     double iter_eps = 1e-5; 
     
@@ -324,7 +324,7 @@ START_TEST(dist_flat_round_trip)
     };
     
     flat_to_dist(x, y, &cal, &xres, &yres);
-    dist_to_flat(xres, yres, &cal, &xres, &yres);
+    dist_to_flat(xres, yres, &cal, &xres, &yres, 0.00001);
     
     ck_assert_msg( fabs(xres - x) < iter_eps &&
                    fabs(yres - y) < iter_eps,
