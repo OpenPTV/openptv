@@ -21,7 +21,7 @@
     mm_np *mm - layer thickness and refractive index parameters.
     
     Output:
-    double x,y - pixel coordinates of projection in the image space.
+    double x,y - metric coordinates of projection in the image space.
  */
 void flat_image_coord (vec3d orig_pos, Calibration *cal, mm_np *mm, 
     double *x, double *y)
@@ -66,7 +66,7 @@ void flat_image_coord (vec3d orig_pos, Calibration *cal, mm_np *mm,
     mm_np *mm - layer thickness and refractive index parameters.
     
     Output:
-    double x,y - pixel coordinates of projection in the image space.
+    double x,y - metric distorted coordinates of projection in the image space.
 */
 void img_coord (vec3d pos, Calibration *cal, mm_np *mm, double *x, double *y) {
     flat_image_coord (pos, cal, mm, x, y);
