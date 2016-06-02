@@ -18,21 +18,20 @@ References:
 /* for the correction routine: */
 #include <math.h>
 
-void old_pixel_to_metric();
 void old_metric_to_pixel();
 
-/* pixel_to_metric converts pixel coordinates to metric coordinates
-Arguments:
-	xp,yp (double) pixel coordinates in pixels
-	(xc,yc) (double *) metric coordinates in [mm]
-	imx,imy (int) image size in pixels
-	pix_x, pix_y (double) size of the pixel of the sensor, in [mm]  
-    field (flag [int], 0 is frame, 1 is for odd or 2 is for even fields) 
-    Note: field or chfield in the parameters is not used anymore (no interlaced cameras) 
-    and it is kept only for backward compatibility. 
+/*  old_pixel_to_metric() converts pixel coordinates to metric coordinates
+    
+    Arguments:
+    double *x_metric, *y_metric - output metric coordinates.
+    double x_pixel, y_pixel - input pixel coordinates.
+    int im_size_x, im_size_y - size in pixels of the corresponding image 
+        dimensions.
+    double pix_size_x, pix_size_y - metric size of each pixel on the sensor 
+        plane.
+    int y_remap_mode - for use with interlaced cameras. Pass 0 for normal use,
+        1 for odd lines and 2 for even lines.
 */
-
-/*  transformation detection pixel coordinates -> geometric coordinates */
 void old_pixel_to_metric (double * x_metric
 		       , double * y_metric
 		       , double x_pixel
@@ -61,7 +60,16 @@ void old_pixel_to_metric (double * x_metric
 
 }
 
-/*  wraps previous one, parameters are read directly from control_par* structure */
+/*  pixel_to_metric() converts pixel coordinates to metric coordinates, given
+    a modern configurattion.
+    
+    Arguments:
+    double *x_metric, *y_metric - output metric coordinates.
+    double x_pixel, y_pixel - input pixel coordinates.
+    control_par* parameters - control structure holding image and pixel sizes.
+    int y_remap_mode - for use with interlaced cameras. Pass 0 for normal use,
+        1 for odd lines and 2 for even lines.
+*/
 void pixel_to_metric(double * x_metric
 				 , double * y_metric
 				 , double x_pixel
@@ -81,26 +89,18 @@ void pixel_to_metric(double * x_metric
 
 }
 
-/* wrap metric_to_pixel */
-void metric_to_pixel(double * x_pixel
-				 , double * y_pixel
-				 , double x_metric
-				 , double y_metric
-				 , control_par* parameters				 
-				 ){
-  old_metric_to_pixel(x_pixel
-		  , y_pixel
-		  , x_metric
-		  , y_metric
-		  , parameters->imx
-		  , parameters->imy
-		  , parameters->pix_x
-		  , parameters->pix_y
-		  , parameters->chfield);
-}
-
-
-/*  transformation detection geometric coordinates -> pixel coordinates */
+/*  old_metric_to_pixel() converts metric coordinates to pixel coordinates
+    
+    Arguments:
+    double *x_pixel, *y_pixel - input pixel coordinates.
+    double x_metric, y_metric - output metric coordinates.
+    int im_size_x, im_size_y - size in pixels of the corresponding image 
+        dimensions.
+    double pix_size_x, pix_size_y - metric size of each pixel on the sensor 
+        plane.
+    int y_remap_mode - for use with interlaced cameras. Pass 0 for normal use,
+        1 for odd lines and 2 for even lines.
+*/
 void old_metric_to_pixel (double * x_pixel
 		      , double * y_pixel
 		      , double x_metric
@@ -129,7 +129,45 @@ void old_metric_to_pixel (double * x_pixel
   }
 }
 
-/*  transformation with Brown + affine  */
+/*  metric_to_pixel() converts metric coordinates to pixel coordinates, given
+    a modern configurattion.
+    
+    Arguments:
+    double *x_pixel, *y_pixel - input pixel coordinates.
+    double x_metric, y_metric - output metric coordinates.
+    control_par* parameters - control structure holding image and pixel sizes.
+    int y_remap_mode - for use with interlaced cameras. Pass 0 for normal use,
+        1 for odd lines and 2 for even lines.
+*/
+/* wrap metric_to_pixel */
+void metric_to_pixel(double * x_pixel
+				 , double * y_pixel
+				 , double x_metric
+				 , double y_metric
+				 , control_par* parameters				 
+				 ){
+  old_metric_to_pixel(x_pixel
+		  , y_pixel
+		  , x_metric
+		  , y_metric
+		  , parameters->imx
+		  , parameters->imy
+		  , parameters->pix_x
+		  , parameters->pix_y
+		  , parameters->chfield);
+}
+
+
+/*  distort_brown_affin() Calculates the real image-plane position of a point
+    seen by a camera with distortions (Brown distortions and scale/shear
+    affine transforms), from a point that would be seen by a simple pinhole
+    camera.
+    
+    Arguments:
+    double x,y - undistorted metric coordinates.
+    ap_52 ap - distortion parameters struct.
+    double *x1, *y1 - output metric distorted parameters.
+*/
 void distort_brown_affin (double x, double y, ap_52 ap, double *x1, double *y1){
   double		r;
   
@@ -147,7 +185,10 @@ void distort_brown_affin (double x, double y, ap_52 ap, double *x1, double *y1){
     }
 }
 
-/*  correct crd to geo with Brown + affine  */
+/*  correct distorted to flat-image coordinates, see correct_brown_affine_exact(),
+    this one is the same except it ensures only one iteration for backward 
+    compatibility.
+*/
 void correct_brown_affin (double x, double y, ap_52 ap, double *x1, double *y1)
 {
     correct_brown_affine_exact(x, y, ap, x1, y1, 100000);
@@ -162,6 +203,8 @@ void correct_brown_affin (double x, double y, ap_52 ap, double *x1, double *y1)
     ap_52 ap - distortion parameters used in the distorting step.
     double *x1, *y1 - output metric shifted flat-image coordinates. Still needs
         unshifting to get pinhole-equivalent coordinates.
+    tol - stop if the relative improvement in position between iterations is 
+        less than this value.
 */
 void correct_brown_affine_exact(double x, double y, ap_52 ap, 
     double *x1, double *y1, double tol)
