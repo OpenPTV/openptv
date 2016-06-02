@@ -74,8 +74,8 @@ double skew_midpoint(vec3d vert1, vec3d direct1, vec3d vert2, vec3d direct2,
     sent toward it from cameras through the image projections of the point.
 
     Arguments:
-    vec2d targets[] - for each camera, the 2D metric coordinates of the
-        identified point projection.
+    vec2d targets[] - for each camera, the 2D metric, flat, centred coordinates 
+        of the identified point projection.
     int num_cams - number of cameras ( = number of elements in ``targets``).
     mm_np *multimed_pars - multimedia parameters struct for ray tracing through
         several layers.
@@ -94,7 +94,6 @@ double point_position(vec2d targets[], int num_cams, mm_np *multimed_pars,
     double dtot = 0;
     vec3d point_tot = {0., 0., 0.};
 
-    vec2d current;
     vec3d* vertices = (vec3d *) calloc(num_cams, sizeof(vec3d));
     vec3d* directs = (vec3d *) calloc(num_cams, sizeof(vec3d));
     vec3d point;
@@ -102,11 +101,8 @@ double point_position(vec2d targets[], int num_cams, mm_np *multimed_pars,
     /* Shoot rays from all cameras. */
     for (cam = 0; cam < num_cams; cam++) {
         if (targets[cam][0] != PT_UNUSED) {
-            current[0] = targets[cam][0] - cals[cam]->int_par.xh;
-            current[1] = targets[cam][1] - cals[cam]->int_par.yh;
-
-            ray_tracing(current[0], current[1], cals[cam], *multimed_pars,
-                vertices[cam], directs[cam]);
+            ray_tracing(targets[cam][0], targets[cam][1], cals[cam], 
+                *multimed_pars, vertices[cam], directs[cam]);
         }
     }
 
@@ -137,8 +133,8 @@ double point_position(vec2d targets[], int num_cams, mm_np *multimed_pars,
 
     Arguments:
     (vec2d **) targets - 2D array of targets, so order 3 tensor of shape
-        (num_targs,num_cams,2). Each target is the 2D metric coordinates of
-        one identified point.
+        (num_targs,num_cams,2). Each target is the 2D metrici, flat, centred
+        coordinates of one identified point.
     int num_targs - the number of known targets, assumed to be the same in all
         cameras.
     int num_cams - number of cameras.
