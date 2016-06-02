@@ -48,6 +48,21 @@ void distort_brown_affin (double x
                         , double *x1
                         , double *y1);
 
+void correct_brown_affine_exact(double x, double y, ap_52 ap, 
+    double *x1, double *y1, double tol);
+
+void flat_to_dist(double flat_x, double flat_y, Calibration *cal, 
+    double *dist_x, double *dist_y);
+void dist_to_flat(double dist_x, double dist_y, Calibration *cal,
+    double *flat_x, double *flat_y, double tol);
+
+/* For testing only, please don't use these directly. */
+void old_pixel_to_metric (double *x_metric, double *y_metric, double x_pixel,
+    double y_pixel,int im_size_x, int im_size_y, double pix_size_x, 
+    double pix_size_y, int y_remap_mode);
+void old_metric_to_pixel (double * x_pixel, double * y_pixel, double x_metric,
+    double y_metric, int im_size_x, int im_size_y, double pix_size_x,
+    double pix_size_y, int y_remap_mode);
 
 #endif
 
