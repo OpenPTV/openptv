@@ -18,8 +18,6 @@ References:
 /* for the correction routine: */
 #include <math.h>
 
-void old_metric_to_pixel();
-
 /*  old_pixel_to_metric() converts pixel coordinates to metric coordinates
     
     Arguments:
