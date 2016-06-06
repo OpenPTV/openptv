@@ -2,8 +2,9 @@
 OpenPTV - framework for particle tracking velocimetry
 =====================================================
 
-https://travis-ci.org/alexlib/openptv.svg?branch=travis-ci
-    
+[![Build Status](https://travis-ci.org/alexlib/openptv.svg?branch=travis-ci)](https://travis-ci.org/alexlib/openptv)
+
+
 This is the code collection of the OpenPTV project - an effort to create
 common code for different aspects of the Particle Tracking Velocimetry
 method. The code is required to meet the community standards for quality, and
