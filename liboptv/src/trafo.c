@@ -208,6 +208,7 @@ void correct_brown_affine_exact(double x, double y, ap_52 ap,
     double *x1, double *y1, double tol)
 {
     double  r, rq, xq, yq;
+    int itnum = 0;
   
     if ((x == 0) && (y == 0)) return;
     
@@ -231,7 +232,9 @@ void correct_brown_affine_exact(double x, double y, ap_52 ap,
            non-magic values will slow this down considerably. 
         */
         if (rq > 1.2*r) rq = 0.5*r;
-    } while (fabs(rq - r)/r > tol);
+        
+        itnum++;
+    } while ((fabs(rq - r)/r > tol) && (itnum < 201));
     
     /* Final step uses the iteratively-found R and x, y to apply the exact
        correction, equivalent to one more iteration. */
