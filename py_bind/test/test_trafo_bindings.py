@@ -3,7 +3,7 @@ from optv.parameters import ControlParams
 from optv.transforms import convert_arr_metric_to_pixel, \
     convert_arr_pixel_to_metric,\
     correct_arr_brown_affine, \
-    distort_arr_brown_affine
+    distort_arr_brown_affine, distorted_to_flat
 from optv.calibration import Calibration
 import numpy as np
 
@@ -117,7 +117,7 @@ class Test_transforms(unittest.TestCase):
         np.testing.assert_array_almost_equal(output, correct_output_dist, decimal=7)
     
     def test_brown_affine(self):
-        """Distortion and correction of pixel coordinaates."""
+        """Distortion and correction of pixel coordinates."""
         
         # This is all based on values from liboptv/tests/check_imgcoord.c
         cal = Calibration()
@@ -144,6 +144,32 @@ class Test_transforms(unittest.TestCase):
         cal.set_radial_distortion(np.r_[0.001, 0., 0.])
         distorted = distort_arr_brown_affine(ref_pos, cal)
         self.failUnless(np.all(abs(distorted) > abs(ref_pos)))
+    
+    def test_full_correction(self):
+        """Round trip distortion/correction."""
+        # This is all based on values from liboptv/tests/check_imgcoord.c
+        cal = Calibration()
+        cal.set_pos(np.r_[0., 0., 40.])
+        cal.set_angles(np.r_[0., 0., 0.])
+        cal.set_primary_point(np.r_[0., 0., 10.])
+        cal.set_glass_vec(np.r_[0., 0., 20.])
+        cal.set_radial_distortion(np.zeros(3))
+        cal.set_decentering(np.zeros(2))
+        cal.set_affine_trans(np.r_[1, 0])
+        
+        # reference metric positions:
+        # Note the last value is different than in test_brown_affine() because
+        # the iteration does not converge for a point too far out.
+        ref_pos = np.array([
+            [0.1, 0.1],
+            [1., -1.],
+            [-5., 5.]
+        ])
+        
+        cal.set_radial_distortion(np.r_[0.001, 0., 0.])
+        distorted = distort_arr_brown_affine(ref_pos, cal)
+        corrected = distorted_to_flat(distorted, cal) # default tight tolerance
+        np.testing.assert_array_almost_equal(ref_pos, corrected, decimal=6)
         
 if __name__ == '__main__':
   unittest.main()
