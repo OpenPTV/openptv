@@ -225,6 +225,12 @@ void correct_brown_affine_exact(double x, double y, ap_52 ap,
             - yq * (ap.k1*r*r + ap.k2*r*r*r*r + ap.k3*r*r*r*r*r*r)
             - ap.p2 * (r*r + 2*yq*yq) - 2*ap.p1*xq*yq;
         rq = sqrt (xq*xq + yq*yq);
+        
+        /* Limit divergent iteration. I realize these are "magic values" here
+           but they should work in most cases and trying to automatically find
+           non-magic values will slow this down considerably. 
+        */
+        if (rq > 1.2*r) rq = 0.5*r;
     } while (fabs(rq - r)/r > tol);
     
     /* Final step uses the iteratively-found R and x, y to apply the exact
