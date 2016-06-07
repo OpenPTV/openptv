@@ -133,7 +133,7 @@ double point_position(vec2d targets[], int num_cams, mm_np *multimed_pars,
 
     Arguments:
     (vec2d **) targets - 2D array of targets, so order 3 tensor of shape
-        (num_targs,num_cams,2). Each target is the 2D metrici, flat, centred
+        (num_targs,num_cams,2). Each target is the 2D metric, flat, centred
         coordinates of one identified point.
     int num_targs - the number of known targets, assumed to be the same in all
         cameras.
