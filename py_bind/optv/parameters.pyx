@@ -368,9 +368,9 @@ cdef class VolumeParams:
         x_span - min. and max. value of X in the search volume, (2,) array.
         z_spans - list of 2 (2,) arrays, each with min. and max. value of Z 
             in the search volume.
-        pixels_tot, pixels_x, pixels_y - reference pixel counts per target: 
-            total and per image dimension.
-        ref_gray - reference sum of grey values for a target.
+        pixels_tot, pixels_x, pixels_y - min. ratio of pixel counts between a 
+            target and a candidate: total and per image dimension.
+        ref_gray - min. ratio of sum of grey values for a target and candidate.
         epipolar_band - width of epipolar line, or the distance from the 
             epipolar line where targets are taken as candidates.
         min_correlation - minimum value for the correlation between particles,
