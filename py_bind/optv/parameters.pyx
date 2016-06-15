@@ -362,8 +362,43 @@ cdef class VolumeParams:
     pythonic access. Objects of this type can be checked for equality using 
     "==" and "!=" operators.
     """
-    def __init__(self):
+    def __init__(self, **kwargs):
+        """
+        Accepted keyword arguments:
+        x_span - min. and max. value of X in the search volume, (2,) array.
+        z_spans - list of 2 (2,) arrays, each with min. and max. value of Z 
+            in the search volume.
+        pixels_tot, pixels_x, pixels_y - min. ratio of pixel counts between a 
+            target and a candidate: total and per image dimension.
+        ref_gray - min. ratio of sum of grey values for a target and candidate.
+        epipolar_band - width of epipolar line, or the distance from the 
+            epipolar line where targets are taken as candidates.
+        min_correlation - minimum value for the correlation between particles,
+            calculated from match of the different target measures to the 
+            reference values in this object.
+        """
         self._volume_par = < volume_par *> malloc(sizeof(volume_par))
+        
+        if 'x_span' in kwargs:
+            self.set_X_lay(kwargs['x_span'])
+        if 'z_spans' in kwargs:
+            mins, maxs = zip(*kwargs['z_spans']) # Python's transpose :)
+            self.set_Zmin_lay(mins)
+            self.set_Zmax_lay(maxs)
+        
+        if 'pixels_x' in kwargs:
+            self.set_cnx(kwargs['pixels_x'])
+        if 'pixels_y' in kwargs:
+            self.set_cny(kwargs['pixels_y'])
+        if 'pixels_tot' in kwargs:
+            self.set_cn(kwargs['pixels_tot'])
+        
+        if 'ref_gray' in kwargs:
+            self.set_csumg(kwargs['ref_gray'])
+        if 'min_correlation' in kwargs:
+            self.set_corrmin(kwargs['min_correlation'])
+        if 'epipolar_band' in kwargs:
+            self.set_eps0(kwargs['epipolar_band'])
     
     # Getters and setters
     def get_X_lay(self, copy=True):

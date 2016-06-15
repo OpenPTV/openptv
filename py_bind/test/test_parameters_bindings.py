@@ -1,6 +1,7 @@
 import unittest
 from optv.parameters import *
 import numpy, os, filecmp, shutil
+from numpy import r_
 
 class Test_MultimediaParams(unittest.TestCase):
     def test_mm_np_instantiation(self):
@@ -223,7 +224,28 @@ class Test_VolumeParams(unittest.TestCase):
         
         self.vol_obj.set_corrmin(6)
         self.failUnless(self.vol_obj.get_corrmin() == 6)
-     
+    
+    def test_init_kwargs(self):
+        """Initialize volume parameters with keyword arguments"""
+        xlay = numpy.array([111.1, 222.2])
+        zlay = [r_[333.3, 555.5], r_[444.4, 666.6]]
+        zmin, zmax = zip(*zlay)
+        
+        vol_obj = VolumeParams(x_span=xlay, z_spans=zlay, 
+            pixels_tot=1, pixels_x=2, pixels_y=3, 
+            ref_gray=4, epipolar_band=5, min_correlation=6)
+        
+        numpy.testing.assert_array_equal(xlay, vol_obj.get_X_lay())
+        numpy.testing.assert_array_equal(zmin, vol_obj.get_Zmin_lay())
+        numpy.testing.assert_array_equal(zmax, vol_obj.get_Zmax_lay())
+        
+        self.failUnless(vol_obj.get_cn() == 1)
+        self.failUnless(vol_obj.get_cnx() == 2)
+        self.failUnless(vol_obj.get_cny() == 3)
+        self.failUnless(vol_obj.get_csumg() == 4)
+        self.failUnless(vol_obj.get_eps0() == 5)
+        self.failUnless(vol_obj.get_corrmin() == 6)
+        
     # testing __richcmp__ comparison method of VolumeParams class
     def test_rich_compare(self):
         self.vol_obj2 = VolumeParams()
