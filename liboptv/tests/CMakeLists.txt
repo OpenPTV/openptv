@@ -43,6 +43,10 @@ add_dependencies(check_orientation optv)
 add_executable(check_epi EXCLUDE_FROM_ALL check_epi.c)
 add_dependencies(check_epi optv)
 
+add_executable(check_segmentation EXCLUDE_FROM_ALL check_segmentation.c)
+add_dependencies(check_segmentation optv)
+
+
 set(LIBS ${LIBS} ${CHECK_LIBRARIES} optv)
 
 # Satysfy the new dynamic linker rules on Linux.
@@ -136,8 +140,16 @@ add_custom_command(TARGET check_orientation PRE_BUILD
     COMMAND ${CMAKE_COMMAND} -E copy_directory
     ${CMAKE_CURRENT_SOURCE_DIR}/testing_fodder $<TARGET_FILE_DIR:check_orientation>/testing_fodder)
     
+target_link_libraries(check_segmentation ${LIBS})
+add_test(check_segmentation ${CMAKE_CURRENT_BINARY_DIR}/check_segmentation)
+
+add_custom_command(TARGET check_segmentation PRE_BUILD
+    COMMAND ${CMAKE_COMMAND} -E copy_directory
+    ${CMAKE_CURRENT_SOURCE_DIR}/testing_fodder $<TARGET_FILE_DIR:check_segmentation>/testing_fodder)
+
+    
 add_custom_target(verify COMMAND ${CMAKE_CTEST_COMMAND})
 add_dependencies(verify check_fb check_calibration check_parameters check_lsqadj 
 check_ray_tracing check_trafo check_vec_utils check_image_proc check_multimed 
-check_imgcoord check_orientation check_epi check_sortgrid)
+check_imgcoord check_orientation check_epi check_sortgrid check_segmentation)
 
