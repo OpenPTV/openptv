@@ -33,7 +33,7 @@ def preprocess_image(np.ndarray[ndim=2, dtype=np.uint8_t] input_img,
     # check arrays dimensions
     if input_img.ndim != 2:
         raise TypeError("Input array must be two-dimensional")
-    if output_img != None and (input_img.shape[0] != output_img.shape[0] or
+    if (output_img is not None) and (input_img.shape[0] != output_img.shape[0] or
                          input_img.shape[1] != output_img.shape[1]):
         raise ValueError("Different shapes of input and output images.")
     else:
