@@ -359,7 +359,8 @@ void copy_images (unsigned char *src, unsigned char *dest, control_par *cpar)
    Arguments:
    unsigned char  *img - the source image to filter.
    unsigned char  *img_hp - result buffer for filtered image. Same size as img.
-   int dim_lp - dimension of subtracted lowpass image.
+   int dim_lp - half-width of lowpass filter, see fast_box_blur()'s filt_span
+      parameter.
    int filter_hp - flag for additional filtering of _hp. 1 for lowpass, 2 for 
       general 3x3 filter given in parameter ``filter_file``.
    char *filter_file - path to a text file containing the filter matrix to be

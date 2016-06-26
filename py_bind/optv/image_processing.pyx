@@ -19,7 +19,8 @@ def preprocess_image(np.ndarray[ndim=2, dtype=np.uint8_t] input_img,
         general 3x3 filter given in parameter ``filter_file``.
     ControlParams control - image details such as size and image half for 
     interlaced cases.
-    int lowpass_dim - dimension of subtracted lowpass image.
+    int lowpass_dim - half-width of lowpass filter, see fast_box_blur()'s filt_span
+      parameter.
     filter_file - path to a text file containing the filter matrix to be
         used in case ```filter_hp == 2```. One line per row, white-space 
         separated columns.
