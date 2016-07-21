@@ -492,9 +492,9 @@ n formulas.
 \end_layout
 
 \begin_layout Standard
-The reverse operation is to find a point on the image plane that intersects
- the ray that goes from the camera primary point to the object represented
- by a given Metric target coordinates.
+The reverse operation is to find a point on the image plane that, when tracing
+ a ray from the camera primary point through it, after all refractions,
+ will intersect the object represented by a given Metric target coordinates.
  This operation appears mainly in calculating average 3D position from ray
  intersections.
  To do this one must first 
