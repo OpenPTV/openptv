@@ -93,7 +93,7 @@ Yosef Meller
 The 3D-PTV method of finding 3D positions of particles in flow has an easy
  to understand general scheme: use 2D images of particles taken from several
  distinct points of view for calculating a 3D position of the observed particles.
- The imlementation of this idea, however, is somewhat more involved.
+ The implementation of this idea, however, is somewhat more involved.
  The basic idea already implies the existence of at least 2 coordinate systems
  - the 2D view coordinates and the global 3D coordinates.
  Practical considerations expand this list further, and this document attempts
@@ -128,7 +128,7 @@ The
 are the base coordinate system.
  Everything in the PTV system lies within it.
  Although this system is initially arbitrary, it is commonly expressed in
- millimetres for small to medium experiments and is determined by the arbitraril
+ millimeters for small to medium experiments and is determined by the arbitraril
 y defined positions of points on a calibration target.
  Typically one well-identified point on the target will be designated as
  the origin, and two other points (in an orthogonal point spread) or even
@@ -179,8 +179,8 @@ Image Coordinates
 The most relevant image coordinate systems are the native Pixel Coordinates,
  the Metric Coordinates, and the Flat Coordinates, which account for camera
  distortions.
- Their relarelationship is described in this section, and summarized in
- Figure .
+ Their relationship is described in this section, and summarized in Figure
+ .
 \end_layout
 
 \begin_layout Standard
@@ -245,11 +245,11 @@ Metric Coordinates
 \emph on
 image
 \emph default
-'s center point, y points up, x still points right, and units are in millimetres.
+'s center point, y points up, x still points right, and units are in millimeters.
  The unit conversion factor is based on the pixel size in the sensor, so
  that the rightmost pixel x-coordinate in the Metric system is half the
- sensor width in millimetrs.
- The sensor width and pixel size may be found in camera datasheets.
+ sensor width in millimeters.
+ The sensor width and pixel size may be found in camera data sheets.
 \end_layout
 
 \begin_layout Standard
@@ -517,7 +517,7 @@ In the old 3DPTV code, with some exceptions, Pixel coordinates are held
 \family typewriter
 pix
 \family default
- arrays; Metrc coordinates are in the 
+ arrays; Metric coordinates are in the 
 \family typewriter
 crd
 \family default
