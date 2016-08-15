@@ -14,18 +14,17 @@ Description:	       	establishment of correspondences for 2/3/4 cameras
 
 ****************************************************************************/
 
-#include <optv/epi.h>
+
 #include "correspondences.h"
-#include "tools.h"
+
+
+// #include "tools.h"
 
 /* quicksort for list of correspondences in order of match quality */
 /* 4 camera version */
 
 
-void qs_con (con, left, right)
-n_tupel	*con;
-int    	left, right;
-{
+void qs_con (n_tupel *con, int left, int right){
   register int	i, j;
   double       	xm;
   n_tupel      	temp;
@@ -47,20 +46,30 @@ int    	left, right;
     }
   while (i <= j);
 
-  if (left < j)	qs_con (con, left, j);
-  if (i < right)	qs_con (con, i, right);
+  if (left < j)	 qs_con (con, left, j);
+  if (i < right) qs_con (con, i, right);
 }
 
-void quicksort_con (con, num)
-n_tupel	*con;
-int    	num;
-{
+/* quicksort_con is helper function to run the 
+   qs_con() when the left = 0, right = num - 1
+*/
+void quicksort_con (n_tupel	*con, int num){
   qs_con (con, 0, num-1);
 }
 
-/* quicksort of targets in y-order */
-
-void qs_target_y (target *pix, int left, int right) {
+/* qs_target_y() uses quicksort algorithm to 
+   sort targets in y-order.
+   Arguments:
+   pointer to an array of targets *pix
+   left, right are integers positions in the
+   array. To sort the complete array, use
+   qs_target_y(target *pix, 0, len(pix)-1)
+   according to https://en.wikipedia.org/wiki/Quicksort
+   Note: 
+   y in OpenPTV is the vertical direction, 
+   x is from left to right and z towards the camera
+*/
+void qs_target_y (target *pix, int left, int right){
   register int	i, j;
   double ym;
   target temp;
@@ -138,7 +147,7 @@ int correspondences_4 (target pix[][nmax], coord_2d geo[][nmax], int num[],
   int 	tim[4][nmax];
   double       	xa12,ya12,xb12,yb12,X,Y,Z;
   double       	corr;
-  candidate   	cand[maxcand];
+  candidate   	cand[MAXCAND];
   n_tupel     	*con0;
   correspond  	*list[4][4];
   vec3d out;
@@ -220,7 +229,7 @@ int correspondences_4 (target pix[][nmax], coord_2d geo[][nmax], int num[],
             pix[i1][pt1].sumg, cand, vpar, cpar, &(cals[i2]) );
 	  /* write all corresponding candidates to the preliminary list */
 	  /* of correspondences */
-	  if (count > maxcand)	{ count = maxcand; }
+	  if (count > MAXCAND)	{ count = MAXCAND; }
 	  for (j=0; j<count; j++)
 	    {
 	      list[i1][i2][p1].p2[j] = cand[j].pnr;
