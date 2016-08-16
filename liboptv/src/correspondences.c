@@ -24,6 +24,18 @@ Description:	       	establishment of correspondences for 2/3/4 cameras
 /* 4 camera version */
 
 
+/* quicksort_con is helper function to run the 
+   qs_con() when the left = 0, right = num - 1
+   Arguments:
+   pointer to the n_tupel array of candidates for correspondence
+    important to hold the .corr property that is sorted in this function
+    uses quicksort algorithm https://en.wikipedia.org/wiki/Quicksort
+   integer num length of the array
+*/
+void quicksort_con (n_tupel	*con, int num){
+  qs_con (con, 0, num-1);
+}
+
 void qs_con (n_tupel *con, int left, int right){
   register int	i, j;
   double       	xm;
@@ -50,11 +62,18 @@ void qs_con (n_tupel *con, int left, int right){
   if (i < right) qs_con (con, i, right);
 }
 
-/* quicksort_con is helper function to run the 
-   qs_con() when the left = 0, right = num - 1
+
+/* quicksort_target_y() uses quicksort algorithm to 
+   sort targets in y-order by calling the function
+   qs_target_y(target *pix, 0, num-1); see below
+   
+   Arguments:
+   pointer to an array of targets *pix
+   integer num equal to the length of the array pix
 */
-void quicksort_con (n_tupel	*con, int num){
-  qs_con (con, 0, num-1);
+
+void quicksort_target_y (target *pix, int num) {
+  qs_target_y (pix, 0, num-1);
 }
 
 /* qs_target_y() uses quicksort algorithm to 
@@ -92,17 +111,19 @@ void qs_target_y (target *pix, int left, int right){
   if (i < right) qs_target_y (pix, i, right);
 }
 
-void quicksort_target_y (target *pix, int num) {
-  qs_target_y (pix, 0, num-1);
+/* quicksort_coord2d_x() uses quicksort algorithm to 
+   sort coordinate array in x-order by calling the function
+   qs_coord2d_x (crd, left, right) see below
+   
+   Arguments:
+   pointer to an array of coordinates 
+   integer num equal to the length of the array pix
+*/
+void quicksort_coord2d_x (coord_2d *crd, int num) {
+	qs_coord2d_x (crd, 0, num-1);
 }
 
-
-/* quicksort of 2d coordinates in x-order */
-
-void qs_coord2d_x (crd, left, right)
-coord_2d	*crd;
-int			left, right;
-{
+void qs_coord2d_x (coord_2d	*crd, int left, int right){
 	register int	i, j;
 	double			xm;
 	coord_2d		temp;
@@ -128,10 +149,6 @@ int			left, right;
 	if (i < right)	qs_coord2d_x (crd, i, right);
 }
 
-void quicksort_coord2d_x (coord_2d *crd, int num) {
-	qs_coord2d_x (crd, 0, num-1);
-}
-
 /****************************************************************************/
 /*--------------- 4 camera model: consistent quadruplets -------------------*/
 /****************************************************************************/
@@ -141,7 +158,7 @@ int correspondences_4 (target pix[][nmax], coord_2d geo[][nmax], int num[],
     int match_counts[])
 {
   int 	i,j,k,l,m,n,o,  i1,i2,i3;
-  int   count, match, match0=0, match4=0, match3=0, match2=0, match1=0;
+  int   count, match=0, match0=0, match4=0, match3=0, match2=0, match1=0;
   int 	p1,p2,p3,p4, p31, p41, p42;
   int  	pt1;
   int 	tim[4][nmax];
@@ -150,21 +167,15 @@ int correspondences_4 (target pix[][nmax], coord_2d geo[][nmax], int num[],
   candidate   	cand[MAXCAND];
   n_tupel     	*con0;
   correspond  	*list[4][4];
-  vec3d out;
-  FILE *fp1;
-
-  for (j=0; j<4; j++) for (i=0; i<nmax; i++) tim[j][i] = 0;
+  
 
   /* allocate memory for lists of correspondences */
   for (i1 = 0; i1 < cpar->num_cams - 1; i1++)
     for (i2 = i1 + 1; i2 < cpar->num_cams; i2++)
-    list[i1][i2] = (correspond *) malloc (num[i1] * sizeof (correspond));
+       list[i1][i2] = (correspond *) malloc (num[i1] * sizeof (correspond));
 
-  con0 = (n_tupel *) malloc (4*nmax * sizeof (n_tupel));
-
-  /*  initialize ...  */
-  match=0; match0=0; match2=0;
-
+  con0 = (n_tupel *) malloc (4 * nmax * sizeof (n_tupel));
+  
   for (i1 = 0; i1 < cpar->num_cams - 1; i1++)
     for (i2 = i1 + 1; i2 < cpar->num_cams; i2++)
       for (i=0; i<num[i1]; i++)
@@ -172,6 +183,7 @@ int correspondences_4 (target pix[][nmax], coord_2d geo[][nmax], int num[],
 	  list[i1][i2][i].p1 = 0;
 	  list[i1][i2][i].n = 0;
 	}
+  	
   for (i = 0; i < nmax; i++) {
     for (j = 0; j < 4; j++) {
         tim[j][i] = 0;
@@ -180,45 +192,15 @@ int correspondences_4 (target pix[][nmax], coord_2d geo[][nmax], int num[],
     con0[i].corr = 0;
   }
 
-  /* -------------if only one cam and 2D--------- */ //by Beat Lüthi June 2007
-/*
-  if(cpar->num_cams == 1){
-	  if(res_name[0]==0){
-          sprintf (res_name, "rt_is");
-	  }
-	 fp1 = fopen (res_name, "w");
-		fprintf (fp1, "%4d\n", num[0]);
-	  for (i=0; i<num[0]; i++){
-          epi_mm_2D (geo[0][i].x,geo[0][i].y, &(cals[0]), 
-            cpar->mm, vpar, out);
-          pix[0][geo[0][i].pnr].tnr=i;
-		  fprintf (fp1, "%4d", i+1);
-		  fprintf (fp1, " %9.3f %9.3f %9.3f", X, Y, Z);
-          fprintf (fp1, " %4d", geo[0][i].pnr);
-          fprintf (fp1, " %4d", -1);
-          fprintf (fp1, " %4d", -1);
-          fprintf (fp1, " %4d\n", -1);
-	  }
-	  fclose (fp1);
-	  match1=num[0];
-  }
-*/
-  /* -------------end of only one cam and 2D ------------ */
 
   /* matching  1 -> 2,3,4  +  2 -> 3,4  +  3 -> 4 */
   for (i1 = 0; i1 < cpar->num_cams - 1; i1++)
     for (i2 = i1 + 1; i2 < cpar->num_cams; i2++) {
-     //printf ("Establishing correspondences  %d - %d\n", i1, i2);
-     /* establish correspondences from num[i1] points of img[i1] to img[i2] */
 
       for (i=0; i<num[i1]; i++)	if (geo[i1][i].x != -999) {
           epi_mm (geo[i1][i].x, geo[i1][i].y, &(cals[i1]), &(cals[i2]), 
           cpar->mm, vpar, &xa12, &ya12, &xb12, &yb12);
 	  
-    /////ich glaube, da muss ich einsteigen, wenn alles erledigt ist.
-	  ///////mit bild_1 x,y Epipole machen und dann selber was schreiben um die Distanz zu messen.
-	  ///////zu Punkt in bild_2.
-
 	  /* origin point in the list */
 	  p1 = i;  list[i1][i2][p1].p1 = p1;	pt1 = geo[i1][p1].pnr;
 
@@ -227,6 +209,7 @@ int correspondences_4 (target pix[][nmax], coord_2d geo[][nmax], int num[],
             xa12, ya12, xb12, yb12, 
             pix[i1][pt1].n,pix[i1][pt1].nx,pix[i1][pt1].ny,
             pix[i1][pt1].sumg, cand, vpar, cpar, &(cals[i2]) );
+            
 	  /* write all corresponding candidates to the preliminary list */
 	  /* of correspondences */
 	  if (count > MAXCAND)	{ count = MAXCAND; }
@@ -466,35 +449,36 @@ int correspondences_4 (target pix[][nmax], coord_2d geo[][nmax], int num[],
   for (i=0; i<match; i++)
     {
       for (j = 0; j < cpar->num_cams; j++)
-	{
-      /* Skip cameras without a correspondence obviously. */
-      if (con[i].p[j] < 0) continue;
+        {
+         /* Skip cameras without a correspondence obviously. */
+         if (con[i].p[j] < 0) continue;
 
-	  p1 = geo[j][con[i].p[j]].pnr;
-	  if (p1 > -1 && p1 < 1202590843)
-	    {
-	      pix[j][p1].tnr= i;
+	     p1 = geo[j][con[i].p[j]].pnr;
+	     if (p1 > -1 && p1 < 1202590843)
+	      {
+	        pix[j][p1].tnr= i;
+	      }
 	    }
-	}
     }
-  /* draw crosses on canvas */
+
     int count1=0;
 	j=0;
+	
 	for (i=0; i<num[j]; i++)
 	  {			      	
 	    p1 = pix[j][i].tnr;
 	    if (p1 == -1 )
 	      {
-		count1++;
+		   count1++;
 	      }
 	  }
-printf("unidentified objects = %d\n",count1);
+    printf("unidentified objects = %d\n",count1);
 
 /* Retun values: match counts of each clique size */
-  match_counts[0] = match4;
-  match_counts[1] = match3;
-  match_counts[2] = match2;
-  match_counts[3] = match;
+    match_counts[0] = match4;
+    match_counts[1] = match3;
+    match_counts[2] = match2;
+    match_counts[3] = match;
 
   /* ----------------------------------------------------------------------- */
   /* free memory for lists of correspondences */
