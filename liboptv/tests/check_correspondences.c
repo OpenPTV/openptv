@@ -48,32 +48,100 @@ START_TEST(test_qs_target_y)
 }
 END_TEST
 
+START_TEST(test_quicksort_target_y)
+{
+    int num; 
+    target test_pix[] = {
+        {0, 0.0, -0.2, 5, 1, 2, 10, -999},
+        {6, 0.2, 0.0, 10, 8, 1, 20, -999},
+        {3, 0.2, 0.8, 10, 3, 3, 30, -999},
+        {4, 0.4, -1.1, 10, 3, 3, 40, -999},
+        {1, 0.7, -0.1, 10, 3, 3, 50, -999},
+        {7, 1.2, 0.3, 10, 3, 3, 60, -999},
+        {5, 10.4, 0.1, 10, 3, 3, 70, -999}
+    };
+    
+    /* sorting test_pix vertically by 'y' */
+    num = sizeof(test_pix)/sizeof(test_pix[0]);
+    quicksort_target_y (test_pix, num);
+
+    /* first point should be -1.1 and the last 0.8 */
+    fail_unless (fabs(test_pix[0].y + 1.1) < 1E-6);
+    fail_unless (fabs(test_pix[1].y + 0.2) < 1E-6);
+    fail_unless (fabs(test_pix[num-1].y - 0.8) < 1E-6);
+    
+
+    
+}
+END_TEST
+
+START_TEST(test_quicksort_coord2d_x)
+{
+    			   
+    int num = 7; /* length of the test_crd */
+
+    /* coord_2d is int pnr, double x,y */
+    coord_2d test_crd[] = {
+        {0, 0.0, 0.0},
+        {6, 0.1, 0.1}, /* best candidate, right on the diagonal */
+        {3, 0.2, -0.8},
+        {4, -0.4, -1.1},
+        {1, 0.7, -0.1},
+        {7, 1.2, 0.3},
+        {5, 10.4, 0.1}
+    };
+
+    quicksort_coord2d_x(test_crd, num);
+   
+    /* first point should be -0.4 and the last 10.4 */
+    fail_unless (fabs(test_crd[0].x + 0.4) < 1E-6);
+    fail_unless (fabs(test_crd[1].x - 0.0) < 1E-6);
+    fail_unless (fabs(test_crd[num-1].x - 10.4) < 1E-6);	
+}
+END_TEST
+
+START_TEST(test_quicksort_con)
+{
+    			   
+    int i, num = 3; /* length of the test_crd */
+    
+    n_tupel test_con[] = {
+        {{0, 1, 2, 3}, 0.1},
+        {{0, 1, 2, 3}, 0.2},
+        {{0, 1, 2, 3}, 0.15}
+    };
+
+    quicksort_con(test_con, num);
+
+   
+    /* first point should be -0.4 and the last 10.4 */
+    fail_unless (fabs(test_con[0].corr - 0.2) < 1E-6);
+    fail_unless (fabs(test_con[2].corr - 0.1) < 1E-6);
+   
+	
+}
+END_TEST
 
 
 
 Suite* orient_suite(void) {
     Suite *s = suite_create ("Testing correspondences");
 
-    TCase *tc = tcase_create ("quicksort target y");
+    TCase *tc = tcase_create ("qs target y");
     tcase_add_test(tc, test_qs_target_y);
     suite_add_tcase (s, tc);
 
-//     tc = tcase_create ("Point position");
-//     tcase_add_test(tc, test_point_position);
-//     suite_add_tcase (s, tc);
-// 
-//     tc = tcase_create ("Convergence measures");
-//     tcase_add_test(tc, test_convergence_measure);
-//     suite_add_tcase (s, tc);
-//     
-//     tc = tcase_create ("Raw orientation");
-//     tcase_add_test(tc, test_raw_orient);
-//     suite_add_tcase (s, tc);
-// 
-//     tc = tcase_create ("Orientation");
-//     tcase_add_test(tc, test_orient);
-//     suite_add_tcase (s, tc);
+    tc = tcase_create ("quicksort_target_y");
+    tcase_add_test(tc, test_quicksort_target_y);
+    suite_add_tcase (s, tc);
 
+    tc = tcase_create ("quicksort_coord2d_x");
+    tcase_add_test(tc, test_quicksort_coord2d_x);
+    suite_add_tcase (s, tc);
+    
+    tc = tcase_create ("quicksort_con");
+    tcase_add_test(tc, test_quicksort_con);
+    suite_add_tcase (s, tc);
     return s;
 }
 
