@@ -17,7 +17,8 @@ ext_mods = [
     mk_ext("optv.calibration", ["optv/calibration.pyx"]),
     mk_ext("optv.transforms", ["optv/transforms.pyx"]),
     mk_ext("optv.imgcoord", ["optv/imgcoord.pyx"]),
-    mk_ext("optv.image_processing", ["optv/image_processing.pyx"])
+    mk_ext("optv.image_processing", ["optv/image_processing.pyx"]),
+    mk_ext("optv.segmentation", ["optv/segmentation.pyx"])
 ]
 
 setup(
