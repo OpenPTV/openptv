@@ -1,0 +1,543 @@
+#LyX 2.1 created this file. For more info see http://www.lyx.org/
+\lyxformat 474
+\begin_document
+\begin_header
+\textclass article
+\begin_preamble
+\usepackage[amssymb]{SIunits}
+\end_preamble
+\use_default_options true
+\maintain_unincluded_children false
+\language english
+\language_package default
+\inputencoding auto
+\fontencoding global
+\font_roman default
+\font_sans default
+\font_typewriter default
+\font_math auto
+\font_default_family default
+\use_non_tex_fonts false
+\font_sc false
+\font_osf false
+\font_sf_scale 100
+\font_tt_scale 100
+\graphics default
+\default_output_format default
+\output_sync 0
+\bibtex_command default
+\index_command default
+\paperfontsize 12
+\spacing single
+\use_hyperref false
+\papersize default
+\use_geometry true
+\use_package amsmath 1
+\use_package amssymb 1
+\use_package cancel 1
+\use_package esint 1
+\use_package mathdots 1
+\use_package mathtools 1
+\use_package mhchem 1
+\use_package stackrel 1
+\use_package stmaryrd 1
+\use_package undertilde 1
+\cite_engine basic
+\cite_engine_type default
+\biblio_style plain
+\use_bibtopic false
+\use_indices false
+\paperorientation portrait
+\suppress_date false
+\justification true
+\use_refstyle 1
+\index Index
+\shortcut idx
+\color #008000
+\end_index
+\secnumdepth 3
+\tocdepth 3
+\paragraph_separation skip
+\defskip medskip
+\quotes_language english
+\papercolumns 1
+\papersides 1
+\paperpagestyle default
+\tracking_changes false
+\output_changes false
+\html_math_output 0
+\html_css_as_file 0
+\html_be_strict false
+\end_header
+
+\begin_body
+
+\begin_layout Title
+Coordinate Systems in 3D-PTV Algorithms
+\end_layout
+
+\begin_layout Author
+Yosef Meller
+\end_layout
+
+\begin_layout Standard
+\begin_inset FormulaMacro
+\newcommand{\unt}[2]{\unit{#1}{#2}}
+{#1\left[#2\right]}
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+The 3D-PTV method of finding 3D positions of particles in flow has an easy
+ to understand general scheme: use 2D images of particles taken from several
+ distinct points of view for calculating a 3D position of the observed particles.
+ The implementation of this idea, however, is somewhat more involved.
+ The basic idea already implies the existence of at least 2 coordinate systems
+ - the 2D view coordinates and the global 3D coordinates.
+ Practical considerations expand this list further, and this document attempts
+ to list and summarize the purpose and properties of all coordinate systems
+ involved in the process.
+ A more thorough but possibly less accessible guide may be found in ref.
+ 
+\begin_inset CommandInset citation
+LatexCommand cite
+key "dracos2013three"
+
+\end_inset
+
+.
+ 
+\end_layout
+
+\begin_layout Section
+Spatial Coordinates 
+\end_layout
+
+\begin_layout Standard
+There are two types of spatial (3D) coordinate systems involved in 3D-PTV:
+ the Global Coordinates, and each camera's Local Frame.
+\end_layout
+
+\begin_layout Standard
+The
+\emph on
+ Global Coordinates 
+\emph default
+are the base coordinate system.
+ Everything in the PTV system lies within it.
+ Although this system is initially arbitrary, it is commonly expressed in
+ millimeters for small to medium experiments and is determined by the arbitraril
+y defined positions of points on a calibration target.
+ Typically one well-identified point on the target will be designated as
+ the origin, and two other points (in an orthogonal point spread) or even
+ just one (non-orthogonal) will determine the direction of axes.
+ It is important, when designating the control points, to note that the
+ Z direction must be consistent with a right-handed system, and that all
+ other calibration points should be consistent with the determined axes.
+\end_layout
+
+\begin_layout Standard
+The 
+\emph on
+Local Frame
+\emph default
+ of each camera is received from the global coordinates by rotation and
+ translation.
+ Their origin is the camera's 
+\emph on
+primary point
+\emph default
+ (The imaginary focal point of the Tchen camera model, which resembles a
+ pinhole camera).
+ The Z axis points opposite the lens direction (i.e.
+ the sensor and observed volume are always in the local negative Z).
+ The local X and Y directions are aligned with the image, such that if the
+ Z axis is horizontal in the global frame and the camera is held upright,
+ the Y direction points up.
+ The X axis is right-handed and therefore would in this setting point to
+ the right of an imaginary photographer holding the camera.
+\end_layout
+
+\begin_layout Standard
+In OpenPTV The image plane position is described in terms of the local coordinat
+es, and 3D operations such as ray tracing and finding image coordinated
+ rely on this description together with the transformations that describe
+ the frame.
+ In some other PTV experiments, the Tchen model is discarded in favor of
+ a fitted function transforming image coordinates to 3D rays directly in
+ global coordinates.
+ Then the local frame is not needed.
+\end_layout
+
+\begin_layout Section
+Image Coordinates
+\end_layout
+
+\begin_layout Standard
+The most relevant image coordinate systems are the native Pixel Coordinates,
+ the Metric Coordinates, and the Flat Coordinates, which account for camera
+ distortions.
+ Their relationship is described in this section, and summarized in Figure
+ .
+\end_layout
+
+\begin_layout Standard
+\begin_inset Float figure
+wide false
+sideways false
+status open
+
+\begin_layout Plain Layout
+\begin_inset Graphics
+	filename coord_transf.eps
+	lyxscale 70
+	width 100col%
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Plain Layout
+\begin_inset Caption Standard
+
+\begin_layout Plain Layout
+Image coordinate systems
+\begin_inset CommandInset label
+LatexCommand label
+name "fig:Image-coordinate-systems"
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+The 
+\emph on
+Pixel Coordinates
+\emph default
+ are the most obvious - they are the row and column in the image data matrix.
+ The origin is at the top-left of the image, the y axis points down, the
+ x axis points right, and the units are pixels.
+ The 
+\emph on
+Metric Coordinates
+\emph default
+ are a simple linear transformation of this system into one where the origin
+ is at the 
+\emph on
+image
+\emph default
+'s center point, y points up, x still points right, and units are in millimeters.
+ The unit conversion factor is based on the pixel size in the sensor, so
+ that the rightmost pixel x-coordinate in the Metric system is half the
+ sensor width in millimeters.
+ The sensor width and pixel size may be found in camera data sheets.
+\end_layout
+
+\begin_layout Standard
+For example: For a sensor of 
+\begin_inset Formula $1280\times1024$
+\end_inset
+
+ pixels (on the x and y direction respectively), each 
+\begin_inset Formula $\unt{0.014}{\milli\metre}$
+\end_inset
+
+ to a side, Table 
+\begin_inset CommandInset ref
+LatexCommand ref
+reference "tab:pixel-metric"
+
+\end_inset
+
+ shows the pixel and metric coordinates of the image corners.
+\end_layout
+
+\begin_layout Standard
+\begin_inset Float table
+wide false
+sideways false
+status open
+
+\begin_layout Plain Layout
+\noindent
+\align center
+\begin_inset Tabular
+<lyxtabular version="3" rows="5" columns="3">
+<features rotate="0" tabularvalignment="middle">
+<column alignment="center" valignment="top">
+<column alignment="center" valignment="top">
+<column alignment="center" valignment="top">
+<row>
+<cell alignment="center" valignment="top" topline="true" bottomline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+Corner
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" bottomline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+Pixel Coordinates 
+\begin_inset Formula $\left(x,y\right)$
+\end_inset
+
+
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" bottomline="true" leftline="true" rightline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+Metric coordinates 
+\begin_inset Formula $\left(x,y\right)$
+\end_inset
+
+
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+top left
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+0,0
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" rightline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+-8.96,7.168
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+top right
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+1280,0
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" rightline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+8.96,7.168
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+bottom left
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+0,1024
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" rightline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+-8.96,-7.168
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row>
+<cell alignment="center" valignment="top" topline="true" bottomline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+bottom right
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" bottomline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+1280,1024
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" bottomline="true" leftline="true" rightline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+8.96,-7.168
+\end_layout
+
+\end_inset
+</cell>
+</row>
+</lyxtabular>
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Plain Layout
+\begin_inset Caption Standard
+
+\begin_layout Plain Layout
+Example of metric coordinates and the corresponding pixel coordinates.
+\begin_inset CommandInset label
+LatexCommand label
+name "tab:pixel-metric"
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+Flat coordinates are a special case of the metric coordinates.
+ They arise from the fact that lens distortion and sensor shift lead to
+ a recorded image which is somewhat different than what would be seen by
+ an ideal pinhole camera as assumed by the simpler model.
+ The metric image coordinates denote coordinates of objects as seen by the
+ camera.
+ The flat coordinates denote the position where an ideal camera would see
+ the same objects.
+ 
+\end_layout
+
+\begin_layout Standard
+The flat coordinates are what you receive from using the multimedia code
+ to trace back a ray from a known 3D position to its intersection with the
+ sensor plane.
+ To get to the Metric system, you must first add the sensor shift to the
+ coordinates, then calculate the distorted coordinates using the usual distortio
+n formulas.
+\end_layout
+
+\begin_layout Standard
+The reverse operation is to find a point on the image plane that, when tracing
+ a ray from the camera primary point through it, after all refractions,
+ will intersect the object represented by a given Metric target coordinates.
+ This operation appears mainly in calculating average 3D position from ray
+ intersections.
+ To do this one must first 
+\emph on
+undistort
+\emph default
+ (or 
+\emph on
+correct
+\emph default
+) the Metric coordinates.
+ This is an inverse problem to that of distortion and is solved iteratively.
+ Then the sensor shift is subtracted from the result to yield the Flat coordinat
+es.
+\end_layout
+
+\begin_layout Standard
+In the old 3DPTV code, with some exceptions, Pixel coordinates are held
+ in the 
+\family typewriter
+pix
+\family default
+ arrays; Metric coordinates are in the 
+\family typewriter
+crd
+\family default
+ arrays; and Flat coordinates are in the 
+\family typewriter
+geo
+\family default
+ arrays.
+\end_layout
+
+\begin_layout Standard
+\begin_inset CommandInset bibtex
+LatexCommand bibtex
+bibfiles "refs"
+options "plain"
+
+\end_inset
+
+
+\end_layout
+
+\end_body
+\end_document
