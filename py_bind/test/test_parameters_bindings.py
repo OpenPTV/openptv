@@ -384,6 +384,21 @@ class Test_ControlParams(unittest.TestCase):
         shutil.rmtree(self.temp_output_directory)        
 
 class TestTargetParams(unittest.TestCase):
+    def test_read(self):
+        inp_filename = "testing_fodder/target_parameters/targ_rec.par"
+        tp = TargetParams()
+        tp.read(inp_filename)
+
+        self.assertEqual(tp.get_max_discontinuity(), 5)
+        self.assertEqual(tp.get_pixel_count_bounds(), (3, 100))
+        self.assertEqual(tp.get_xsize_bounds(), (1, 20))
+        self.assertEqual(tp.get_ysize_bounds(), (1, 20))
+        self.assertEqual(tp.get_min_sum_grey(), 3)
+
+        numpy.testing.assert_array_equal(
+            tp.get_grey_thresholds(), [3, 2, 2, 3])
+        
+    
     def test_instantiate_fast(self):
         tp = TargetParams(discont=1, gvthresh=[2, 3, 4, 5], 
             pixel_count_bounds=(10, 100), xsize_bounds=(20, 200), 
@@ -395,7 +410,6 @@ class TestTargetParams(unittest.TestCase):
         self.assertEqual(tp.get_ysize_bounds(), (30, 300))
         self.assertEqual(tp.get_min_sum_grey(), 60)
 
-        
         numpy.testing.assert_array_equal(
             tp.get_grey_thresholds(), [2, 3, 4, 5])
         

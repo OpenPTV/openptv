@@ -26,6 +26,8 @@ cdef extern from "optv/parameters.h":
     control_par * c_new_control_par "new_control_par"(int cams);
     void c_free_control_par "free_control_par"(control_par * cp);
     int c_compare_control_par "compare_control_par"(control_par * c1, control_par * c2);
+    
+    target_par* read_target_par(char *filename)
 
 cdef numpy.ndarray wrap_1d_c_arr_as_ndarray(object base_obj, 
     int arr_size, int num_type, void * data, int copy):
@@ -720,6 +722,7 @@ cdef class TargetParams:
             gvthresh = [0] * 4
         
         self._targ_par = <target_par *> malloc(sizeof(target_par))
+        
         self.set_max_discontinuity(discont)
         self.set_grey_thresholds(gvthresh)
         self.set_pixel_count_bounds(pixel_count_bounds)
@@ -812,3 +815,32 @@ cdef class TargetParams:
     def set_cross_size(self, int cr_sz):
         self._targ_par.cr_sz = cr_sz
     
+    def read(self, inp_filename):
+        """
+        Reads target recognition parameters from a legacy .par file, which 
+        holds one parameter per line. The arguments are read in this order:
+        
+        1. gvthres[0]
+        2. gvthres[1]
+        3. gvthres[2]
+        4. gvthres[3]
+        5. discont
+        6. nnmin
+        7. nnmax
+        8. nxmin
+        9. nxmax
+        10. nymin
+        11. nymax
+        12. sumg_min
+        13. cr_sz
+        
+        Fills up the fields of the object from the file and returns.
+        """
+        free(self._targ_par)
+        self._targ_par = read_target_par(inp_filename)
+        
+        if self._targ_par == NULL:
+            raise IOError("Problem reading target recognition parameters.")
+    
+    def __dealloc__(self):
+        free(self._targ_par)
