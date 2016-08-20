@@ -142,7 +142,7 @@ START_TEST(test_correspondences)
     int subset_size, num_corres;
     n_tupel *corres;
     
-    ck_abort_msg("Known failure: j/p2 in find_candidate_plus breaks this.");
+    // ck_abort_msg("Known failure: j/p2 in find_candidate_plus breaks this.");
     chdir("testing_fodder/");
     init_proc_c();
     
@@ -179,7 +179,11 @@ START_TEST(test_correspondences)
         }
     }
     vpar = read_volume_par("parameters/criteria.par");
-    corres_lists = correspondences(&frm, calib, vpar, cpar);
+    // corres_lists = correspondences(&frm, calib, vpar, cpar);
+    match = correspondences(targ, coord_2d geo[][nmax], frm.num_targets, 
+    vpar, cpar, calib, corres, 
+    int match_counts[]); 
+    
     fail_unless(corres_lists[0] == NULL);
     
     for (subset_size = 2; subset_size <= num_cams; subset_size++) {
