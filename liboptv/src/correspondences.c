@@ -527,9 +527,9 @@ Calibration **calib, int match_counts[]) {
 // 
 //   ----------------------------------------------------------------------- */
 //   free memory for lists of correspondences */
-//   for (i1 = 0; i1 < cpar->num_cams - 1; i1++)
-//     for (i2 = i1 + 1; i2 < cpar->num_cams; i2++)
-//         free (list[i1][i2]);
+  for (i1 = 0; i1 < cpar->num_cams - 1; i1++)
+    for (i2 = i1 + 1; i2 < cpar->num_cams; i2++)
+        free (list[i1][i2]);
 
   free (con0);
 
