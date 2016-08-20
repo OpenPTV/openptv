@@ -40,7 +40,7 @@ void quicksort_con (n_tupel	*con, int num);
 void qs_con (n_tupel *con, int left, int right);
 
 
-int correspondences (target pix[][nmax], coord_2d geo[][nmax], int num[],
-    volume_par *vpar, control_par *cpar, Calibration cals[], n_tupel *con, int match_counts[]);
+n_tupel *correspondences (frame *frm, volume_par *vpar, control_par *cpar, 
+Calibration **calib, int match_counts[]);
 
 #endif
