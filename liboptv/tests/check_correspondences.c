@@ -155,13 +155,14 @@ START_TEST(test_correspondences)
     for (cam = 0; cam < num_cams; cam++) {
         sprintf(ori_name, ori_tmpl, cam + 1);
         puts(ori_name);
-       calib[cam] = read_calibration(ori_name, "testing_fodder/cal/cam1.tif.addpar", NULL);
+        calib[cam] = read_calibration(ori_name, "testing_fodder/cal/cam1.tif.addpar", NULL);
         
         
        frm.num_targets[cam] = 16;
         
         /* Construct a scene representing a calibration target, generate
            tergets for it, then use them to reconstruct correspondences. */
+        printf("Constructing the targets\n");
         for (cpt_horz = 0; cpt_horz < 4; cpt_horz++) {
             for (cpt_vert = 0; cpt_vert < 4; cpt_vert++) {
                 cpt_ix = cpt_horz*4 + cpt_vert;
@@ -173,6 +174,8 @@ START_TEST(test_correspondences)
                 vec_set(tmp, cpt_vert * 10, cpt_horz * 10, 0);
                 img_coord(tmp, calib[cam], &media_par, &(targ->x), &(targ->y));
                 metric_to_pixel(&(targ->x), &(targ->y), targ->x, targ->y, cpar);
+                printf("targ[%d] %f %f %d\n", cpt_ix, frm.targets[cam][cpt_ix].x, 
+                frm.targets[cam][cpt_ix].y, frm.targets[cam][cpt_ix].pnr);
                 
                 /* These values work in check_epi, so used here too */
                 targ->n = 25;
@@ -181,10 +184,10 @@ START_TEST(test_correspondences)
             }
         }
     }
-       
-       vpar = read_volume_par("testing_fodder/parameters/criteria.par");
+       fail_if((cpar = read_control_par("testing_fodder/parameters/ptv.par"))== 0);
+       fail_if((vpar = read_volume_par("testing_fodder/parameters/criteria.par"))==0);
     
-       con = correspondences(&frm, calib, vpar, cpar, &match_counts); 
+       con = correspondences(&frm, vpar, cpar, calib, &match_counts);
     
 //     fail_unless(con[0] == NULL);
     

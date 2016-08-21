@@ -42,5 +42,4 @@ void qs_con (n_tupel *con, int left, int right);
 
 n_tupel *correspondences (frame *frm, volume_par *vpar, control_par *cpar, 
 Calibration **calib, int match_counts[]);
-
 #endif
