@@ -144,17 +144,16 @@ START_TEST(test_correspondences)
     int subset_size, num_corres;
     n_tupel *corres;
     
-    // ck_abort_msg("Known failure: j/p2 in find_candidate_plus breaks this.");
-    // chdir("testing_fodder/");
-    // init_proc_c();
+   fail_if((cpar = read_control_par("testing_fodder/parameters/ptv.par"))== 0);
+   fail_if((vpar = read_volume_par("testing_fodder/parameters/criteria.par"))==0);
     
     int i,j;
     /* Four cameras on 4 quadrants looking down into a calibration target.
        Calibration taken from an actual experimental setup */
     frame_init(&frm, num_cams, 16);
+    
     for (cam = 0; cam < num_cams; cam++) {
         sprintf(ori_name, ori_tmpl, cam + 1);
-        puts(ori_name);
         calib[cam] = read_calibration(ori_name, "testing_fodder/cal/cam1.tif.addpar", NULL);
         
         
@@ -184,8 +183,7 @@ START_TEST(test_correspondences)
             }
         }
     }
-       fail_if((cpar = read_control_par("testing_fodder/parameters/ptv.par"))== 0);
-       fail_if((vpar = read_volume_par("testing_fodder/parameters/criteria.par"))==0);
+
     
        con = correspondences(&frm, vpar, cpar, calib, &match_counts);
     

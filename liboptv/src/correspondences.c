@@ -162,24 +162,47 @@ Calibration **calib, int match_counts[]) {
   int   count, match=0, match0=0, match4=0, match3=0, match2=0, match1=0;
   int 	p1,p2,p3,p4, p31, p41, p42;
   int  	pt1;
-  int 	tim[4][nmax];
   double       	xa12,ya12,xb12,yb12,X,Y,Z;
   double       	corr;
   candidate   	cand[MAXCAND];
   n_tupel     	*con0, *con;
   correspond  	*list[4][4];
   coord_2d **corrected;
-  double img_x, img_y; /* image center */
+  double img_x, img_y; /* image center */  
+  int **tim;
+
+   con0 = (n_tupel *) malloc(cpar->num_cams*nmax * sizeof(n_tupel));
+   con = (n_tupel *) malloc(cpar->num_cams*nmax * sizeof(n_tupel)); 
+     
+    
+    tim = malloc(cpar->num_cams * sizeof(int *));
+    if(tim == NULL)
+        {
+        fprintf(stderr, "out of memory\n");
+        return NULL;
+        }
+    for(i = 0; i < nmax; i++)
+        {
+        tim[i] = malloc(nmax * sizeof(int));
+        if(tim[i] == NULL)
+            {
+            fprintf(stderr, "out of memory\n");
+            return NULL;
+            }
+        }
   
-
-
   /* allocate memory for lists of correspondences */
-  for (i1 = 0; i1 < cpar->num_cams - 1; i1++)
-    for (i2 = i1 + 1; i2 < cpar->num_cams; i2++)
+  for (i1 = 0; i1 < cpar->num_cams - 1; i1++){
+    for (i2 = i1 + 1; i2 < cpar->num_cams; i2++){
        list[i1][i2] = (correspond *) malloc (frm->num_targets[i1] * sizeof (correspond));
+       if (list[i1][i2] == NULL){
+            fprintf(stderr, "list is not allocated");
+            return NULL;
+        }
+     }
+    }
 
-  con0 = (n_tupel *) calloc(cpar->num_cams, sizeof(n_tupel));
-  con = (n_tupel *) calloc(cpar->num_cams, sizeof(n_tupel));
+
 
   for (i1 = 0; i1 < cpar->num_cams - 1; i1++)
     for (i2 = i1 + 1; i2 < cpar->num_cams; i2++)
@@ -194,7 +217,7 @@ Calibration **calib, int match_counts[]) {
    number of targets in any image (if we will implement the cyclic search) but for 
    a while we always start with the cam1
 */     	
-  for (i = 0; i < frm->num_targets[0]; i++) {
+  for (i = 0; i < nmax; i++) {
     for (j = 0; j < cpar->num_cams; j++) {
         tim[j][i] = 0;
         con0[i].p[j] = -1;
@@ -202,29 +225,34 @@ Calibration **calib, int match_counts[]) {
     con0[i].corr = 0.0;
   }
   
+    
+
 
 /*  We work on distortion-corrected image coordinates of particles.
         This loop does the correction. It also recycles the iteration on
         frm->num_cams to allocate some arrays needed later and do some related
         preparation. 
 */
-
-    printf("num cams = %d or %d\n", cpar->num_cams, frm->num_cams);
     
-    corrected = (coord_2d **) malloc(frm->num_cams * sizeof(coord_2d *));
+    corrected = (coord_2d **) malloc(cpar->num_cams * sizeof(coord_2d *));    
     for (cam = 0; cam < cpar->num_cams; cam++) {
         corrected[cam] = (coord_2d *) malloc(
             frm->num_targets[cam] * sizeof(coord_2d));
+        if (corrected[cam] == NULL){
+            fprintf(stderr, "corrected is not allocated");
+            return NULL;
+        }
+            
             
         for (part = 0; part < frm->num_targets[cam]; part++) {
+        printf("%f %f \n", frm->targets[cam][part].x, frm->targets[cam][part].y);
             pixel_to_metric(&corrected[cam][part].x, 
                             &corrected[cam][part].y,
                             frm->targets[cam][part].x, 
                             frm->targets[cam][part].y,
                             cpar);
                             
-            //printf("%f %f \n", frm->targets[cam][part].x, frm->targets[cam][part].y);                
-            //printf("%f %f \n", corrected[cam][part].x, corrected[cam][part].y);
+            printf("%f %f \n", corrected[cam][part].x, corrected[cam][part].y);
             
             img_x = corrected[cam][part].x - calib[cam]->int_par.xh;
             img_y = corrected[cam][part].y - calib[cam]->int_par.yh;
@@ -235,7 +263,7 @@ Calibration **calib, int match_counts[]) {
             corrected[cam][part].pnr = frm->targets[cam][part].pnr;
             
             // printf('%f %f %d \n', corrected[cam][part].x, corrected[cam][part].y, corrected[cam][part].pnr);
-            //printf("%f %f %d \n", corrected[cam][part].x, corrected[cam][part].y, corrected[cam][part].pnr);
+            printf("%f %f %d \n", corrected[cam][part].x, corrected[cam][part].y, corrected[cam][part].pnr);
         }
         
         /* This is expected by find_candidate_plus() */
