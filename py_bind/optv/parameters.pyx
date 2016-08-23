@@ -667,12 +667,10 @@ cdef class ControlParams:
         else: raise TypeError("Unhandled comparison operator " + operator)
         
     def __dealloc__(self):
-        # free memory of control_par c struct and all memory allocated under its pointers 
-        # please note that the memory of mm_np c struct (that is referred to by the 
-        # instance variable _mm_np of _multimedia_params python object) will ALSO be freed 
+        # set the mm pointer to NULL in order to prevent c_free_control_par 
+        # function to free it. MultimediaParams object will free this
+        # memory in its python destructor when there will be no references to it.
+        
+        self._control_par[0].mm = NULL
         c_free_control_par(self._control_par)
-        # __dealloc__ method of _multimedia_params object will be called automatically to dispose the object
-        # but this memory was just freed by c_free_control_par function,
-        # so in order to avoid double free corruption - set _multimeia_params's C struct pointer to NULL
-        self._multimedia_params._mm_np = NULL
 
