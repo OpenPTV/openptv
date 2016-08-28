@@ -26,17 +26,38 @@ cdef extern from "optv/parameters.h":
     control_par * c_new_control_par "new_control_par"(int cams);
     void c_free_control_par "free_control_par"(control_par * cp);
     int c_compare_control_par "compare_control_par"(control_par * c1, control_par * c2);
+    
+    target_par* read_target_par(char *filename)
 
-cdef numpy.ndarray wrap_1d_c_arr_as_ndarray(object base_obj, int arr_size, int num_type, void * data, int copy): 
-    cdef numpy.npy_intp shape[1]  # for 1 dimensional array
-    shape[0] = < numpy.npy_intp > arr_size
-    cdef numpy.ndarray ndarray
-    ndarray = numpy.PyArray_SimpleNewFromData(1, shape, num_type, data)
-    ndarray.base = < PyObject *> base_obj
+cdef numpy.ndarray wrap_1d_c_arr_as_ndarray(object base_obj, 
+    int arr_size, int num_type, void * data, int copy):
+    """
+    Returns as NumPy array a value internally represented as a C array.
+    
+    Arguments:
+    object base_obj - the object supplying the memory. Needed for refcounting.
+    int arr_size - length of the C array.
+    int num_type - type number as required by PyArray_SimpleNewFromData
+    void* data - the underlying C array.
+    int copy - 0 to return an ndarray whose data is the original data,
+        1 to return a copy of the data.
+    
+    Returns:
+    ndarray of length arr_size
+    """
+    cdef:
+        numpy.npy_intp shape[1]  # for 1 dimensional array
+        numpy.ndarray ndarr
+    shape[0] = <numpy.npy_intp> arr_size
+    
+    ndarr = numpy.PyArray_SimpleNewFromData(1, shape, num_type, data)
+    ndarr.base = <PyObject *> base_obj
     Py_INCREF(base_obj)
+    
     if copy:
-        return numpy.copy(ndarray)
-    return ndarray
+        return numpy.copy(ndarr)
+    
+    return ndarr
     
 cdef class MultimediaParams:
     """
@@ -676,3 +697,150 @@ cdef class ControlParams:
         # so in order to avoid double free corruption - set _multimeia_params's C struct pointer to NULL
         self._multimedia_params._mm_np = NULL
 
+cdef class TargetParams:
+    """
+    Wrapping the target_par C struct (declared in liboptv/paramethers.h) for 
+    pythonic access. Objects of this type can be checked for equality using 
+    "==" and "!=" operators.
+    """
+    def __init__(self, int discont=0, gvthresh=None, 
+        pixel_count_bounds=(0, 1000),
+        xsize_bounds=(0, 100), ysize_bounds=(0, 100), int min_sum_grey=0, 
+        int cross_size=2):
+        """
+        Arguments (all optional):
+        int discont - maximum discontinuity parameter.
+        gvthresh - sequence, per-camera grey-level threshold beneath which a 
+            pixel is not considered. Currently limited to 4 cameras.
+        pixel_count_bounds - tuple, min and max number of pixels in a target.
+        xsize_bounds, ysize_bounds - each a tuple, min and max size of target
+            in the respective dimension.
+        int min_sum_grey - minimal sum of grey values in a target.
+        int cross_size - legacy parameter, don't use.
+        """
+        if gvthresh is None:
+            gvthresh = [0] * 4
+        
+        self._targ_par = <target_par *> malloc(sizeof(target_par))
+        
+        self.set_max_discontinuity(discont)
+        self.set_grey_thresholds(gvthresh)
+        self.set_pixel_count_bounds(pixel_count_bounds)
+        self.set_xsize_bounds(xsize_bounds)
+        self.set_ysize_bounds(ysize_bounds)
+        self.set_min_sum_grey(min_sum_grey)
+        self.set_cross_size(cross_size)
+    
+    def get_max_discontinuity(self):
+        return self._targ_par.discont
+    
+    def set_max_discontinuity(self, int discont):
+        self._targ_par.discont = discont
+    
+    def get_grey_thresholds(self, num_cams=4, copy=True):
+        """
+        Get the first ``num_cams`` (up to 4) per-camera grey-level thresholds.
+        
+        Arguments:
+        num_cams - the number of cameras to get. Currently cannot exceed 4
+            (raises ValueError). Default is 4.
+        copy - if True, return a copy of the underlying array. This way the 
+            original is safe.
+        """
+        return wrap_1d_c_arr_as_ndarray(self, num_cams, numpy.NPY_INT, 
+            self._targ_par.gvthres, (1 if copy else 0))
+        
+    def set_grey_thresholds(self, gvthresh):
+        """
+        Arguments:
+        gvthresh - a sequence of at most 4 ints.
+        """
+        if len(gvthresh) > 4:
+            raise ValueError("Can't store more than 4 grey-level thresholds.")
+        
+        for gvx in xrange(len(gvthresh)):
+            self._targ_par.gvthres[gvx] = gvthresh[gvx]
+    
+    def get_pixel_count_bounds(self):
+        """
+        Returns a tuple (min, max) pixels per target.
+        """
+        return (self._targ_par.nnmin, self._targ_par.nnmax)
+    
+    def set_pixel_count_bounds(self, bounds):
+        """
+        Arguments:
+        bounds - tuple, min and max number of pixels in a target.
+        """
+        self._targ_par.nnmin = bounds[0]
+        self._targ_par.nnmax = bounds[1]
+    
+    def get_xsize_bounds(self):
+        """
+        Returns a tuple (min, max) x size of a target.
+        """
+        return (self._targ_par.nxmin, self._targ_par.nxmax)
+    
+    def set_xsize_bounds(self, bounds):
+        """
+        Arguments:
+        bounds - tuple, min and max x size of a target.
+        """
+        self._targ_par.nxmin = bounds[0]
+        self._targ_par.nxmax = bounds[1]
+        
+    def get_ysize_bounds(self):
+        """
+        Returns a tuple (min, max) y size of a target.
+        """
+        return (self._targ_par.nymin, self._targ_par.nymax)
+    
+    def set_ysize_bounds(self, bounds):
+        """
+        Arguments:
+        bounds - tuple, min and max x size of a target.
+        """
+        self._targ_par.nymin = bounds[0]
+        self._targ_par.nymax = bounds[1]
+    
+    def get_min_sum_grey(self):
+        return self._targ_par.sumg_min
+    
+    def set_min_sum_grey(self, int min_sumg):
+        self._targ_par.sumg_min = min_sumg
+    
+    def get_cross_size(self):
+        return self._targ_par.cr_sz
+    
+    def set_cross_size(self, int cr_sz):
+        self._targ_par.cr_sz = cr_sz
+    
+    def read(self, inp_filename):
+        """
+        Reads target recognition parameters from a legacy .par file, which 
+        holds one parameter per line. The arguments are read in this order:
+        
+        1. gvthres[0]
+        2. gvthres[1]
+        3. gvthres[2]
+        4. gvthres[3]
+        5. discont
+        6. nnmin
+        7. nnmax
+        8. nxmin
+        9. nxmax
+        10. nymin
+        11. nymax
+        12. sumg_min
+        13. cr_sz
+        
+        Fills up the fields of the object from the file and returns.
+        """
+        free(self._targ_par)
+        self._targ_par = read_target_par(inp_filename)
+        
+        if self._targ_par == NULL:
+            raise IOError("Problem reading target recognition parameters.")
+    
+    def __dealloc__(self):
+        free(self._targ_par)

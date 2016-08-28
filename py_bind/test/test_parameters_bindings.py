@@ -1,6 +1,8 @@
 import unittest
-from optv.parameters import *
-import numpy, os, filecmp, shutil
+from optv.parameters import MultimediaParams, ControlParams, VolumeParams, \
+    SequenceParams, TrackingParams, TargetParams
+
+import numpy, os, shutil
 from numpy import r_
 
 class Test_MultimediaParams(unittest.TestCase):
@@ -381,5 +383,35 @@ class Test_ControlParams(unittest.TestCase):
         # remove the testing output directory and its files
         shutil.rmtree(self.temp_output_directory)        
 
+class TestTargetParams(unittest.TestCase):
+    def test_read(self):
+        inp_filename = "testing_fodder/target_parameters/targ_rec.par"
+        tp = TargetParams()
+        tp.read(inp_filename)
+
+        self.assertEqual(tp.get_max_discontinuity(), 5)
+        self.assertEqual(tp.get_pixel_count_bounds(), (3, 100))
+        self.assertEqual(tp.get_xsize_bounds(), (1, 20))
+        self.assertEqual(tp.get_ysize_bounds(), (1, 20))
+        self.assertEqual(tp.get_min_sum_grey(), 3)
+
+        numpy.testing.assert_array_equal(
+            tp.get_grey_thresholds(), [3, 2, 2, 3])
+        
+    
+    def test_instantiate_fast(self):
+        tp = TargetParams(discont=1, gvthresh=[2, 3, 4, 5], 
+            pixel_count_bounds=(10, 100), xsize_bounds=(20, 200), 
+            ysize_bounds=(30, 300), min_sum_grey=60, cross_size=3)
+        
+        self.assertEqual(tp.get_max_discontinuity(), 1)
+        self.assertEqual(tp.get_pixel_count_bounds(), (10, 100))
+        self.assertEqual(tp.get_xsize_bounds(), (20, 200))
+        self.assertEqual(tp.get_ysize_bounds(), (30, 300))
+        self.assertEqual(tp.get_min_sum_grey(), 60)
+
+        numpy.testing.assert_array_equal(
+            tp.get_grey_thresholds(), [2, 3, 4, 5])
+        
 if __name__ == "__main__":
     unittest.main()
