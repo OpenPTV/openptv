@@ -15,14 +15,12 @@ Description:	       	establishment of correspondences for 2/3/4 cameras
 ****************************************************************************/
 
 #include <stdio.h>
+#include <stdlib.h>
 #include "correspondences.h"
 
 
-// #include "tools.h"
-
 /* quicksort for list of correspondences in order of match quality */
 /* 4 camera version */
-
 
 /* quicksort_con is helper function to run the 
    qs_con() when the left = 0, right = num - 1
@@ -149,20 +147,67 @@ void qs_coord2d_x (coord_2d	*crd, int left, int right){
 	if (i < right)	qs_coord2d_x (crd, i, right);
 }
 
+/****************************************************
+ *  Memory management                               *
+ ****************************************************/
+
+/*  deallocate_target_usage_marks() deallocates all subarrays and the top
+    array of target usage marks. Assumes all unallocated subarrays are 
+    pointing to NULL so deallocation is simple. This setting is handled by
+    the allocation function.
+    
+    Arguments:
+    int** tusage - the usage marks array of arrays.
+    int num_cams - 
+*/
+void deallocate_target_usage_marks(int** tusage, int num_cams) {
+    int cam;
+    for (cam = 0; cam < num_cams; cam++) {
+        free(tusage[cam]); 
+    }
+    free(tusage);
+}
+
+/*  safely_allocate_target_usage_marks() allocates space for per-camera
+    arrays marking whether a certain target was used . If some allocation
+    failed, it cleans up memory and returns NULL. Allocated arrays are zeroed
+    out initially by the C library.
+*/
+int** safely_allocate_target_usage_marks(int num_cams) {
+    int cam, error=0;
+    int **tusage;
+    
+    tusage = (int**) malloc(num_cams * sizeof(int *));
+    if (tusage == NULL) return NULL;
+    
+    for (cam = 0; cam < num_cams; cam++) {
+        if (error == 0) {
+            tusage[cam] = (int *) calloc(nmax, sizeof(int));
+            if (tusage[cam] == NULL) 
+                error = 1;
+        } else {
+            tusage[cam] = NULL; /* So free() can be called without corruption */
+        }
+    }
+    if (error = 0) 
+        return tusage;
+    
+    deallocate_target_usage_marks(tusage, num_cams);
+    return NULL;
+}
+
 /****************************************************************************/
 /*--------------- 4 camera model: consistent quadruplets -------------------*/
 /****************************************************************************/
 
-// int correspondences (target pix[][nmax], coord_2d corrected[][nmax], int num[], 
-//     volume_par *vpar, control_par *cpar, Calibration calib[], n_tupel *con, 
-//     int match_counts[]){
 n_tupel *correspondences (frame *frm, volume_par *vpar, control_par *cpar, 
-Calibration **calib, int match_counts[]) {
+  Calibration **calib, int match_counts[]) 
+{
   int 	i,j,k,l,m,n,o,i1,i2,i3,cam,part;
   int   count, match=0, match0=0, match4=0, match3=0, match2=0, match1=0;
   int 	p1,p2,p3,p4, p31, p41, p42;
   int  	pt1;
-  double       	xa12,ya12,xb12,yb12,X,Y,Z;
+  double       	xa12,ya12,xb12,yb12;
   double       	corr;
   candidate   	cand[MAXCAND];
   n_tupel     	*con0, *con;
@@ -170,26 +215,20 @@ Calibration **calib, int match_counts[]) {
   coord_2d **corrected;
   double img_x, img_y; /* image center */  
   int **tim;
-
-   con0 = (n_tupel *) malloc(cpar->num_cams*nmax * sizeof(n_tupel));
-   con = (n_tupel *) malloc(cpar->num_cams*nmax * sizeof(n_tupel)); 
-     
-    
-    tim = malloc(cpar->num_cams * sizeof(int *));
-    if(tim == NULL)
-        {
-        fprintf(stderr, "out of memory\n");
-        return NULL;
-        }
-    for(i = 0; i < cpar->num_cams; i++)
-        {
-        tim[i] = malloc(nmax * sizeof(int));
-        if(tim[i] == NULL)
-            {
-            fprintf(stderr, "out of memory\n");
-            return NULL;
-            }
-        }
+  
+  /* Allocation of scratch buffers for internal tasks and return-value 
+     space. 
+  */
+  con0 = (n_tupel *) malloc(cpar->num_cams*nmax * sizeof(n_tupel));
+  con = (n_tupel *) malloc(cpar->num_cams*nmax * sizeof(n_tupel)); 
+  
+  tim = safely_allocate_target_usage_marks(cpar->num_cams);
+  if (tim == NULL) {
+      fprintf(stderr, "out of memory\n");
+      free(con0);
+      free(con);
+      return NULL;
+  }
   
   /* allocate memory for lists of correspondences */
   for (i1 = 0; i1 < cpar->num_cams - 1; i1++){
@@ -198,9 +237,9 @@ Calibration **calib, int match_counts[]) {
        if (list[i1][i2] == NULL){
             fprintf(stderr, "list is not allocated");
             return NULL;
-        }
-     }
+       }
     }
+  }
 
 
 

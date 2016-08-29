@@ -144,8 +144,8 @@ START_TEST(test_correspondences)
     int subset_size, num_corres;
     n_tupel *corres;
     
-   fail_if((cpar = read_control_par("testing_fodder/parameters/ptv.par"))== 0);
-   fail_if((vpar = read_volume_par("testing_fodder/parameters/criteria.par"))==0);
+    fail_if((cpar = read_control_par("testing_fodder/parameters/ptv.par"))== 0);
+    fail_if((vpar = read_volume_par("testing_fodder/parameters/criteria.par"))==0);
     
     int i,j;
     /* Four cameras on 4 quadrants looking down into a calibration target.
@@ -156,8 +156,7 @@ START_TEST(test_correspondences)
         sprintf(ori_name, ori_tmpl, cam + 1);
         calib[cam] = read_calibration(ori_name, "testing_fodder/cal/cam1.tif.addpar", NULL);
         
-        
-       frm.num_targets[cam] = 16;
+        frm.num_targets[cam] = 16;
         
         /* Construct a scene representing a calibration target, generate
            tergets for it, then use them to reconstruct correspondences. */
@@ -183,9 +182,8 @@ START_TEST(test_correspondences)
             }
         }
     }
-
     
-       con = correspondences(&frm, vpar, cpar, calib, &match_counts);
+    con = correspondences(&frm, vpar, cpar, calib, &match_counts);
     
 //     fail_unless(con[0] == NULL);
     
