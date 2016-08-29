@@ -689,7 +689,7 @@ cdef class ControlParams:
         
     def __dealloc__(self):
         # set the mm pointer to NULL in order to prevent c_free_control_par 
-        # function to free it. MultimediaParams object will free this
+        # function from freeing it. MultimediaParams object will free this
         # memory in its python destructor when there will be no references to it.
         
         self._control_par[0].mm = NULL
