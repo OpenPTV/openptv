@@ -181,7 +181,7 @@ Calibration **calib, int match_counts[]) {
         fprintf(stderr, "out of memory\n");
         return NULL;
         }
-    for(i = 0; i < nmax; i++)
+    for(i = 0; i < cpar->num_cams; i++)
         {
         tim[i] = malloc(nmax * sizeof(int));
         if(tim[i] == NULL)
