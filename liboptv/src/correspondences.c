@@ -189,7 +189,7 @@ int** safely_allocate_target_usage_marks(int num_cams) {
             tusage[cam] = NULL; /* So free() can be called without corruption */
         }
     }
-    if (error = 0) 
+    if (error == 0) 
         return tusage;
     
     deallocate_target_usage_marks(tusage, num_cams);
