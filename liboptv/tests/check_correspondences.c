@@ -160,7 +160,6 @@ START_TEST(test_correspondences)
         
         /* Construct a scene representing a calibration target, generate
            tergets for it, then use them to reconstruct correspondences. */
-        printf("Constructing the targets\n");
         for (cpt_horz = 0; cpt_horz < 4; cpt_horz++) {
             for (cpt_vert = 0; cpt_vert < 4; cpt_vert++) {
                 cpt_ix = cpt_horz*4 + cpt_vert;
@@ -172,8 +171,6 @@ START_TEST(test_correspondences)
                 vec_set(tmp, cpt_vert * 10, cpt_horz * 10, 0);
                 img_coord(tmp, calib[cam], &media_par, &(targ->x), &(targ->y));
                 metric_to_pixel(&(targ->x), &(targ->y), targ->x, targ->y, cpar);
-                printf("targ[%d] %f %f %d\n", cpt_ix, frm.targets[cam][cpt_ix].x, 
-                frm.targets[cam][cpt_ix].y, frm.targets[cam][cpt_ix].pnr);
                 
                 /* These values work in check_epi, so used here too */
                 targ->n = 25;
@@ -183,20 +180,13 @@ START_TEST(test_correspondences)
         }
     }
     
-    con = correspondences(&frm, vpar, cpar, calib, &match_counts);
+    con = correspondences(&frm, vpar, cpar, calib, match_counts);
     
-//     fail_unless(con[0] == NULL);
-    
-//     for (subset_size = 2; subset_size <= num_cams; subset_size++) {
-//         corres = corres_lists[subset_size - 1];
-//         num_corres = 0;
-//         
-//         while (corres->corr >= 0) {
-//             num_corres++;
-//             corres++;
-//         }
-//         fail_unless(num_corres == ((subset_size == 4) ? 16 : 0));
-//     }
+    /* The example set is built to have all 16 quadruplets. */
+    fail_unless(match_counts[0] == 16);
+    fail_unless(match_counts[1] == 0);
+    fail_unless(match_counts[2] == 0);
+    fail_unless(match_counts[3] == 16); /* last elemnt is the sum of matches */
 }
 END_TEST
 
