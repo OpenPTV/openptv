@@ -147,6 +147,11 @@ START_TEST(test_correspondences)
     fail_if((cpar = read_control_par("testing_fodder/parameters/ptv.par"))== 0);
     fail_if((vpar = read_volume_par("testing_fodder/parameters/criteria.par"))==0);
     
+    /* Cameras are at so high angles that opposing cameras don't see each other
+       in the normal air-glass-water setting. */
+    cpar->mm->n2[0] = 1.0001;
+    cpar->mm->n3 = 1.0001;
+    
     int i,j;
     /* Four cameras on 4 quadrants looking down into a calibration target.
        Calibration taken from an actual experimental setup */

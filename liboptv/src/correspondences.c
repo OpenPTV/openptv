@@ -273,7 +273,7 @@ n_tupel *correspondences (frame *frm, volume_par *vpar, control_par *cpar,
         preparation. 
 */
     
-    corrected = (coord_2d **) malloc(cpar->num_cams * sizeof(coord_2d *));    
+    corrected = (coord_2d **) malloc(cpar->num_cams * sizeof(coord_2d *));
     for (cam = 0; cam < cpar->num_cams; cam++) {
         corrected[cam] = (coord_2d *) malloc(
             frm->num_targets[cam] * sizeof(coord_2d));
@@ -284,15 +284,12 @@ n_tupel *correspondences (frame *frm, volume_par *vpar, control_par *cpar,
             
             
         for (part = 0; part < frm->num_targets[cam]; part++) {
-        printf("%f %f \n", frm->targets[cam][part].x, frm->targets[cam][part].y);
             pixel_to_metric(&corrected[cam][part].x, 
                             &corrected[cam][part].y,
                             frm->targets[cam][part].x, 
                             frm->targets[cam][part].y,
                             cpar);
                             
-            printf("%f %f \n", corrected[cam][part].x, corrected[cam][part].y);
-            
             img_x = corrected[cam][part].x - calib[cam]->int_par.xh;
             img_y = corrected[cam][part].y - calib[cam]->int_par.yh;
             
@@ -300,15 +297,12 @@ n_tupel *correspondences (frame *frm, volume_par *vpar, control_par *cpar,
                &corrected[cam][part].x, &corrected[cam][part].y);
             
             corrected[cam][part].pnr = frm->targets[cam][part].pnr;
-            
-            // printf('%f %f %d \n', corrected[cam][part].x, corrected[cam][part].y, corrected[cam][part].pnr);
-            printf("%f %f %d \n", corrected[cam][part].x, corrected[cam][part].y, corrected[cam][part].pnr);
         }
         
         /* This is expected by find_candidate_plus() */
         quicksort_coord2d_x(corrected[cam], frm->num_targets[cam]);
     }
- 
+
 /*   matching  1 -> 2,3,4  +  2 -> 3,4  +  3 -> 4 */
   for (i1 = 0; i1 < cpar->num_cams - 1; i1++)
     for (i2 = i1 + 1; i2 < cpar->num_cams; i2++) {
@@ -316,10 +310,6 @@ n_tupel *correspondences (frame *frm, volume_par *vpar, control_par *cpar,
       for (i=0; i<frm->num_targets[i1]; i++)	if (corrected[i1][i].x != -999) {
           epi_mm (corrected[i1][i].x, corrected[i1][i].y, calib[i1], calib[i2], 
           cpar->mm, vpar, &xa12, &ya12, &xb12, &yb12);
-          
-          // printf('%f %f\n', corrected[i1][i].x, corrected[i1][i].y);
-          // printf('%f %f %f %f\n', xa12, ya12, xb12, yb12);
-          
 	  
           /* origin point in the list */
 	      p1 = i;  list[i1][i2][p1].p1 = p1;	pt1 = corrected[i1][p1].pnr;
@@ -342,12 +332,6 @@ n_tupel *correspondences (frame *frm, volume_par *vpar, control_par *cpar,
 	  list[i1][i2][p1].n = count;
 	}
   }
-  
-    /* Image coordinates not needed beyond this point. */
-    for (cam = 0; cam < frm->num_cams; cam++) {
-        free(corrected[cam]);
-    }
-    free(corrected);
 
 /*   search consistent quadruplets in the list */
   if (cpar->num_cams == 4) {
@@ -558,11 +542,10 @@ n_tupel *correspondences (frame *frm, volume_par *vpar, control_par *cpar,
         {
          /* Skip cameras without a correspondence obviously. */
          if (con[i].p[j] < 0) continue;
-
-	     p1 = corrected[j][con[i].p[j]].pnr;
+             p1 = corrected[j][con[i].p[j]].pnr;
 	     if (p1 > -1 && p1 < 1202590843)
 	      {
-	        frm->targets[j][p1].tnr= i;
+                frm->targets[j][p1].tnr= i;
 	      }
 	    }
     }
@@ -586,6 +569,12 @@ n_tupel *correspondences (frame *frm, volume_par *vpar, control_par *cpar,
     match_counts[2] = match2;
     match_counts[3] = match;
 
+/* Image coordinates not needed beyond this point. */
+    for (cam = 0; cam < frm->num_cams; cam++) {
+        free(corrected[cam]);
+    }
+    free(corrected);
+    
 /*   free memory for lists of correspondences */
   for (i1 = 0; i1 < cpar->num_cams - 1; i1++)
     for (i2 = i1 + 1; i2 < cpar->num_cams; i2++)
