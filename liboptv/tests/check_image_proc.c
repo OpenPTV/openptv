@@ -127,7 +127,7 @@ START_TEST(test_box_blur)
     
     /*  set lowpass edge values to 0 so it equals the no-wrap action of 
         the fast box blur */
-    for (elem = 0; elem < 6; elem++) {
+    for (elem = 0; elem < 5; elem++) {
         img_mean[5*elem] = 0;
         img_mean[5*elem + 4] = 0;
     }
