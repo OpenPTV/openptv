@@ -16,6 +16,7 @@ Description:
 
 #include "segmentation.h"
 #include <string.h>
+#include <stdio.h>
 
 typedef short targpix[2];
 
@@ -68,6 +69,14 @@ int targ_rec (unsigned char *img, target_par *targ_par, int xmin,
     img0 = (unsigned char *) calloc (imx*imy, 1);
     memcpy(img0, img, imx*imy);
 
+    /* Make sure the min/max coordinates don't cause us to access memory
+       outside the image memory.
+    */
+    if (xmin <= 0) xmin = 1;
+    if (ymin <= 0) ymin = 1;
+    if (xmax >= imx) xmax = imx - 1;
+    if (ymax >= imy) ymax = imy - 1;
+    
     /*  thresholding and connectivity analysis in image  */
     for (i=ymin; i<ymax; i++)  for (j=xmin; j<xmax; j++)
     {
@@ -110,7 +119,8 @@ int targ_rec (unsigned char *img, target_par *targ_par, int xmin,
                     /* conditions for threshold, discontinuity, image borders */
                     /* and peak fitting */
                     if (   (gv > thres)
-                       && (xn>=xmin)&&(xn<xmax) && (yn>=ymin)&&(yn<ymax)
+                       && (xn > xmin - 1) && (xn < xmax + 1) 
+                       && (yn > ymin - 1) && (yn < ymax + 1)
                        && (gv <= gvref+disco)
                        && (gvref + disco >= *(img + imx*(yn-1) + xn))
                        && (gvref + disco >= *(img + imx*(yn+1) + xn))
@@ -148,8 +158,11 @@ int targ_rec (unsigned char *img, target_par *targ_par, int xmin,
             }   /*  end of while-loop  */
 
             /* check whether target touches image borders */
-            if (xa==xmin || ya==ymin || xb==xmax-1 || yb==ymax-1)
+            if (xa == (xmin - 1) || ya == (ymin - 1) || 
+                xb == (xmax + 1)|| yb == (ymax + 1)) 
+            {
                 continue;
+            }
 
             /* get targets extensions in x and y */
             nx = xb - xa + 1;  
