@@ -108,6 +108,12 @@ START_TEST(test_targ_rec)
         0, cpar.imy, &cpar, 1, pix);
    fail_unless(ntargets == 1);
 
+    /* Trip a segfault writing over the edge. */
+    printf("trying\n");
+    img1[4][4] = 255;
+    ntargets = targ_rec (img1, &targ_par, 0, cpar.imx, -1, cpar.imy, &cpar, 1,
+        pix);
+  /* If execution reached here, test passed. */
 
 }
 END_TEST
