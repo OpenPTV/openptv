@@ -274,7 +274,6 @@ n_tupel *correspondences (frame *frm, volume_par *vpar, control_par *cpar,
   n_tupel     	*con0, *con;
   correspond  	*list[4][4];
   coord_2d **corrected;
-  double img_x, img_y; /* image center */  
   int **tim;
   
   /* Allocation of scratch buffers for internal tasks and return-value 
@@ -314,11 +313,12 @@ n_tupel *correspondences (frame *frm, volume_par *vpar, control_par *cpar,
   }
 
   /*  We work on distortion-corrected image coordinates of particles.
-      This loop does the correction. It also recycles the iteration on
-      frm->num_cams to allocate some arrays needed later and do some related
-      preparation. 
+      This loop does the correction and also sets point numbers correctly.
+      I have a feeling that this should not happen here, because the correction
+      is used both for this and for point positions, so the function should 
+      receive it as argument.
   */
-    
+  
   corrected = (coord_2d **) malloc(cpar->num_cams * sizeof(coord_2d *));
   for (cam = 0; cam < cpar->num_cams; cam++) {
       corrected[cam] = (coord_2d *) malloc(
@@ -332,29 +332,27 @@ n_tupel *correspondences (frame *frm, volume_par *vpar, control_par *cpar,
           return NULL;
       }
             
-            
-        for (part = 0; part < frm->num_targets[cam]; part++) {
-            pixel_to_metric(&corrected[cam][part].x, 
-                            &corrected[cam][part].y,
-                            frm->targets[cam][part].x, 
-                            frm->targets[cam][part].y,
-                            cpar);
+      for (part = 0; part < frm->num_targets[cam]; part++) {
+          pixel_to_metric(&corrected[cam][part].x, 
+                          &corrected[cam][part].y,
+                          frm->targets[cam][part].x, 
+                          frm->targets[cam][part].y,
+                          cpar);
                             
-            img_x = corrected[cam][part].x - calib[cam]->int_par.xh;
-            img_y = corrected[cam][part].y - calib[cam]->int_par.yh;
-            
-            correct_brown_affin (img_x, img_y, calib[cam]->added_par,
-               &corrected[cam][part].x, &corrected[cam][part].y);
-            
-            corrected[cam][part].pnr = frm->targets[cam][part].pnr;
-        }
+          dist_to_flat(corrected[cam][part].x, corrected[cam][part].y,
+              calib[cam], &corrected[cam][part].x, &corrected[cam][part].y,
+              0.00001);
+          
+          corrected[cam][part].pnr = frm->targets[cam][part].pnr;
+      }
         
-        /* This is expected by find_candidate_plus() */
-        quicksort_coord2d_x(corrected[cam], frm->num_targets[cam]);
-    }
+      /* This is expected by find_candidate_plus() */
+      quicksort_coord2d_x(corrected[cam], frm->num_targets[cam]);
+  }
 
-/*   matching  1 -> 2,3,4  +  2 -> 3,4  +  3 -> 4 */
-  for (i1 = 0; i1 < cpar->num_cams - 1; i1++)
+  /* Generate adjacency lists: mark candidates for correspondence.
+     matching  1 -> 2,3,4  +  2 -> 3,4  +  3 -> 4 */
+  for (i1 = 0; i1 < cpar->num_cams - 1; i1++) {
     for (i2 = i1 + 1; i2 < cpar->num_cams; i2++) {
 
       for (i=0; i<frm->num_targets[i1]; i++)	if (corrected[i1][i].x != -999) {
@@ -364,29 +362,29 @@ n_tupel *correspondences (frame *frm, volume_par *vpar, control_par *cpar,
           /* origin point in the list */
 	      p1 = i;  list[i1][i2][p1].p1 = p1;	pt1 = corrected[i1][p1].pnr;
 
-           /* search for a conjugate point in corrected[i2] */
-            count = find_candidate (corrected[i2], frm->targets[i2], frm->num_targets[i2],
-            xa12, ya12, xb12, yb12, 
-            frm->targets[i1][pt1].n,frm->targets[i1][pt1].nx,frm->targets[i1][pt1].ny,
-            frm->targets[i1][pt1].sumg, cand, vpar, cpar, calib[i2]);
+          /* search for a conjugate point in corrected[i2] */
+          count = find_candidate(corrected[i2], frm->targets[i2], 
+              frm->num_targets[i2], xa12, ya12, xb12, yb12, 
+              frm->targets[i1][pt1].n, frm->targets[i1][pt1].nx,
+              frm->targets[i1][pt1].ny, frm->targets[i1][pt1].sumg, cand, 
+              vpar, cpar, calib[i2]);
              
-/* 	         write all corresponding candidates to the preliminary list 
- 	          of correspondences */
-	  if (count > MAXCAND)	{ count = MAXCAND; }
-	  for (j=0; j<count; j++)
-	    {
-	      list[i1][i2][p1].p2[j] = cand[j].pnr;
-	      list[i1][i2][p1].corr[j] = cand[j].corr;
-	      list[i1][i2][p1].dist[j] = cand[j].tol;
-	    }
-	  list[i1][i2][p1].n = count;
-	}
+          /* write all corresponding candidates to the preliminary list 
+ 	         of correspondences */
+          if (count > MAXCAND) count = MAXCAND;
+	      for (j = 0; j < count; j++) {
+	        list[i1][i2][p1].p2[j] = cand[j].pnr;
+	        list[i1][i2][p1].corr[j] = cand[j].corr;
+	        list[i1][i2][p1].dist[j] = cand[j].tol;
+	      }
+	      list[i1][i2][p1].n = count;
+	  }
+    }
   }
 
-/*   search consistent quadruplets in the list */
+  /*   search consistent quadruplets in the list */
   if (cpar->num_cams == 4) {
-      for (i=0, match0=0; i<frm->num_targets[0]; i++)
-	{
+    for (i = 0, match0 = 0; i < frm->num_targets[0]; i++) {
 	  p1 = list[0][1][i].p1;
 	  for (j=0; j<list[0][1][i].n; j++)
 	    for (k=0; k<list[0][2][i].n; k++)
@@ -398,67 +396,63 @@ n_tupel *correspondences (frame *frm, volume_par *vpar, control_par *cpar,
 		  for (m=0; m<list[1][2][p2].n; m++) {
 			p31 = list[1][2][p2].p2[m];
             if (p3 != p31) continue;
-		    for (n=0; n<list[1][3][p2].n; n++)
-		      {
-			p41 = list[1][3][p2].p2[n];
-			if (p4 != p41) continue;
-              i3 = list[2][3][p3].n;
-			  for (o=0; o<i3; o++)
-			    {
-			      p42 = list[2][3][p3].p2[o];
-			      if (p4 == p42)
-				{
-				  corr = (list[0][1][i].corr[j]
-					  + list[0][2][i].corr[k]
-					  + list[0][3][i].corr[l]
-					  + list[1][2][p2].corr[m]
-					  + list[1][3][p2].corr[n]
-					  + list[2][3][p3].corr[o])
-				    / (list[0][1][i].dist[j]
-				       + list[0][2][i].dist[k]
-				       + list[0][3][i].dist[l]
-				       + list[1][2][p2].dist[m]
-				       + list[1][3][p2].dist[n]
-				       + list[2][3][p3].dist[o]);
-				  if (corr > vpar->corrmin)
-				    {
+		    for (n = 0; n < list[1][3][p2].n; n++) {
+			  p41 = list[1][3][p2].p2[n];
+			  if (p4 != p41) continue;
+                i3 = list[2][3][p3].n;
+			    for (o = 0; o < i3; o++) {
+                  p42 = list[2][3][p3].p2[o];
+			      if (p4 != p42) continue;
+                  
+                  corr = (list[0][1][i].corr[j]
+                    + list[0][2][i].corr[k]
+                    + list[0][3][i].corr[l]
+                    + list[1][2][p2].corr[m]
+                    + list[1][3][p2].corr[n]
+                    + list[2][3][p3].corr[o])
+                    / (list[0][1][i].dist[j]
+                    + list[0][2][i].dist[k]
+                    + list[0][3][i].dist[l]
+                    + list[1][2][p2].dist[m]
+                    + list[1][3][p2].dist[n]
+                    + list[2][3][p3].dist[o]);
+                  
+				  if (corr > vpar->corrmin) {
 				      /*accept as preliminary match */
 				      con0[match0].p[0] = p1;
 				      con0[match0].p[1] = p2;
 				      con0[match0].p[2] = p3;
 				      con0[match0].p[3] = p4;
 				      con0[match0++].corr = corr;
+                      
 				      if (match0 == 4*nmax)	/* security */
-					{
-					  printf ("Overflow in correspondences:");
-					  printf (" > %d matches\n", match0);
-					  i = frm->num_targets[0];
-					}
-				    }
-				}
-			    }
-              
-		      }
-            }
-		}
-	}
+					  {
+					    printf ("Overflow in correspondences:");
+					    printf (" > %d matches\n", match0);
+					    i = frm->num_targets[0];
+					  }
+                  } /* acceptance */
+              }
+			}
+		  } /* target loops */
+        } /* Other camera loops*/
+    } /* 1st camera targets*/
 
-/*       sort quadruplets for match quality (.corr) */
-        quicksort_con (con0, match0);
+    /* sort quadruplets for match quality (.corr) */
+    quicksort_con (con0, match0);
 
-/*       take quadruplets from the top to the bottom of the sorted list
-       only if none of the points has already been used */
-      for (i=0, match=0; i<match0; i++)
-	{
-	  p1 = con0[i].p[0];	if (p1 > -1)	if (++tim[0][p1] > 1)	continue;
-	  p2 = con0[i].p[1];	if (p2 > -1)	if (++tim[1][p2] > 1)	continue;
-	  p3 = con0[i].p[2];	if (p3 > -1)	if (++tim[2][p3] > 1)	continue;
-	  p4 = con0[i].p[3];	if (p4 > -1)	if (++tim[3][p4] > 1)	continue;
-	  con[match++] = con0[i];
+    /*  take quadruplets from the top to the bottom of the sorted list
+        only if none of the points has already been used */
+    for (i=0, match=0; i<match0; i++) {
+        p1 = con0[i].p[0];	if (p1 > -1)	if (++tim[0][p1] > 1)	continue;
+        p2 = con0[i].p[1];	if (p2 > -1)	if (++tim[1][p2] > 1)	continue;
+        p3 = con0[i].p[2];	if (p3 > -1)	if (++tim[2][p3] > 1)	continue;
+        p4 = con0[i].p[3];	if (p4 > -1)	if (++tim[3][p4] > 1)	continue;
+        con[match++] = con0[i];
 	}
  
-       match4 = match;
-     }
+    match4 = match;
+ }
 
 /*   search consistent triplets :  123, 124, 134, 234 */
   if ((cpar->num_cams == 4 && cpar->allCam_flag == 0) || cpar->num_cams == 3)
