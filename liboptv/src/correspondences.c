@@ -196,6 +196,67 @@ int** safely_allocate_target_usage_marks(int num_cams) {
     return NULL;
 }
 
+/*  deallocate_adjacency_lists() deallocates all pairwise arrays of posisible
+    correspondence between targets. Assumes all unallocated subarrays are 
+    pointing to NULL so deallocation is simple. This setting is handled by
+    the allocation function. "Adjacency" denotes connection in the conceptual
+    targets graph.
+    
+    Arguments:
+    correspond* lists[4][4]  - the array of arrays to clear.
+    int num_cams - number of cameras to handle (up to 4).
+*/
+void deallocate_adjacency_lists(correspond* lists[4][4], int num_cams) {
+    int c1, c2;
+    
+    for (c1 = 0; c1 < num_cams - 1; c1++) {
+        for (c2 = c1 + 1; c2 < num_cams; c2++) {
+            free(lists[c1][c2]);
+        }
+    }
+}
+
+/*  safely_allocate_adjacency_lists() Allocates and initializes pairwise 
+    adjacency lists. If an error occurs, cleans up memory and returns 0, 
+    otherwise returns 1.
+    
+    Arguments:
+    correspond* lists[4][4] - an existing array of arrays of pointers,
+        where allocations will be stored.
+    int num_cams - number of cameras to handle (up to 4).
+    int *target_counts - an array holding the number of targets in each camera.
+*/
+int safely_allocate_adjacency_lists(correspond* lists[4][4], int num_cams, 
+    int *target_counts) 
+{
+    int c1, c2, edge, error=0;
+
+    for (c1 = 0; c1 < num_cams - 1; c1++) {
+        for (c2 = c1 + 1; c2 < num_cams; c2++) {
+            if (error == 0) {
+                lists[c1][c2] = (correspond *) malloc(
+                    target_counts[c1] * sizeof(correspond));
+                if (lists[c1][c2] == NULL) {
+                    error = 1;
+                    continue;
+                }
+                
+                for(edge=0; edge < target_counts[c1]; edge++) {
+                    lists[c1][c2][edge].n = 0;
+                    lists[c1][c2][edge].p1 = 0;
+                }
+            } else {
+                lists[c1][c2] = NULL;
+            }
+        }
+    }
+    
+    if (error == 0) return 1;
+    
+    deallocate_adjacency_lists(lists, num_cams);
+    return 0;
+}
+
 /****************************************************************************/
 /*--------------- 4 camera model: consistent quadruplets -------------------*/
 /****************************************************************************/
@@ -231,25 +292,13 @@ n_tupel *correspondences (frame *frm, volume_par *vpar, control_par *cpar,
   }
   
   /* allocate memory for lists of correspondences */
-  for (i1 = 0; i1 < cpar->num_cams - 1; i1++){
-    for (i2 = i1 + 1; i2 < cpar->num_cams; i2++){
-       list[i1][i2] = (correspond *) malloc (frm->num_targets[i1] * sizeof (correspond));
-       if (list[i1][i2] == NULL){
-            fprintf(stderr, "list is not allocated");
-            return NULL;
-       }
-    }
+  if (safely_allocate_adjacency_lists(list, cpar->num_cams, frm->num_targets) == 0) {
+      fprintf(stderr, "list is not allocated");
+      deallocate_target_usage_marks(tim, cpar->num_cams);
+      free(con0);
+      free(con);
+      return NULL;
   }
-
-
-
-  for (i1 = 0; i1 < cpar->num_cams - 1; i1++)
-    for (i2 = i1 + 1; i2 < cpar->num_cams; i2++)
-      for (i=0; i<frm->num_targets[i1]; i++)
-	{
-	  list[i1][i2][i].p1 = 0;
-	  list[i1][i2][i].n = 0;
-	}
 
 /* if I understand correctly, the number of matches cannot be more than the number of
    targets (dots) in the first image. In the future we'll replace it by the maximum
@@ -263,24 +312,25 @@ n_tupel *correspondences (frame *frm, volume_par *vpar, control_par *cpar,
     }
     con0[i].corr = 0.0;
   }
-  
-    
 
-
-/*  We work on distortion-corrected image coordinates of particles.
-        This loop does the correction. It also recycles the iteration on
-        frm->num_cams to allocate some arrays needed later and do some related
-        preparation. 
-*/
+  /*  We work on distortion-corrected image coordinates of particles.
+      This loop does the correction. It also recycles the iteration on
+      frm->num_cams to allocate some arrays needed later and do some related
+      preparation. 
+  */
     
-    corrected = (coord_2d **) malloc(cpar->num_cams * sizeof(coord_2d *));
-    for (cam = 0; cam < cpar->num_cams; cam++) {
-        corrected[cam] = (coord_2d *) malloc(
-            frm->num_targets[cam] * sizeof(coord_2d));
-        if (corrected[cam] == NULL){
-            fprintf(stderr, "corrected is not allocated");
-            return NULL;
-        }
+  corrected = (coord_2d **) malloc(cpar->num_cams * sizeof(coord_2d *));
+  for (cam = 0; cam < cpar->num_cams; cam++) {
+      corrected[cam] = (coord_2d *) malloc(
+          frm->num_targets[cam] * sizeof(coord_2d));
+      if (corrected[cam] == NULL){
+          fprintf(stderr, "corrected is not allocated");
+          deallocate_adjacency_lists(list, cpar->num_cams);
+          deallocate_target_usage_marks(tim, cpar->num_cams);
+          free(con0);
+          free(con);
+          return NULL;
+      }
             
             
         for (part = 0; part < frm->num_targets[cam]; part++) {
@@ -563,24 +613,22 @@ n_tupel *correspondences (frame *frm, volume_par *vpar, control_par *cpar,
 	  }
     printf("unidentified objects = %d\n",count1);
 
-/* Retun values: match counts of each clique size */
-    match_counts[0] = match4;
-    match_counts[1] = match3;
-    match_counts[2] = match2;
-    match_counts[3] = match;
+  /* Retun values: match counts of each clique size */
+  match_counts[0] = match4;
+  match_counts[1] = match3;
+  match_counts[2] = match2;
+  match_counts[3] = match;
 
-/* Image coordinates not needed beyond this point. */
-    for (cam = 0; cam < frm->num_cams; cam++) {
-        free(corrected[cam]);
-    }
-    free(corrected);
+  /* Image coordinates not needed beyond this point. */
+  for (cam = 0; cam < frm->num_cams; cam++) {
+      free(corrected[cam]);
+  }
+  free(corrected);
     
-/*   free memory for lists of correspondences */
-  for (i1 = 0; i1 < cpar->num_cams - 1; i1++)
-    for (i2 = i1 + 1; i2 < cpar->num_cams; i2++)
-          free (list[i1][i2]);
-
-   free (con0);
+  /* free all other allocations */
+  deallocate_adjacency_lists(list, cpar->num_cams);
+  deallocate_target_usage_marks(tim, cpar->num_cams);
+  free (con0);
 
   return con;
 }
