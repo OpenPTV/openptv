@@ -18,8 +18,6 @@
 #include <string.h>
 #include <math.h>
 
-
-#define PT_UNUSED -999
 #define NUM_ITER  80
 #define POS_INF 1E20
 #define CONVERGENCE 0.00001

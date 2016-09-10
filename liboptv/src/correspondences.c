@@ -340,19 +340,62 @@ int four_camera_matching(correspond *list[4][4], int base_target_count,
 
 
 /****************************************************************************/
-/*--------------- 4 camera model: consistent quadruplets -------------------*/
+/*         Other components of the correspondence process                   */
+/****************************************************************************/
+
+void match_pairs(correspond *list[4][4], coord_2d **corrected, 
+    frame *frm, volume_par *vpar, control_par *cpar, Calibration **calib) 
+{
+    int i1, i2, i, j, pt1, count;
+    double xa12, ya12, xb12, yb12; /* Epipolar line edges */
+    candidate cand[MAXCAND];
+    
+    for (i1 = 0; i1 < cpar->num_cams - 1; i1++) {
+        for (i2 = i1 + 1; i2 < cpar->num_cams; i2++) {
+            for (i=0; i<frm->num_targets[i1]; i++) {
+                if (corrected[i1][i].x == PT_UNUSED) continue;
+                
+                epi_mm (corrected[i1][i].x, corrected[i1][i].y, 
+                    calib[i1], calib[i2], cpar->mm, 
+                    vpar, &xa12, &ya12, &xb12, &yb12);
+                
+                /* origin point in the list */
+                list[i1][i2][i].p1 = i;
+                pt1 = corrected[i1][i].pnr;
+
+                /* search for a conjugate point in corrected[i2] */
+                count = find_candidate(corrected[i2], frm->targets[i2],
+                    frm->num_targets[i2], xa12, ya12, xb12, yb12, 
+                    frm->targets[i1][pt1].n, frm->targets[i1][pt1].nx,
+                    frm->targets[i1][pt1].ny, frm->targets[i1][pt1].sumg, cand, 
+                    vpar, cpar, calib[i2]);
+                
+                /* write all corresponding candidates to the preliminary list 
+ 	           of correspondences */
+                if (count > MAXCAND) count = MAXCAND;
+                
+                for (j = 0; j < count; j++) {
+                    list[i1][i2][i].p2[j] = cand[j].pnr;
+                    list[i1][i2][i].corr[j] = cand[j].corr;
+                    list[i1][i2][i].dist[j] = cand[j].tol;
+                }
+	        list[i1][i2][i].n = count;
+            }
+        }
+    }
+}
+
+/****************************************************************************/
+/*         Full correspondence process                                      */
 /****************************************************************************/
 
 n_tupel *correspondences (frame *frm, volume_par *vpar, control_par *cpar, 
   Calibration **calib, int match_counts[]) 
 {
-  int 	i,j,k,l,m,n,o,i1,i2,i3,cam,part;
-  int   count, match=0, match0=0, match4=0, match3=0, match2=0, match1=0;
-  int 	p1,p2,p3,p4, p31, p41, p42;
-  int  	pt1;
-  double       	xa12,ya12,xb12,yb12;
+  int 	i,j,k,m,n,i1,i2,i3,cam,part;
+  int   match=0, match0=0, match4=0, match3=0, match2=0, match1=0;
+  int 	p1,p2,p3,p4, p31;
   double       	corr;
-  candidate   	cand[MAXCAND];
   n_tupel     	*con0, *con;
   correspond  	*list[4][4];
   coord_2d **corrected;
@@ -428,41 +471,13 @@ n_tupel *correspondences (frame *frm, volume_par *vpar, control_par *cpar,
           corrected[cam][part].pnr = frm->targets[cam][part].pnr;
       }
         
-      /* This is expected by find_candidate_plus() */
+      /* This is expected by find_candidate() */
       quicksort_coord2d_x(corrected[cam], frm->num_targets[cam]);
   }
 
   /* Generate adjacency lists: mark candidates for correspondence.
      matching  1 -> 2,3,4  +  2 -> 3,4  +  3 -> 4 */
-  for (i1 = 0; i1 < cpar->num_cams - 1; i1++) {
-    for (i2 = i1 + 1; i2 < cpar->num_cams; i2++) {
-
-      for (i=0; i<frm->num_targets[i1]; i++)	if (corrected[i1][i].x != -999) {
-          epi_mm (corrected[i1][i].x, corrected[i1][i].y, calib[i1], calib[i2], 
-          cpar->mm, vpar, &xa12, &ya12, &xb12, &yb12);
-	  
-          /* origin point in the list */
-	      p1 = i;  list[i1][i2][p1].p1 = p1;	pt1 = corrected[i1][p1].pnr;
-
-          /* search for a conjugate point in corrected[i2] */
-          count = find_candidate(corrected[i2], frm->targets[i2], 
-              frm->num_targets[i2], xa12, ya12, xb12, yb12, 
-              frm->targets[i1][pt1].n, frm->targets[i1][pt1].nx,
-              frm->targets[i1][pt1].ny, frm->targets[i1][pt1].sumg, cand, 
-              vpar, cpar, calib[i2]);
-             
-          /* write all corresponding candidates to the preliminary list 
- 	         of correspondences */
-          if (count > MAXCAND) count = MAXCAND;
-	      for (j = 0; j < count; j++) {
-	        list[i1][i2][p1].p2[j] = cand[j].pnr;
-	        list[i1][i2][p1].corr[j] = cand[j].corr;
-	        list[i1][i2][p1].dist[j] = cand[j].tol;
-	      }
-	      list[i1][i2][p1].n = count;
-	  }
-    }
-  }
+  match_pairs(list, corrected, frm, vpar, cpar, calib);
 
   /*   search consistent quadruplets in the list */
   if (cpar->num_cams == 4) {

@@ -166,6 +166,86 @@ frame *generate_test_set(Calibration *calib[4], control_par *cpar,
     return frm;
 }
 
+START_TEST(test_pairwise_matching)
+{
+    frame *frm;
+    Calibration *calib[4];
+    volume_par *vpar;
+    control_par *cpar;
+    correspond *list[4][4];
+    coord_2d **corrected;
+    int cam, subcam, part, cand, correct_pnr;
+    
+    char ori_tmpl[] = "testing_fodder/cal/sym_cam%d.tif.ori";
+    char ori_name[40];
+    
+    fail_if((cpar = read_control_par("testing_fodder/parameters/ptv.par"))== 0);
+    fail_if((vpar = read_volume_par("testing_fodder/parameters/criteria.par"))==0);
+    
+    /* Cameras are at so high angles that opposing cameras don't see each other
+       in the normal air-glass-water setting. */
+    cpar->mm->n2[0] = 1.0001;
+    cpar->mm->n3 = 1.0001;
+    
+    for (cam = 0; cam < cpar->num_cams; cam++) {
+        sprintf(ori_name, ori_tmpl, cam + 1);
+        calib[cam] = read_calibration(ori_name, "testing_fodder/cal/cam1.tif.addpar", NULL);
+    }
+    frm = generate_test_set(calib, cpar, vpar);
+    
+    corrected = (coord_2d **) malloc(cpar->num_cams * sizeof(coord_2d *));
+    for (cam = 0; cam < cpar->num_cams; cam++) {
+        fail_unless(corrected[cam] = (coord_2d *) malloc(
+            frm->num_targets[cam] * sizeof(coord_2d)));
+        
+        for (part = 0; part < frm->num_targets[cam]; part++) {
+            pixel_to_metric(&corrected[cam][part].x, 
+                          &corrected[cam][part].y,
+                          frm->targets[cam][part].x, 
+                          frm->targets[cam][part].y,
+                          cpar);
+                            
+            dist_to_flat(corrected[cam][part].x, corrected[cam][part].y,
+                calib[cam], &corrected[cam][part].x, &corrected[cam][part].y,
+                0.00001);
+          
+            corrected[cam][part].pnr = frm->targets[cam][part].pnr;
+        }
+        
+        /* This is expected by find_candidate() */
+        quicksort_coord2d_x(corrected[cam], frm->num_targets[cam]);
+    }
+    safely_allocate_adjacency_lists(list, cpar->num_cams, frm->num_targets);
+    
+    match_pairs(list, corrected, frm, vpar, cpar, calib);
+    
+    /* Well, I guess we should at least check that each target has the 
+       real matches as candidates, as a sample check. */
+    for (cam = 0; cam < cpar->num_cams - 1; cam++) {
+        for (subcam = cam + 1; subcam < cpar->num_cams; subcam++) {
+            for (part = 0; part < frm->num_targets[cam]; part++) {
+                
+                /* Complications here:
+                   1. target numbering scheme alternates.
+                   2. Candidte 'pnr' is an index into the x-sorted array, not
+                      the original pnr.
+                */
+                if ((subcam - cam) % 2 == 0) {
+                    correct_pnr = corrected[cam][list[cam][subcam][part].p1].pnr;
+                } else {
+                    correct_pnr = 15 - corrected[cam][list[cam][subcam][part].p1].pnr;
+                }
+                
+                for (cand = 0; cand < MAXCAND; cand++) {
+                    if (corrected[subcam][list[cam][subcam][part].p2[cand]].pnr == correct_pnr) break;
+                }
+                fail_if(cand == MAXCAND);
+            }
+        }
+    }
+}
+END_TEST
+
 START_TEST(test_correspondences)
 {
     frame *frm;
@@ -226,6 +306,10 @@ Suite* orient_suite(void) {
     
     tc = tcase_create ("Calibration target correspondences");
     tcase_add_test(tc, test_correspondences);
+    suite_add_tcase (s, tc);
+    
+    tc = tcase_create ("Pairwise matching");
+    tcase_add_test(tc, test_pairwise_matching);
     suite_add_tcase (s, tc);
     
     return s;

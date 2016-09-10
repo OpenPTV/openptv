@@ -41,5 +41,14 @@ void qs_con (n_tupel *con, int left, int right);
 
 
 n_tupel *correspondences (frame *frm, volume_par *vpar, control_par *cpar, 
-Calibration **calib, int match_counts[]);
+    Calibration **calib, int match_counts[]);
+
+
+/* subcomponents of correspondences, may be separately useful. */
+
+int safely_allocate_adjacency_lists(correspond* lists[4][4], int num_cams, 
+    int *target_counts);
+void match_pairs(correspond *list[4][4], coord_2d **corrected, 
+    frame *frm, volume_par *vpar, control_par *cpar, Calibration **calib);
+
 #endif
