@@ -122,46 +122,25 @@ START_TEST(test_quicksort_con)
 }
 END_TEST
 
-START_TEST(test_correspondences)
-{
-    frame frm;
-    Calibration *calib[4];
-    volume_par *vpar;
-    control_par *cpar;
-    n_tupel *con;
-    mm_np media_par = {1, 1., {1., 0., 0.}, {1., 0., 0.}, 1.};
-    
-    vec3d tmp;
-    int match_counts[4];
+/* Tests of correspondence components and full process using dummy data */
 
-    
-    char ori_tmpl[] = "testing_fodder/cal/sym_cam%d.tif.ori";
-    char ori_name[40]; 
-    
-    int num_cams = 4, cam, cpt_vert, cpt_horz, cpt_ix;
+/* generate_test_set() generates data for targets on 4 cameras. The targets
+ * Are organized on a 4x4 grid, 10mm apart.
+ */
+frame *generate_test_set(Calibration *calib[4], control_par *cpar, 
+    volume_par *vpar)
+{
+    int cam, cpt_horz, cpt_vert, cpt_ix;
     target *targ;
+    vec3d tmp;
+    frame *frm = (frame *) malloc(sizeof(frame));
     
-    int subset_size, num_corres;
-    n_tupel *corres;
-    
-    fail_if((cpar = read_control_par("testing_fodder/parameters/ptv.par"))== 0);
-    fail_if((vpar = read_volume_par("testing_fodder/parameters/criteria.par"))==0);
-    
-    /* Cameras are at so high angles that opposing cameras don't see each other
-       in the normal air-glass-water setting. */
-    cpar->mm->n2[0] = 1.0001;
-    cpar->mm->n3 = 1.0001;
-    
-    int i,j;
     /* Four cameras on 4 quadrants looking down into a calibration target.
        Calibration taken from an actual experimental setup */
-    frame_init(&frm, num_cams, 16);
+    frame_init(frm, cpar->num_cams, 16);
     
-    for (cam = 0; cam < num_cams; cam++) {
-        sprintf(ori_name, ori_tmpl, cam + 1);
-        calib[cam] = read_calibration(ori_name, "testing_fodder/cal/cam1.tif.addpar", NULL);
-        
-        frm.num_targets[cam] = 16;
+    for (cam = 0; cam < cpar->num_cams; cam++) {
+        frm->num_targets[cam] = 16;
         
         /* Construct a scene representing a calibration target, generate
            tergets for it, then use them to reconstruct correspondences. */
@@ -170,11 +149,11 @@ START_TEST(test_correspondences)
                 cpt_ix = cpt_horz*4 + cpt_vert;
                 if (cam % 2) cpt_ix = 15 - cpt_ix; /* Avoid symmetric case */
                 
-                targ = &(frm.targets[cam][cpt_ix]);
+                targ = &(frm->targets[cam][cpt_ix]);
                 targ->pnr = cpt_ix;
                 
                 vec_set(tmp, cpt_vert * 10, cpt_horz * 10, 0);
-                img_coord(tmp, calib[cam], &media_par, &(targ->x), &(targ->y));
+                img_coord(tmp, calib[cam], cpar->mm, &(targ->x), &(targ->y));
                 metric_to_pixel(&(targ->x), &(targ->y), targ->x, targ->y, cpar);
                 
                 /* These values work in check_epi, so used here too */
@@ -184,8 +163,38 @@ START_TEST(test_correspondences)
             }
         }
     }
+    return frm;
+}
+
+START_TEST(test_correspondences)
+{
+    frame *frm;
+    Calibration *calib[4];
+    volume_par *vpar;
+    control_par *cpar;
+    n_tupel *con;
+    int cam, match_counts[4];
     
-    con = correspondences(&frm, vpar, cpar, calib, match_counts);
+    char ori_tmpl[] = "testing_fodder/cal/sym_cam%d.tif.ori";
+    char ori_name[40];
+    
+    n_tupel *corres;
+    
+    fail_if((cpar = read_control_par("testing_fodder/parameters/ptv.par"))== 0);
+    fail_if((vpar = read_volume_par("testing_fodder/parameters/criteria.par"))==0);
+    
+    /* Cameras are at so high angles that opposing cameras don't see each other
+       in the normal air-glass-water setting. */
+    cpar->mm->n2[0] = 1.0001;
+    cpar->mm->n3 = 1.0001;
+        
+    for (cam = 0; cam < cpar->num_cams; cam++) {
+        sprintf(ori_name, ori_tmpl, cam + 1);
+        calib[cam] = read_calibration(ori_name, "testing_fodder/cal/cam1.tif.addpar", NULL);
+    }
+    
+    frm = generate_test_set(calib, cpar, vpar);
+    con = correspondences(frm, vpar, cpar, calib, match_counts);
     
     /* The example set is built to have all 16 quadruplets. */
     fail_unless(match_counts[0] == 16);
