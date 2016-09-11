@@ -14,17 +14,12 @@
 #include <unistd.h>
 #include <math.h>
 
-#include "orientation.h"
 #include "calibration.h"
 #include "vec_utils.h"
 #include "parameters.h"
 #include "imgcoord.h"
-#include "sortgrid.h"
 #include "trafo.h"
 #include "correspondences.h"
-
-#define RO 200./M_PI
-
 
 START_TEST(test_qs_target_y)
 {
