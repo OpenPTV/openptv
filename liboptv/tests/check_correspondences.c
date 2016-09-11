@@ -161,6 +161,50 @@ frame *generate_test_set(Calibration *calib[4], control_par *cpar,
     return frm;
 }
 
+/*  correct_frame() performs the transition from pixel to metric to flat 
+    coordinates and x-sorting as required by the correspondence code.
+    
+    Arguments:
+    frame *frm - target information for all cameras.
+    control_par *cpar - parameters of image size, pixel size etc.
+    tol - tolerance parameter for iterative flattening phase, see 
+        trafo.h:correct_brown_affine_exact().
+*/
+coord_2d **correct_frame(frame *frm, Calibration *calib[], control_par *cpar, 
+    double tol) 
+{
+    coord_2d **corrected;
+    int cam, part;
+    
+    corrected = (coord_2d **) malloc(cpar->num_cams * sizeof(coord_2d *));
+    for (cam = 0; cam < cpar->num_cams; cam++) {
+        corrected[cam] = (coord_2d *) malloc(
+            frm->num_targets[cam] * sizeof(coord_2d));
+        if (corrected[cam] == NULL) {
+            /* roll back allocations and fail */
+            for (cam -= 1; cam >= 0; cam--) free(corrected[cam]);
+            free(corrected);
+            return NULL;
+        }
+        
+        for (part = 0; part < frm->num_targets[cam]; part++) {
+            pixel_to_metric(&corrected[cam][part].x, &corrected[cam][part].y,
+                          frm->targets[cam][part].x, frm->targets[cam][part].y,
+                          cpar);
+            
+            dist_to_flat(corrected[cam][part].x, corrected[cam][part].y,
+                calib[cam], &corrected[cam][part].x, &corrected[cam][part].y,
+                tol);
+        
+            corrected[cam][part].pnr = frm->targets[cam][part].pnr;
+        }
+        
+        /* This is expected by find_candidate() */
+        quicksort_coord2d_x(corrected[cam], frm->num_targets[cam]);
+    }
+    return corrected;
+}
+
 START_TEST(test_pairwise_matching)
 {
     frame *frm;
@@ -188,28 +232,7 @@ START_TEST(test_pairwise_matching)
     }
     frm = generate_test_set(calib, cpar, vpar);
     
-    corrected = (coord_2d **) malloc(cpar->num_cams * sizeof(coord_2d *));
-    for (cam = 0; cam < cpar->num_cams; cam++) {
-        fail_unless(corrected[cam] = (coord_2d *) malloc(
-            frm->num_targets[cam] * sizeof(coord_2d)));
-        
-        for (part = 0; part < frm->num_targets[cam]; part++) {
-            pixel_to_metric(&corrected[cam][part].x, 
-                          &corrected[cam][part].y,
-                          frm->targets[cam][part].x, 
-                          frm->targets[cam][part].y,
-                          cpar);
-                            
-            dist_to_flat(corrected[cam][part].x, corrected[cam][part].y,
-                calib[cam], &corrected[cam][part].x, &corrected[cam][part].y,
-                0.00001);
-          
-            corrected[cam][part].pnr = frm->targets[cam][part].pnr;
-        }
-        
-        /* This is expected by find_candidate() */
-        quicksort_coord2d_x(corrected[cam], frm->num_targets[cam]);
-    }
+    corrected = correct_frame(frm, calib, cpar, 0.0001);
     safely_allocate_adjacency_lists(list, cpar->num_cams, frm->num_targets);
     
     match_pairs(list, corrected, frm, vpar, cpar, calib);
@@ -238,6 +261,12 @@ START_TEST(test_pairwise_matching)
             }
         }
     }
+    
+    /* Clean up */
+    for (cam = 0; cam < cpar->num_cams; cam++) 
+        free(corrected[cam]);
+    free(corrected);
+    deallocate_adjacency_lists(list, cpar->num_cams);
 }
 END_TEST
 
