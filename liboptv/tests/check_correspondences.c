@@ -276,6 +276,7 @@ START_TEST(test_correspondences)
     Calibration *calib[4];
     volume_par *vpar;
     control_par *cpar;
+    coord_2d **corrected;
     n_tupel *con;
     int cam, match_counts[4];
     
@@ -298,7 +299,8 @@ START_TEST(test_correspondences)
     }
     
     frm = generate_test_set(calib, cpar, vpar);
-    con = correspondences(frm, vpar, cpar, calib, match_counts);
+    corrected = correct_frame(frm, calib, cpar, 0.0001);
+    con = correspondences(frm, corrected, vpar, cpar, calib, match_counts);
     
     /* The example set is built to have all 16 quadruplets. */
     fail_unless(match_counts[0] == 16);

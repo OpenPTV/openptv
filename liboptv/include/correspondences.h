@@ -40,8 +40,9 @@ void quicksort_con (n_tupel	*con, int num);
 void qs_con (n_tupel *con, int left, int right);
 
 
-n_tupel *correspondences (frame *frm, volume_par *vpar, control_par *cpar, 
-    Calibration **calib, int match_counts[]);
+n_tupel *correspondences (frame *frm, coord_2d **corrected, 
+    volume_par *vpar, control_par *cpar, Calibration **calib,
+    int match_counts[]);
 
 
 /* subcomponents of correspondences, may be separately useful. */

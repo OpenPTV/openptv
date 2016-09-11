@@ -389,16 +389,15 @@ void match_pairs(correspond *list[4][4], coord_2d **corrected,
 /*         Full correspondence process                                      */
 /****************************************************************************/
 
-n_tupel *correspondences (frame *frm, volume_par *vpar, control_par *cpar, 
-  Calibration **calib, int match_counts[]) 
+n_tupel *correspondences (frame *frm, coord_2d **corrected, 
+  volume_par *vpar, control_par *cpar, Calibration **calib, int match_counts[])
 {
-  int 	i,j,k,m,n,i1,i2,i3,cam,part;
+  int 	i,j,k,m,n,i1,i2,i3,cam;
   int   match=0, match0=0, match4=0, match3=0, match2=0, match1=0;
   int 	p1,p2,p3,p4, p31;
   double       	corr;
   n_tupel     	*con0, *con;
   correspond  	*list[4][4];
-  coord_2d **corrected;
   int **tim;
   
   /* Allocation of scratch buffers for internal tasks and return-value 
@@ -435,44 +434,6 @@ n_tupel *correspondences (frame *frm, volume_par *vpar, control_par *cpar,
         con0[i].p[j] = -1;
     }
     con0[i].corr = 0.0;
-  }
-
-  /*  We work on distortion-corrected image coordinates of particles.
-      This loop does the correction and also sets point numbers correctly.
-      I have a feeling that this should not happen here, because the correction
-      is used both for this and for point positions, so the function should 
-      receive it as argument.
-  */
-  
-  corrected = (coord_2d **) malloc(cpar->num_cams * sizeof(coord_2d *));
-  for (cam = 0; cam < cpar->num_cams; cam++) {
-      corrected[cam] = (coord_2d *) malloc(
-          frm->num_targets[cam] * sizeof(coord_2d));
-      if (corrected[cam] == NULL){
-          fprintf(stderr, "corrected is not allocated");
-          deallocate_adjacency_lists(list, cpar->num_cams);
-          deallocate_target_usage_marks(tim, cpar->num_cams);
-          free(con0);
-          free(con);
-          return NULL;
-      }
-            
-      for (part = 0; part < frm->num_targets[cam]; part++) {
-          pixel_to_metric(&corrected[cam][part].x, 
-                          &corrected[cam][part].y,
-                          frm->targets[cam][part].x, 
-                          frm->targets[cam][part].y,
-                          cpar);
-                            
-          dist_to_flat(corrected[cam][part].x, corrected[cam][part].y,
-              calib[cam], &corrected[cam][part].x, &corrected[cam][part].y,
-              0.00001);
-          
-          corrected[cam][part].pnr = frm->targets[cam][part].pnr;
-      }
-        
-      /* This is expected by find_candidate() */
-      quicksort_coord2d_x(corrected[cam], frm->num_targets[cam]);
   }
 
   /* Generate adjacency lists: mark candidates for correspondence.
