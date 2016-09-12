@@ -327,7 +327,7 @@ int four_camera_matching(correspond *list[4][4], int base_target_count,
                   
                   matched++;
                   if (matched == scratch_size) {
-                      printf ("Overflow in correspondences.");
+                      printf ("Overflow in correspondences.\n");
                       return matched;
                   }
               }
@@ -379,7 +379,7 @@ void match_pairs(correspond *list[4][4], coord_2d **corrected,
                     list[i1][i2][i].corr[j] = cand[j].corr;
                     list[i1][i2][i].dist[j] = cand[j].tol;
                 }
-	        list[i1][i2][i].n = count;
+                list[i1][i2][i].n = count;
             }
         }
     }
