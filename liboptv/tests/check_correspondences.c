@@ -270,6 +270,51 @@ START_TEST(test_pairwise_matching)
 }
 END_TEST
 
+START_TEST(test_four_camera_matching)
+{
+    frame *frm;
+    Calibration *calib[4];
+    volume_par *vpar;
+    control_par *cpar;
+    correspond *list[4][4];
+    coord_2d **corrected;
+    n_tupel *con;
+    int cam, matched;
+    
+    char ori_tmpl[] = "testing_fodder/cal/sym_cam%d.tif.ori";
+    char ori_name[40];
+    
+    fail_if((cpar = read_control_par("testing_fodder/parameters/ptv.par"))== 0);
+    fail_if((vpar = read_volume_par("testing_fodder/parameters/criteria.par"))==0);
+    
+    /* Cameras are at so high angles that opposing cameras don't see each other
+       in the normal air-glass-water setting. */
+    cpar->mm->n2[0] = 1.0001;
+    cpar->mm->n3 = 1.0001;
+    
+    for (cam = 0; cam < cpar->num_cams; cam++) {
+        sprintf(ori_name, ori_tmpl, cam + 1);
+        calib[cam] = read_calibration(ori_name, "testing_fodder/cal/cam1.tif.addpar", NULL);
+    }
+    frm = generate_test_set(calib, cpar, vpar);
+
+    corrected = correct_frame(frm, calib, cpar, 0.0001);
+    safely_allocate_adjacency_lists(list, cpar->num_cams, frm->num_targets);
+    match_pairs(list, corrected, frm, vpar, cpar, calib);
+    
+    con = (n_tupel *) malloc(16*sizeof(n_tupel));
+    matched = four_camera_matching(list, 16, 1., con, 16);
+
+    fail_unless(matched == 16);
+    
+    /* Clean up */
+    for (cam = 0; cam < cpar->num_cams; cam++) 
+        free(corrected[cam]);
+    deallocate_adjacency_lists(list, cpar->num_cams);
+    free(con);
+}
+END_TEST
+
 START_TEST(test_correspondences)
 {
     frame *frm;
@@ -338,6 +383,10 @@ Suite* orient_suite(void) {
     tcase_add_test(tc, test_pairwise_matching);
     suite_add_tcase (s, tc);
     
+    tc = tcase_create ("four camera matching");
+    tcase_add_test(tc, test_four_camera_matching);
+    suite_add_tcase (s, tc);
+
     return s;
 }
 
