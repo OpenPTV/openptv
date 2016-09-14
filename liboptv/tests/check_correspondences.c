@@ -119,6 +119,18 @@ END_TEST
 
 /* Tests of correspondence components and full process using dummy data */
 
+void read_all_calibration(Calibration *calib[4], control_par *cpar) {
+    char ori_tmpl[] = "testing_fodder/cal/sym_cam%d.tif.ori";
+    char added_name[] = "testing_fodder/cal/cam1.tif.addpar";
+    char ori_name[40];
+    int cam;
+    
+    for (cam = 0; cam < cpar->num_cams; cam++) {
+        sprintf(ori_name, ori_tmpl, cam + 1);
+        calib[cam] = read_calibration(ori_name, added_name, NULL);
+    }
+}
+
 /* generate_test_set() generates data for targets on 4 cameras. The targets
  * Are organized on a 4x4 grid, 10mm apart.
  */
@@ -215,9 +227,6 @@ START_TEST(test_pairwise_matching)
     coord_2d **corrected;
     int cam, subcam, part, cand, correct_pnr;
     
-    char ori_tmpl[] = "testing_fodder/cal/sym_cam%d.tif.ori";
-    char ori_name[40];
-    
     fail_if((cpar = read_control_par("testing_fodder/parameters/ptv.par"))== 0);
     fail_if((vpar = read_volume_par("testing_fodder/parameters/criteria.par"))==0);
     
@@ -226,10 +235,7 @@ START_TEST(test_pairwise_matching)
     cpar->mm->n2[0] = 1.0001;
     cpar->mm->n3 = 1.0001;
     
-    for (cam = 0; cam < cpar->num_cams; cam++) {
-        sprintf(ori_name, ori_tmpl, cam + 1);
-        calib[cam] = read_calibration(ori_name, "testing_fodder/cal/cam1.tif.addpar", NULL);
-    }
+    read_all_calibration(calib, cpar);
     frm = generate_test_set(calib, cpar, vpar);
     
     corrected = correct_frame(frm, calib, cpar, 0.0001);
@@ -281,9 +287,6 @@ START_TEST(test_four_camera_matching)
     n_tupel *con;
     int cam, matched;
     
-    char ori_tmpl[] = "testing_fodder/cal/sym_cam%d.tif.ori";
-    char ori_name[40];
-    
     fail_if((cpar = read_control_par("testing_fodder/parameters/ptv.par"))== 0);
     fail_if((vpar = read_volume_par("testing_fodder/parameters/criteria.par"))==0);
     
@@ -292,10 +295,7 @@ START_TEST(test_four_camera_matching)
     cpar->mm->n2[0] = 1.0001;
     cpar->mm->n3 = 1.0001;
     
-    for (cam = 0; cam < cpar->num_cams; cam++) {
-        sprintf(ori_name, ori_tmpl, cam + 1);
-        calib[cam] = read_calibration(ori_name, "testing_fodder/cal/cam1.tif.addpar", NULL);
-    }
+    read_all_calibration(calib, cpar);
     frm = generate_test_set(calib, cpar, vpar);
 
     corrected = correct_frame(frm, calib, cpar, 0.0001);
@@ -325,11 +325,6 @@ START_TEST(test_correspondences)
     n_tupel *con;
     int cam, match_counts[4];
     
-    char ori_tmpl[] = "testing_fodder/cal/sym_cam%d.tif.ori";
-    char ori_name[40];
-    
-    n_tupel *corres;
-    
     fail_if((cpar = read_control_par("testing_fodder/parameters/ptv.par"))== 0);
     fail_if((vpar = read_volume_par("testing_fodder/parameters/criteria.par"))==0);
     
@@ -338,11 +333,7 @@ START_TEST(test_correspondences)
     cpar->mm->n2[0] = 1.0001;
     cpar->mm->n3 = 1.0001;
         
-    for (cam = 0; cam < cpar->num_cams; cam++) {
-        sprintf(ori_name, ori_tmpl, cam + 1);
-        calib[cam] = read_calibration(ori_name, "testing_fodder/cal/cam1.tif.addpar", NULL);
-    }
-    
+    read_all_calibration(calib, cpar);
     frm = generate_test_set(calib, cpar, vpar);
     corrected = correct_frame(frm, calib, cpar, 0.0001);
     con = correspondences(frm, corrected, vpar, cpar, calib, match_counts);
