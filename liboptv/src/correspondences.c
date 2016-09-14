@@ -338,6 +338,65 @@ int four_camera_matching(correspond *list[4][4], int base_target_count,
     return matched;
 }
 
+int three_camera_matching(correspond *list[4][4], int num_cams, 
+    int *target_counts, double accept_corr, n_tupel *scratch, int scratch_size,
+    int** tusage)
+{
+    int matched = 0;
+    int i1, i2, i3, n; /* camera indices */
+    int i, j, k, m; /* corresp. target indices */
+    int p1, p2, p3; /* pair indicators */
+    double corr;
+    
+    for (i1 = 0; i1 < num_cams - 2; i1++)
+        for (i = 0; i < target_counts[i1]; i++) {            
+            for (i2 = i1 + 1; i2 < num_cams - 1; i2++)
+                p1 = list[i1][i2][i].p1;
+                if (p1 > nmax || tusage[i1][p1] > 0) continue;
+
+                for (j = 0; j < list[i1][i2][i].n; j++) {
+                    p2 = list[i1][i2][i].p2[j];
+                    if (p2 > nmax || tusage[i2][p2] > 0) continue;
+
+                    for (i3 = i2 + 1; i3 < num_cams; i3++)
+                        for (k = 0; k < list[i1][i3][i].n; k++) {
+                            p3 = list[i1][i3][i].p2[k];
+                            if (p3 > nmax || tusage[i3][p3] > 0) continue;
+						  						  
+                            for (m = 0; m < list[i2][i3][p2].n; m++) {
+                                if (p3 != list[i2][i3][p2].p2[m]) continue;
+                                
+                                /* accept as preliminary match */
+                                corr = (list[i1][i2][i].corr[j]
+                                    + list[i1][i3][i].corr[k]
+                                    + list[i2][i3][p2].corr[m])
+                                    / (list[i1][i2][i].dist[j]
+                                    + list[i1][i3][i].dist[k]
+                                    + list[i2][i3][p2].dist[m]);
+                                
+                                if (corr <= accept_corr)
+                                    continue;
+                                
+                                /* This to catch the 4th (excluded )camera */
+                                for (n = 0; n < num_cams; n++) 
+                                    scratch[matched].p[n] = -2;
+                                
+                                scratch[matched].p[i1] = p1;
+                                scratch[matched].p[i2] = p2;
+                                scratch[matched].p[i3] = p3;
+                                scratch[matched].corr = corr;
+                                
+                                matched++;
+                                if (matched == scratch_size) {
+                                    printf ("Overflow in correspondences.\n");
+                                    return matched;
+                                }
+                            }
+                    }
+            }
+    }
+    return matched;
+}
 
 /****************************************************************************/
 /*         Other components of the correspondence process                   */
@@ -459,75 +518,30 @@ n_tupel *correspondences (frame *frm, coord_2d **corrected,
 	}
  
     match4 = match;
- }
+  }
 
-/*   search consistent triplets :  123, 124, 134, 234 */
-  if ((cpar->num_cams == 4 && cpar->allCam_flag == 0) || cpar->num_cams == 3)
-    {
-      //printf("Search consistent triplets \n");
-      match0 = 0;
-      for (i1 = 0; i1 < cpar->num_cams - 2; i1++)
-        for (i2 = i1 + 1; i2 < cpar->num_cams - 1; i2++)
-           for (i3 = i2 + 1; i3 < cpar->num_cams; i3++)
-				for (i=0; i<frm->num_targets[i1]; i++){
-					 p1 = list[i1][i2][i].p1;
-					 if (p1 > nmax  ||  tim[i1][p1] > 0)	continue;
+  /*   search consistent triplets :  123, 124, 134, 234 */
+  if ((cpar->num_cams == 4 && cpar->allCam_flag == 0) || cpar->num_cams == 3) {
+    match0 = three_camera_matching(list, cpar->num_cams, frm->num_targets, 
+        vpar->corrmin, con0, 4*nmax, tim);
+    
+    /* sort triplets for match quality (.corr) */
+    quicksort_con (con0, match0);
 
-					 for (j=0; j<list[i1][i2][i].n; j++)
-					  for (k=0; k<list[i1][i3][i].n; k++) {
-						  p2 = list[i1][i2][i].p2[j];
-						  if (p2 > nmax  ||  tim[i2][p2] > 0)	continue;
-						  p3 = list[i1][i3][i].p2[k];
-						  if (p3 > nmax  ||  tim[i3][p3] > 0)	continue;
-						  						  
-						  for (m=0; m<list[i2][i3][p2].n; m++) {
-						     p31 = list[i2][i3][p2].p2[m];
-						     
-						     if (p3 == p31) {
-							    corr = (list[i1][i2][i].corr[j]
-								  + list[i1][i3][i].corr[k]
-								  + list[i2][i3][p2].corr[m])
-							    / (list[i1][i2][i].dist[j]
-							    + list[i1][i3][i].dist[k]
-							    + list[i2][i3][p2].dist[m]);
-							  if (corr > vpar->corrmin) {
-								for (n = 0; n < cpar->num_cams; n++) con0[match0].p[n] = -2;
-									con0[match0].p[i1] = p1;
-									con0[match0].p[i2] = p2;
-									con0[match0].p[i3] = p3;
-									con0[match0++].corr = corr;
-								}
-								if (match0 == 4*nmax) {   /* security */
-									printf ("Overflow in correspondences:\n");
-									printf (" > %d matches\n", match0);
-									i = frm->num_targets[i1]; /* Break out of the outer loop over i */
-								}
-							}
-						  }
-					    }
-					}
-/*       sort triplets for match quality (.corr) */
-       quicksort_con (con0, match0);
+    /* take triplets from the top to the bottom of the sorted list 
+       only if none of the points has already been used */
+    for (i = 0; i < match0; i++){
+        p1 = con0[i].p[0];	if (p1 > -1)	if (++tim[0][p1] > 1)	continue;
+        p2 = con0[i].p[1];	if (p2 > -1)	if (++tim[1][p2] > 1)	continue;
+        p3 = con0[i].p[2];	if (p3 > -1)	if (++tim[2][p3] > 1)	continue;
+        p4 = con0[i].p[3];	if (p4 > -1  && cpar->num_cams > 3) if (++tim[3][p4] > 1) continue;
 
-/*     pragmatic version: 
-       take triplets from the top to the bottom of the sorted list 
-       only if none of the points has already been used 
-*/
-      for (i=0; i<match0; i++){
-		  p1 = con0[i].p[0];	if (p1 > -1)	if (++tim[0][p1] > 1)	continue;
-		  p2 = con0[i].p[1];	if (p2 > -1)	if (++tim[1][p2] > 1)	continue;
-		  p3 = con0[i].p[2];	if (p3 > -1)	if (++tim[2][p3] > 1)	continue;
-		  p4 = con0[i].p[3];	if (p4 > -1  && cpar->num_cams > 3) if (++tim[3][p4] > 1) continue;
-
-		  con[match] = con0[i];
-		  match++;
-	  }
-
-      match3 = match - match4;
-
-      /* repair artifact (?) */
-      if (cpar->num_cams == 3) for (i=0; i<match; i++)	con[i].p[3] = -1;
+        con[match] = con0[i];
+        match++;
     }
+
+    match3 = match - match4;
+}
   
 /*   search consistent pairs :  12, 13, 14, 23, 24, 34 
       only if an object model is available or if only 2 images are used 
