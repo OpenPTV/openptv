@@ -464,6 +464,42 @@ void match_pairs(correspond *list[4][4], coord_2d **corrected,
     }
 }
 
+int take_best_candidates(n_tupel *src, n_tupel *dst, 
+    int num_cams, int num_cands, int **tusage) 
+{
+    int cand, cam, tnum, has_used_target, taken = 0;
+    
+    /* sort candidates by match quality (.corr) */
+    quicksort_con (src, num_cands);
+    
+    /*  take quadruplets from the top to the bottom of the sorted list
+        only if none of the points has already been used */
+    for (cand = 0; cand < num_cands; cand++) {
+        has_used_target = 0;
+        for (cam = 0; cam < num_cams; cam++) {
+            tnum = src[cand].p[cam];
+            
+            /* if any correspondence in this camera, check that target is free */
+            if ((tnum > -1) && (tusage[cam][tnum] > 0)) {
+                has_used_target = 1;
+                break;
+            }
+        }
+        
+        if (has_used_target == 1) continue;
+        
+        /* Only now can we commit to marking used targets. */
+        for (cam = 0; cam < num_cams; cam++) {
+            tnum = src[cand].p[cam];
+            if (tnum > -1)
+                tusage[cam][tnum]++;
+        }
+        dst[taken] = src[cand];
+        taken++;
+    }
+    return taken;
+}
+
 /****************************************************************************/
 /*         Full correspondence process                                      */
 /****************************************************************************/
@@ -524,20 +560,8 @@ n_tupel *correspondences (frame *frm, coord_2d **corrected,
     match0 = four_camera_matching(list, frm->num_targets[0], 
         vpar->corrmin, con0, 4*nmax);
     
-    /* sort quadruplets for match quality (.corr) */
-    quicksort_con (con0, match0);
-
-    /*  take quadruplets from the top to the bottom of the sorted list
-        only if none of the points has already been used */
-    for (i = 0; i < match0; i++) {
-        p1 = con0[i].p[0];	if (p1 > -1)	if (++tim[0][p1] > 1)	continue;
-        p2 = con0[i].p[1];	if (p2 > -1)	if (++tim[1][p2] > 1)	continue;
-        p3 = con0[i].p[2];	if (p3 > -1)	if (++tim[2][p3] > 1)	continue;
-        p4 = con0[i].p[3];	if (p4 > -1)	if (++tim[3][p4] > 1)	continue;
-        con[match++] = con0[i];
-	}
- 
-    match4 = match;
+    match4 = take_best_candidates(con0, con, cpar->num_cams, match0, tim);
+    match += match4;
   }
 
   /*   search consistent triplets :  123, 124, 134, 234 */
@@ -545,23 +569,10 @@ n_tupel *correspondences (frame *frm, coord_2d **corrected,
     match0 = three_camera_matching(list, cpar->num_cams, frm->num_targets, 
         vpar->corrmin, con0, 4*nmax, tim);
     
-    /* sort triplets for match quality (.corr) */
-    quicksort_con (con0, match0);
-
-    /* take triplets from the top to the bottom of the sorted list 
-       only if none of the points has already been used */
-    for (i = 0; i < match0; i++){
-        p1 = con0[i].p[0];	if (p1 > -1)	if (++tim[0][p1] > 1)	continue;
-        p2 = con0[i].p[1];	if (p2 > -1)	if (++tim[1][p2] > 1)	continue;
-        p3 = con0[i].p[2];	if (p3 > -1)	if (++tim[2][p3] > 1)	continue;
-        p4 = con0[i].p[3];	if (p4 > -1  && cpar->num_cams > 3) if (++tim[3][p4] > 1) continue;
-
-        con[match] = con0[i];
-        match++;
-    }
-
-    match3 = match - match4;
-}
+    match3 = take_best_candidates(con0, &(con[match]), 
+        cpar->num_cams, match0, tim);
+    match += match3;
+  }
   
 /*   search consistent pairs :  12, 13, 14, 23, 24, 34 
       only if an object model is available or if only 2 images are used 

@@ -362,7 +362,6 @@ START_TEST(test_three_camera_matching)
     matched = three_camera_matching(list, 4, frm->num_targets, 100000., con, 
         4*16, tusage);
     
-    printf("matched %d\n", matched);
     fail_unless(matched == 16);
     
     /* Clean up */
