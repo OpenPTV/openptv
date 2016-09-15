@@ -338,6 +338,24 @@ int four_camera_matching(correspond *list[4][4], int base_target_count,
     return matched;
 }
 
+/*  three_camera_matching() marks candidate 3-cliques found from adjacency 
+    lists.
+    
+    Arguments:
+    correspond *list[4][4] - the pairwise adjacency lists.
+    int num_cams - the number of cameras in the scene.
+    int *target_counts - number of turgets in each camera.
+    double accept_corr - minimal correspondence grade for acceptance.
+    n_tupel *scratch - scratch buffer to fill with candidate clique data.
+    int scratch_size - size of the scratch space. Upon reaching it, the search
+        is terminated and only the candidates found by then are returned.
+    int **tusage - record of currently used/unused targets in each camera.
+        Targets that are already marked used (e.g. by quadruplets) will not be
+        taken to build triplets.
+    
+    Returns:
+    int, the number of candidate cliques found.
+*/
 int three_camera_matching(correspond *list[4][4], int num_cams, 
     int *target_counts, double accept_corr, n_tupel *scratch, int scratch_size,
     int** tusage)
@@ -348,12 +366,12 @@ int three_camera_matching(correspond *list[4][4], int num_cams,
     int p1, p2, p3; /* pair indicators */
     double corr;
     
-    for (i1 = 0; i1 < num_cams - 2; i1++)
-        for (i = 0; i < target_counts[i1]; i++) {            
-            for (i2 = i1 + 1; i2 < num_cams - 1; i2++)
+    for (i1 = 0; i1 < num_cams - 2; i1++) {
+        for (i = 0; i < target_counts[i1]; i++) {
+            for (i2 = i1 + 1; i2 < num_cams - 1; i2++) {
                 p1 = list[i1][i2][i].p1;
                 if (p1 > nmax || tusage[i1][p1] > 0) continue;
-
+                
                 for (j = 0; j < list[i1][i2][i].n; j++) {
                     p2 = list[i1][i2][i].p2[j];
                     if (p2 > nmax || tusage[i2][p2] > 0) continue;
@@ -393,7 +411,9 @@ int three_camera_matching(correspond *list[4][4], int num_cams,
                                 }
                             }
                     }
+                }
             }
+        }
     }
     return matched;
 }

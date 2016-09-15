@@ -315,6 +315,67 @@ START_TEST(test_four_camera_matching)
 }
 END_TEST
 
+START_TEST(test_three_camera_matching)
+{
+    /* the overall setup is the same as the 4-camera test, with the following
+       changes: targets are darkenned in one camera to get 3*16 triplets;
+       one target is marked as used to reduce it to 15 trips.*/
+    frame *frm;
+    target *targ;
+    
+    Calibration *calib[4];
+    volume_par *vpar;
+    control_par *cpar;
+    
+    correspond *list[4][4];
+    coord_2d **corrected;
+    n_tupel *con;
+    int **tusage;
+    
+    int cam, matched, part;
+    
+    fail_if((cpar = read_control_par("testing_fodder/parameters/ptv.par"))== 0);
+    fail_if((vpar = read_volume_par("testing_fodder/parameters/criteria.par"))==0);
+    
+    cpar->mm->n2[0] = 1.0001;
+    cpar->mm->n3 = 1.0001;
+    
+    read_all_calibration(calib, cpar);
+    frm = generate_test_set(calib, cpar, vpar);
+    
+    /* Darken cam 2 below acceptance.*/
+    for (part = 0; part < frm->num_targets[1]; part++) {
+        targ = &(frm->targets[1][part]);
+        targ->n = 0;
+        targ->nx = targ->ny = 0;
+        targ->sumg = 0;
+    }
+
+    corrected = correct_frame(frm, calib, cpar, 0.0001);
+    safely_allocate_adjacency_lists(list, cpar->num_cams, frm->num_targets);
+    match_pairs(list, corrected, frm, vpar, cpar, calib);
+    
+    con = (n_tupel *) malloc(4*16*sizeof(n_tupel));
+    tusage = safely_allocate_target_usage_marks(cpar->num_cams);
+    
+    /* high accept corr bcz of closeness to epipolar lines. */
+    matched = three_camera_matching(list, 4, frm->num_targets, 100000., con, 
+        4*16, tusage);
+    
+    printf("matched %d\n", matched);
+    fail_unless(matched == 16);
+    
+    /* Clean up */
+    for (cam = 0; cam < cpar->num_cams; cam++) 
+        free(corrected[cam]);
+    deallocate_adjacency_lists(list, cpar->num_cams);
+    deallocate_target_usage_marks(tusage, cpar->num_cams);
+    free(con);
+    free(vpar);
+    free_control_par(cpar);
+}
+END_TEST
+
 START_TEST(test_correspondences)
 {
     frame *frm;
@@ -377,7 +438,10 @@ Suite* orient_suite(void) {
     tc = tcase_create ("four camera matching");
     tcase_add_test(tc, test_four_camera_matching);
     suite_add_tcase (s, tc);
-
+    
+    tc = tcase_create ("Three camera matching");
+    tcase_add_test(tc, test_three_camera_matching);
+    suite_add_tcase (s, tc);
     return s;
 }
 

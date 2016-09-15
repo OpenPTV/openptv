@@ -46,6 +46,8 @@ n_tupel *correspondences (frame *frm, coord_2d **corrected,
 
 
 /* subcomponents of correspondences, may be separately useful. */
+int** safely_allocate_target_usage_marks(int num_cams);
+void deallocate_target_usage_marks(int** tusage, int num_cams);
 
 int safely_allocate_adjacency_lists(correspond* lists[4][4], int num_cams, 
     int *target_counts);
@@ -53,6 +55,9 @@ void deallocate_adjacency_lists(correspond* lists[4][4], int num_cams);
 
 int four_camera_matching(correspond *list[4][4], int base_target_count, 
     double accept_corr, n_tupel *scratch, int scratch_size);
+int three_camera_matching(correspond *list[4][4], int num_cams, 
+    int *target_counts, double accept_corr, n_tupel *scratch, int scratch_size,
+    int** tusage);
 
 void match_pairs(correspond *list[4][4], coord_2d **corrected, 
     frame *frm, volume_par *vpar, control_par *cpar, Calibration **calib);
