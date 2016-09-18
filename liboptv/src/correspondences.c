@@ -395,7 +395,7 @@ int three_camera_matching(correspond *list[4][4], int num_cams,
                                 if (corr <= accept_corr)
                                     continue;
                                 
-                                /* This to catch the 4th (excluded )camera */
+                                /* This to catch the 4th (excluded) camera */
                                 for (n = 0; n < num_cams; n++) 
                                     scratch[matched].p[n] = -2;
                                 
@@ -422,6 +422,21 @@ int three_camera_matching(correspond *list[4][4], int num_cams,
 /*         Other components of the correspondence process                   */
 /****************************************************************************/
 
+/*  match_pairs() finds for each target in each source camera the candidate
+    targets for correspondence on the other cameras by projecting epipolar 
+    lines.
+    
+    Arguments:
+    correspond *list[4][4] - pairwise adjacency lists to be filled with the
+        results. Each is a buffer long enough to contain data for all targets
+        in the source camera of the pair.
+    coord_2d **corrected - the flat-image metric coordinates of targets, by
+        camera, x-sorted. Epipolar lines are projected in flat coordinates.
+    frame *frm - frame data and reference target properties (similarity of
+        size and brightness are used to determine correlation score).
+    volume_par *vpar, control_par *cpar, Calibration **calib - scene 
+        parameters.
+*/
 void match_pairs(correspond *list[4][4], coord_2d **corrected, 
     frame *frm, volume_par *vpar, control_par *cpar, Calibration **calib) 
 {
@@ -464,6 +479,26 @@ void match_pairs(correspond *list[4][4], coord_2d **corrected,
     }
 }
 
+/*  take_best_candidates() takes candidates out of a candidate list by their
+    correlation measure. A candidate is not taken if it has been marked used
+    for a larger clique or for a same-size clique with a better correlation 
+    score.
+    
+    Arguments:
+    n_tupel *src - the array of candidates. sorted in place by correlation 
+        score.
+    n_tupel *dst - an array to receive the chosen cliques in order. Must have
+        enough space allocated.
+    int num_cams - the number of cameras in the scene, which defines the size
+        of other parameters.
+    int num_cands - number of elements in ``src``.
+    int **tusage - record of currently used/unused targets in each camera.
+        Targets that are already marked used (e.g. by quadruplets) will not be
+        taken.
+    
+    Returns:
+    the number of cliques taken from the candidate list.
+*/
 int take_best_candidates(n_tupel *src, n_tupel *dst, 
     int num_cams, int num_cands, int **tusage) 
 {
