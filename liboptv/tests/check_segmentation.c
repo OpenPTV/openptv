@@ -87,28 +87,32 @@ START_TEST(test_targ_rec)
         .cr_sz = 13 };
     
                 
-   ntargets = targ_rec (img, &targ_par, 0, cpar.imx, 0, cpar.imy, &cpar, 0, pix);
-   fail_unless(ntargets == 1);
-   fail_unless(pix[0].n == 9);
+    ntargets = targ_rec (img, &targ_par, 0, cpar.imx, 0, cpar.imy, &cpar, 0, pix);
+    fail_unless(ntargets == 1);
+    fail_unless(pix[0].n == 9);
    
-   /* test the two objects */
-     unsigned char img1[5][5] = {
+    /* test the two objects */
+    unsigned char img1[5][5] = {
         { 0,   0,   0,   0, 0},
         { 0, 255, 0, 0, 0},
         { 0, 0, 0, 0, 0},
         { 0, 0, 0, 251, 0},
         { 0,   0,   0,   0, 0}
     };
-   ntargets = targ_rec (img1, &targ_par, 0, cpar.imx, 0, cpar.imy, &cpar, 1, 
+    ntargets = targ_rec (img1, &targ_par, 0, cpar.imx, 0, cpar.imy, &cpar, 1, 
         pix);
-   fail_unless(ntargets == 2);
+    fail_unless(ntargets == 2);
    
-   targ_par.gvthres[1] = 252; 
-   ntargets = targ_rec ((unsigned char *)img1, &targ_par, 0, cpar.imx, 
+    targ_par.gvthres[1] = 252; 
+    ntargets = targ_rec ((unsigned char *)img1, &targ_par, 0, cpar.imx, 
         0, cpar.imy, &cpar, 1, pix);
-   fail_unless(ntargets == 1);
+    fail_unless(ntargets == 1);
 
-
+    /* Trip a segfault writing over the edge. */
+    img1[4][4] = 255;
+    ntargets = targ_rec (img1, &targ_par, 0, cpar.imx, 0, cpar.imy, &cpar, 1,
+        pix);
+    /* If execution reached here, test passed. */
 }
 END_TEST
 
