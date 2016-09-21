@@ -581,10 +581,9 @@ int take_best_candidates(n_tupel *src, n_tupel *dst,
 n_tupel *correspondences (frame *frm, coord_2d **corrected, 
   volume_par *vpar, control_par *cpar, Calibration **calib, int match_counts[])
 {
-  int 	i, j, p1;
-  int   match=0, match0=0, match4=0, match3=0, match2=0;
-  n_tupel     	*con0, *con;
-  correspond  	*list[4][4];
+  int 	i, j, p1, match0;
+  n_tupel *con0, *con;
+  correspond *list[4][4];
   int **tim;
   
   /* Allocation of scratch buffers for internal tasks and return-value 
@@ -617,11 +616,11 @@ n_tupel *correspondences (frame *frm, coord_2d **corrected,
 */     	
   for (i = 0; i < nmax; i++) {
     for (j = 0; j < cpar->num_cams; j++) {
-        tim[j][i] = 0;
         con0[i].p[j] = -1;
     }
     con0[i].corr = 0.0;
   }
+  match_counts[3] = 0;
 
   /* Generate adjacency lists: mark candidates for correspondence.
      matching  1 -> 2,3,4  +  2 -> 3,4  +  3 -> 4 */
@@ -632,8 +631,8 @@ n_tupel *correspondences (frame *frm, coord_2d **corrected,
     match0 = four_camera_matching(list, frm->num_targets[0], 
         vpar->corrmin, con0, 4*nmax);
     
-    match4 = take_best_candidates(con0, con, cpar->num_cams, match0, tim);
-    match += match4;
+    match_counts[0] = take_best_candidates(con0, con, cpar->num_cams, match0, tim);
+    match_counts[3] += match_counts[0];
   }
 
   /*   search consistent triplets :  123, 124, 134, 234 */
@@ -641,23 +640,23 @@ n_tupel *correspondences (frame *frm, coord_2d **corrected,
     match0 = three_camera_matching(list, cpar->num_cams, frm->num_targets, 
         vpar->corrmin, con0, 4*nmax, tim);
     
-    match3 = take_best_candidates(con0, &(con[match]), 
+    match_counts[1] = take_best_candidates(con0, &(con[match_counts[3]]), 
         cpar->num_cams, match0, tim);
-    match += match3;
+    match_counts[3] += match_counts[1];
   }
   
   /*   search consistent pairs :  12, 13, 14, 23, 24, 34 */
   if(cpar->num_cams > 1 && cpar->allCam_flag == 0) {
-    match0 = consistent_pair_matching(list, cpar->num_cams, 
-        frm->num_targets, vpar->corrmin, con0, 4*nmax, tim);
+      match0 = consistent_pair_matching(list, cpar->num_cams, 
+          frm->num_targets, vpar->corrmin, con0, 4*nmax, tim);
                 
-        match2 = take_best_candidates(con0, &(con[match]), 
-            cpar->num_cams, match0, tim);
-        match += match2;
+      match_counts[2] = take_best_candidates(con0, &(con[match_counts[3]]), 
+          cpar->num_cams, match0, tim);
+      match_counts[3] += match_counts[2];
   }
   
-  /*   give each used pix the correspondence number */
-  for (i = 0; i < match; i++) {
+  /* give each used pix the correspondence number */
+  for (i = 0; i < match_counts[3]; i++) {
       for (j = 0; j < cpar->num_cams; j++) {
           /* Skip cameras without a correspondence obviously. */
           if (con[i].p[j] < 0) continue;
@@ -668,20 +667,6 @@ n_tupel *correspondences (frame *frm, coord_2d **corrected,
           }
 	}
   }
-
-  int count1=0;
-  j = 0;
-  for (i = 0; i < frm->num_targets[j]; i++) {
-      p1 = frm->targets[j][i].tnr;
-      if (p1 == -1 ) count1++;
-  }
-  printf("unidentified objects = %d\n",count1);
-
-  /* Retun values: match counts of each clique size */
-  match_counts[0] = match4;
-  match_counts[1] = match3;
-  match_counts[2] = match2;
-  match_counts[3] = match;
   
   /* free all other allocations */
   deallocate_adjacency_lists(list, cpar->num_cams);
