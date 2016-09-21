@@ -418,6 +418,45 @@ int three_camera_matching(correspond *list[4][4], int num_cams,
     return matched;
 }
 
+int consistent_pair_matching(correspond *list[4][4], int num_cams, 
+    int *target_counts, double accept_corr, n_tupel *scratch, int scratch_size,
+    int** tusage)
+{
+    int matched = 0;
+    int i1, i2, n; /* camera indices */
+    int i, p1, p2;
+    double corr;
+    
+    for (i1 = 0; i1 < num_cams - 1; i1++) {
+        for (i2 = i1 + 1; i2 < num_cams; i2++) {
+            for (i=0; i < target_counts[i1]; i++) {
+                p1 = list[i1][i2][i].p1;
+                if (p1 > nmax || tusage[i1][p1] > 0) continue;
+
+                /* if the candidate is the only one, there is no ambiguity. 
+                   we only take unambiguous pairs.
+                */
+                if (list[i1][i2][i].n != 1) continue;
+
+                p2 = list[i1][i2][i].p2[0];
+                if (p2 > nmax || tusage[i2][p2] > 0) continue;
+
+                corr = list[i1][i2][i].corr[0] / list[i1][i2][i].dist[0];
+                if (corr <= accept_corr) continue;
+
+                /* This to catch the excluded cameras */
+                for (n = 0; n < num_cams; n++) 
+                    scratch[matched].p[n] = -2;
+                
+                scratch[matched].p[i1] = p1;
+                scratch[matched].p[i2] = p2;
+                scratch[matched].corr = corr;
+            }
+        }
+    }
+    return matched;
+}
+
 /****************************************************************************/
 /*         Other components of the correspondence process                   */
 /****************************************************************************/
@@ -542,10 +581,8 @@ int take_best_candidates(n_tupel *src, n_tupel *dst,
 n_tupel *correspondences (frame *frm, coord_2d **corrected, 
   volume_par *vpar, control_par *cpar, Calibration **calib, int match_counts[])
 {
-  int 	i,j,i1,i2,cam;
-  int   match=0, match0=0, match4=0, match3=0, match2=0, match1=0;
-  int 	p1,p2,p3,p4;
-  double       	corr;
+  int 	i, j, p1;
+  int   match=0, match0=0, match4=0, match3=0, match2=0;
   n_tupel     	*con0, *con;
   correspond  	*list[4][4];
   int **tim;
@@ -609,103 +646,43 @@ n_tupel *correspondences (frame *frm, coord_2d **corrected,
     match += match3;
   }
   
-/*   search consistent pairs :  12, 13, 14, 23, 24, 34 
-      only if an object model is available or if only 2 images are used 
-*/
-      if(cpar->num_cams > 1 && cpar->allCam_flag == 0){
-		  match0 = 0;
-		  for (i1 = 0; i1 < cpar->num_cams - 1; i1++)
-			if ( cpar->num_cams == 2 || (frm->num_targets[0] < 64 && 
-			frm->num_targets[1] < 64 && frm->num_targets[2] < 64 && 
-			frm->num_targets[3] < 64))
-			  for (i2 = i1 + 1; i2 < cpar->num_cams; i2++)
-			for (i=0; i<frm->num_targets[i1]; i++)
-			  {
-				p1 = list[i1][i2][i].p1;
-				if (p1 > nmax  ||  tim[i1][p1] > 0)	continue;
-
-				/* take only unambigous pairs */
-				if (list[i1][i2][i].n != 1)	continue;
-
-				p2 = list[i1][i2][i].p2[0];
-				if (p2 > nmax  ||  tim[i2][p2] > 0)	continue;
-
-				corr = list[i1][i2][i].corr[0] / list[i1][i2][i].dist[0];
-
-				if (corr > vpar->corrmin)
-				  {
-				con0[match0].p[i1] = p1;
-				con0[match0].p[i2] = p2;
-				con0[match0++].corr = corr;
-				  }
-			  }
-
-/* 		  sort pairs for match quality (.corr) */
- 		  quicksort_con (con0, match0);
-
-/* 		  take pairs from the top to the bottom of the sorted list 
- 		  only if none of the points has already been used 
-*/
-		  for (i=0; i<match0; i++) {
-			  p1 = con0[i].p[0];	if (p1 > -1)	if (++tim[0][p1] > 1)	continue;
-			  p2 = con0[i].p[1];	if (p2 > -1)	if (++tim[1][p2] > 1)	continue;
-			  p3 = con0[i].p[2];	if (p3 > -1  && cpar->num_cams > 2)
-			  if (++tim[2][p3] > 1)	continue;
-			  p4 = con0[i].p[3];	if (p4 > -1  && cpar->num_cams > 3)
-			  if (++tim[3][p4] > 1)	continue;
-
-			  con[match++] = con0[i];
-			}
-		  } 
- 
-      match2 = match-match4-match3;
-    if(cpar->num_cams == 1){
-       printf ( "determined %d points from 2D", match1);
-       }
-     else{
-      printf ("%d quadruplets (red), %d triplets (green) and %d unambigous pairs\n",
-	      match4, match3, match2);
-     }
-/*   give each used pix the correspondence number */
-  for (i=0; i<match; i++)
-    {
-      for (j = 0; j < cpar->num_cams; j++)
-        {
-         /* Skip cameras without a correspondence obviously. */
-         if (con[i].p[j] < 0) continue;
-             p1 = corrected[j][con[i].p[j]].pnr;
-	     if (p1 > -1 && p1 < 1202590843)
-	      {
+  /*   search consistent pairs :  12, 13, 14, 23, 24, 34 */
+  if(cpar->num_cams > 1 && cpar->allCam_flag == 0) {
+    match0 = consistent_pair_matching(list, cpar->num_cams, 
+        frm->num_targets, vpar->corrmin, con0, 4*nmax, tim);
+                
+        match2 = take_best_candidates(con0, &(con[match]), 
+            cpar->num_cams, match0, tim);
+        match += match2;
+  }
+  
+  /*   give each used pix the correspondence number */
+  for (i = 0; i < match; i++) {
+      for (j = 0; j < cpar->num_cams; j++) {
+          /* Skip cameras without a correspondence obviously. */
+          if (con[i].p[j] < 0) continue;
+          
+          p1 = corrected[j][con[i].p[j]].pnr;
+          if (p1 > -1 && p1 < 1202590843) {
                 frm->targets[j][p1].tnr= i;
-	      }
-	    }
-    }
+          }
+	}
+  }
 
-    int count1=0;
-	j=0;
-	
-	for (i=0; i < frm->num_targets[j]; i++)
-	  {			      	
-	    p1 = frm->targets[j][i].tnr;
-	    if (p1 == -1 )
-	      {
-		   count1++;
-	      }
-	  }
-    printf("unidentified objects = %d\n",count1);
+  int count1=0;
+  j = 0;
+  for (i = 0; i < frm->num_targets[j]; i++) {
+      p1 = frm->targets[j][i].tnr;
+      if (p1 == -1 ) count1++;
+  }
+  printf("unidentified objects = %d\n",count1);
 
   /* Retun values: match counts of each clique size */
   match_counts[0] = match4;
   match_counts[1] = match3;
   match_counts[2] = match2;
   match_counts[3] = match;
-
-  /* Image coordinates not needed beyond this point. */
-  for (cam = 0; cam < frm->num_cams; cam++) {
-      free(corrected[cam]);
-  }
-  free(corrected);
-    
+  
   /* free all other allocations */
   deallocate_adjacency_lists(list, cpar->num_cams);
   deallocate_target_usage_marks(tim, cpar->num_cams);
