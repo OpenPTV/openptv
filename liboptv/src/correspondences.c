@@ -584,6 +584,31 @@ int take_best_candidates(n_tupel *src, n_tupel *dst,
 /*         Full correspondence process                                      */
 /****************************************************************************/
 
+/*  correspondences() generates a list of tuple target numbers (one for each
+    camera), denoting the set of targets all corresponding to one 3D position. 
+    Candidates are preferred by the number of cameras invoilved (more is 
+    better) and the correspondence score calculated using epipolar lines.
+    
+    Arguments:
+    frame *frm - a frame struct holding the observed targets and their number
+        for each camera.
+    coord_2d **corrected - for each camera, an array of the flat-image 
+        coordinates corresponding to the targets in frm (the .pnr property
+        says which is which), sorted by the X coordinate. 
+    volume_par *vpar - epipolar search zone and criteria for correspondence.
+    control_par *cpar - general scene parameters s.a. image size.
+    Calibration **calib - array of pointers to each camera's calibration 
+        parameters.
+    
+    Output Arguments:
+    int match_counts[] - output buffer, as long as the number of cameras.
+        stores the number of matches for each clique size, in descending
+        clique size order. The last element stores the total.
+    
+    Returns:
+    n_tupel con - the sorted list of correspondences in descending quality
+        order.
+*/
 n_tupel *correspondences (frame *frm, coord_2d **corrected, 
   volume_par *vpar, control_par *cpar, Calibration **calib, int match_counts[])
 {
