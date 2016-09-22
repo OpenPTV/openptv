@@ -451,6 +451,12 @@ int consistent_pair_matching(correspond *list[4][4], int num_cams,
                 scratch[matched].p[i1] = p1;
                 scratch[matched].p[i2] = p2;
                 scratch[matched].corr = corr;
+                
+                matched++;
+                if (matched == scratch_size) {
+                    printf ("Overflow in correspondences.\n");
+                    return matched;
+                }
             }
         }
     }

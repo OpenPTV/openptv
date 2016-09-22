@@ -375,6 +375,62 @@ START_TEST(test_three_camera_matching)
 }
 END_TEST
 
+START_TEST(test_two_camera_matching)
+{
+    /* the overall setup is the same as the 4-camera test, with the following
+       changes: targets are darkenned in two cameras to get 16 pairs. */
+    frame *frm;
+    target *targ;
+    
+    Calibration *calib[4];
+    volume_par *vpar;
+    control_par *cpar;
+    
+    correspond *list[4][4];
+    coord_2d **corrected;
+    n_tupel *con;
+    int **tusage;
+    
+    int cam, matched, part;
+    
+    fail_if((cpar = read_control_par("testing_fodder/parameters/ptv.par"))== 0);
+    fail_if((vpar = read_volume_par("testing_fodder/parameters/criteria.par"))==0);
+    
+    cpar->mm->n2[0] = 1.0001;
+    cpar->mm->n3 = 1.0001;
+    vpar->Zmin_lay[0] = -1;
+    vpar->Zmin_lay[1] = -1;
+    vpar->Zmax_lay[0] = 1;
+    vpar->Zmax_lay[1] = 1;
+    
+    read_all_calibration(calib, cpar);
+    frm = generate_test_set(calib, cpar, vpar);
+    
+    cpar->num_cams = 2;
+    corrected = correct_frame(frm, calib, cpar, 0.0001);
+    safely_allocate_adjacency_lists(list, cpar->num_cams, frm->num_targets);
+    match_pairs(list, corrected, frm, vpar, cpar, calib);
+    
+    con = (n_tupel *) malloc(4*16*sizeof(n_tupel));
+    tusage = safely_allocate_target_usage_marks(cpar->num_cams);
+    
+    /* high accept corr bcz of closeness to epipolar lines. */
+    matched = consistent_pair_matching(list, 2, frm->num_targets, 10000., con, 
+        4*16, tusage);
+    
+    fail_unless(matched == 16);
+    
+    /* Clean up */
+    for (cam = 0; cam < cpar->num_cams; cam++) 
+        free(corrected[cam]);
+    deallocate_adjacency_lists(list, cpar->num_cams);
+    deallocate_target_usage_marks(tusage, cpar->num_cams);
+    free(con);
+    free(vpar);
+    free_control_par(cpar);
+}
+END_TEST
+
 START_TEST(test_correspondences)
 {
     frame *frm;
@@ -407,7 +463,7 @@ START_TEST(test_correspondences)
 END_TEST
 
 
-Suite* orient_suite(void) {
+Suite* corresp_suite(void) {
     Suite *s = suite_create ("Testing correspondences");
 
     TCase *tc = tcase_create ("qs target y");
@@ -441,12 +497,17 @@ Suite* orient_suite(void) {
     tc = tcase_create ("Three camera matching");
     tcase_add_test(tc, test_three_camera_matching);
     suite_add_tcase (s, tc);
+
+    tc = tcase_create ("Two camera matching");
+    tcase_add_test(tc, test_two_camera_matching);
+    suite_add_tcase (s, tc);
+
     return s;
 }
 
 int main(void) {
     int number_failed;
-    Suite *s = orient_suite();
+    Suite *s = corresp_suite();
     SRunner *sr = srunner_create (s);
     srunner_run_all (sr, CK_ENV);
     number_failed = srunner_ntests_failed (sr);
