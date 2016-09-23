@@ -35,6 +35,15 @@ cdef extern from "optv/parameters.h":
         double pix_y
         int chfield
         mm_np *mm
+    
+    ctypedef struct target_par:
+        int discont
+        int gvthres[4]    # grey value threshold per camera.
+        int nnmin, nnmax  # bounds for number of pixels in target.
+        int nxmin, nxmax  # same in x dimension.
+        int nymin, nymax  # same in y dimension.
+        int sumg_min      # minimal sum of grey values in target.
+        int cr_sz         # correspondence parameter.
         
 cdef class MultimediaParams:
     cdef mm_np* _mm_np
@@ -52,3 +61,6 @@ cdef class VolumeParams:
 cdef class ControlParams:
     cdef control_par * _control_par
     cdef MultimediaParams _multimedia_params
+
+cdef class TargetParams:
+    cdef target_par* _targ_par

@@ -3,6 +3,27 @@ cimport numpy as np
 from optv.parameters cimport ControlParams
 from optv.calibration cimport Calibration
 
+def check_inputs(inp_arr, out_arr):
+    """
+    All functions here have the same behaviour of getting an (n,2) array and
+    returning an array of the same shape, possibly the same one given as output
+    parameter. This funcion checks that the rules of input are adhered to, 
+    raises the appropriate exception if not, and returns the appropriate 
+    (possibly new) output array to work with.
+    """
+    # Raise exception if received non Nx2 shaped ndarray
+    # or if output and input arrays' shapes do not match.
+    if inp_arr.shape[1] != 2:
+        raise TypeError("Only two-column arrays accepted for conversion.")
+        
+    if out_arr is None:
+        out_arr = np.empty_like(inp_arr)
+    else:
+        if np.any(inp_arr.shape != out_arr.shape):
+            raise TypeError("Unmatching shape of input and output arrays: " 
+                            + str(inp_arr.shape) + " != " + str(out_arr.shape))
+    return out_arr
+    
 def convert_arr_pixel_to_metric(np.ndarray[ndim=2, dtype=np.float_t] input,
                                 ControlParams control,
                                 np.ndarray[ndim=2, dtype=np.float_t] out=None):
@@ -36,19 +57,7 @@ cdef convert_generic(np.ndarray[ndim=2, dtype=np.float_t] input,
                         control_par * c_control,
                         np.ndarray[ndim=2, dtype=np.float_t] out,
                         void convert_function(double * , double * , double, double , control_par *)):
-    # Raise exception if received non Nx2 shaped ndarray
-    # or if output and input arrays' shapes do not match.
-    if input.shape[1] != 2 or ((out is not None) and (out.shape[1] != 2)):
-        raise TypeError("Only two-column matrices accepted for conversion.")
-    if out is not None:
-        if not(input.shape[0] == out.shape[0] and input.shape[1] == out.shape[1]):
-            raise TypeError("Unmatching shape of input and output arrays: (" 
-                            + str(input.shape[0]) + "," + str(input.shape[1]) 
-                            + ") != (" + str(out.shape[0]) + "," + str(out.shape[1]) + ")")
-    else:
-        # If no array for output was passed (out==None):
-        # create new array for output with  same shape as input array 
-        out = np.empty_like(input)
+    out = check_inputs(input, out)
 
     for i in range(input.shape[0]):
         convert_function(< double *> np.PyArray_GETPTR2(out, i, 0)
@@ -82,7 +91,7 @@ def distort_arr_brown_affine(np.ndarray[ndim=2, dtype=np.float_t] input,
     '''
     Transformation with Brown + affine. 
     input - input Numpy ndarray of Nx2 shape.
-    control - Calibration object that holds parameters needed for transformation.
+    calibration - Calibration object that holds parameters needed for transformation.
     out - OPTIONAL Numpy ndarray, same shape as input.
     
     Returns:
@@ -95,24 +104,43 @@ cdef brown_affine_generic(np.ndarray[ndim=2, dtype=np.float_t] input,
                         ap_52 c_ap_52,
                         np.ndarray[ndim=2, dtype=np.float_t] out,
                         void affine_function(double, double, ap_52 , double * , double *)):
-    # Raise exception if received non Nx2 shaped ndarray
-    # or if output and input arrays' shapes do not match.
-    if input.shape[1] != 2 or ((out is not None) and (out.shape[1] != 2)):
-        raise TypeError("Only two-column matrices accepted for conversion.")
-    if out is not None:
-        if not(input.shape[0] == out.shape[0] and input.shape[1] == out.shape[1]):
-            raise TypeError("Unmatching shape of input and output arrays: (" 
-                            + str(input.shape[0]) + "," + str(input.shape[1]) 
-                            + ") != (" + str(out.shape[0]) + "," + str(out.shape[1]) + ")")
-    else:
-        # If no array for output was passed (out==None):
-        # create new array for output with  same shape as input array 
-        out = np.empty_like(input)
-
+    out = check_inputs(input, out)
+    
     for i in range(input.shape[0]):
         affine_function((< double *> np.PyArray_GETPTR2(input, i, 0))[0]
                         , (< double *> np.PyArray_GETPTR2(input, i, 1))[0]
                         , c_ap_52
                         , < double *> np.PyArray_GETPTR2(out, i, 0)
                         , < double *> np.PyArray_GETPTR2(out, i, 1))
+    return out
+
+def distorted_to_flat(np.ndarray[ndim=2, dtype=np.float_t] inp,
+    Calibration calibration, np.ndarray[ndim=2, dtype=np.float_t] out=None,
+    double tol=0.00001):
+    """
+    Full, exact conversion of distorted metric coordinates to flat unshifted 
+    metric coordinates. By 'exact' it is meant that the correction iteration 
+    is allowed to do more than one step, with given tolerance.
+    
+    Arguments:
+    input - input (n,2) array, distorted metric coordinates.
+    calibration - Calibration object that holds parameters needed for 
+        transformation.
+    out - (optional) ndarray, same shape as input. If given, result is placed
+        in the memory belonging to this array.
+    tol - (optional) tolerance of improvement in predicting radial position
+        between iterations of the correction loop. There is a sensible default
+        but if you need more or less accuracy you can change that.
+    
+    Returns:
+    the out array with metric flat unshifted coordinates, or a new array of the
+    correct size with the same results.
+    """
+    out = check_inputs(inp, out)
+    
+    for pt_num, pt in enumerate(inp):
+        dist_to_flat(pt[0], pt[1], calibration._calibration, 
+            <double *> np.PyArray_GETPTR2(out, pt_num, 0),
+            <double *> np.PyArray_GETPTR2(out, pt_num, 1), tol)
+    
     return out
