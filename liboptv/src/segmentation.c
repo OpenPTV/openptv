@@ -185,6 +185,7 @@ int targ_rec (unsigned char *img, target_par *targ_par, int xmin,
                     
                     pix[n_targets].x = x;
                     pix[n_targets].y = y;
+                    pix[n_targets].tnr = -1;
                     pix[n_targets].pnr = n_targets;
                     n_targets++;
                     
@@ -473,7 +474,6 @@ int ymin, int ymax, control_par *cpar, int num_cam, target pix[]){
           pix[n_target].nx = peaks[i].xmax - peaks[i].xmin + 1;
           pix[n_target].ny = peaks[i].ymax - peaks[i].ymin + 1;
           pix[n_target].tnr = -1;
-          // pix[n_target].pnr = n_target++;
           pix[n_target].pnr = n_target;
           n_target++;
         }
