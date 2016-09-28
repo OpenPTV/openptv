@@ -46,6 +46,9 @@ add_dependencies(check_epi optv)
 add_executable(check_segmentation EXCLUDE_FROM_ALL check_segmentation.c)
 add_dependencies(check_segmentation optv)
 
+add_executable(check_correspondences EXCLUDE_FROM_ALL check_correspondences.c)
+add_dependencies(check_correspondences optv)
+
 
 set(LIBS ${LIBS} ${CHECK_LIBRARIES} optv)
 
@@ -147,9 +150,18 @@ add_custom_command(TARGET check_segmentation PRE_BUILD
     COMMAND ${CMAKE_COMMAND} -E copy_directory
     ${CMAKE_CURRENT_SOURCE_DIR}/testing_fodder $<TARGET_FILE_DIR:check_segmentation>/testing_fodder)
 
+
+target_link_libraries(check_correspondences ${LIBS})
+add_test(check_correspondences ${CMAKE_CURRENT_BINARY_DIR}/check_correspondences)
+
+add_custom_command(TARGET check_correspondences PRE_BUILD
+    COMMAND ${CMAKE_COMMAND} -E copy_directory
+    ${CMAKE_CURRENT_SOURCE_DIR}/testing_fodder $<TARGET_FILE_DIR:check_correspondences>/testing_fodder)
+
     
 add_custom_target(verify COMMAND ${CMAKE_CTEST_COMMAND})
 add_dependencies(verify check_fb check_calibration check_parameters check_lsqadj 
 check_ray_tracing check_trafo check_vec_utils check_image_proc check_multimed 
-check_imgcoord check_orientation check_epi check_sortgrid check_segmentation)
+check_imgcoord check_orientation check_epi check_sortgrid check_segmentation 
+check_correspondences)
 

@@ -12,6 +12,8 @@ for all cameras, correspondence information and path links information.
 #define POSI 80
 #define STR_MAX_LEN 255
 
+#define PT_UNUSED -999
+
 typedef struct
 {
   int     pnr;
