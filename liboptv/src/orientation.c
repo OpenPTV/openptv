@@ -291,7 +291,7 @@ double* orient (Calibration* cal_in, control_par *cpar, int nfix, vec3d fix[],
     }
     
     for(i = 0; i < NPAR; i++)
-        sigmabeta[j] = 0.0;
+        sigmabeta[i] = 0.0;
 
     if(flags->interfflag){
         numbers = 18;
