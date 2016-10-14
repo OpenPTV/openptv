@@ -14,13 +14,12 @@ endif()
 
 include_directories("../include/")
 
-add_library (optv SHARED tracking_frame_buf.c calibration.c parameters.c lsqadj.c ray_tracing.c trafo.c vec_utils.c image_processing.c multimed.c imgcoord.c epi.c orientation.c sortgrid.c segmentation.c correspondences.c)
+add_library (optv SHARED tracking_frame_buf.c calibration.c parameters.c lsqadj.c ray_tracing.c trafo.c vec_utils.c image_processing.c multimed.c imgcoord.c epi.c orientation.c sortgrid.c segmentation.c correspondences.c track.c tracking_run.c)
 
 
 
 if(UNIX)
-  target_link_libraries(optv m 
-    debug efence)
+  target_link_libraries(optv m)
 endif(UNIX)
 
 install(TARGETS optv DESTINATION lib)
