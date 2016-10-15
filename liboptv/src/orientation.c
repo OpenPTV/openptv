@@ -716,6 +716,7 @@ int read_man_ori_fix(vec3d fix4[4], char* calblock_filename,
 
     fpp = fopen(man_ori_filename,"r");
     if (! fpp) {
+        fix = (vec3d *) malloc(1); //otherwise we try to release a non existing object
         printf("Can't open manual orientation file %s\n", man_ori_filename);
         goto handle_error;
     }
@@ -744,7 +745,7 @@ int read_man_ori_fix(vec3d fix4[4], char* calblock_filename,
         if (num_match >= num_fix) break;
     }
     
-    free(fix);   
+    free(fix);
     return num_match;
 
 handle_error:
