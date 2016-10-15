@@ -93,7 +93,6 @@ int targ_rec (unsigned char *img, target_par *targ_par, int xmin,
       /* => local maximum, 'peak' */
           {
             yn=i;  xn=j;
-            xn = xn;
             sumg = gv;  *(img0 + i*imx + j) = 0;
             xa = xn;  xb = xn;  ya = yn;  yb = yn;
             gv -= thres;
