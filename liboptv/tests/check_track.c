@@ -452,6 +452,8 @@ START_TEST(test_cavity)
                   "Was expecting npart == 672 but found %f \n", ret->npart);
     ck_assert_msg(ret->nlinks == 99,
                   "Was expecting nlinks == 99 but found %f \n", ret->nlinks);
+    
+    trackcorr_c_finish(ret, 10002, display);
 }
 END_TEST
 
