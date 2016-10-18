@@ -90,6 +90,7 @@ START_TEST(test_targ_rec)
     ntargets = targ_rec (img, &targ_par, 0, cpar.imx, 0, cpar.imy, &cpar, 0, pix);
     fail_unless(ntargets == 1);
     fail_unless(pix[0].n == 9);
+    fail_unless(pix[0].tnr == CORRES_NONE);
    
     /* test the two objects */
     unsigned char img1[5][5] = {

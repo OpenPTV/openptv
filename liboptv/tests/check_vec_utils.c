@@ -187,6 +187,10 @@ Suite* fb_suite(void) {
     tcase_add_test(tc, test_cross);
     suite_add_tcase (s, tc);
 
+   tc = tcase_create("Normalised difference");
+   tcase_add_test(tc, test_diff_norm);
+   suite_add_tcase (s,tc);
+
     return s;
 }
 
