@@ -179,20 +179,12 @@ START_TEST(test_split)
     /* Note: first line of erased half is only erased from the middle, 
        for historic reasons. */
     split(img1, 1, &cpar);
-    //fail_unless(images_equal(img1, img_odd, 5, 2, 0, 0));
-    //fail_unless(images_equal(&(img1[2]), erased_half, 5, 3, 0, 0));
-    for (elem=0;elem<25;elem++){
-    printf("%d ",img1[elem]);
-    }
-    printf("\n");
+    fail_unless(images_equal(img1, img_odd, 5, 2, 0, 0));
+    fail_unless(images_equal(&(img1[10]), erased_half, 5, 3, 2, 0));
     
     split(img2, 2, &cpar);
-    //fail_unless(images_equal(img2, img_even, 5, 2, 0, 0));
-    for (elem=0;elem<25;elem++){
-    printf("%d ",img2[elem]);
-    }
-    printf("\n");
-    //fail_unless(images_equal(&(img2[2]), erased_half, 5, 3, 0, 0));
+    fail_unless(images_equal(img2, img_even, 5, 2, 0, 0));
+    fail_unless(images_equal(&(img2[10]), erased_half, 5, 3, 2, 0));
 }
 END_TEST
 
