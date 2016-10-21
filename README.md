@@ -1,4 +1,6 @@
 
+[![Google Group](https://img.shields.io/badge/-Google%20Group-lightgrey.svg)](https://groups.google.com/forum/#!forum/openptv)
+
 OpenPTV - framework for particle tracking velocimetry
 =====================================================
 
