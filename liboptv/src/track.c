@@ -422,7 +422,8 @@ void searchquader(vec3d point, double xr[4], double xl[4], double yd[4], \
         }
 }
 
-/* sortwhatfound sourts the list of candidates in foundpix array
+/* sort_candidates_by_freq sorts the list of candidates in foundpix array by frequency of their
+ * appearance in all the cameras
  * Arguments:
  * foundpix array, item[] which is as long as: num_cam*MAX_CANDS candidates
  * integer * counter - pointer to the list of the candidates
@@ -431,7 +432,7 @@ void searchquader(vec3d point, double xr[4], double xl[4], double yd[4], \
  * an integer number of different candidates
  */
 
-void sortwhatfound (foundpix item[], int *counter, int num_cams)
+void sort_candidates_by_freq (foundpix item[], int *counter, int num_cams)
 {
         int i,j,m, different;
         foundpix temp;
@@ -659,7 +660,7 @@ void trackcorr_c_loop (tracking_run *run_info, int step, int display, Calibratio
                 }
 
                 /* fill and sort candidate struct */
-                sortwhatfound(p16, &counter1, fb->num_cams);
+                sort_candidates_by_freq(p16, &counter1, fb->num_cams);
                 for (j=0; j<counter1; j++) {
 //            printf("p16[%d].ftnr = %d, freq = %d\n",j,p16[j].ftnr,p16[j].freq);
                 }
@@ -704,7 +705,7 @@ void trackcorr_c_loop (tracking_run *run_info, int step, int display, Calibratio
                         /* end of search in pix */
 
                         /* fill and sort candidate struct */
-                        sortwhatfound(p16, &counter2, fb->num_cams);
+                        sort_candidates_by_freq(p16, &counter2, fb->num_cams);
                         for (j=0; j<counter2; j++) {
 //                printf("next step p16[%d].ftnr = %d, freq = %d\n",j,p16[j].ftnr,p16[j].freq);
                         }
@@ -1210,7 +1211,7 @@ double trackback_c (tracking_run *run_info, int step, int display, Calibration *
                         }
 
                         /* fill and sort candidate struct */
-                        sortwhatfound(p16, &counter1, fb->num_cams);
+                        sort_candidates_by_freq(p16, &counter1, fb->num_cams);
                         w = (foundpix *) calloc (counter1, sizeof (foundpix));
 
                         /*end of candidate struct */

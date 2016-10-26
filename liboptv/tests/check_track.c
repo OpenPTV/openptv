@@ -357,7 +357,7 @@ START_TEST(test_searchquader)
 END_TEST
 
 
-START_TEST(test_sortwhatfound)
+START_TEST(test_sort_candidates_by_freq)
 {
     foundpix src[] = {  {1,0,{1,0}},
                         {2,0,{1,1}}
@@ -374,7 +374,7 @@ START_TEST(test_sortwhatfound)
     int counter;
 
     /* test simple sort of a small foundpix array */
-    sortwhatfound(dest, &counter, num_cams);
+    sort_candidates_by_freq(dest, &counter, num_cams);
     
     ck_assert_msg( dest[0].ftnr == 2 ,
                   "Was expecting dest[0].ftnr == 2 but found %d \n", dest[0].ftnr);
@@ -526,8 +526,8 @@ Suite* fb_suite(void) {
     tcase_add_test(tc, test_searchquader);
     suite_add_tcase (s, tc);
     
-    tc = tcase_create ("Sortwhatfound");
-    tcase_add_test(tc, test_sortwhatfound);
+    tc = tcase_create ("sort_candidates_by_freq");
+    tcase_add_test(tc, test_sort_candidates_by_freq);
     suite_add_tcase (s, tc);
     
     tc = tcase_create ("Test cavity case");

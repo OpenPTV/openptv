@@ -39,7 +39,7 @@ int candsearch_in_pix(target  next[], int num_targets, double x, double y,
     double dl, double dr, double du, double dd, int p[4], control_par *cpar);
 int candsearch_in_pixrest(target  next[], int num_targets, double x, double y,
     double dl, double dr, double du, double dd, int p[4], control_par *cpar);
-void sortwhatfound (foundpix item[16], int *zaehler, int num_cams);
+void sort_candidates_by_freq (foundpix item[16], int *zaehler, int num_cams);
 void searchquader(vec3d point, double xr[4], double xl[4], double yd[4], \
     double yu[4], track_par *tpar, control_par *cpar, Calibration **cal);
 void predict(vec2d a, vec2d b, vec2d c);
