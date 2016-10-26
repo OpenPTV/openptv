@@ -233,12 +233,6 @@ void angle_acc(vec3d start, vec3d pred, vec3d cand, double *angle, double *acc)
                 *angle = (200./M_PI) * acos(vec_dot(v0, v1) / vec_norm(v0) \
                                             / vec_norm(v1));
         }
-        if (isnan(*angle)) {
-//        printf("v0: %3.2f %3.2f %3.2f v1: %3.2f %3.2f %3.2f\n",v0[0],v0[1],v0[2],v1[0],v1[1],v1[2]);
-//        printf("start %3.2f %3.2f %3.2f \n", start[0],start[1],start[2]);
-//        printf("pred %3.2f %3.2f %3.2f \n", pred[0],pred[1],pred[2]);
-//        printf("cand %3.2f %3.2f %3.2f \n", cand[0],cand[1],cand[2]);
-        }
 }
 
 
@@ -276,8 +270,6 @@ int candsearch_in_pix (target next[], int num_targets, double cent_x, double cen
         p1 = p2 = p3 = p4 = -999;
         d1 = d2 = d3 = d4 = dmin;
 
-        // printf("candsearch center %3.2f %3.2f\n",cent_x,cent_y);
-        // printf("targets in this frame %d \n",num_targets);
 
         if (cent_x >= 0.0 && cent_x <= cpar->imx ) {
                 if (cent_y >= 0.0 && cent_y <= cpar->imy ) {
@@ -289,7 +281,7 @@ int candsearch_in_pix (target next[], int num_targets, double cent_x, double cen
                                 else j0 -= dj;
                         }
 
-                        j0 -= 12;  if (j0 < 0) j0 = 0;/* due to trunc */
+                        j0 -= 12;  if (j0 < 0) j0 = 0; /* due to trunc */
                         for (j=j0; j<num_targets; j++) { /* candidate search */
                                 if (next[j].tnr != -1 ) {
                                         if (next[j].y > ymax ) break; /* finish search */
@@ -327,10 +319,7 @@ int candsearch_in_pix (target next[], int num_targets, double cent_x, double cen
                         p[2]=p3;
                         p[3]=p4;
 
-                        for (j=0; j<4; j++) if ( p[j] != -999 ) {
-                                        // printf("neighbour %d at %3.2f %3.2f \n",p[j],next[p[j]].x,next[p[j]].y);
-                                        counter++;
-                                }
+                        for (j=0; j<4; j++) if ( p[j] != -999 ) counter++;
                 } /* if x is within the image boundaries */
         } /* if y is within the image boundaries */
         return (counter);
@@ -589,8 +578,6 @@ void trackcorr_c_loop (tracking_run *run_info, int step, int display, Calibratio
 
         foundpix *w, *wn, *p16; //p16 due to history of 4 cameras times 4 candidates
 
-//    printf ("Time step: %d, seqnr: %d\n",
-//        step - run_info->seq_par->first, step);
         count1=0; num_added=0;
 
         fb = run_info->fb;
@@ -615,9 +602,6 @@ void trackcorr_c_loop (tracking_run *run_info, int step, int display, Calibratio
                 /* 3D-position */
                 vec_copy(X[1], curr_path_inf->x);
 
-//        printf("Trying to link particle %d, located at: %3.2f %3.2f %3.2f\n",h,X[1][0],X[1][1],X[1][2]);
-//        printf("previous %d, next %d\n",curr_path_inf->prev,curr_path_inf->next);
-
                 /* use information from previous to locate new search position
                    and to calculate values for search area */
                 if (curr_path_inf->prev >= 0) {
@@ -631,14 +615,12 @@ void trackcorr_c_loop (tracking_run *run_info, int step, int display, Calibratio
                 } else {
                         vec_copy(X[2], X[1]);
                         for (j=0; j < fb->num_cams; j++) {
-                                // printf("curr_corres->p[%d]=%d\n",j,curr_corres->p[j]);
                                 if (curr_corres->p[j] == -1) {
                                         point_to_pixel (v1[j], X[2], cal[j], cpar);
                                 } else {
                                         _ix = curr_corres->p[j];
                                         v1[j][0] = curr_targets[j][_ix].x;
                                         v1[j][1] = curr_targets[j][_ix].y;
-                                        //printf("cam %d search center is [pixels] %f,%f\n",j,v1[j][0],v1[j][1]);
                                 }
                         }
 
@@ -646,11 +628,6 @@ void trackcorr_c_loop (tracking_run *run_info, int step, int display, Calibratio
 
                 /* calculate search cuboid (quader) and reproject it to the image space */
                 searchquader(X[2], xr, xl, yd, yu, tpar, cpar, cal);
-
-                //printf("search region around is [pixels]: right, left, down, up:\n");
-                //for (j = 0; j < fb->num_cams; j++) {
-                //    printf("cam %d %f %f %f %f\n",j,xr[j],xl[j],yd[j],yu[j]);
-                //}
 
                 /* search in pix for candidates in the next time step */
                 for (j = 0; j < fb->num_cams; j++) {
@@ -662,14 +639,11 @@ void trackcorr_c_loop (tracking_run *run_info, int step, int display, Calibratio
                 /* fill and sort candidate struct */
                 sort_candidates_by_freq(p16, &counter1, fb->num_cams);
                 for (j=0; j<counter1; j++) {
-//            printf("p16[%d].ftnr = %d, freq = %d\n",j,p16[j].ftnr,p16[j].freq);
                 }
                 w = (foundpix *) calloc (counter1, sizeof (foundpix));
 
                 if (counter1 > 0) count2++;
                 copy_foundpix_array(w, p16, counter1, fb->num_cams);
-//        printf("copied p16 to w, going to the next frame\n");
-                /*end of candidate struct */
 
                 /* check for what was found */
                 for (mm=0; mm<counter1; mm++) { /* counter1-loop */
@@ -688,8 +662,6 @@ void trackcorr_c_loop (tracking_run *run_info, int step, int display, Calibratio
                         } else {
                                 search_volume_center_moving(X[1], X[3], X[5]);
                         }
-//            printf("looking around X[5]\n");
-//            printf("%3.2f %3.2f %3.2f\n",X[5][0],X[5][1],X[5][2]);
 
                         searchquader(X[5], xr, xl, yd, yu, tpar, cpar, cal);
 
@@ -706,16 +678,11 @@ void trackcorr_c_loop (tracking_run *run_info, int step, int display, Calibratio
 
                         /* fill and sort candidate struct */
                         sort_candidates_by_freq(p16, &counter2, fb->num_cams);
-                        for (j=0; j<counter2; j++) {
-//                printf("next step p16[%d].ftnr = %d, freq = %d\n",j,p16[j].ftnr,p16[j].freq);
-                        }
 
                         wn = (foundpix *) calloc (counter2, sizeof (foundpix));
 
                         if (counter2 > 0) count3++;
                         copy_foundpix_array(wn, p16, counter2, fb->num_cams);
-//            printf("copied p16 to wn going to last frame\n");
-
                         /*end of candidate struct */
                         /* ************************************************ */
                         for (kk=0; kk < counter2; kk++)  {/* counter2-loop */
@@ -725,30 +692,14 @@ void trackcorr_c_loop (tracking_run *run_info, int step, int display, Calibratio
                                 vec_subt(X[4], X[3], diff_pos);
                                 if ( pos3d_in_bounds(diff_pos, tpar)) {
                                         angle_acc(X[3], X[4], X[5], &angle1, &acc1);
-//                    printf("angle1=%3.2f, acc1 = %3.2f\n",angle1,acc1);
-//                    if (isnan(angle1)){
-//                        printf("X[3] %3.2f %3.2f %3.2f \n", X[3][0],X[3][1],X[3][2]);
-//                        printf("X[4] %3.2f %3.2f %3.2f \n", X[4][0],X[4][1],X[4][2]);
-//                        printf("X[5] %3.2f %3.2f %3.2f \n", X[5][0],X[5][1],X[5][2]);
-
-//                    }
-
                                         if (curr_path_inf->prev >= 0) {
                                                 angle_acc(X[1], X[2], X[3], &angle0, &acc0);
-//                        printf("angle0=%3.2f, acc0 = %3.2f\n",angle0,acc0);
-//                        if (isnan(angle0)){
-//                            printf("X[1] %3.2f %3.2f %3.2f \n", X[1][0],X[1][1],X[1][2]);
-//                            printf("X[2] %3.2f %3.2f %3.2f \n", X[2][0],X[2][1],X[2][2]);
-//                            printf("X[3] %3.2f %3.2f %3.2f \n", X[3][0],X[3][1],X[3][2]);
-//
-//                        }
                                         } else {
                                                 acc0=acc1; angle0=angle1;
                                         }
 
                                         acc=(acc0+acc1)/2; angle=(angle0+angle1)/2;
                                         quali=wn[kk].freq+w[mm].freq;
-//                    printf("kk=%d,acc=%3.2f,angle=%3.2f,quali=%d\n",kk,acc,angle,quali);
 
                                         if ((acc < tpar->dacc && angle < tpar->dangle) || \
                                             (acc < tpar->dacc/10))
@@ -779,8 +730,6 @@ void trackcorr_c_loop (tracking_run *run_info, int step, int display, Calibratio
                                 counter2 = candsearch_in_pix (fb->buf[3]->targets[j],
                                                               fb->buf[3]->num_targets[j], n[j][0], n[j][1],
                                                               xl[j], xr[j], yu[j], yd[j], philf[j], cpar);
-
-//                printf("within %d found %d candidates in cam %d\n",ADD_PART, counter2, j);
 
                                 if(counter2>0 ) {
                                         _ix = philf[j][0]; // first nearest neighbour
@@ -1094,8 +1043,6 @@ void trackcorr_c_loop (tracking_run *run_info, int step, int display, Calibratio
         run_info->npart = run_info->npart + fb->buf[1]->num_parts;
         run_info->nlinks = run_info->nlinks + count1;
 
-//    printf("collective num parts: %d nlinks %d\n",run_info->npart, run_info->nlinks);
-
         fb_next(fb);
         fb_write_frame_from_start(fb, step);
         if(step < run_info->seq_par->last - 2) {
@@ -1376,7 +1323,7 @@ double trackback_c (tracking_run *run_info, int step, int display, Calibration *
                         if (curr_path_inf->prev != -1 ) count1++;
                 } /* end of creation of links with decision check */
 
-                sprintf (buf, "step: %d, curr: %d, next: %d, links: %d, lost: %d, add: %d",
+                printf ("step: %d, curr: %d, next: %d, links: %d, lost: %d, add: %d",
                          step, fb->buf[1]->num_parts, fb->buf[2]->num_parts, count1,
                          fb->buf[1]->num_parts - count1, num_added);
 
