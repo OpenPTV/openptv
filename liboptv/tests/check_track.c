@@ -400,7 +400,7 @@ START_TEST(test_trackcorr_c_loop)
     
     cpar = read_control_par("parameters/ptv.par");
     read_all_calibration(calib, cpar->num_cams);
-    ret = trackcorr_c_init(calib[0]);
+    ret = trackcorr_c_init(calib);
 
 
     trackcorr_c_loop (ret, ret->seq_par->first, display, calib);
@@ -443,7 +443,7 @@ START_TEST(test_cavity)
     cpar = read_control_par("parameters/ptv.par");
     read_all_calibration(calib, cpar->num_cams);
     printf("In test_cavity num cams = %d\n",cpar->num_cams);
-    ret = trackcorr_c_init(calib[0]);
+    ret = trackcorr_c_init(calib);
     
     trackcorr_c_loop (ret, 10002, display, calib);
     //trackcorr_c_finish(ret, 10002, display);
@@ -472,7 +472,7 @@ START_TEST(test_trackback)
     
     cpar = read_control_par("parameters/ptv.par");
     read_all_calibration(calib, cpar->num_cams);
-    ret = trackcorr_c_init(calib[0]);
+    ret = trackcorr_c_init(calib);
     ret->tpar->dvxmin =ret->tpar->dvymin=ret->tpar->dvzmin=-50;
     ret->tpar->dvxmax =ret->tpar->dvymax=ret->tpar->dvzmax=50;
     
