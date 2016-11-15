@@ -18,44 +18,7 @@
 
 #define EPS 1E-5
 
-void read_all_calibration(Calibration *calib[3], int num_cams);
-void create_tracking_test_case();
-
-void create_tracking_test_case()
-{
-    Calibration *calib[3];
-    int step, test_step = 10001;
-    vec3d point = {0.0, 0.0, 0.0};
-    vec2d v[3];
-    control_par *cpar;
-    
-    
-    chdir("testing_fodder/track");
-    
-    /* prepare the 3D point moving in the flow */
-    cpar = read_control_par("parameters/ptv.par");
-    read_all_calibration(calib, cpar->num_cams);
-    
-    target t1 = {0, 1127.0000, 796.0000, 10, 2, 2, 100, 0};
-    
-    char target_tmpl[] = "img/cam%d.";
-    char target_name[256];
-    
-    for(step = test_step-1; step < test_step + 4; step++){
-        for (int j=0; j<cpar->num_cams;j++){
-            point[0] += 0.1;
-            point_to_pixel(v[j], point, calib[j], cpar);
-            t1.x = v[j][0]; t1.y = v[j][1];
-            sprintf(target_name, target_tmpl, j + 1);
-            write_targets(&t1, 1, target_name, step);
-        }
-    }
-}
-
-
-/* Tests of correspondence components and full process using dummy data */
-
-void read_all_calibration(Calibration *calib[3], int num_cams) {
+void read_all_calibration(Calibration *calib[], int num_cams) {
     char ori_tmpl[] = "cal/cam%d.tif.ori";
     char added_tmpl[] = "cal/cam%d.tif.addpar";
     char ori_name[256],added_name[256];
