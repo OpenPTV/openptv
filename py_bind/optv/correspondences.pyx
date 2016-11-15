@@ -8,6 +8,8 @@ Created on Fri Oct 28 13:46:39 2016
 """
 
 from libc.stdlib cimport malloc, free
+cimport numpy as np
+import numpy as np
 
 from optv.transforms cimport pixel_to_metric, dist_to_flat
 from optv.parameters cimport ControlParams
@@ -48,13 +50,13 @@ cdef class MatchedCoords:
         """
         cdef:
             target *targ
-            int  num_targs = len(targs)
         
-        self.buf = <coord_2d *> malloc(num_targs * sizeof(coord_2d))
+        self._num_pts = len(targs)
+        self.buf = <coord_2d *> malloc(self._num_pts * sizeof(coord_2d))
         if self.buf == NULL:
             raise MemoryError("could not allocate matched-coordinates array.")
         
-        for tnum in range(num_targs):
+        for tnum in range(self._num_pts):
             targ = &(targs._tarr[tnum])
             if reset_numbers:
                 targ.pnr = tnum
@@ -67,8 +69,31 @@ cdef class MatchedCoords:
                 &(self.buf[tnum].x), &(self.buf[tnum].y), tol)
             self.buf[tnum].pnr = targ.pnr
         
-        quicksort_coord2d_x(self.buf, num_targs)
+        quicksort_coord2d_x(self.buf, self._num_pts)
     
-    
+    def as_arrays(self):
+        """
+        Returns the data associated with the object (the matched coordinates 
+        block) as NumPy arrays.
+        
+        Returns:
+        pos - (n,2) array, the (x,y) flat-coordinates position of n targets.
+        pnr - n-length array, the corresponding target number for each point.
+        """
+        cdef:
+            np.ndarray[ndim=2, dtype=np.float64_t] pos
+            np.ndarray[ndim=1, dtype=np.int_t] pnr
+            int pt
+        
+        pos = np.empty((self._num_pts, 2))
+        pnr = np.empty(self._num_pts, dtype=np.int_)
+        
+        for pt in range(self._num_pts):
+            pos[pt,0] = self.buf[pt].x
+            pos[pt,1] = self.buf[pt].y
+            pnr[pt] = self.buf[pt].pnr
+        
+        return pos, pnr
+        
     def __dealloc__(self):
         free(self.buf)

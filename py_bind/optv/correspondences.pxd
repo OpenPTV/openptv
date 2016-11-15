@@ -21,3 +21,4 @@ cdef extern from "optv/correspondences.h":
 
 cdef class MatchedCoords:
     cdef coord_2d *buf
+    cdef int _num_pts
