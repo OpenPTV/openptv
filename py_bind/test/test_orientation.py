@@ -58,16 +58,16 @@ class Test_Orientation(unittest.TestCase):
                                                       cparam=self.control)
 
         # assert target array is as before
-
         for i in range(coords_count):
             if matched_target_array[i].pos() != target_array[i].pos() \
                     or matched_target_array[i].pnr() != target_array[i].pnr():
                 self.fail('match_detection_to_ref failed to match detection to reference.')
 
+        # pass ref_pts and img_pts with non-equal lengths
         with self.assertRaises(TypeError):
             match_detection_to_ref(cal=self.calibration,
                                    ref_pts=xyz_input,
-                                   img_pts=TargetArray(coords_count - 1),  # test wrong length
+                                   img_pts=TargetArray(coords_count - 1),
                                    cparam=self.control)
 
 

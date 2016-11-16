@@ -25,7 +25,6 @@ def match_detection_to_ref(Calibration cal,
     np.ndarray[ndim=2, dtype=pos_t] ref_pts - an (n,3) array, the 3D known 
         positions of the selected 2D points found on the image.
     TargetArray img_pts - detected points to match to known 3D positions.
-        Modified inplace.
     ControlParams cparam - an object holding general control parameters.
     int eps - pixel radius of neighbourhood around detection to search for
         closest projection.
