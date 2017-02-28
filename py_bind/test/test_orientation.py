@@ -84,10 +84,8 @@ class Test_Orientation(unittest.TestCase):
                            [(17, 42, 0)]], dtype=float)
 
         num_cams = 4
-        os.chdir("testing_fodder/")
-
-        ori_tmpl = r'calibration/sym_cam{cam_num}.tif.ori'
-        add_file = r'calibration/cam1.tif.addpar'
+        ori_tmpl = r'testing_fodder/calibration/sym_cam{cam_num}.tif.ori'
+        add_file = r'testing_fodder/calibration/cam1.tif.addpar'
         calibs = []
         targs_plain = np.empty([0, 2])
         targs_jigged = np.empty([0, 2])
