@@ -69,7 +69,7 @@ class Test_Orientation(unittest.TestCase):
                 self.fail()
 
         # pass ref_pts and img_pts with non-equal lengths
-        with self.assertRaises(TypeError):
+        with self.assertRaises(ValueError):
             match_detection_to_ref(cal=self.calibration,
                                    ref_pts=xyz_input,
                                    img_pts=TargetArray(coords_count - 1),
