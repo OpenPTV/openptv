@@ -23,6 +23,7 @@ class Test_Orientation(unittest.TestCase):
         self.control.read_control_par(self.control_file_name)
 
     def test_match_detection_to_ref(self):
+        """Match detection to reference (sortgrid)"""
         xyz_input = np.array([(10, 10, 10),
                               (200, 200, 200),
                               (600, 800, 100),
@@ -30,15 +31,18 @@ class Test_Orientation(unittest.TestCase):
                               (30, 30, 30)], dtype=float)
         coords_count = len(xyz_input)
 
-        xy_img_pts_metric = image_coordinates(xyz_input, self.calibration, self.control.get_multimedia_params())
-        xy_img_pts_pixel = convert_arr_metric_to_pixel(xy_img_pts_metric, control=self.control)
+        xy_img_pts_metric = image_coordinates(
+            xyz_input, self.calibration, self.control.get_multimedia_params())
+        xy_img_pts_pixel = convert_arr_metric_to_pixel(
+            xy_img_pts_metric, control=self.control)
 
         # convert to TargetArray object
         target_array = TargetArray(coords_count)
 
         for i in range(coords_count):
             target_array[i].set_pnr(i)
-            target_array[i].set_pos((xy_img_pts_pixel[i][0], xy_img_pts_pixel[i][1]))
+            target_array[i].set_pos(
+                (xy_img_pts_pixel[i][0], xy_img_pts_pixel[i][1]))
 
         # create randomized target array
         indices = range(coords_count)
@@ -47,22 +51,22 @@ class Test_Orientation(unittest.TestCase):
         while indices == shuffled_indices:
             random.shuffle(shuffled_indices)
 
-        randomized_target_array = TargetArray(coords_count)
+        rand_targ_array = TargetArray(coords_count)
         for i in range(coords_count):
-            randomized_target_array[shuffled_indices[i]].set_pos(target_array[i].pos())
-            randomized_target_array[shuffled_indices[i]].set_pnr(target_array[i].pnr())
+            rand_targ_array[shuffled_indices[i]].set_pos(target_array[i].pos())
+            rand_targ_array[shuffled_indices[i]].set_pnr(target_array[i].pnr())
 
         # match detection to reference
         matched_target_array = match_detection_to_ref(cal=self.calibration,
                                                       ref_pts=xyz_input,
-                                                      img_pts=randomized_target_array,
+                                                      img_pts=rand_targ_array,
                                                       cparam=self.control)
 
         # assert target array is as before
         for i in range(coords_count):
             if matched_target_array[i].pos() != target_array[i].pos() \
                     or matched_target_array[i].pnr() != target_array[i].pnr():
-                self.fail('match_detection_to_ref failed to match detection to reference.')
+                self.fail()
 
         # pass ref_pts and img_pts with non-equal lengths
         with self.assertRaises(TypeError):
@@ -72,6 +76,7 @@ class Test_Orientation(unittest.TestCase):
                                    cparam=self.control)
 
     def test_point_positions(self):
+        """Point positions"""
         # prepare MultimediaParams
         mult_params = self.control.get_multimedia_params()
 
@@ -80,15 +85,15 @@ class Test_Orientation(unittest.TestCase):
         mult_params.set_n3(1.)
 
         # 3d point
-        points = np.array([[(17, 42, 0)],
-                           [(17, 42, 0)]], dtype=float)
-
+        points = np.array([[17, 42, 0],
+                           [17, 42, 0]], dtype=float)
+        
         num_cams = 4
         ori_tmpl = r'testing_fodder/calibration/sym_cam{cam_num}.tif.ori'
         add_file = r'testing_fodder/calibration/cam1.tif.addpar'
         calibs = []
-        targs_plain = np.empty([0, 2])
-        targs_jigged = np.empty([0, 2])
+        targs_plain = []
+        targs_jigged = []
 
         jigg_amp = 0.5
 
@@ -99,42 +104,39 @@ class Test_Orientation(unittest.TestCase):
             new_cal.from_file(ori_file=ori_name, add_file=add_file)
             calibs.append(new_cal)
 
-        for point in points:
-            for cam_cal in calibs:
-                new_plain_targ = image_coordinates(point, cam_cal, self.control.get_multimedia_params())
-                targs_plain = np.append(targs_plain, new_plain_targ, 0)
+        for cam_num, cam_cal in enumerate(calibs):
+            new_plain_targ = image_coordinates(
+                points, cam_cal, self.control.get_multimedia_params())
+            targs_plain.append(new_plain_targ)
+            
+            if (cam_num % 2) == 0:
+                jigged_points = points - np.r_[0, jigg_amp, 0]
+            else:
+                jigged_points = points + np.r_[0, jigg_amp, 0]
 
-                jigged_point = np.copy(point)
-                for j in jigged_point:
-                    j[1] += (jigg_amp if (calibs.index(cam_cal) % 2) != 0 else -jigg_amp)
+            new_jigged_targs = image_coordinates(
+                jigged_points, cam_cal, self.control.get_multimedia_params())
+            targs_jigged.append(new_jigged_targs)
 
-                new_jigged_targ = image_coordinates(jigged_point, cam_cal, self.control.get_multimedia_params())
-                targs_jigged = np.append(targs_jigged, new_jigged_targ, 0)
+        targs_plain = np.array(targs_plain).transpose(1,0,2)
+        targs_jigged = np.array(targs_jigged).transpose(1,0,2)
+        skew_dist_plain = point_positions(targs_plain, self.control, calibs)
+        skew_dist_jigged = point_positions(targs_jigged, self.control, calibs)
 
-            targets_plain = np.empty(shape=(len(point), num_cams, 2))
-            targets_jigged = np.empty(shape=(len(point), num_cams, 2))
-            for targ_ix in range(len(point)):
-                for cam_ix in range(num_cams):
-                    for coord_ix in range(2):
-                        targets_plain[targ_ix][cam_ix][coord_ix] = targs_plain[cam_ix][coord_ix]
-                        targets_jigged[targ_ix][cam_ix][coord_ix] = targs_jigged[cam_ix][coord_ix]
+        if np.any(skew_dist_plain[1] > 1e-10):
+            self.fail(('skew distance of target#{targ_num} ' \
+                + 'is more than allowed').format(
+                    targ_num=np.nonzero(skew_dist_plain[1] > 1e-10)[0][0]))
 
-            skew_dist_plain = point_positions(targets=targets_plain, cparam=self.control, cals=calibs)
-            skew_dist_jigged = point_positions(targets=targets_jigged, cparam=self.control, cals=calibs)
+        if np.any(np.linalg.norm(points - skew_dist_plain[0], axis=1) > 1e-6):
+            self.fail('Rays converge on wrong position.')
 
-            for targ_ix in range(len(targets_plain)):
-                if skew_dist_plain[1][targ_ix] > 1e-10:
-                    self.fail('skew distance of target#{targ_num} is more than allowed'.format(targ_num=targ_ix + 1))
-
-            if np.linalg.norm(np.subtract(point, skew_dist_plain[0])) > 1e-10:
-                self.fail('matrix norm for skew distance is bigger than allowed')
-
-            jigged_correct = 4 * (2 * jigg_amp) / 6
-            if abs(skew_dist_jigged[1] - jigged_correct) > 0.05:
-                self.fail('jigged skew distance is bigger than allowed')
-
-            if np.linalg.norm(np.subtract(point, skew_dist_jigged[0])) > 0.01:
-                self.fail('matrix norm for skew distance is bigger than allowed')
+        if np.any(skew_dist_jigged[1] > 0.7):
+            self.fail(('skew distance of target#{targ_num} ' \
+                + 'is more than allowed').format(
+                    targ_num=np.nonzero(skew_dist_jigged[1] > 1e-10)[0][0]))
+        if np.any(np.linalg.norm(points - skew_dist_jigged[0], axis=1) > 0.1):
+            self.fail('Rays converge on wrong position after jigging.')
 
 
 if __name__ == "__main__":
