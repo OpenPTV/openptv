@@ -143,7 +143,7 @@ START_TEST(test_volumedimension)
     double xmax, xmin, ymax, ymin, zmax, zmin;
     int i; 
     
-    Calibration *tmp, cal[2];
+    Calibration *tmp, *cal[2];
         
     char ori_file[] = "testing_fodder/cal/cam1.tif.ori";
     char add_file[] = "testing_fodder/cal/cam1.tif.addpar";
@@ -152,7 +152,7 @@ START_TEST(test_volumedimension)
     ck_assert_msg (file_exists(add_file) == 1, "\n File %s does not exist\n", add_file);
     tmp = read_calibration(ori_file, add_file, NULL);    
     fail_if (tmp == NULL, "\n ORI or ADDPAR file reading failed \n");
-    cal[0] = *tmp;
+    cal[0] = tmp;
     
     
     char ori_file2[] = "testing_fodder/cal/cam2.tif.ori";
@@ -162,7 +162,7 @@ START_TEST(test_volumedimension)
     ck_assert_msg (file_exists(add_file2) == 1, "\n File %s does not exist\n", add_file2);
     tmp = read_calibration(ori_file, add_file2, NULL);    
     fail_if (tmp == NULL, "\n ORI or ADDPAR file reading failed \n");
-    cal[1] = *tmp;
+    cal[1] = tmp;
     
          
     volume_par *vpar;

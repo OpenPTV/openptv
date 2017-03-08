@@ -1,3 +1,6 @@
+<!--- 
+[![gitcheese.com](https://api.gitcheese.com/v1/projects/055c2faf-6c1e-4f01-9cd3-15a2e005f8fc/badges)](https://www.gitcheese.com/app/#/projects/055c2faf-6c1e-4f01-9cd3-15a2e005f8fc/pledges/create)
+-->
 
 OpenPTV - framework for particle tracking velocimetry
 =====================================================
@@ -29,6 +32,12 @@ through Google Groups.
 
 Instalation
 -----------
-See the respective subdirectories' README files for instructions on installing 
-subpackages.
+See the documentation on <http://openptv-python.readthedocs.io/en/latest/> or respective subdirectories' README files for instructions on installing subpackages.
+
+Donations
+---------
+Please consider donation to support our website and domain expenses and our developers during their job transitions.
+
+[![paypal](https://www.paypalobjects.com/en_US/i/btn/btn_donateCC_LG.gif)](https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_id=RK3FHXTCJDSWL)
+
 
