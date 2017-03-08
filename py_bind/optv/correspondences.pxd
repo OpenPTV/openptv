@@ -17,8 +17,14 @@ cdef extern from "optv/epi.h":
         double x, y
 
 cdef extern from "optv/correspondences.h":
+    ctypedef struct n_tupel:
+        int p[4]
+    
     void quicksort_coord2d_x(coord_2d *crd, int num)
-
+    n_tupel* corresp "correspondences" (frame *frm, coord_2d **corrected, 
+        volume_par *vpar, control_par *cpar, calibration **calib,
+        int match_counts[])
+    
 cdef class MatchedCoords:
     cdef coord_2d *buf
     cdef int _num_pts

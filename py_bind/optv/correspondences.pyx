@@ -13,8 +13,9 @@ import numpy as np
 
 from optv.transforms cimport pixel_to_metric, dist_to_flat
 from optv.parameters cimport ControlParams
-from optv.calibration cimport Calibration
-from optv.tracking_framebuf cimport target
+from optv.calibration cimport Calibration, calibration
+from optv.tracking_framebuf cimport TargetArray, target, frame, \
+    PT_UNUSED, CORRES_NONE
 
 cdef class MatchedCoords:
     """
@@ -97,3 +98,100 @@ cdef class MatchedCoords:
         
     def __dealloc__(self):
         free(self.buf)
+
+def correspondences(list img_pts, list flat_coords, list cals, 
+    VolumeParams vparam, ControlParams cparam):
+    """
+    Get the correspondences for each clique size. 
+    
+    Arguments:
+    img_pts - a list of c := len(cals), containing TargetArray objects, each 
+        with the target coordinates of n detections in the respective image.
+        The target arrays are clobbered: returned arrays have the tnr property 
+        set. the pnr property should be set to the target index in its array.
+    flat_coords - a list of MatchedCoordinates objects, one per camera, holding
+        the x-sorted flat-coordinates conversion of the respective image 
+        targets.
+    cals - a list of Calibration objects, each for the camera taking one image.
+    VolumeParams vparam - an object holding observed volume size parameters.
+    ControlParams cparam - an object holding general control parameters.
+    
+    Returns:
+    sorted_pos - a tuple of (c,?,2) arrays, each with the positions in each of 
+        c image planes of points belonging to quadruplets, triplets, pairs 
+        found.
+    sorted_corresp - a tuple of (c,?) arrays, each with the point identifiers
+        of targets belonging to a quad/trip/etc per camera.
+    num_targs - total number of targets (must be greater than the sum of 
+        previous 3).
+    """
+    cdef:
+        int pt, cam
+        
+        calibration **calib = <calibration **> malloc(
+            len(cals) * sizeof(calibration *))
+        coord_2d **corrected = <coord_2d **> malloc(
+            num_cams * sizeof(coord_2d *))
+        frame frm
+        
+        np.ndarray[ndim=2, dtype=np.int_t] clique_ids
+        np.ndarray[ndim=2, dtype=np.int_t] clique_targs
+        
+        # Return buffers:
+        int *match_counts = <int *> malloc(num_cams * sizeof(int))
+        n_tupel *corresp_buf
+    
+    # Initialize frame partially, without the extra momory used by init_frame.
+    frm.targets = <target**> calloc(num_cams, sizeof(target*))
+    frm.num_targets = <int *> calloc(num_cams, sizeof(int))
+    
+    for cam in range(num_cams):
+        calib[cam] = (<Calibration>cals[cam])._calibration
+        frm.targets[cam] = img_pts[cam]._tarr
+        frm.num_targets[cam] = len(img_pts[cam])
+        corrected[cam] = flat_coords[cam].buf
+        
+    # The biz:
+    corresp_buf = corresp(&frm, corrected, 
+        vparam._volume_par, cparam._control_par, calib, match_counts)
+    
+    # Distribute data to return structures:
+    sorted_pos = [None]*(num_cams - 1)
+    sorted_corresp = [None]*(num_cams - 1)
+    last_count = 0
+    
+    for clique_type in xrange(num_cams - 1):
+        num_points = match_counts[clique_type]
+        clique_targs = np.full((num_cams, num_points, 2), PT_UNUSED, 
+            dtype=np.float64)
+        clique_ids = np.full((num_cams, num_points), CORRES_NONE, 
+            dtype=np.int_)
+        
+        # Trace back the pixel target properties through the flat metric
+        # intermediary that's x-sorted.
+        for cam in range(num_cams):            
+            for pt in range(num_points):
+                geo_id = corresp_buf[pt + last_count].p[cam]
+                if geo_id < 0:
+                    continue
+                
+                p1 = corrected[cam][geo_id].pnr
+                clique_ids[cam, pt] = p1
+
+                if p1 > -1:
+                    clique_targs[cam, pt, 0] = img_pts[cam][p1].x
+                    clique_targs[cam, pt, 1] = img_pts[cam][p1].y
+        
+        last_count += num_points
+        sorted_pos[clique_type] = clique_targs
+        sorted_corresp[clique_type] = clique_ids
+    
+    # Clean up.
+    num_targs = match_counts[num_cams - 1]
+    free(frm.targets)
+    free(frm.num_targets)
+    free(calib)
+    free(match_counts)
+    free(corresp_buf) # Note this for future returning of correspondences.
+    
+    return sorted_pos, sorted_corresp, num_targs

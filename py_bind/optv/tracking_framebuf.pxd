@@ -17,6 +17,7 @@ cdef extern from "optv/tracking_frame_buf.h":
     
     cpdef enum:
         CORRES_NONE = -1
+        PT_UNUSED = -999
     
     ctypedef struct path_inf "P":
         vec3d x
