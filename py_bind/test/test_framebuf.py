@@ -36,6 +36,15 @@ class TestTargets(unittest.TestCase):
         self.failUnlessEqual([targ.pos()[0] for targ in targs], [1127., 796.])
         self.failUnlessEqual([targ.pos()[1] for targ in targs], [796., 809.])
     
+    def test_sort_y(self):
+        """sorting on the Y coordinate in place"""
+        targs = read_targets("testing_fodder/frame/cam1.", 333)
+        revs = read_targets("testing_fodder/frame/cam1_reversed.", 333)
+        revs.sort_y()
+        
+        for targ, rev in zip(targs, revs):
+            self.failUnless(targ.pos(), rev.pos())
+    
     def test_write_targets(self):
         """Round-trip test of writing targets."""
         targs = read_targets("../../liboptv/tests/testing_fodder/sample_", 42)
