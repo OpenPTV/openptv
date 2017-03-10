@@ -400,13 +400,12 @@ double get_mmf_from_mmlut (Calibration *cal, vec3d pos){
     volume_par *vpar - struct holding the observed volume size.
     control_par *cpar - struct holding general control parameters such as 
         image size.
-    Calibration *cal - current single-camera positioning and other camera-
-        specific data.
+    Calibration *cal - scene parameters.
 */  
 void volumedimension (double *xmax, double *xmin, 
     double *ymax, double *ymin,
     double *zmax, double *zmin,
-    volume_par *vpar, control_par *cpar, Calibration *cal)
+    volume_par *vpar, control_par *cpar, Calibration **cal)
 {
   int i_cam, i, j;
   double X, Y;
@@ -438,11 +437,11 @@ void volumedimension (double *xmax, double *xmin,
       for (i = 0; i < 2; i ++) {
           for (j = 0; j < 2; j++) {
               pixel_to_metric (&x, &y, xc[i], yc[j], cpar);
-              x = x - cal[i_cam].int_par.xh;
-              y = y - cal[i_cam].int_par.yh;
-              correct_brown_affin (x, y, cal[i_cam].added_par, &x, &y);
+              x = x - cal[i_cam]->int_par.xh;
+              y = y - cal[i_cam]->int_par.yh;
+              correct_brown_affin (x, y, cal[i_cam]->added_par, &x, &y);
           
-              ray_tracing(x, y, &cal[i_cam], *(cpar->mm), pos, a);
+              ray_tracing(x, y, cal[i_cam], *(cpar->mm), pos, a);
           
               X = pos[0] + (Zmin - pos[2]) * a[0]/a[2];   
               Y = pos[1] + (Zmin - pos[2]) * a[1]/a[2];

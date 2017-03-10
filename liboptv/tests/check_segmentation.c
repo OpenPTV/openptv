@@ -8,12 +8,12 @@
 START_TEST(test_peak_fit)
 {
     int ntargets; 
-    unsigned char img[5][5] = {
-        { 0,   0,   0,   0, 0},
-        { 0, 255, 255, 255, 0},
-        { 0, 255, 255, 255, 0},
-        { 0, 255, 255, 255, 0},
-        { 0,   0,   0,   0, 0}
+    unsigned char img[25] = {
+         0,   0,   0,   0, 0,
+         0, 255, 255, 255, 0,
+         0, 255, 255, 255, 0,
+         0, 255, 255, 255, 0,
+         0,   0,   0,   0, 0
     };
     
     target pix[1024];
@@ -39,12 +39,12 @@ START_TEST(test_peak_fit)
    fail_unless(pix[0].n == 9);
    
    /* test the two objects */
-     unsigned char img1[5][5] = {
-        { 0,   0,   0,   0, 0},
-        { 0, 255, 0, 0, 0},
-        { 0, 0, 0, 0, 0},
-        { 0, 0, 0, 251, 0},
-        { 0,   0,   0,   0, 0}
+     unsigned char img1[25] = {
+         0,   0,   0,   0, 0,
+         0, 255, 0, 0, 0,
+         0, 0, 0, 0, 0,
+         0, 0, 0, 251, 0,
+         0,   0,   0,   0, 0
     };
    ntargets = peak_fit(img1, &targ_par, 0, cpar.imx, 0, cpar.imy, &cpar, 1, 
         pix);
@@ -61,12 +61,12 @@ END_TEST
 START_TEST(test_targ_rec)
 {
     int ntargets; 
-    unsigned char img[5][5] = {
-        { 0,   0,   0,   0, 0},
-        { 0, 255, 255, 255, 0},
-        { 0, 255, 255, 255, 0},
-        { 0, 255, 255, 255, 0},
-        { 0,   0,   0,   0, 0}
+    unsigned char img[25] = {
+         0,   0,   0,   0, 0,
+         0, 255, 255, 255, 0,
+         0, 255, 255, 255, 0,
+         0, 255, 255, 255, 0,
+         0,   0,   0,   0, 0
     };
     
     target pix[1024];
@@ -93,12 +93,12 @@ START_TEST(test_targ_rec)
     fail_unless(pix[0].tnr == CORRES_NONE);
    
     /* test the two objects */
-    unsigned char img1[5][5] = {
-        { 0,   0,   0,   0, 0},
-        { 0, 255, 0, 0, 0},
-        { 0, 0, 0, 0, 0},
-        { 0, 0, 0, 251, 0},
-        { 0,   0,   0,   0, 0}
+    unsigned char img1[25] = {
+         0,   0,   0,   0, 0,
+         0, 255, 0, 0, 0,
+         0, 0, 0, 0, 0,
+         0, 0, 0, 251, 0,
+         0,   0,   0,   0, 0
     };
     ntargets = targ_rec (img1, &targ_par, 0, cpar.imx, 0, cpar.imy, &cpar, 1, 
         pix);
@@ -110,7 +110,7 @@ START_TEST(test_targ_rec)
     fail_unless(ntargets == 1);
 
     /* Trip a segfault writing over the edge. */
-    img1[4][4] = 255;
+    img1[4*cpar.imx+4] = 255;
     ntargets = targ_rec (img1, &targ_par, 0, cpar.imx, 0, cpar.imy, &cpar, 1,
         pix);
     /* If execution reached here, test passed. */
