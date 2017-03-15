@@ -7,14 +7,14 @@ Created on Fri Oct 28 13:46:39 2016
 @author: yosef
 """
 
-from libc.stdlib cimport malloc, free
+from libc.stdlib cimport malloc, calloc, free
 cimport numpy as np
 import numpy as np
 
 from optv.transforms cimport pixel_to_metric, dist_to_flat
-from optv.parameters cimport ControlParams
+from optv.parameters cimport ControlParams, VolumeParams
 from optv.calibration cimport Calibration, calibration
-from optv.tracking_framebuf cimport TargetArray, target, frame, \
+from optv.tracking_framebuf cimport TargetArray, Target, target, frame, \
     PT_UNUSED, CORRES_NONE
 
 cdef class MatchedCoords:
@@ -127,15 +127,16 @@ def correspondences(list img_pts, list flat_coords, list cals,
     """
     cdef:
         int pt, cam
+        int num_cams = len(cals)
         
         calibration **calib = <calibration **> malloc(
-            len(cals) * sizeof(calibration *))
+            num_cams * sizeof(calibration *))
         coord_2d **corrected = <coord_2d **> malloc(
             num_cams * sizeof(coord_2d *))
         frame frm
         
         np.ndarray[ndim=2, dtype=np.int_t] clique_ids
-        np.ndarray[ndim=2, dtype=np.int_t] clique_targs
+        np.ndarray[ndim=3, dtype=np.float64_t] clique_targs
         
         # Return buffers:
         int *match_counts = <int *> malloc(num_cams * sizeof(int))
@@ -147,9 +148,9 @@ def correspondences(list img_pts, list flat_coords, list cals,
     
     for cam in range(num_cams):
         calib[cam] = (<Calibration>cals[cam])._calibration
-        frm.targets[cam] = img_pts[cam]._tarr
+        frm.targets[cam] = (<TargetArray>img_pts[cam])._tarr
         frm.num_targets[cam] = len(img_pts[cam])
-        corrected[cam] = flat_coords[cam].buf
+        corrected[cam] = (<MatchedCoords>flat_coords[cam]).buf
         
     # The biz:
     corresp_buf = corresp(&frm, corrected, 
@@ -179,8 +180,9 @@ def correspondences(list img_pts, list flat_coords, list cals,
                 clique_ids[cam, pt] = p1
 
                 if p1 > -1:
-                    clique_targs[cam, pt, 0] = img_pts[cam][p1].x
-                    clique_targs[cam, pt, 1] = img_pts[cam][p1].y
+                    targ = img_pts[cam][p1]
+                    clique_targs[cam, pt, 0] = (<Target> targ)._targ.x
+                    clique_targs[cam, pt, 1] = (<Target> targ)._targ.y
         
         last_count += num_points
         sorted_pos[clique_type] = clique_targs
