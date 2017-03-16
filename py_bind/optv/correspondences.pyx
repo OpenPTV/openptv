@@ -106,13 +106,13 @@ cdef class MatchedCoords:
             np.ndarray[ndim=2, dtype=np.float64_t] pos
             int pt
         
-        pos = np.empty((len(pnrs), 2))
-        num_found = 0
+        pos = np.full((len(pnrs), 2), PT_UNUSED, dtype=np.float64)
         for pt in range(self._num_pts):
-            if self.buf[pt].pnr in pnrs:
-                pos[num_found,0] = self.buf[pt].x
-                pos[num_found,1] = self.buf[pt].y
-                num_found += 1
+            which = np.flatnonzero(self.buf[pt].pnr == pnrs)
+            if len(which) > 0:
+                which = which[0]
+                pos[which,0] = self.buf[pt].x
+                pos[which,1] = self.buf[pt].y
         return pos
         
     def __dealloc__(self):
