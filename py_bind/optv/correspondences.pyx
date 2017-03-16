@@ -95,6 +95,25 @@ cdef class MatchedCoords:
             pnr[pt] = self.buf[pt].pnr
         
         return pos, pnr
+    
+    def get_by_pnrs(self, np.ndarray[ndim=1, dtype=np.int_t] pnrs):
+        """
+        Return the flat positions of points whose pnr property is given, as an
+        (n,2) flat position array. Assumes all pnrs are to be found, otherwise
+        there will be garbage at the end of the position array.
+        """
+        cdef:
+            np.ndarray[ndim=2, dtype=np.float64_t] pos
+            int pt
+        
+        pos = np.empty((len(pnrs), 2))
+        num_found = 0
+        for pt in range(self._num_pts):
+            if self.buf[pt].pnr in pnrs:
+                pos[num_found,0] = self.buf[pt].x
+                pos[num_found,1] = self.buf[pt].y
+                num_found += 1
+        return pos
         
     def __dealloc__(self):
         free(self.buf)
