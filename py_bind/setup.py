@@ -18,6 +18,7 @@ ext_mods = [
     mk_ext("optv.transforms", ["optv/transforms.pyx"]),
     mk_ext("optv.imgcoord", ["optv/imgcoord.pyx"]),
     mk_ext("optv.image_processing", ["optv/image_processing.pyx"]),
+    mk_ext("optv.correspondences", ["optv/correspondences.pyx"]),
     mk_ext("optv.segmentation", ["optv/segmentation.pyx"]),
     mk_ext("optv.orientation", ["optv/orientation.pyx"])
 ]
