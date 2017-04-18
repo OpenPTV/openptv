@@ -31,6 +31,9 @@
 #include <stdlib.h>
 #include <stdio.h>
 
+/* internal-use defines, not needed by the outside world. */
+#define TR_UNUSED -1
+
 /* track_forward_start() - initializes the tracking frame buffer with the 
    first frames.
    
@@ -61,7 +64,7 @@ void track_forward_start(tracking_run *tr) {
 void reset_foundpix_array(foundpix *arr, int arr_len, int num_cams) {
     int i, cam;
     for (i = 0; i < arr_len; i++) {
-        arr[i].ftnr = -1;
+        arr[i].ftnr = TR_UNUSED;
         arr[i].freq = 0;
         for(cam = 0; cam < num_cams; cam++) {
             arr[i].whichcam[cam] = 0;
@@ -115,7 +118,7 @@ void register_closest_neighbs(target *targets, int num_targets, int cam,
 
     for (cand = 0; cand < MAX_CANDS; cand++) {
         if(all_cands[cand] == -999) {
-            reg[cand].ftnr = -1;
+            reg[cand].ftnr = TR_UNUSED;
         } else {
             reg[cand].whichcam[cam] = 1;
             reg[cand].ftnr = targets[all_cands[cand]].tnr;
@@ -410,7 +413,7 @@ int sort_candidates_by_freq(foundpix item[], int num_cams) {
     /* how often was ftnr found */
     for (i = 0; i<num_cams*MAX_CANDS; i++)
         for (j = 0; j < num_cams; j++)
-            if (item[i].whichcam[j] == 1 && item[i].ftnr !=-1) {
+            if (item[i].whichcam[j] == 1 && item[i].ftnr != TR_UNUSED) {
                 item[i].freq++;
             }
 
@@ -430,7 +433,7 @@ int sort_candidates_by_freq(foundpix item[], int num_cams) {
             if (item[i].ftnr == item[j].ftnr || item[j].freq <2)
             {
                 item[j].freq = 0;
-                item[j].ftnr = -1;
+                item[j].ftnr = TR_UNUSED;
             }
         }
 
@@ -487,6 +490,62 @@ void point_to_pixel (vec2d v1, vec3d point, Calibration *cal, control_par *cpar)
     metric_to_pixel(&v1[0], &v1[1], v1[0], v1[1], cpar);
 }
 
+/* sorted_candidates_in_volume() receives a volume center and produces a list
+   of candidates for the next particle in that volume, sorted by the 
+   candidates' number of appearances as 2D targets.
+   
+   Arguments:
+   vec3d center - the 3D midpoint-position of the search volume
+   vec2d center_proj[] - projections of the center on the cameras, pixel 
+      coordinates.
+   frame *frm - the frame holding targets for the search.
+   tracking_run *run - the parameter collection we need for determining 
+        search region. The same object used throughout the tracking code.
+   
+   Returns:
+   foundpix *points - a newly-allocated buffer of foundpix items, denoting
+      for each item its particle number and quality parameters. The buffer
+      is terminated by one extra item with ftnr set to TR_UNUSED
+*/
+foundpix *sorted_candidates_in_volume(vec3d center, vec2d center_proj[],
+    frame *frm, tracking_run *run)
+{
+    foundpix *points;
+    double right[TR_MAX_CAMS], left[TR_MAX_CAMS];
+    double down[TR_MAX_CAMS], up[TR_MAX_CAMS];
+    int cam, num_cams, num_cands;
+    
+    num_cams = frm->num_cams;
+    points = (foundpix*) calloc(num_cams*MAX_CANDS, sizeof(foundpix));
+    reset_foundpix_array(points, num_cams*MAX_CANDS, num_cams);
+    
+    /* Search limits in image space */
+    searchquader(center, right, left, down, up, 
+        run->tpar, run->cpar, run->cal);
+    
+    /* search in pix for candidates in the next time step */
+    for (cam = 0; cam < num_cams; cam++) {
+        register_closest_neighbs(frm->targets[cam], 
+            frm->num_targets[cam], cam, 
+            center_proj[cam][0], center_proj[cam][1],
+            left[cam], right[cam], up[cam], down[cam], 
+            &(points[cam*MAX_CANDS]), run->cpar
+        );
+    }
+
+    /* fill and sort candidate struct */
+    num_cands = sort_candidates_by_freq(points, num_cams);
+    if (num_cands > 0) {
+        points = (foundpix *) realloc(
+            points, (num_cands + 1)*sizeof(foundpix));
+        points[num_cands].ftnr = TR_UNUSED;
+        return points;
+    } else {
+        free(points);
+        return NULL;
+    }
+}
+
 /* trackcorr_c_loop is the main tracking subroutine that scans the 3D particle position
  * data from rt_is.* files and the 2D particle positions in image space in _targets and
  * constructs trajectories (links) of the particles in 3D in time.
@@ -512,14 +571,14 @@ void point_to_pixel (vec2d v1, vec3d point, Calibration *cal, control_par *cpar)
 void trackcorr_c_loop (tracking_run *run_info, int step, int display) {
     /* sequence loop */
     int j, h, mm, kk, in_volume = 0;
-    int counter1, counter2, philf[4][MAX_CANDS];
+    int counter2, philf[4][MAX_CANDS];
     int count1 = 0, count2 = 0, count3 = 0, num_added = 0;
     int quali = 0;
     vec3d diff_pos, X[6];     /* 7 reference points used in the algorithm, TODO: check if can reuse some */
     double angle, acc, angle0, acc0,  dl;
     double xr[4], xl[4], yd[4], yu[4], angle1, acc1;
     vec2d n[4];     // would replace xp,yp and xc,yc and xn,yn by p[i][0],p[i][1]
-    vec2d v1[4], v2[4];     // replaced x1[4], y1[4], x2[4], y2[4] by v1[j][0], v1[j][1]
+    vec2d v1[4], v2[4]; /* volume center projection on cameras */ 
     double rr;
 
 
@@ -537,8 +596,7 @@ void trackcorr_c_loop (tracking_run *run_info, int step, int display) {
     volume_par *vpar;
     control_par *cpar;
 
-    foundpix *w, *wn, *p16;     //p16 due to history of 4 cameras times 4 candidates
-
+    foundpix *w, *wn; 
     count1 = 0; num_added = 0;
 
     fb = run_info->fb;
@@ -548,9 +606,6 @@ void trackcorr_c_loop (tracking_run *run_info, int step, int display) {
     cpar = run_info->cpar;
     curr_targets = fb->buf[1]->targets;
 
-
-    p16 = (foundpix*) calloc(fb->num_cams*MAX_CANDS, sizeof(foundpix));
-
     /* try to track correspondences from previous 0 - corp, variable h */
     for (h = 0; h < fb->buf[1]->num_parts; h++) {
         for (j = 0; j < 6; j++) vec_init(X[j]);
@@ -559,7 +614,6 @@ void trackcorr_c_loop (tracking_run *run_info, int step, int display) {
         curr_corres = &(fb->buf[1]->correspond[h]);
 
         curr_path_inf->inlist = 0;
-        reset_foundpix_array(p16, fb->num_cams*MAX_CANDS, fb->num_cams);
 
         /* 3D-position */
         vec_copy(X[1], curr_path_inf->x);
@@ -588,29 +642,17 @@ void trackcorr_c_loop (tracking_run *run_info, int step, int display) {
 
         }
 
-        /* calculate search cuboid (quader) and reproject it to the image space */
-        searchquader(X[2], xr, xl, yd, yu, tpar, cpar, cal);
+        /* calculate search cuboid and reproject it to the image space */
+        w = sorted_candidates_in_volume(X[2], v1, fb->buf[2], run_info);
+        if (w == NULL) continue;
 
-        /* search in pix for candidates in the next time step */
-        for (j = 0; j < fb->num_cams; j++) {
-            register_closest_neighbs(fb->buf[2]->targets[j],
-                                     fb->buf[2]->num_targets[j], j, v1[j][0], v1[j][1],
-                                     xl[j], xr[j], yu[j], yd[j], &p16[j*MAX_CANDS], cpar);
-        }
-
-        /* fill and sort candidate struct */
-        counter1 = sort_candidates_by_freq(p16, fb->num_cams);
-        w = (foundpix *) calloc (counter1, sizeof (foundpix));
-
-        if (counter1 > 0) count2++;
-        copy_foundpix_array(w, p16, counter1, fb->num_cams);
-
-        /* check for what was found */
-        for (mm = 0; mm<counter1; mm++) {       /* counter1-loop */
+        /* Continue to find candidates for the candidates. */
+        count2++;
+        mm = 0;
+        while (w[mm].ftnr != TR_UNUSED) {       /* counter1-loop */
+            printf("%d\n", mm);
             /* search for found corr of current the corr in next
                with predicted location */
-
-            reset_foundpix_array(p16, fb->num_cams*MAX_CANDS, fb->num_cams);
 
             /* found 3D-position */
             ref_path_inf = &(fb->buf[2]->path_info[w[mm].ftnr]);
@@ -623,53 +665,45 @@ void trackcorr_c_loop (tracking_run *run_info, int step, int display) {
                 search_volume_center_moving(X[1], X[3], X[5]);
             }
 
-            searchquader(X[5], xr, xl, yd, yu, tpar, cpar, cal);
-
             for (j = 0; j < fb->num_cams; j++) {
                 point_to_pixel (v1[j], X[5], cal[j], cpar);
             }
 
-            for (j = 0; j < fb->num_cams; j++) {
-                register_closest_neighbs(fb->buf[3]->targets[j],
-                                         fb->buf[3]->num_targets[j], j, v1[j][0], v1[j][1],
-                                         xl[j], xr[j], yu[j], yd[j], &p16[j*MAX_CANDS], cpar);
-            }
             /* end of search in pix */
+            wn = sorted_candidates_in_volume(X[5], v1, fb->buf[3], run_info);
+            if (wn != NULL) {
+                count3++;
+                kk = 0;
+                while (wn[kk].ftnr != TR_UNUSED) {
+                    ref_path_inf = &(fb->buf[3]->path_info[wn[kk].ftnr]);
+                    vec_copy(X[4], ref_path_inf->x);
 
-            /* fill and sort candidate struct */
-            counter2 = sort_candidates_by_freq(p16, fb->num_cams);
-            wn = (foundpix *) calloc (counter2, sizeof (foundpix));
+                    vec_subt(X[4], X[3], diff_pos);
+                    if ( pos3d_in_bounds(diff_pos, tpar)) {
+                        angle_acc(X[3], X[4], X[5], &angle1, &acc1);
+                        if (curr_path_inf->prev >= 0) {
+                            angle_acc(X[1], X[2], X[3], &angle0, &acc0);
+                        } else {
+                            acc0 = acc1; angle0 = angle1;
+                        }
 
-            if (counter2 > 0) count3++;
-            copy_foundpix_array(wn, p16, counter2, fb->num_cams);
-            /*end of candidate struct */
-            /* ************************************************ */
-            for (kk = 0; kk < counter2; kk++)  {          /* counter2-loop */
-                ref_path_inf = &(fb->buf[3]->path_info[wn[kk].ftnr]);
-                vec_copy(X[4], ref_path_inf->x);
+                        acc = (acc0+acc1)/2; angle = (angle0+angle1)/2;
+                        quali = wn[kk].freq+w[mm].freq;
 
-                vec_subt(X[4], X[3], diff_pos);
-                if ( pos3d_in_bounds(diff_pos, tpar)) {
-                    angle_acc(X[3], X[4], X[5], &angle1, &acc1);
-                    if (curr_path_inf->prev >= 0) {
-                        angle_acc(X[1], X[2], X[3], &angle0, &acc0);
-                    } else {
-                        acc0 = acc1; angle0 = angle1;
+                        if ((acc < tpar->dacc && angle < tpar->dangle) || \
+                            (acc < tpar->dacc/10))
+                        {
+                            dl = (vec_diff_norm(X[1], X[3]) +
+                                vec_diff_norm(X[4], X[3]) )/2;
+                            rr = (dl/run_info->lmax + acc/tpar->dacc + \
+                                angle/tpar->dangle)/(quali);
+                            register_link_candidate(
+                                curr_path_inf, rr, w[mm].ftnr);
+                        }
                     }
-
-                    acc = (acc0+acc1)/2; angle = (angle0+angle1)/2;
-                    quali = wn[kk].freq+w[mm].freq;
-
-                    if ((acc < tpar->dacc && angle < tpar->dangle) || \
-                        (acc < tpar->dacc/10))
-                    {
-                        dl = (vec_diff_norm(X[1], X[3]) +
-                              vec_diff_norm(X[4], X[3]) )/2;
-                        rr = (dl/run_info->lmax + acc/tpar->dacc + angle/tpar->dangle)/(quali);
-                        register_link_candidate(curr_path_inf, rr, w[mm].ftnr);
-                    }
-                }
-            }             /* end of counter2-loop */
+                    kk++;
+                } /* End of searching 2nd-frame candidates. */
+            }             
 
             /* creating new particle position,
              *  reset img coord because of num_cams < 4
@@ -792,7 +826,8 @@ void trackcorr_c_loop (tracking_run *run_info, int step, int display) {
             }
 
             free(wn);
-        }         /* end of counter1-loop */
+            mm++;
+        } /* end of loop over first-frame candidates. */
 
         /* begin of inlist still zero */
         if (tpar->add) {
@@ -969,7 +1004,7 @@ double trackback_c (tracking_run *run_info, int step, int display)
     vec2d n[4], v2[4];     // replaces xn,yn, x2[4], y2[4],
     double rr, Ymin = 0, Ymax = 0;
     double npart = 0, nlinks = 0;
-    foundpix *w, *p16;
+    foundpix *w;
 
     sequence_par *seq_par;
     track_par *tpar;
@@ -994,8 +1029,6 @@ double trackback_c (tracking_run *run_info, int step, int display)
     vpar = run_info->vpar;
     cpar = run_info->cpar;
 
-    p16 = (foundpix*) calloc(cpar->num_cams*MAX_CANDS, sizeof(foundpix));
-
     fb = run_info->fb;
 
     /* Prime the buffer with first frames */
@@ -1018,7 +1051,6 @@ double trackback_c (tracking_run *run_info, int step, int display)
 
             for (j = 0; j < 6; j++) vec_init(X[j]);
             curr_path_inf->inlist = 0;
-            reset_foundpix_array(p16, fb->num_cams*MAX_CANDS, fb->num_cams);
 
             /* 3D-position of current particle */
             vec_copy(X[1], curr_path_inf->x);
@@ -1034,41 +1066,33 @@ double trackback_c (tracking_run *run_info, int step, int display)
             }
 
             /* calculate searchquader and reprojection in image space */
-            searchquader(X[2], xr, xl, yd, yu, tpar, cpar, cal);
+            w = sorted_candidates_in_volume(X[2], n, fb->buf[2], run_info);
+            
+            if (w != NULL) {
+                count2++;
 
-            /* search in pix for candidates in next time step */
-            for (j = 0; j < fb->num_cams; j++) {
-                register_closest_neighbs(fb->buf[2]->targets[j],
-                                         fb->buf[2]->num_targets[j], j, n[j][0], n[j][1],
-                                         xl[j], xr[j], yu[j], yd[j], &p16[j*MAX_CANDS], cpar);
-            }
+                i = 0;
+                while (w[i].ftnr != TR_UNUSED) {
+                    ref_path_inf = &(fb->buf[2]->path_info[w[i].ftnr]);
+                    vec_copy(X[3], ref_path_inf->x);
 
-            /* fill and sort candidate struct */
-            counter1 = sort_candidates_by_freq(p16, fb->num_cams);
-            w = (foundpix *) calloc (counter1, sizeof (foundpix));
+                    vec_subt(X[1], X[3], diff_pos);
+                    if (pos3d_in_bounds(diff_pos, tpar)) {
+                        angle_acc(X[1], X[2], X[3], &angle, &acc);
 
-            /*end of candidate struct */
-            if (counter1 > 0) count2++;
-            copy_foundpix_array(w, p16, counter1, fb->num_cams);
-
-            for (i = 0; i < counter1; i++) {
-                ref_path_inf = &(fb->buf[2]->path_info[w[i].ftnr]);
-                vec_copy(X[3], ref_path_inf->x);
-
-                vec_subt(X[1], X[3], diff_pos);
-                if (pos3d_in_bounds(diff_pos, tpar)) {
-                    angle_acc(X[1], X[2], X[3], &angle, &acc);
-
-                    /* *********************check link *****************************/
-                    if ((acc < tpar->dacc && angle < tpar->dangle) || \
-                        (acc < tpar->dacc/10))
-                    {
-                        dl = (vec_diff_norm(X[1], X[3]) +
-                              vec_diff_norm(X[0], X[1]) )/2;
-                        quali = w[i].freq;
-                        rr = (dl/run_info->lmax + acc/tpar->dacc + angle/tpar->dangle)/quali;
-                        register_link_candidate(curr_path_inf, rr, w[i].ftnr);
+                        /* *********************check link *****************************/
+                        if ((acc < tpar->dacc && angle < tpar->dangle) || \
+                            (acc < tpar->dacc/10))
+                        {
+                            dl = (vec_diff_norm(X[1], X[3]) +
+                                  vec_diff_norm(X[0], X[1]) )/2;
+                            quali = w[i].freq;
+                            rr = (dl/run_info->lmax + acc/tpar->dacc + \
+                                angle/tpar->dangle)/quali;
+                            register_link_candidate(curr_path_inf, rr, w[i].ftnr);
+                        }
                     }
+                    i++;
                 }
             }
 

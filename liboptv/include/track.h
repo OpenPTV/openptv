@@ -23,13 +23,14 @@
  link.
  */
 #define TR_BUFSPACE 4
+#define TR_MAX_CAMS 4
 #define MAX_TARGETS 20000
 #define MAX_CANDS 4         // max candidates, nearest neighbours
 #define ADD_PART 3          // search region 3 pix around a particle
 
 typedef struct /* struct for what was found to corres */
 {
- int ftnr, freq, whichcam[4];
+ int ftnr, freq, whichcam[TR_MAX_CAMS];
 }
 foundpix;
 
