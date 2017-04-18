@@ -351,7 +351,7 @@ END_TEST
 
 START_TEST(test_trackcorr_c_loop)
 {
-    tracking_run *ret;
+    tracking_run *run;
     int step, display=0;
     Calibration *calib[3];
     control_par *cpar;
@@ -360,26 +360,27 @@ START_TEST(test_trackcorr_c_loop)
     
     printf("----------------------------\n");
     printf("Test tracking multiple files 2 cameras, 1 particle \n");
-    
     cpar = read_control_par("parameters/ptv.par");
     read_all_calibration(calib, cpar->num_cams);
-    ret = trackcorr_c_init(calib);
-
-
-    trackcorr_c_loop (ret, ret->seq_par->first, display, calib);
     
-    for (step = ret->seq_par->first+1; step < ret->seq_par->last; step++)
+    run = tr_new_legacy("parameters/sequence.par", 
+        "parameters/track.par", "parameters/criteria.par", 
+        "parameters/ptv.par", calib);
+    track_forward_start(run);
+    trackcorr_c_loop(run, run->seq_par->first, display);
+    
+    for (step = run->seq_par->first + 1; step < run->seq_par->last; step++)
     {
-        trackcorr_c_loop (ret, step, display, calib);
+        trackcorr_c_loop(run, step, display);
     }
-    trackcorr_c_finish(ret, ret->seq_par->last, display);
+    trackcorr_c_finish(run, run->seq_par->last, display);
     
-    int range = ret->seq_par->last - ret->seq_par->first;
+    int range = run->seq_par->last - run->seq_par->first;
     double npart, nlinks;
     
     /* average of all steps */
-    npart = (double)ret->npart / range;
-    nlinks = (double)ret->nlinks / range;
+    npart = (double)run->npart / range;
+    nlinks = (double)run->nlinks / range;
     
     ck_assert_msg(fabs(npart - 208.0/210.0)<EPS,
                   "Was expecting npart == 208/210 but found %f \n", npart);
@@ -406,10 +407,12 @@ START_TEST(test_cavity)
     cpar = read_control_par("parameters/ptv.par");
     read_all_calibration(calib, cpar->num_cams);
     printf("In test_cavity num cams = %d\n",cpar->num_cams);
-    ret = trackcorr_c_init(calib);
+    ret = tr_new_legacy("parameters/sequence.par", 
+        "parameters/track.par", "parameters/criteria.par", 
+        "parameters/ptv.par", calib);
+    track_forward_start(ret);
     
-    trackcorr_c_loop (ret, 10002, display, calib);
-    //trackcorr_c_finish(ret, 10002, display);
+    trackcorr_c_loop (ret, 10002, display);
     
     ck_assert_msg(ret->npart == 672,
                   "Was expecting npart == 672 but found %f \n", ret->npart);
@@ -435,7 +438,9 @@ START_TEST(test_trackback)
     
     cpar = read_control_par("parameters/ptv.par");
     read_all_calibration(calib, cpar->num_cams);
-    ret = trackcorr_c_init(calib);
+    ret = tr_new_legacy("parameters/sequence.par",
+        "parameters/track.par", "parameters/criteria.par",
+        "parameters/ptv.par", calib);
     ret->tpar->dvxmin =ret->tpar->dvymin=ret->tpar->dvzmin=-50;
     ret->tpar->dvxmax =ret->tpar->dvymax=ret->tpar->dvzmax=50;
     
@@ -443,7 +448,7 @@ START_TEST(test_trackback)
                      (ret->tpar->dvymin - ret->tpar->dvymax), \
                      (ret->tpar->dvzmin - ret->tpar->dvzmax));
     
-    nlinks = trackback_c(ret, ret->seq_par->last, display, calib);
+    nlinks = trackback_c(ret, ret->seq_par->last, display);
     
     ck_assert_msg(fabs(nlinks - 201.0/209.0)<EPS,
                   "Was expecting nlinks to be 201/209 but found %f %f\n", nlinks, nlinks*209.0);

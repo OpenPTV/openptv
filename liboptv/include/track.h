@@ -22,12 +22,10 @@
  MAX_CANDS is the max number of candidates sought in search volume for next
  link.
  */
-#define BUFSPACE 4
+#define TR_BUFSPACE 4
 #define MAX_TARGETS 20000
 #define MAX_CANDS 4         // max candidates, nearest neighbours
 #define ADD_PART 3          // search region 3 pix around a particle
-
-
 
 typedef struct /* struct for what was found to corres */
 {
@@ -54,11 +52,9 @@ void copy_foundpix_array(foundpix *dest, foundpix *src, int arr_len, \
     int num_cams);
 void point_to_pixel (vec2d v1, vec3d point, Calibration *cal, control_par *cpar);
 
-tracking_run* trackcorr_c_init(Calibration **cal);
-void trackcorr_c_loop (tracking_run *run_info, int step, int display, \
-    Calibration **cal);
+void track_forward_start(tracking_run *tr);
+void trackcorr_c_loop (tracking_run *run_info, int step, int display);
 void trackcorr_c_finish(tracking_run *run_info, int step, int display);
-double trackback_c(tracking_run *run_info, int step, int display, \
-    Calibration **cal);
+double trackback_c(tracking_run *run_info, int step, int display);
 
 #endif

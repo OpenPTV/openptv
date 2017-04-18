@@ -32,8 +32,6 @@
 #include <stdio.h>
 
 
-
-
 /* Global variables marked extern in 'globals.h' and not defined elsewhere: */
 int intx0_tr[4][10000], inty0_tr[4][10000], intx1_tr[4][10000], \
     inty1_tr[4][10000], intx2_tr[4][10000], inty2_tr[4][10000], \
@@ -43,44 +41,24 @@ double pnr3_tr[4][10000];
 double npart, nlinks;
 
 
-/* trackcorr_c_init - initializes the tracking frame buffer with the parameters
-   from sequence, track, criteria and ptv.par files
+/* track_forward_start() - initializes the tracking frame buffer with the 
+   first frames.
+   
    Arguments:
-   Calibration *cal - pointer to the calibration data of all the cameras
-
-   returns: tracking_run type of a structure
- */
-
-tracking_run* trackcorr_c_init(Calibration **cal) {
+   tracking_run *tr - an object holding the per-run tracking parameters, and
+      a frame buffer with 4 positions.
+*/
+void track_forward_start(tracking_run *tr) {
     int step;
-    tracking_run *ret;
-
-    /* Remaining globals:
-       see below for communication globals.
-     */
-
-    ret = (tracking_run *) malloc(sizeof(tracking_run));
-    tr_init(ret, "parameters/sequence.par", "parameters/track.par",
-            "parameters/criteria.par", "parameters/ptv.par");
-
-    fb_init(ret->fb, 4, ret->cpar->num_cams, MAX_TARGETS,
-            "res/rt_is", "res/ptv_is", "res/added", ret->seq_par->img_base_name);
-
     /* Prime the buffer with first frames */
-    for (step = ret->seq_par->first; step < ret->seq_par->first + 3; step++) {
-        fb_read_frame_at_end(ret->fb, step, 0);
-        fb_next(ret->fb);
+    for (step = tr->seq_par->first; 
+         step < tr->seq_par->first + TR_BUFSPACE - 1; 
+         step++) 
+    {
+        fb_read_frame_at_end(tr->fb, step, 0);
+        fb_next(tr->fb);
     }
-    fb_prev(ret->fb);
-
-    ret->lmax = norm((ret->tpar->dvxmin - ret->tpar->dvxmax), \
-                     (ret->tpar->dvymin - ret->tpar->dvymax), \
-                     (ret->tpar->dvzmin - ret->tpar->dvzmax));
-    volumedimension (&(ret->vpar->X_lay[1]), &(ret->vpar->X_lay[0]), &(ret->ymax),
-                     &(ret->ymin), &(ret->vpar->Zmax_lay[1]), &(ret->vpar->Zmin_lay[0]),
-                     ret->vpar, ret->cpar, *cal);
-
-    return ret;
+    fb_prev(tr->fb);
 }
 
 /* reset_foundpix_array() sets default values for foundpix objects in an array.
@@ -544,8 +522,7 @@ void point_to_pixel (vec2d v1, vec3d point, Calibration *cal, control_par *cpar)
  * Calibration **cal is a set of calibration parameters of the in_volumeved cameras (from 1 to run_info->cpar->num_cams)
  * Returns: function does not return an argument, the tracks are updated within the run_info dataset
  */
-void trackcorr_c_loop (tracking_run *run_info, int step, int display, Calibration **cal)
-{
+void trackcorr_c_loop (tracking_run *run_info, int step, int display) {
     /* sequence loop */
     int j, h, mm, kk, in_volume = 0;
     int counter1, counter2, philf[4][MAX_CANDS];
@@ -570,7 +547,8 @@ void trackcorr_c_loop (tracking_run *run_info, int step, int display, Calibratio
     int _ix;     /* For use in any of the complex index expressions below */
     int _frame_parts;     /* number of particles in a frame */
 
-    /* Shortcuts into the tracking_run struct */
+    /* Shortcuts into the tracking_run struct */ 
+    Calibration **cal;
     framebuf *fb;
     track_par *tpar;
     volume_par *vpar;
@@ -581,6 +559,7 @@ void trackcorr_c_loop (tracking_run *run_info, int step, int display, Calibratio
     count1 = 0; num_added = 0;
 
     fb = run_info->fb;
+    cal = run_info->cal;
     tpar = run_info->tpar;
     vpar = run_info->vpar;
     cpar = run_info->cpar;
@@ -1071,9 +1050,8 @@ void trackcorr_c_finish(tracking_run *run_info, int step, int display)
 }
 
 /*     track backwards */
-double trackback_c (tracking_run *run_info, int step, int display, Calibration **cal)
+double trackback_c (tracking_run *run_info, int step, int display)
 {
-    char buf[256];
     int i, j, h, in_volume = 0;
     int counter1, philf[4][MAX_CANDS];
     int count1 = 0, count2 = 0, num_added = 0;
@@ -1091,6 +1069,7 @@ double trackback_c (tracking_run *run_info, int step, int display, Calibration *
     volume_par *vpar;
     control_par *cpar;
     framebuf *fb;
+    Calibration **cal;
 
     /* Shortcuts to inside current frame */
     P *curr_path_inf, *ref_path_inf;
@@ -1102,13 +1081,13 @@ double trackback_c (tracking_run *run_info, int step, int display, Calibration *
     display = 1;
 
     /* shortcuts */
+    cal = run_info->cal;
     seq_par = run_info->seq_par;
     tpar = run_info->tpar;
     vpar = run_info->vpar;
     cpar = run_info->cpar;
 
     p16 = (foundpix*) calloc(cpar->num_cams*MAX_CANDS, sizeof(foundpix));
-
 
     fb = run_info->fb;
 
