@@ -30,7 +30,7 @@ void volumedimension (double *xmax
 					, double *zmin
 					, volume_par *vpar
                		, control_par *cpar
-               		, Calibration *cal);
+               		, Calibration **cal);
 
 void trans_Cam_Point(Exterior ex, mm_np mm, Glass gl, vec3d pos, Exterior *ex_t, 
     vec3d pos_t, double cross_p[3], double cross_c[3]);
