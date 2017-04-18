@@ -379,18 +379,20 @@ void searchquader(vec3d point, double xr[4], double xl[4], double yd[4], \
     }
 }
 
-/* sort_candidates_by_freq sorts the list of candidates in foundpix array by frequency of their
- * appearance in all the cameras
+/* sort_candidates_by_freq() sorts (in place!) the list of candidates in 
+ * foundpix array by frequency of their appearance in all the cameras.
+ *
  * Arguments:
- * foundpix array, item[] which is as long as: num_cam*MAX_CANDS candidates
- * integer * counter - pointer to the list of the candidates
- * integer num_cams - number of cameras in the experiment (typically 1-4)
+ * foundpix item[] - as long as num_cam*MAX_CANDS candidates. Sorted in place!
+ * int num_cams - number of cameras in the experiment (typically 1-4)
  * Returns the sorted array foundpix item[] and a pointer *counter to
  * an integer number of different candidates
+ *
+ * Retuens:
+ * The number of distinct particles in the sorted array.
  */
 
-void sort_candidates_by_freq (foundpix item[], int *counter, int num_cams)
-{
+int sort_candidates_by_freq(foundpix item[], int num_cams) {
     int i,j,m, different;
     foundpix temp;
 
@@ -404,9 +406,6 @@ void sort_candidates_by_freq (foundpix item[], int *counter, int num_cams)
                 {
                     item[i].whichcam[j] = 1;
                 }
-
-
-
 
     /* how often was ftnr found */
     for (i = 0; i<num_cams*MAX_CANDS; i++)
@@ -445,8 +444,7 @@ void sort_candidates_by_freq (foundpix item[], int *counter, int num_cams)
         }
 
     for (i = 0; i<num_cams*MAX_CANDS; ++i) if(item[i].freq != 0) different++;
-    *counter = different;
-
+    return different;
 }
 
 /* sorts a float array a and an integer array b both of length n
@@ -488,7 +486,6 @@ void point_to_pixel (vec2d v1, vec3d point, Calibration *cal, control_par *cpar)
     img_coord(point, cal, cpar->mm, &v1[0], &v1[1]);
     metric_to_pixel(&v1[0], &v1[1], v1[0], v1[1], cpar);
 }
-
 
 /* trackcorr_c_loop is the main tracking subroutine that scans the 3D particle position
  * data from rt_is.* files and the 2D particle positions in image space in _targets and
@@ -602,9 +599,7 @@ void trackcorr_c_loop (tracking_run *run_info, int step, int display) {
         }
 
         /* fill and sort candidate struct */
-        sort_candidates_by_freq(p16, &counter1, fb->num_cams);
-        for (j = 0; j<counter1; j++) {
-        }
+        counter1 = sort_candidates_by_freq(p16, fb->num_cams);
         w = (foundpix *) calloc (counter1, sizeof (foundpix));
 
         if (counter1 > 0) count2++;
@@ -642,8 +637,7 @@ void trackcorr_c_loop (tracking_run *run_info, int step, int display) {
             /* end of search in pix */
 
             /* fill and sort candidate struct */
-            sort_candidates_by_freq(p16, &counter2, fb->num_cams);
-
+            counter2 = sort_candidates_by_freq(p16, fb->num_cams);
             wn = (foundpix *) calloc (counter2, sizeof (foundpix));
 
             if (counter2 > 0) count3++;
@@ -690,7 +684,6 @@ void trackcorr_c_loop (tracking_run *run_info, int step, int display) {
                 v2[j][0] = -1e10; v2[j][1] = -1e10;
             }
             for (j = 0; j < fb->num_cams; j++) {
-
                 /* here we shall use only the 1st neigbhour */
                 counter2 = candsearch_in_pix (fb->buf[3]->targets[j],
                                               fb->buf[3]->num_targets[j], n[j][0], n[j][1],
@@ -1051,7 +1044,7 @@ double trackback_c (tracking_run *run_info, int step, int display)
             }
 
             /* fill and sort candidate struct */
-            sort_candidates_by_freq(p16, &counter1, fb->num_cams);
+            counter1 = sort_candidates_by_freq(p16, fb->num_cams);
             w = (foundpix *) calloc (counter1, sizeof (foundpix));
 
             /*end of candidate struct */

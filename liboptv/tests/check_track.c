@@ -327,17 +327,15 @@ START_TEST(test_sort_candidates_by_freq)
                      };
     foundpix *dest;
     int num_cams = 2;
+    int num_parts;
     
     /* sortwhatfound freaks out if array is not reset before */
     dest = (foundpix *) calloc (num_cams*MAX_CANDS, sizeof (foundpix));
     reset_foundpix_array(dest, num_cams*MAX_CANDS, num_cams);
     copy_foundpix_array(dest, src, 2, 2);
 
-    
-    int counter;
-
     /* test simple sort of a small foundpix array */
-    sort_candidates_by_freq(dest, &counter, num_cams);
+    num_parts = sort_candidates_by_freq(dest, num_cams);
     
     ck_assert_msg( dest[0].ftnr == 2 ,
                   "Was expecting dest[0].ftnr == 2 but found %d \n", dest[0].ftnr);
