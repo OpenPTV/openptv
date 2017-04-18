@@ -31,16 +31,6 @@
 #include <stdlib.h>
 #include <stdio.h>
 
-
-/* Global variables marked extern in 'globals.h' and not defined elsewhere: */
-int intx0_tr[4][10000], inty0_tr[4][10000], intx1_tr[4][10000], \
-    inty1_tr[4][10000], intx2_tr[4][10000], inty2_tr[4][10000], \
-    pnr1_tr[4][10000], pnr2_tr[4][10000], m1_tr;
-int seq_step_shake;
-double pnr3_tr[4][10000];
-double npart, nlinks;
-
-
 /* track_forward_start() - initializes the tracking frame buffer with the 
    first frames.
    
@@ -527,17 +517,13 @@ void trackcorr_c_loop (tracking_run *run_info, int step, int display) {
     int j, h, mm, kk, in_volume = 0;
     int counter1, counter2, philf[4][MAX_CANDS];
     int count1 = 0, count2 = 0, count3 = 0, num_added = 0;
-    int intx0, intx1, inty0, inty1;
-    int intx2, inty2;
     int quali = 0;
     vec3d diff_pos, X[6];     /* 7 reference points used in the algorithm, TODO: check if can reuse some */
     double angle, acc, angle0, acc0,  dl;
     double xr[4], xl[4], yd[4], yu[4], angle1, acc1;
-    vec2d p[4], c[4], n[4];     // would replace xp,yp and xc,yc and xn,yn by p[i][0],p[i][1]
+    vec2d n[4];     // would replace xp,yp and xc,yc and xn,yn by p[i][0],p[i][1]
     vec2d v1[4], v2[4];     // replaced x1[4], y1[4], x2[4], y2[4] by v1[j][0], v1[j][1]
     double rr;
-    int flag_m_tr = 0;
-    int zoom_x[4], zoom_y[4], zoom_f[4];      /* zoom parameters */
 
 
     /* Shortcuts to inside current frame */
@@ -941,78 +927,6 @@ void trackcorr_c_loop (tracking_run *run_info, int step, int display) {
         if (curr_path_inf->next != NEXT_NONE ) count1++;
     }
     /* end of creation of links with decision check */
-
-
-
-
-    /* ******** Draw links ******** */
-    m1_tr = 0;
-    if (display) {
-        for (h = 0; h < fb->buf[1]->num_parts; h++) {
-            curr_path_inf = &(fb->buf[1]->path_info[h]);
-            curr_corres = &(fb->buf[1]->correspond[h]);
-            ref_corres = &(fb->buf[2]->correspond[curr_path_inf->next]);
-
-            if (curr_path_inf->next != NEXT_NONE ) {
-
-                for (j = 0; j < fb->num_cams; j++) {
-                    if (curr_corres->p[j] > 0 && ref_corres->p[j] > 0) {
-                        flag_m_tr = 1;
-                        p[j][0] = curr_targets[j][curr_corres->p[j]].x;
-                        p[j][1] = curr_targets[j][curr_corres->p[j]].y;
-                        c[j][0] = fb->buf[2]->targets[j][ref_corres->p[j]].x;
-                        c[j][1] = fb->buf[2]->targets[j][ref_corres->p[j]].y;
-
-                        predict (p[j], c[j], n[j]);
-
-                        if ( ( fabs(p[j][0]-zoom_x[j]) < cpar->imx/(2*zoom_f[j]))
-                             && (fabs(p[j][1]-zoom_y[j]) < cpar->imy/(2*zoom_f[j])))
-                        {
-                            intx0 = (int)(cpar->imx/2 + zoom_f[j]*(p[j][0] - zoom_x[j]));
-                            inty0 = (int)(cpar->imy/2 + zoom_f[j]*(p[j][1] - zoom_y[j]));
-                            intx1 = (int)(cpar->imx/2 + zoom_f[j]*(c[j][0] - zoom_x[j]));
-                            inty1 = (int)(cpar->imy/2 + zoom_f[j]*(c[j][1] - zoom_y[j]));
-                            intx2 = (int)(cpar->imx/2 + zoom_f[j]*(n[j][0] - zoom_x[j]));
-                            inty2 = (int)(cpar->imy/2 + zoom_f[j]*(n[j][1] - zoom_y[j]));
-
-                            intx0_tr[j][m1_tr] = intx0;
-                            inty0_tr[j][m1_tr] = inty0;
-                            intx1_tr[j][m1_tr] = intx1;
-                            inty1_tr[j][m1_tr] = inty1;
-                            intx2_tr[j][m1_tr] = intx2;
-                            inty2_tr[j][m1_tr] = inty2;
-                            pnr1_tr[j][m1_tr] = -1;
-                            pnr2_tr[j][m1_tr] = -1;
-                            pnr3_tr[j][m1_tr] = -1;
-
-                            if (curr_path_inf->finaldecis > 0.2) {
-                                pnr1_tr[j][m1_tr] = h;
-                                pnr2_tr[j][m1_tr] = curr_path_inf->next;
-                                pnr3_tr[j][m1_tr] = curr_path_inf->finaldecis;
-                            }
-                        }
-                    }
-
-                    if (flag_m_tr==0)  {
-                        intx0_tr[j][m1_tr] = 0;
-                        inty0_tr[j][m1_tr] = 0;
-                        intx1_tr[j][m1_tr] = 0;
-                        inty1_tr[j][m1_tr] = 0;
-                        intx2_tr[j][m1_tr] = 0;
-                        inty2_tr[j][m1_tr] = 0;
-                        pnr1_tr[j][m1_tr] = -1;
-                        pnr2_tr[j][m1_tr] = -1;
-                        pnr3_tr[j][m1_tr] = -1;
-                    }
-                    flag_m_tr = 0;
-                }
-                m1_tr++;
-            }
-        }
-    }
-
-    /* ******** End of Draw links ******** */
-
 
     printf ("step: %d, curr: %d, next: %d, links: %d, lost: %d, add: %d\n",
             step, fb->buf[1]->num_parts, fb->buf[2]->num_parts, count1,
