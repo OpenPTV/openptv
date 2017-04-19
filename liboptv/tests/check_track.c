@@ -350,7 +350,7 @@ END_TEST
 START_TEST(test_trackcorr_c_loop)
 {
     tracking_run *run;
-    int step, display=0;
+    int step;
     Calibration *calib[3];
     control_par *cpar;
 
@@ -365,13 +365,12 @@ START_TEST(test_trackcorr_c_loop)
         "parameters/track.par", "parameters/criteria.par", 
         "parameters/ptv.par", calib);
     track_forward_start(run);
-    trackcorr_c_loop(run, run->seq_par->first, display);
+    trackcorr_c_loop(run, run->seq_par->first);
     
-    for (step = run->seq_par->first + 1; step < run->seq_par->last; step++)
-    {
-        trackcorr_c_loop(run, step, display);
+    for (step = run->seq_par->first + 1; step < run->seq_par->last; step++) {
+        trackcorr_c_loop(run, step);
     }
-    trackcorr_c_finish(run, run->seq_par->last, display);
+    trackcorr_c_finish(run, run->seq_par->last);
     
     int range = run->seq_par->last - run->seq_par->first;
     double npart, nlinks;
@@ -391,7 +390,6 @@ END_TEST
 START_TEST(test_cavity)
 {
     tracking_run *ret;
-    int display=0;
     Calibration *calib[4];
     control_par *cpar;
     
@@ -410,21 +408,20 @@ START_TEST(test_cavity)
         "parameters/ptv.par", calib);
     track_forward_start(ret);
     
-    trackcorr_c_loop (ret, 10002, display);
+    trackcorr_c_loop (ret, 10002);
     
     ck_assert_msg(ret->npart == 672,
                   "Was expecting npart == 672 but found %f \n", ret->npart);
     ck_assert_msg(ret->nlinks == 99,
                   "Was expecting nlinks == 99 but found %f \n", ret->nlinks);
     
-    trackcorr_c_finish(ret, 10002, display);
+    trackcorr_c_finish(ret, 10002);
 }
 END_TEST
 
 START_TEST(test_trackback)
 {
     tracking_run *ret;
-    int display=0;
     double nlinks;
     Calibration *calib[3];
     control_par *cpar;
@@ -446,7 +443,7 @@ START_TEST(test_trackback)
                      (ret->tpar->dvymin - ret->tpar->dvymax), \
                      (ret->tpar->dvzmin - ret->tpar->dvzmax));
     
-    nlinks = trackback_c(ret, ret->seq_par->last, display);
+    nlinks = trackback_c(ret, ret->seq_par->last);
     
     ck_assert_msg(fabs(nlinks - 201.0/209.0)<EPS,
                   "Was expecting nlinks to be 201/209 but found %f %f\n", nlinks, nlinks*209.0);

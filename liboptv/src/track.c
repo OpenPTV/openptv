@@ -599,11 +599,10 @@ void add_particle(frame *frm, vec3d pos, int cand_inds[][MAX_CANDS]) {
  * Note: step is not really setting up the step to track, the buffer provided to the trackcoor_c_loop
  * is already preset by 4 frames buf[0] to buf[3] and we track particles in buf[1], i.e. one "previous"
  * one present and two future frames.
- * integer display - shall be probably removed, was used as a flag for intermediate data returnt for display
- * Calibration **cal is a set of calibration parameters of the in_volumeved cameras (from 1 to run_info->cpar->num_cams)
+ * 
  * Returns: function does not return an argument, the tracks are updated within the run_info dataset
  */
-void trackcorr_c_loop (tracking_run *run_info, int step, int display) {
+void trackcorr_c_loop (tracking_run *run_info, int step) {
     /* sequence loop */
     int j, h, mm, kk, in_volume = 0;
     int counter2, philf[4][MAX_CANDS];
@@ -968,7 +967,7 @@ void trackcorr_c_loop (tracking_run *run_info, int step, int display) {
     }
 } /* end of sequence loop */
 
-void trackcorr_c_finish(tracking_run *run_info, int step, int display)
+void trackcorr_c_finish(tracking_run *run_info, int step)
 {
     int range = run_info->seq_par->last - run_info->seq_par->first;
     double npart, nlinks;
@@ -983,13 +982,10 @@ void trackcorr_c_finish(tracking_run *run_info, int step, int display)
     fb_write_frame_from_start(run_info->fb, step);
 
     fb_free(run_info->fb);
-
-    /* reset of display flag */
-    display = 1;
 }
 
 /*     track backwards */
-double trackback_c (tracking_run *run_info, int step, int display)
+double trackback_c (tracking_run *run_info, int step)
 {
     int i, j, h, in_volume = 0;
     int counter1, philf[4][MAX_CANDS];
@@ -1013,8 +1009,6 @@ double trackback_c (tracking_run *run_info, int step, int display)
     /* Shortcuts to inside current frame */
     P *curr_path_inf, *ref_path_inf;
     int _ix;     /* For use in any of the complex index expressions below */
-
-    display = 1;
 
     /* shortcuts */
     cal = run_info->cal;
@@ -1232,9 +1226,6 @@ double trackback_c (tracking_run *run_info, int step, int display)
     fb_free(fb);
     free(fb);
     free(tpar);
-
-    /* reset of display flag */
-    display = 1;
 
     return nlinks;
 }
