@@ -208,16 +208,19 @@ void angle_acc(vec3d start, vec3d pred, vec3d cand, double *angle, double *acc)
 
 
 /* candsearch_in_pix searches of four (4) near candidates in target list
+ * 
  * Arguments:
- * target next[] array of targets (pointer, x,y, n, nx,ny, sumg, track ID),
- * has to be y sorted ?!! this is not tested in the function.
+ * target next[] - array of targets (pointer, x,y, n, nx,ny, sumg, track ID),
+ *     assumed to be y sorted.
  * int num_targets - target array length.
  * double cent_x, cent_y - image coordinates of the position of a particle [pixel]
  * double dl, dr, du, dd - respectively the left, right, up, down distance to
  *   the search area borders from its center, [pixel]
- * int p[] array of integer pointers
+ * int p[] - indices in ``next`` of the candidates found.
  * control_par *cpar array of parameters (cpar->imx,imy are needed)
- * Returns the integer counter of the number of candidates, between 0 - 3
+ * 
+ * Returns:
+ * int, the number of candidates found, between 0 - 3
  */
 
 int candsearch_in_pix (target next[], int num_targets, double cent_x, double cent_y,
@@ -237,8 +240,8 @@ int candsearch_in_pix (target next[], int num_targets, double cent_x, double cen
     if(ymax > cpar->imy)
         ymax = cpar->imy;
 
-    for (j = 0; j<4; j++) ( p[j] = -999 );
-    p1 = p2 = p3 = p4 = -999;
+    for (j = 0; j<4; j++) ( p[j] = PT_UNUSED );
+    p1 = p2 = p3 = p4 = PT_UNUSED;
     d1 = d2 = d3 = d4 = dmin;
 
 
@@ -290,14 +293,11 @@ int candsearch_in_pix (target next[], int num_targets, double cent_x, double cen
             p[2] = p3;
             p[3] = p4;
 
-            for (j = 0; j<4; j++) if ( p[j] != -999 ) counter++;
+            for (j = 0; j<4; j++) if ( p[j] != PT_UNUSED ) counter++;
         }         /* if x is within the image boundaries */
     }     /* if y is within the image boundaries */
     return (counter);
 }
-
-
-
 
 /* searchquader defines the search region, using tracking parameters
  * dvxmin, ... dvzmax (but within the image boundaries), per camera
@@ -319,7 +319,6 @@ int candsearch_in_pix (target next[], int num_targets, double cent_x, double cen
  * for the search of a quader (cuboid), given in pixel distances, relative to the
  * point of search.
  */
-
 void searchquader(vec3d point, double xr[4], double xl[4], double yd[4], \
                   double yu[4], track_par *tpar, control_par *cpar, Calibration **cal){
     int i, pt, dim;
@@ -546,6 +545,42 @@ foundpix *sorted_candidates_in_volume(vec3d center, vec2d center_proj[],
     }
 }
 
+/* add_particle() inserts a particle at a given position to the end of the 
+ * frame, along with associated targets.
+ * 
+ * Arguments:
+ * frame *frm - the frame to store the particle.
+ * vec3d pos - position of inserted particle in the global coordinates.
+ * int cand_inds[][MAX_CANDS] - indices of candidate targets for association
+ *    with this particle.
+ */
+void add_particle(frame *frm, vec3d pos, int cand_inds[][MAX_CANDS]) {
+    int num_parts, cam, _ix;
+    P *ref_path_inf;
+    corres *ref_corres;
+    target **ref_targets;
+    
+    num_parts = frm->num_parts;
+    ref_path_inf = &(frm->path_info[num_parts]);
+    vec_copy(ref_path_inf->x, pos);
+    reset_links(ref_path_inf);
+    
+    ref_corres = &(frm->correspond[num_parts]);
+    ref_targets = frm->targets;
+    for (cam = 0; cam < frm->num_cams; cam++) {
+        ref_corres->p[cam] = CORRES_NONE;
+        
+        /* We always take the 1st candidate, apparently. Why did we fetch 4? */
+        if(cand_inds[cam][0] != PT_UNUSED) {
+            _ix = cand_inds[cam][0];
+            ref_targets[cam][_ix].tnr = num_parts;
+            ref_corres->p[cam] = _ix;
+            ref_corres->nr = num_parts;
+        }
+    }
+    frm->num_parts++;
+}
+
 /* trackcorr_c_loop is the main tracking subroutine that scans the 3D particle position
  * data from rt_is.* files and the 2D particle positions in image space in _targets and
  * constructs trajectories (links) of the particles in 3D in time.
@@ -584,10 +619,9 @@ void trackcorr_c_loop (tracking_run *run_info, int step, int display) {
 
     /* Shortcuts to inside current frame */
     P *curr_path_inf, *ref_path_inf;
-    corres *curr_corres, *ref_corres;
-    target **curr_targets, **ref_targets;
+    corres *curr_corres;
+    target **curr_targets;
     int _ix;     /* For use in any of the complex index expressions below */
-    int _frame_parts;     /* number of particles in a frame */
 
     /* Shortcuts into the tracking_run struct */ 
     Calibration **cal;
@@ -776,25 +810,7 @@ void trackcorr_c_loop (tracking_run *run_info, int step, int display) {
                         register_link_candidate(curr_path_inf, rr, w[mm].ftnr);
 
                         if (tpar->add) {
-                            ref_path_inf = &(fb->buf[3]->path_info[
-                                                 fb->buf[3]->num_parts]);
-                            vec_copy(ref_path_inf->x, X[4]);
-                            reset_links(ref_path_inf);
-
-                            _frame_parts = fb->buf[3]->num_parts;
-                            ref_corres = &(fb->buf[3]->correspond[_frame_parts]);
-                            ref_targets = fb->buf[3]->targets;
-                            for (j = 0; j < fb->num_cams; j++) {
-                                ref_corres->p[j] = -1;
-
-                                if(philf[j][0]!=-999) {
-                                    _ix = philf[j][0];
-                                    ref_targets[j][_ix].tnr = _frame_parts;
-                                    ref_corres->p[j] = _ix;
-                                    ref_corres->nr = _frame_parts;
-                                }
-                            }
-                            fb->buf[3]->num_parts++;
+                            add_particle(fb->buf[3], X[4], philf);
                             num_added++;
                         }
                     }
@@ -881,28 +897,9 @@ void trackcorr_c_loop (tracking_run *run_info, int step, int display) {
                             dl = (vec_diff_norm(X[1], X[3]) +
                                   vec_diff_norm(X[0], X[1]) )/2;
                             rr = (dl/run_info->lmax + acc/tpar->dacc + angle/tpar->dangle)/(quali);
+                            register_link_candidate(curr_path_inf, rr, fb->buf[2]->num_parts);
 
-                            ref_path_inf = &(fb->buf[2]->path_info[
-                                                 fb->buf[2]->num_parts]);
-                            vec_copy(ref_path_inf->x, X[3]);
-                            reset_links(ref_path_inf);
-
-                            _frame_parts = fb->buf[2]->num_parts;
-                            register_link_candidate(curr_path_inf, rr, _frame_parts);
-
-                            ref_corres = &(fb->buf[2]->correspond[_frame_parts]);
-                            ref_targets = fb->buf[2]->targets;
-                            for (j = 0; j < fb->num_cams; j++) {
-                                ref_corres->p[j] = -1;
-
-                                if(philf[j][0]!=-999) {
-                                    _ix = philf[j][0];
-                                    ref_targets[j][_ix].tnr = _frame_parts;
-                                    ref_corres->p[j] = _ix;
-                                    ref_corres->nr = _frame_parts;
-                                }
-                            }
-                            fb->buf[2]->num_parts++;
+                            add_particle(fb->buf[2], X[3], philf);
                             num_added++;
                         }
                     }
@@ -1015,10 +1012,7 @@ double trackback_c (tracking_run *run_info, int step, int display)
 
     /* Shortcuts to inside current frame */
     P *curr_path_inf, *ref_path_inf;
-    corres *ref_corres;
-    target **ref_targets;
     int _ix;     /* For use in any of the complex index expressions below */
-    int _frame_parts;     /* number of particles in a frame */
 
     display = 1;
 
@@ -1149,30 +1143,9 @@ double trackback_c (tracking_run *run_info, int step, int display)
                                 dl = (vec_diff_norm(X[1], X[3]) +
                                       vec_diff_norm(X[0], X[1]) )/2;
                                 rr = (dl/run_info->lmax+acc/tpar->dacc + angle/tpar->dangle)/(quali);
+                                register_link_candidate(curr_path_inf, rr, fb->buf[2]->num_parts);
 
-                                ref_path_inf = &(fb->buf[2]->path_info[
-                                                     fb->buf[2]->num_parts]);
-                                vec_copy(ref_path_inf->x, X[3]);
-                                reset_links(ref_path_inf);
-
-                                _frame_parts = fb->buf[2]->num_parts;
-                                register_link_candidate(curr_path_inf, rr,
-                                                        _frame_parts);
-
-                                ref_corres = &(fb->buf[2]->correspond[_frame_parts]);
-                                ref_targets = fb->buf[2]->targets;
-
-                                for (j = 0; j < fb->num_cams; j++) {
-                                    ref_corres->p[j] = -1;
-
-                                    if(philf[j][0]!=-999) {
-                                        _ix = philf[j][0];
-                                        ref_targets[j][_ix].tnr = _frame_parts;
-                                        ref_corres->p[j] = _ix;
-                                        ref_corres->nr = _frame_parts;
-                                    }
-                                }
-                                fb->buf[2]->num_parts++;
+                                add_particle(fb->buf[2], X[3], philf);
                             }
                         }
                         in_volume = 0;
@@ -1230,7 +1203,7 @@ double trackback_c (tracking_run *run_info, int step, int display)
                 }
             }
 
-            if (curr_path_inf->prev != -1 ) count1++;
+            if (curr_path_inf->prev != PREV_NONE ) count1++;
         }         /* end of creation of links with decision check */
 
         printf ("step: %d, curr: %d, next: %d, links: %d, lost: %d, add: %d",
