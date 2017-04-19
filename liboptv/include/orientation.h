@@ -10,7 +10,7 @@
 #include "imgcoord.h"
 #include "trafo.h"
 
-#define COORD_UNUSED INFINITY
+#define COORD_UNUSED -1e10
 
 /* These define the structure of the sigma array returned from orient() */
 #define IDT 10
