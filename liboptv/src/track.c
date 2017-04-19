@@ -545,6 +545,60 @@ foundpix *sorted_candidates_in_volume(vec3d center, vec2d center_proj[],
     }
 }
 
+/* asses_new_position() determines the nearest target on each camera around a 
+ * search position and prepares the data structures accordingly with the 
+ * determined target info or the unused flag value.
+ * 
+ * Arguments:
+ * vec3d pos - the position around which to search.
+ * vec2d targ_pos[] - the determined targets' respective positions.
+ * int cand_inds[][MAX_CANDS] - output buffer, the determined targets' index in
+ *    the respective camera's target list
+ * frame *frm - the frame holdin target data for the search position.
+ * tracking_run *run - scene information struct.
+ * 
+ * Returns:
+ * the number of cameras where a suitable target was found.
+ */
+int assess_new_position(vec3d pos, vec2d targ_pos[], 
+    int cand_inds[][MAX_CANDS], frame *frm, tracking_run *run) 
+{
+    int cam, num_cands, valid_cams, _ix;
+    vec2d pixel;
+    double right, left, down, up; /* search rectangle limits */
+    
+    left = right = up = down = ADD_PART;
+    for (cam = 0; cam < run->cpar->num_cams; cam++) {
+        point_to_pixel(pixel, pos, run->cal[cam], run->cpar);
+        //printf("%g, %g\n", pixel[0], pixel[1]);
+        targ_pos[cam][0] = targ_pos[cam][1] = COORD_UNUSED;
+        
+        /* here we shall use only the 1st neigbhour */
+        num_cands = candsearch_in_pix (frm->targets[cam], frm->num_targets[cam],
+            pixel[0], pixel[1], left, right, up, down, 
+            cand_inds[cam], run->cpar);
+
+        if (num_cands > 0) {
+            printf("%d \n", num_cands);
+            _ix = cand_inds[cam][0];  // first nearest neighbour
+            targ_pos[cam][0] = frm->targets[cam][_ix].x;
+            targ_pos[cam][1] = frm->targets[cam][_ix].y;
+        }
+    }
+
+    valid_cams = 0;
+    for (cam = 0; cam < run->cpar->num_cams; cam++) {
+        if ((targ_pos[cam][0] != COORD_UNUSED) && \
+            (targ_pos[cam][1] != COORD_UNUSED)) 
+        {
+            pixel_to_metric(&(targ_pos[cam][0]), &(targ_pos[cam][1]), 
+                targ_pos[cam][0], targ_pos[cam][1], run->cpar);
+            valid_cams++;
+        }
+    }
+    return valid_cams;
+}
+
 /* add_particle() inserts a particle at a given position to the end of the 
  * frame, along with associated targets.
  * 
@@ -742,35 +796,8 @@ void trackcorr_c_loop (tracking_run *run_info, int step) {
              *  fix distance of 3 pixels to define xl,xr,yu,yd instead of searchquader
              *  and search for unused candidates in next time step
              */
-
-
-            for (j = 0; j < fb->num_cams; j++) {
-                point_to_pixel (n[j], X[5], cal[j], cpar);
-                xl[j] = xr[j] = yu[j] = yd[j] = ADD_PART;
-                v2[j][0] = -1e10; v2[j][1] = -1e10;
-            }
-            for (j = 0; j < fb->num_cams; j++) {
-                /* here we shall use only the 1st neigbhour */
-                counter2 = candsearch_in_pix (fb->buf[3]->targets[j],
-                                              fb->buf[3]->num_targets[j], n[j][0], n[j][1],
-                                              xl[j], xr[j], yu[j], yd[j], philf[j], cpar);
-
-                if(counter2>0 ) {
-                    _ix = philf[j][0];                     // first nearest neighbour
-                    v2[j][0] = fb->buf[3]->targets[j][_ix].x;
-                    v2[j][1] = fb->buf[3]->targets[j][_ix].y;
-
-                }
-            }
-
-            quali = 0;
-            for (j = 0; j < fb->num_cams; j++) {
-                if (v2[j][0] != -1e10 && v2[j][1] != -1e10) {
-                    pixel_to_metric(&v2[j][0],&v2[j][1], v2[j][0],v2[j][1], cpar);
-                    quali++;
-                }
-            }
-
+            quali = assess_new_position(X[5], v2, philf, fb->buf[3], run_info); 
+                        
             /* quali >=2 means at least in two cameras
              * we found a candidate
              */
