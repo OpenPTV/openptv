@@ -683,7 +683,6 @@ void trackcorr_c_loop (tracking_run *run_info, int step) {
         count2++;
         mm = 0;
         while (w[mm].ftnr != TR_UNUSED) {       /* counter1-loop */
-            printf("%d\n", mm);
             /* search for found corr of current the corr in next
                with predicted location */
 
