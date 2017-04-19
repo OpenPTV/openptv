@@ -775,16 +775,9 @@ void trackcorr_c_loop (tracking_run *run_info, int step) {
              * we found a candidate
              */
             if ( quali >= 2) {
-                /* next line is not clear to me, why to copy X[5] to X[4]? */
-                /* todo: check when it really does something useful, i.e.
-                 * when point_position does not return a thing? is it possible?
-                 */
-
-                vec_copy(X[4], X[5]);
                 in_volume = 0;                 //inside volume
 
                 dl = point_position(v2, cpar->num_cams, cpar->mm, cal, X[4]);
-
 
                 /* volume check */
                 if ( vpar->X_lay[0] < X[4][0] && X[4][0] < vpar->X_lay[1] &&
