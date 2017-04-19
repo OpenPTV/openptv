@@ -659,13 +659,12 @@ void add_particle(frame *frm, vec3d pos, int cand_inds[][MAX_CANDS]) {
 void trackcorr_c_loop (tracking_run *run_info, int step) {
     /* sequence loop */
     int j, h, mm, kk, in_volume = 0;
-    int counter2, philf[4][MAX_CANDS];
+    int philf[4][MAX_CANDS];
     int count1 = 0, count2 = 0, count3 = 0, num_added = 0;
     int quali = 0;
     vec3d diff_pos, X[6];     /* 7 reference points used in the algorithm, TODO: check if can reuse some */
     double angle, acc, angle0, acc0,  dl;
-    double xr[4], xl[4], yd[4], yu[4], angle1, acc1;
-    vec2d n[4];     // would replace xp,yp and xc,yc and xn,yn by p[i][0],p[i][1]
+    double angle1, acc1;
     vec2d v1[4], v2[4]; /* volume center projection on cameras */ 
     double rr;
 
@@ -866,29 +865,7 @@ void trackcorr_c_loop (tracking_run *run_info, int step) {
         /* begin of inlist still zero */
         if (tpar->add) {
             if ( curr_path_inf->inlist == 0 && curr_path_inf->prev >= 0 ) {
-
-                quali = 0;
-                for (j = 0; j < fb->num_cams; j++) {
-                    point_to_pixel (n[j], X[2], cal[j],cpar);
-
-                    /*use fix distance to define xl, xr, yu, yd instead of searchquader */
-                    xl[j] = xr[j] = yu[j] = yd[j] = ADD_PART;
-
-                    counter2 = candsearch_in_pix (fb->buf[2]->targets[j],
-                                                  fb->buf[2]->num_targets[j], n[j][0], n[j][1],
-                                                  xl[j], xr[j], yu[j], yd[j], philf[j], cpar);
-                    if(counter2 > 0) {
-                        _ix = philf[j][0];
-                        v2[j][0] = fb->buf[2]->targets[j][_ix].x;
-                        v2[j][1] = fb->buf[2]->targets[j][_ix].y;
-                        pixel_to_metric(&v2[j][0], &v2[j][1], v2[j][0], v2[j][1], cpar);
-                        quali++;
-                    } else {
-                        v2[j][0] = -1e10;
-                        v2[j][1] = -1e10;
-                    }
-                }
-
+                quali = assess_new_position(X[2], v2, philf, fb->buf[2], run_info);
 
                 if (quali>=2) {
                     vec_copy(X[3], X[2]);
@@ -1007,11 +984,10 @@ void trackcorr_c_finish(tracking_run *run_info, int step)
 double trackback_c (tracking_run *run_info, int step)
 {
     int i, j, h, in_volume = 0;
-    int counter1, philf[4][MAX_CANDS];
+    int philf[4][MAX_CANDS];
     int count1 = 0, count2 = 0, num_added = 0;
     int quali = 0;
     double angle, acc, dl;
-    double xr[4], xl[4], yd[4], yu[4];
     vec3d diff_pos, X[6];     /* 6 reference points used in the algorithm */
     vec2d n[4], v2[4];     // replaces xn,yn, x2[4], y2[4],
     double rr, Ymin = 0, Ymax = 0;
@@ -1027,7 +1003,6 @@ double trackback_c (tracking_run *run_info, int step)
 
     /* Shortcuts to inside current frame */
     P *curr_path_inf, *ref_path_inf;
-    int _ix;     /* For use in any of the complex index expressions below */
 
     /* shortcuts */
     cal = run_info->cal;
@@ -1067,11 +1042,11 @@ double trackback_c (tracking_run *run_info, int step)
             ref_path_inf = &(fb->buf[0]->path_info[curr_path_inf->next]);
             vec_copy(X[0], ref_path_inf->x);
             search_volume_center_moving(ref_path_inf->x, curr_path_inf->x, X[2]);
-
+            
             for (j = 0; j < fb->num_cams; j++) {
                 point_to_pixel (n[j], X[2], cal[j], cpar);
             }
-
+            
             /* calculate searchquader and reprojection in image space */
             w = sorted_candidates_in_volume(X[2], n, fb->buf[2], run_info);
             
@@ -1105,35 +1080,10 @@ double trackback_c (tracking_run *run_info, int step)
 
             free(w);
 
-            quali = 0;
-
-            /* reset img coord because num_cams < 4 */
-            for (j = 0; j<4; j++) { v2[j][0] = -1e10; v2[j][1] = -1e10;}
-
             /* if old wasn't found try to create new particle position from rest */
             if (tpar->add) {
                 if ( curr_path_inf->inlist == 0) {
-                    for (j = 0; j < fb->num_cams; j++) {
-                        /* use fix distance to define xl, xr, yu, yd instead of searchquader */
-                        xl[j] = xr[j] = yu[j] = yd[j] = ADD_PART;
-
-                        counter1 = candsearch_in_pix (fb->buf[2]->targets[j],
-                                                      fb->buf[2]->num_targets[j], n[j][0], n[j][1],
-                                                      xl[j], xr[j], yu[j], yd[j], philf[j], cpar);
-                        if(counter1 > 0) {
-                            _ix = philf[j][0];
-                            v2[j][0] = fb->buf[2]->targets[j][_ix].x;
-                            v2[j][1] = fb->buf[2]->targets[j][_ix].y;
-                        }
-                    }
-
-                    for (j = 0; j < fb->num_cams; j++) {
-                        if (v2[j][0] !=-1e10 && v2[j][1] != -1e10) {
-                            pixel_to_metric(&v2[j][0], &v2[j][1], v2[j][0],v2[j][1], cpar);
-                            quali++;
-                        }
-                    }
-
+                    quali = assess_new_position(X[2], v2, philf, fb->buf[2], run_info);
                     if (quali>=2) {
                         //vec_copy(X[3], X[2]);
                         in_volume = 0;
