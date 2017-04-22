@@ -570,7 +570,6 @@ int assess_new_position(vec3d pos, vec2d targ_pos[],
     left = right = up = down = ADD_PART;
     for (cam = 0; cam < run->cpar->num_cams; cam++) {
         point_to_pixel(pixel, pos, run->cal[cam], run->cpar);
-        //printf("%g, %g\n", pixel[0], pixel[1]);
         targ_pos[cam][0] = targ_pos[cam][1] = COORD_UNUSED;
         
         /* here we shall use only the 1st neigbhour */
@@ -579,7 +578,6 @@ int assess_new_position(vec3d pos, vec2d targ_pos[],
             cand_inds[cam], run->cpar);
 
         if (num_cands > 0) {
-            printf("%d \n", num_cands);
             _ix = cand_inds[cam][0];  // first nearest neighbour
             targ_pos[cam][0] = frm->targets[cam][_ix].x;
             targ_pos[cam][1] = frm->targets[cam][_ix].y;
@@ -593,6 +591,8 @@ int assess_new_position(vec3d pos, vec2d targ_pos[],
         {
             pixel_to_metric(&(targ_pos[cam][0]), &(targ_pos[cam][1]), 
                 targ_pos[cam][0], targ_pos[cam][1], run->cpar);
+            dist_to_flat(targ_pos[cam][0], targ_pos[cam][1], run->cal[cam], 
+                &(targ_pos[cam][0]), &(targ_pos[cam][1]), run->flatten_tol);
             valid_cams++;
         }
     }
@@ -674,6 +674,7 @@ void trackcorr_c_loop (tracking_run *run_info, int step) {
     corres *curr_corres;
     target **curr_targets;
     int _ix;     /* For use in any of the complex index expressions below */
+    int orig_parts; /* avoid infinite loop with particle addition set */
 
     /* Shortcuts into the tracking_run struct */ 
     Calibration **cal;
@@ -693,7 +694,8 @@ void trackcorr_c_loop (tracking_run *run_info, int step) {
     curr_targets = fb->buf[1]->targets;
 
     /* try to track correspondences from previous 0 - corp, variable h */
-    for (h = 0; h < fb->buf[1]->num_parts; h++) {
+    orig_parts = fb->buf[1]->num_parts;
+    for (h = 0; h < orig_parts; h++) {
         for (j = 0; j < 6; j++) vec_init(X[j]);
 
         curr_path_inf = &(fb->buf[1]->path_info[h]);

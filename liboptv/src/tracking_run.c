@@ -21,7 +21,7 @@ tracking_run* tr_new_legacy(char *seq_par_fname, char *tpar_fname,
     sequence_par *seq_par = read_sequence_par(seq_par_fname, cpar->num_cams);
     return tr_new(seq_par, read_track_par(tpar_fname), 
         read_volume_par(vpar_fname), cpar, 4, 20000,
-        "res/rt_is", "res/ptv_is", "res/added", cal);
+        "res/rt_is", "res/ptv_is", "res/added", cal, 10000);
 }
 
 /* tr_new() aggregates several parameter structs used by tracking, and
@@ -43,11 +43,14 @@ tracking_run* tr_new_legacy(char *seq_par_fname, char *tpar_fname,
    char *corres_file_base, *linkage_file_base, *prio_file_base
       - naming scheme in the frame buffer, passed forward
       without tampering. See tracking_frame_buf.c:fb_init()
+   Calibration **cal - camra positions etc.
+   double flatten_tol - tolerance for the action of transforming distorted 
+      image coordinates to flat coordinates.
 */
 tracking_run *tr_new(sequence_par *seq_par, track_par *tpar,
     volume_par *vpar, control_par *cpar, int buf_len, int max_targets,
     char *corres_file_base, char *linkage_file_base, char *prio_file_base, 
-    Calibration **cal)
+    Calibration **cal, double flatten_tol)
 {
     tracking_run *tr = (tracking_run *) malloc(sizeof(tracking_run));
     tr->tpar = tpar;
@@ -55,6 +58,7 @@ tracking_run *tr_new(sequence_par *seq_par, track_par *tpar,
     tr->cpar = cpar;
     tr->seq_par = seq_par;
     tr->cal = cal;
+    tr->flatten_tol = flatten_tol;
     
     tr->fb = (framebuf *) malloc(sizeof(framebuf));
     fb_init(tr->fb, buf_len, cpar->num_cams, max_targets,
