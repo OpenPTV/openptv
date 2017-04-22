@@ -447,12 +447,60 @@ START_TEST(test_trackback)
     
     ck_assert_msg(fabs(nlinks - 201.0/209.0)<EPS,
                   "Was expecting nlinks to be 201/209 but found %f %f\n", nlinks, nlinks*209.0);
-    
-    
-    
 }
 END_TEST
 
+START_TEST(test_new_particle)
+{
+    /* this test also has the side-effect of testing instantiation of a 
+       tracking_run struct without the legacy stuff. */
+
+    Calibration *calib[3];
+    control_par *cpar;
+    sequence_par *spar;
+    track_par *tpar;
+    volume_par *vpar;
+    tracking_run *run;
+    
+    char ori_tmpl[] = "cal/sym_cam%d.tif.ori";
+    char added_name[] = "cal/cam1.tif.addpar";
+    char ori_name[256];
+    int cam, status;
+
+    fail_unless((status = chdir("testing_fodder/")) == 0);
+    
+    /* Set up all scene parameters to track one specially-contrived 
+       trajectory. */
+    for (cam = 0; cam < 3; cam++) {
+        sprintf(ori_name, ori_tmpl, cam + 1);
+        calib[cam] = read_calibration(ori_name, added_name, NULL);
+    }
+    
+    fail_unless((status = chdir("track/")) == 0);
+
+    spar = read_sequence_par("parameters/sequence_newpart.par", 3);
+    cpar = read_control_par("parameters/control_newpart.par");
+    tpar = read_track_par("parameters/track.par");
+    vpar = read_volume_par("parameters/criteria.par");
+    
+    run = tr_new(spar, tpar, vpar, cpar, 4, MAX_TARGETS, 
+        "res/particles", "res/linkage", "res/whatever", calib);
+    track_forward_start(run);
+    trackcorr_c_loop(run, 1);
+    trackcorr_c_loop(run, 2);
+    
+    fb_prev(run->fb); /* because each loop step moves the FB forward */
+    fail_unless(run->fb->buf[1]->path_info[0].next == 1);
+    
+    tpar->add = 0;
+    track_forward_start(run);
+    trackcorr_c_loop(run, 1);
+    trackcorr_c_loop(run, 2);
+    
+    fb_prev(run->fb); /* because each loop step moves the FB forward */
+    fail_unless(run->fb->buf[1]->path_info[0].next == 0);
+}
+END_TEST
 
 Suite* fb_suite(void) {
     Suite *s = suite_create ("ttools");
@@ -504,7 +552,10 @@ Suite* fb_suite(void) {
     tc = tcase_create ("Trackback");
     tcase_add_test(tc, test_trackback);
     suite_add_tcase (s, tc);
-
+    
+    tc = tcase_create ("Tracking a constructed frame");
+    tcase_add_test(tc, test_new_particle);
+    suite_add_tcase (s, tc);
 
     return s;
 }
