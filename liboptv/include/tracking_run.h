@@ -29,7 +29,7 @@ tracking_run* tr_new_legacy(char *seq_par_fname, char *tpar_fname,
 tracking_run* tr_new(sequence_par *seq_par, track_par *tpar,
     volume_par *vpar, control_par *cpar, int num_cams, int max_targets,
     char *corres_file_base, char *linkage_file_base, char *prio_file_base, 
-    char **target_file_base, Calibration **cal);
+    Calibration **cal);
 void tr_free(tracking_run *tr);
 
 #endif
