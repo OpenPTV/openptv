@@ -9,5 +9,7 @@ cdef extern from "optv/sortgrid.h":
 cdef extern from "optv/orientation.h":
     ctypedef double vec2d[2]
 
+    double COORD_UNUSED
+
     double point_position(vec2d targets[], int num_cams, mm_np *multimed_pars,
         calibration* cals[], vec3d res);
