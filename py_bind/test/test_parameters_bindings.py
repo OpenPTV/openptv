@@ -113,14 +113,9 @@ class Test_TrackingParams(unittest.TestCase):
 class Test_SequenceParams(unittest.TestCase):
     def setUp(self):
         self.input_sequence_par_file_name = "testing_fodder/sequence_parameters/sequence.par"
-        self.temp_output_directory = "testing_fodder/sequence_parameters/testing_output"
-        
-        # create a temporary output directory (will be deleted by the end of test)
-        if not os.path.exists(self.temp_output_directory):
-            os.makedirs(self.temp_output_directory)
             
         # create an instance of SequencParams class
-        self.seq_obj = SequenceParams(4)
+        self.seq_obj = SequenceParams(num_cams=4)
         
     def test_read_sequence(self):
         # Fill the SequenceParams object with parameters from test file
@@ -148,10 +143,10 @@ class Test_SequenceParams(unittest.TestCase):
        
     # testing __richcmp__ comparison method of SequenceParams class
     def test_rich_compare(self):
-        self.seq_obj2 = SequenceParams(4)
+        self.seq_obj2 = SequenceParams(num_cams=4)
         self.seq_obj2.read_sequence_par(self.input_sequence_par_file_name, 4)
         
-        self.seq_obj3 = SequenceParams(4)
+        self.seq_obj3 = SequenceParams(num_cams=4)
         self.seq_obj3.read_sequence_par(self.input_sequence_par_file_name, 4)
                
         self.failUnless(self.seq_obj2 == self.seq_obj3)
@@ -163,10 +158,15 @@ class Test_SequenceParams(unittest.TestCase):
             
         with self.assertRaises(TypeError):
             var = (self.seq_obj2 > self.seq_obj3)
-     
-    def tearDown(self):
-        # remove the testing output directory and its files
-        shutil.rmtree(self.temp_output_directory)
+    
+    def test_full_instantiate(self):
+        """Instantiate a SequenceParams object from keywords."""
+        spar = SequenceParams(
+            image_base=['test1', 'test2'], frame_range=(1, 100))
+        self.failUnless(spar.get_img_base_name(0) == "test1") 
+        self.failUnless(spar.get_img_base_name(1) == "test2")
+        self.failUnless(spar.get_first() == 1)
+        self.failUnless(spar.get_last() == 100)
         
 class Test_VolumeParams(unittest.TestCase):
     def setUp(self):

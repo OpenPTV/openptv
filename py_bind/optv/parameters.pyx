@@ -315,12 +315,31 @@ cdef class SequenceParams:
     pythonic access. Binding the read_track_par C function. Objects of this 
     type can be checked for equality using "==" and "!=" operators.
     """
-    def __init__(self, num_cams):
+    def __init__(self, **kwargs):
         """
-        Arguments:
+        Arguments (all optional, but either num_cams or image_base required):
         num_cams - number of camras used in the scene.
+        image_base - a list of image base names, to which the frame number 
+            is added during sequence operations.
+        frame_range - (first, last)
         """
+        if 'num_cams' in kwargs:
+            num_cams = kwargs['num_cams']
+            print num_cams
+        elif 'image_base' in kwargs:
+            num_cams = len(kwargs['image_base'])
+        else:
+            raise ValueError(
+                "SequenceParams requires either num_cams or image_base")
+        
         self._sequence_par = c_new_sequence_par(num_cams)
+        
+        if 'frame_range' in kwargs:
+            self.set_first(kwargs['frame_range'][0])
+            self.set_last(kwargs['frame_range'][1])
+        if 'image_base' in kwargs:
+            for cam in range(num_cams):
+                self.set_img_base_name(cam, kwargs['image_base'][cam])
         
     def get_first(self):
         return self._sequence_par[0].first
