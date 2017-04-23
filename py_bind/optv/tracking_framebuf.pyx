@@ -17,6 +17,9 @@ cdef extern from "optv/tracking_frame_buf.h":
     int read_frame(frame *self, char *corres_file_base, char *linkage_file_base,
         char *prio_file_base, char **target_file_base, int frame_num)
 
+cdef extern from "optv/correspondences.h":
+    void quicksort_target_y(target *pix, int num)
+
 DEF MAX_TARGETS = 20000 # Until improvement of read_targets to auto-allocate.
 ctypedef np.float64_t pos_t
 
@@ -142,6 +145,17 @@ cdef class TargetArray:
         self._num_targets = num_targets
         self._owns_data = owns_data
     
+    def sort_y(self):
+        """
+        Sorts the targets in-place by their Y coordinate. This is required for
+        tracking (and relied on by OpenPTV-Python, so a useful step for those
+        who need backwards-compatible output). Also renumbers the targets'
+        ``pnr `` property to the new sort order.
+        """
+        quicksort_target_y(self._tarr, self._num_targets)
+        for tnum in range(self._num_targets):
+            self._tarr[tnum].pnr = tnum
+        
     def write(self, char *file_base, int frame_num):
         """
         Writes a _targets file - a text format for targets. First line: number

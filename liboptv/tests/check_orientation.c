@@ -40,7 +40,7 @@ START_TEST(test_raw_orient)
     
     nfix = read_man_ori_fix(fix4, "testing_fodder/cal/calblock.txt",
                                     "testing_fodder/parameters/wrong_man_ori.par", 0);
-    fail_unless(nfix == NULL);                                
+    fail_unless(nfix == 0);                                
                                     
     
     /* read 4 points manually selected from the calibration file */
