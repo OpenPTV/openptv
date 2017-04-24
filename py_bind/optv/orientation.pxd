@@ -13,3 +13,5 @@ cdef extern from "optv/orientation.h":
 
     double point_position(vec2d targets[], int num_cams, mm_np *multimed_pars,
         calibration* cals[], vec3d res);
+
+cdef calibration** cal_list2arr(list cals)
