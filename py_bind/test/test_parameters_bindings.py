@@ -40,32 +40,25 @@ class Test_TrackingParams(unittest.TestCase):
     
     def setUp(self):
         self.input_tracking_par_file_name = "testing_fodder/tracking_parameters/track.par"
-        self.output_directory = "testing_fodder/tracking_parameters/testing_output"
-        
-        # create a temporary output directory (will be deleted by the end of test)
-        if not os.path.exists(self.output_directory):
-            os.makedirs(self.output_directory)
             
         # create an instance of TrackingParams class
         # testing setters that are used in constructor
-        self.track_obj1 = TrackingParams(1.1, 2.2, 3.3, 4.4, 5.5, 6.6, 7.7, 8.8, 9, 10, 11, 12, 13)
+        self.track_obj1 = TrackingParams(
+            accel_lim=1.1, angle_lim=2.2, add_particle=1,
+            velocity_lims=[[3.3, 4.4], [5.5, 6.6], [7.7, 8.8]])
         
     # Testing getters according to the values passed in setUp
     
     def test_TrackingParams_getters(self):
         self.failUnless(self.track_obj1.get_dacc() == 1.1)
         self.failUnless(self.track_obj1.get_dangle() == 2.2)
-        self.failUnless(self.track_obj1.get_dvxmax() == 3.3)
-        self.failUnless(self.track_obj1.get_dvxmin() == 4.4)
-        self.failUnless(self.track_obj1.get_dvymax() == 5.5)
-        self.failUnless(self.track_obj1.get_dvymin() == 6.6)
-        self.failUnless(self.track_obj1.get_dvzmax() == 7.7)
-        self.failUnless(self.track_obj1.get_dvzmin() == 8.8)
-        self.failUnless(self.track_obj1.get_dsumg() == 9)
-        self.failUnless(self.track_obj1.get_dn() == 10)
-        self.failUnless(self.track_obj1.get_dnx() == 11)
-        self.failUnless(self.track_obj1.get_dny() == 12)
-        self.failUnless(self.track_obj1.get_add() == 13)
+        self.failUnless(self.track_obj1.get_dvxmin() == 3.3)
+        self.failUnless(self.track_obj1.get_dvxmax() == 4.4)
+        self.failUnless(self.track_obj1.get_dvymin() == 5.5)
+        self.failUnless(self.track_obj1.get_dvymax() == 6.6)
+        self.failUnless(self.track_obj1.get_dvzmin() == 7.7)
+        self.failUnless(self.track_obj1.get_dvzmax() == 8.8)
+        self.failUnless(self.track_obj1.get_add() == 1)
 
     def test_TrackingParams_read_from_file(self):
         """Filling a TrackingParams object by reading file"""
@@ -93,23 +86,19 @@ class Test_TrackingParams(unittest.TestCase):
         
     def test_comparison(self):
         # create two identical objects
-        self.track_obj2 = TrackingParams(1.1, 2.2, 3.3, 4.4, 5.5, 6.6, 7.7, 8.8, 9, 10, 11, 12, 13)
-        self.track_obj3 = TrackingParams(1.1, 2.2, 3.3, 4.4, 5.5, 6.6, 7.7, 8.8, 9, 10, 11, 12, 13)
+        self.track_obj2 = TrackingParams(
+            accel_lim=1.1, angle_lim=2.2, add_particle=1,
+            velocity_lims=[[3.3, 4.4], [5.5, 6.6], [7.7, 8.8]])
         
-        self.failUnless(self.track_obj2 == self.track_obj3)
-        self.failIf(self.track_obj2 != self.track_obj3)
+        self.failUnless(self.track_obj2 == self.track_obj1)
+        self.failIf(self.track_obj2 != self.track_obj1)
         
         # change one instance variable of track_obj2 and check that the comparisons results are inverted
         # please note that the operands '==' and '!=' must be checked separately
         self.track_obj2.set_dvxmin(999.999)
-        self.failUnless(self.track_obj2 != self.track_obj3)
-        self.failIf(self.track_obj2 == self.track_obj3)
-        
-
-    def tearDown(self):
-        # remove the testing output directory and its files
-        shutil.rmtree(self.output_directory)
-        
+        self.failUnless(self.track_obj2 != self.track_obj1)
+        self.failIf(self.track_obj2 == self.track_obj1)
+                
 class Test_SequenceParams(unittest.TestCase):
     def setUp(self):
         self.input_sequence_par_file_name = "testing_fodder/sequence_parameters/sequence.par"
