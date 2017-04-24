@@ -52,6 +52,12 @@ class TestTracker(unittest.TestCase):
         last_step = 1
         while self.tracker.step_forward():
             self.failUnless(self.tracker.current_step() > last_step)
+            with open("testing_fodder/track/res/linkage.%d" % last_step) as f:
+                lines = f.readlines()
+                if last_step < 3:
+                    self.failUnless(lines[0] == "1\n")
+                else:
+                    self.failUnless(lines[0] == "2\n")
             last_step += 1
         self.tracker.finalize()
     
