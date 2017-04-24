@@ -78,7 +78,7 @@ tracking_run* trackcorr_c_init(Calibration **cal) {
                      (ret->tpar->dvzmin - ret->tpar->dvzmax));
     volumedimension (&(ret->vpar->X_lay[1]), &(ret->vpar->X_lay[0]), &(ret->ymax),
                      &(ret->ymin), &(ret->vpar->Zmax_lay[1]), &(ret->vpar->Zmin_lay[0]),
-                     ret->vpar, ret->cpar, *cal);
+                     ret->vpar, ret->cpar, cal);
 
     return ret;
 }
