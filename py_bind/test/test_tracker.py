@@ -8,12 +8,17 @@ Created on Mon Apr 24 10:57:01 2017
 @author: yosef
 """
 
-import unittest, yaml
+import unittest, yaml, shutil, os
 from optv.tracker import Tracker
 from optv.calibration import Calibration
 from optv.parameters import ControlParams, VolumeParams, TrackingParams, \
     SequenceParams
 
+framebuf_naming = {
+    'corres': 'testing_fodder/track/res/particles',
+    'linkage': 'testing_fodder/track/res/linkage',
+    'prio': 'testing_fodder/track/res/whatever'
+}
 class TestTracker(unittest.TestCase):
     def setUp(self):
         with open("testing_fodder/track/conf.yaml") as f:
@@ -36,15 +41,31 @@ class TestTracker(unittest.TestCase):
             image_base=img_base,
             frame_range=(seq_cfg['first'], seq_cfg['last']))
         
-        self.tracker = Tracker(cpar, vpar, tpar, spar, cals)
+        self.tracker = Tracker(cpar, vpar, tpar, spar, cals, framebuf_naming)
         
     def test_forward(self):
         """Manually running a full forward tracking run."""
-        pass
+        shutil.copytree(
+            "testing_fodder/track/res_orig/", "testing_fodder/track/res/")
+        
+        self.tracker.restart()
+        last_step = 1
+        while self.tracker.step_forward():
+            self.failUnless(self.tracker.current_step() > last_step)
+            last_step += 1
+        self.tracker.finalize()
     
     def test_full_forward(self):
         """Automatic full forward tracking run."""
-        pass
-
+        shutil.copytree(
+            "testing_fodder/track/res_orig/", "testing_fodder/track/res/")
+        self.tracker.full_forward()
+        # if it passes without error, we assume it's ok. The actual test is in 
+        # the C code.
+    
+    def tearDown(self):
+        if os.path.exists("testing_fodder/track/res/"):
+            shutil.rmtree("testing_fodder/track/res/")
+        
 if __name__ == "__main__":
     unittest.main()

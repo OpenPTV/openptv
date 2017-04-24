@@ -36,7 +36,7 @@ correspondences:
     epipolar_band: 0.15   # mm on sensor plane.
     
 sequence:
-    targets_template: testing_fodder/track/img/cam{cam:1d}.
+    targets_template: testing_fodder/track/newpart/cam{cam:1d}.
     first: 1
     last: 5
 
