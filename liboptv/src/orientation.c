@@ -98,7 +98,7 @@ double point_position(vec2d targets[], int num_cams, mm_np *multimed_pars,
 
     /* Shoot rays from all cameras. */
     for (cam = 0; cam < num_cams; cam++) {
-        if (targets[cam][0] != PT_UNUSED) {
+        if (targets[cam][0] != COORD_UNUSED) {
             ray_tracing(targets[cam][0], targets[cam][1], cals[cam], 
                 *multimed_pars, vertices[cam], directs[cam]);
         }
@@ -106,10 +106,10 @@ double point_position(vec2d targets[], int num_cams, mm_np *multimed_pars,
 
     /* Check intersection distance for each pair of rays and find position */
     for (cam = 0; cam < num_cams; cam++) {
-        if (targets[cam][0] == PT_UNUSED) continue;
+        if (targets[cam][0] == COORD_UNUSED) continue;
 
         for (pair = cam + 1; pair < num_cams; pair++) {
-            if (targets[pair][0] == PT_UNUSED) continue;
+            if (targets[pair][0] == COORD_UNUSED) continue;
 
             num_used_pairs++;
             dtot += skew_midpoint(vertices[cam], directs[cam],
