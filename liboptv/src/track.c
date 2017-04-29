@@ -978,8 +978,6 @@ void trackcorr_c_finish(tracking_run *run_info, int step)
 
     fb_next(run_info->fb);
     fb_write_frame_from_start(run_info->fb, step);
-
-    fb_free(run_info->fb);
 }
 
 /*     track backwards */
