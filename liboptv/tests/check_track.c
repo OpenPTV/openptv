@@ -289,7 +289,8 @@ START_TEST(test_copy_foundpix_array)
                         {2,5,{1,1}}
                     };
     foundpix *dest;
-    int arr_len = 2, num_cams = 2, i;
+    int arr_len = 2, num_cams = 2;
+    int i;
 
     dest = (foundpix *) calloc (arr_len, sizeof (foundpix));
 
