@@ -17,6 +17,8 @@ The quality standards are decided upon open discussion on the community
 mailing-list, 
 
   openptv@googlegroups.com
+  
+  https://groups.google.com/forum/#!forum/openptv
 
 The peer-review process happens in the open on the same mailing list.
 
