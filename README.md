@@ -15,8 +15,6 @@ all code here is therefore peer reviewed.
 
 The quality standards are decided upon open discussion on the community 
 mailing-list, 
-
-  openptv@googlegroups.com
   
   https://groups.google.com/forum/#!forum/openptv
 
