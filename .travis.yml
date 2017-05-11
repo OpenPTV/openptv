@@ -13,7 +13,7 @@ before_install:
 install: true
 
 script:
-- cd openptv/liboptv
+- cd OpenPTV/openptv/liboptv
 - mkdir _build && cd _build
 - cmake ../
 - make
