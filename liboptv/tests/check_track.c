@@ -207,7 +207,7 @@ START_TEST(test_candsearch_in_pix)
 
 
     /* prepare test control parameters, basically for pix_x  */
-    int cam;
+    int cam, i;
     char img_format[] = "cam%d";
     char cal_format[] = "cal/cam%d.tif";
     control_par *test_cpar;
@@ -238,7 +238,7 @@ START_TEST(test_candsearch_in_pix)
 
     printf("counter %d \n",counter);
     printf("candidates: \n");
-    for (int i=0;i<counter;i++){
+    for (i=0;i<counter;i++){
         printf("%f,%f\n",test_pix[p[i]].x,test_pix[p[i]].y);
     }
     fail_unless(counter == 2);
@@ -252,7 +252,7 @@ START_TEST(test_candsearch_in_pix)
                                  dl, dr, du, dd, p, test_cpar);
     printf("counter %d \n",counter);
     printf("candidates:\n");
-    for (int i=0;i<counter;i++){
+    for (i=0;i<counter;i++){
         printf("%f,%f\n",test_pix[p[i]].x,test_pix[p[i]].y);
     }
 
@@ -266,6 +266,7 @@ START_TEST(test_sort)
     float test_array[] = {1.0, 2200.2, 0.3, -0.8, 100.0};
     int ix_array[] = {0,5,13,2,124};
     int len_array = 5;
+    int i;
 
     sort(len_array,test_array,ix_array);
 
@@ -276,7 +277,7 @@ START_TEST(test_sort)
              "Was expecting 1 but found %f \n", ix_array[len_array-1]);
 
     printf("Sorted array:\n");
-    for (int i=0;i<len_array;i++){
+    for (i=0;i<len_array;i++){
         printf("test_array[%d]=%f\n",ix_array[i],test_array[i]);
     }
 
@@ -291,6 +292,7 @@ START_TEST(test_copy_foundpix_array)
     foundpix *dest;
     int arr_len = 2;
     int num_cams = 2;
+    int i;
 
     dest = (foundpix *) calloc (arr_len, sizeof (foundpix));
 
@@ -310,7 +312,7 @@ START_TEST(test_copy_foundpix_array)
              "Was expecting dest[1].ftnr == 2 but found %d \n", dest[1].ftnr);
 
     printf(" destination foundpix array\n");
-    for (int i=0; i<arr_len; i++){
+    for (i=0; i<arr_len; i++){
         printf("ftnr = %d freq=%d whichcam = %d %d\n", dest[i].ftnr, dest[i].freq, \
         dest[i].whichcam[0],dest[i].whichcam[1]);
     }
