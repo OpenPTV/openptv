@@ -106,7 +106,11 @@ int write_targets(target buffer[], int num_targets, char* file_base, \
     int	tix, printf_ok, success = 0;
     char fileout[STR_MAX_LEN + 1];
     
-    sprintf(fileout, "%s%04d%s", file_base, frame_num, "_targets");
+    if (frame_num == 0){
+        sprintf(fileout, "%s%s", file_base, "_targets");
+    } else {
+        sprintf(fileout, "%s%04d%s", file_base, frame_num, "_targets");
+    }
 
     FILEOUT = fopen(fileout, "w");
     if (! FILEOUT) {
