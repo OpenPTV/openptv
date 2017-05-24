@@ -2,6 +2,8 @@
 [![gitcheese.com](https://api.gitcheese.com/v1/projects/055c2faf-6c1e-4f01-9cd3-15a2e005f8fc/badges)](https://www.gitcheese.com/app/#/projects/055c2faf-6c1e-4f01-9cd3-15a2e005f8fc/pledges/create)
 -->
 
+[![Google Group](https://img.shields.io/badge/-Google%20Group-lightgrey.svg)](https://groups.google.com/forum/#!forum/openptv)
+
 OpenPTV - framework for particle tracking velocimetry
 =====================================================
 
