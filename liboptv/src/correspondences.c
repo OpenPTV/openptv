@@ -31,7 +31,7 @@ Description:	       	establishment of correspondences for 2/3/4 cameras
    integer num length of the array
 */
 void quicksort_con (n_tupel	*con, int num){
-  qs_con (con, 0, num-1);
+  if (num > 0) qs_con (con, 0, num-1);
 }
 
 void qs_con (n_tupel *con, int left, int right){
