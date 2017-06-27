@@ -21,6 +21,7 @@ ext_mods = [
     mk_ext("optv.correspondences", ["optv/correspondences.pyx"]),
     mk_ext("optv.segmentation", ["optv/segmentation.pyx"]),
     mk_ext("optv.epipolar", ["optv/epipolar.pyx"]),
+    mk_ext("optv.tracker", ["optv/tracker.pyx"]),
     mk_ext("optv.orientation", ["optv/orientation.pyx"])
 ]
 
