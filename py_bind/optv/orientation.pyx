@@ -107,3 +107,102 @@ def point_positions(np.ndarray[ndim=3, dtype=pos_t] targets,
                                  <vec3d> np.PyArray_GETPTR2(res, pt, 0))
 
     return res, rcm
+
+def external_calibration(Calibration cal, 
+    np.ndarray[ndim=2, dtype=pos_t] ref_pts, 
+    np.ndarray[ndim=2, dtype=pos_t] img_pts,
+    ControlParams cparam):
+    """
+    Update the external calibration with results of raw orientation, i.e.
+    the iterative process that adjust the initial guess' external parameters
+    (position and angle of cameras) without internal or distortions.
+    
+    Arguments:
+    Calibration cal - position and other parameters of the camera.
+    np.ndarray[ndim=2, dtype=pos_t] ref_pts - an (n,3) array, the 3D known 
+        positions of the select 2D points found on the image.
+    np.ndarray[ndim=2, dtype=pos_t] img_pts - a selection of pixel coordinates
+        of image points whose 3D position is known.
+    ControlParams cparam - an object holding general control parameters.
+    
+    Returns:
+    True if iteration succeeded, false otherwise.
+    """
+    cdef:
+        target *targs
+        vec3d *ref_coord
+    
+    ref_pts = np.ascontiguousarray(ref_pts)
+    ref_coord = <vec3d *>ref_pts.data
+    
+    # Convert pixel coords to metric coords:
+    targs = <target *>calloc(len(img_pts), sizeof(target))
+    
+    for ptx, pt in enumerate(img_pts):
+        targs[ptx].x = pt[0]
+        targs[ptx].y = pt[1]
+    
+    success = raw_orient (cal._calibration, cparam._control_par, 
+        len(ref_pts), ref_coord, targs)
+    
+    free(targs);
+    
+    return (True if success else False)
+
+def full_calibration(Calibration cal,
+    np.ndarray[ndim=2, dtype=pos_t] ref_pts, TargetArray img_pts,
+    ControlParams cparam):
+    """
+    Performs a full calibration, affecting all calibration structs.
+    
+    Arguments:
+    Calibration cal - current position and other parameters of the camera. Will
+        be overwritten with new calibration if iteration succeeded, otherwise 
+        remains untouched.
+    np.ndarray[ndim=2, dtype=pos_t] ref_pts - an (n,3) array, the 3D known 
+        positions of the select 2D points found on the image.
+    TargetArray img_pts - detected points to match to known 3D positions.
+        Must be sorted by matching ref point (as done by function
+        ``match_detection_to_ref()``.
+    ControlParams cparam - an object holding general control parameters.
+    
+    Returns:
+    ret - (r,2) array, the residuals in the x and y direction for r points used
+        in orientation.
+    used - r-length array, indices into target array of targets used.
+    err_est - error estimation per calibration DOF. We 
+    
+    Raises:
+    ValueError if iteration did not converge.
+    """
+    cdef:
+        vec3d *ref_coord
+        np.ndarray[ndim=2, dtype=pos_t] ret
+        np.ndarray[ndim=1, dtype=np.int_t] used
+        np.ndarray[ndim=1, dtype=pos_t] err_est
+        orient_par *orip
+        double *residuals
+    
+    ref_pts = np.ascontiguousarray(ref_pts)
+    ref_coord = <vec3d *>ref_pts.data
+    orip = read_orient_par("parameters/orient.par")
+    
+    err_est = np.empty((NPAR + 1) * sizeof(double))
+    residuals = orient(cal._calibration, cparam._control_par, len(ref_pts), 
+        ref_coord, img_pts._tarr, orip, <double *>err_est.data)
+    
+    free(orip)
+    
+    if residuals == NULL:
+        free(residuals)
+        raise ValueError("Orientation iteration failed, need better setup.")
+    
+    ret = np.empty((len(img_pts), 2))
+    used = np.empty(len(img_pts), dtype=np.int_)
+    
+    for ix in range(len(img_pts)):
+        ret[ix] = (residuals[2*ix], residuals[2*ix + 1])
+        used[ix] = img_pts[ix].pnr()
+    
+    free(residuals)
+    return ret, used, err_est

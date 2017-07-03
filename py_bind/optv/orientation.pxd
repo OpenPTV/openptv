@@ -8,10 +8,19 @@ cdef extern from "optv/sortgrid.h":
 
 cdef extern from "optv/orientation.h":
     ctypedef double vec2d[2]
+    ctypedef struct orient_par:
+        pass
 
+    enum:
+        NPAR
     double COORD_UNUSED
 
     double point_position(vec2d targets[], int num_cams, mm_np *multimed_pars,
         calibration* cals[], vec3d res);
+    int raw_orient(calibration* cal, control_par *cpar, int nfix, vec3d fix[], 
+        target pix[]);
+    double* orient (calibration* cal_in, control_par *cpar, int nfix, 
+        vec3d fix[], target pix[], orient_par *flags, double sigmabeta[20])
+    orient_par* read_orient_par(char *filename)
 
 cdef calibration** cal_list2arr(list cals)
