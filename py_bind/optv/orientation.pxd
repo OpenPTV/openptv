@@ -9,7 +9,11 @@ cdef extern from "optv/sortgrid.h":
 cdef extern from "optv/orientation.h":
     ctypedef double vec2d[2]
     ctypedef struct orient_par:
-        pass
+        unsigned int useflag
+        unsigned int ccflag, xhflag, yhflag
+        unsigned int k1flag, k2flag, k3flag
+        unsigned int p1flag, p2flag
+        unsigned int scxflag, sheflag, interfflag
 
     enum:
         NPAR

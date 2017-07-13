@@ -2,7 +2,7 @@ import numpy as np
 cimport numpy as np
 
 ctypedef np.float64_t pos_t
-from libc.stdlib cimport calloc
+from libc.stdlib cimport calloc, free
 
 from optv.tracking_framebuf cimport TargetArray
 from optv.calibration cimport Calibration
@@ -201,17 +201,18 @@ def full_calibration(Calibration cal,
     # Load up the orientation parameters. Silly, but saves on defining
     # a whole new class for what is no more than a list.
     orip = <orient_par *>calloc(1, sizeof(orient_par))
-    orip->cc = 'cc' in flags
-    orip->xh = 'xh' in flags
-    orip->yh = 'yh' in flags
-    orip->k1 = 'k1' in flags
-    orip->k2 = 'k2' in flags
-    orip->k3 = 'k3' in flags
-    orip->p1 = 'p1' in flags
-    orip->p2 = 'p2' in flags
-    orip->scx = 'scale' in flags
-    orip->she = 'shear' in flags
-    
+    orip[0].useflag = 0
+    orip[0].ccflag = (1 if 'cc' in flags else 0)
+    orip[0].xhflag = (1 if 'xh' in flags else 0)
+    orip[0].yhflag = (1 if 'yh' in flags else 0)
+    orip[0].k1flag = (1 if 'k1' in flags else 0)
+    orip[0].k2flag = (1 if 'k2' in flags else 0)
+    orip[0].k3flag = (1 if 'k3' in flags else 0)
+    orip[0].p1flag = (1 if 'p1' in flags else 0)
+    orip[0].p2flag = (1 if 'p2' in flags else 0)
+    orip[0].scxflag = (1 if 'scale' in flags else 0)
+    orip[0].sheflag = (1 if 'shear' in flags else 0)
+    orip[0].interfflag = 0 # This also solves for the glass, I'm skipping it.
     
     err_est = np.empty((NPAR + 1) * sizeof(double))
     residuals = orient(cal._calibration, cparam._control_par, len(ref_pts), 
