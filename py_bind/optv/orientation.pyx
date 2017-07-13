@@ -151,7 +151,7 @@ def external_calibration(Calibration cal,
 
 def full_calibration(Calibration cal,
     np.ndarray[ndim=2, dtype=pos_t] ref_pts, TargetArray img_pts,
-    ControlParams cparam):
+    ControlParams cparam, list flags=[]):
     """
     Performs a full calibration, affecting all calibration structs.
     
@@ -165,6 +165,18 @@ def full_calibration(Calibration cal,
         Must be sorted by matching ref point (as done by function
         ``match_detection_to_ref()``.
     ControlParams cparam - an object holding general control parameters.
+    flags - a list whose members are the names of possible distortion
+        parameters. Only parameter names present in the list will be used.
+        Passing an empty list should be functionally equivalent to a raw 
+        calibration, though the code paths taken in C are different. 
+        
+        The recognized flags are: 
+            'cc', 'xh', 'yh' - sensor position.
+            'k1', 'k2', 'k3' - radial distortion.
+            'p1', 'p2' - decentering
+            'scale', 'shear' - affine transforms.
+        
+        This is what the underlying library uses a struct for, but come on.
     
     Returns:
     ret - (r,2) array, the residuals in the x and y direction for r points used
@@ -185,7 +197,21 @@ def full_calibration(Calibration cal,
     
     ref_pts = np.ascontiguousarray(ref_pts)
     ref_coord = <vec3d *>ref_pts.data
-    orip = read_orient_par("parameters/orient.par")
+
+    # Load up the orientation parameters. Silly, but saves on defining
+    # a whole new class for what is no more than a list.
+    orip = <orient_par *>calloc(1, sizeof(orient_par))
+    orip->cc = 'cc' in flags
+    orip->xh = 'xh' in flags
+    orip->yh = 'yh' in flags
+    orip->k1 = 'k1' in flags
+    orip->k2 = 'k2' in flags
+    orip->k3 = 'k3' in flags
+    orip->p1 = 'p1' in flags
+    orip->p2 = 'p2' in flags
+    orip->scx = 'scale' in flags
+    orip->she = 'shear' in flags
+    
     
     err_est = np.empty((NPAR + 1) * sizeof(double))
     residuals = orient(cal._calibration, cparam._control_par, len(ref_pts), 
@@ -206,3 +232,4 @@ def full_calibration(Calibration cal,
     
     free(residuals)
     return ret, used, err_est
+
