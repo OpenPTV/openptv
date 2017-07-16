@@ -1,11 +1,11 @@
 import numpy as np
 import random
 import unittest
-import os
 
 from optv.calibration import Calibration
 from optv.imgcoord import image_coordinates
-from optv.orientation import match_detection_to_ref, point_positions
+from optv.orientation import match_detection_to_ref, point_positions, \
+    external_calibration
 from optv.parameters import ControlParams
 from optv.tracking_framebuf import TargetArray
 from optv.transforms import convert_arr_metric_to_pixel
@@ -18,7 +18,8 @@ class Test_Orientation(unittest.TestCase):
         self.control_file_name = r'testing_fodder/control_parameters/control.par'
 
         self.calibration = Calibration()
-        self.calibration.from_file(self.input_ori_file_name, self.input_add_file_name)
+        self.calibration.from_file(
+            self.input_ori_file_name, self.input_add_file_name)
         self.control = ControlParams(4)
         self.control.read_control_par(self.control_file_name)
 
@@ -138,6 +139,47 @@ class Test_Orientation(unittest.TestCase):
         if np.any(np.linalg.norm(points - skew_dist_jigged[0], axis=1) > 0.1):
             self.fail('Rays converge on wrong position after jigging.')
 
+class TestGradientDescent(unittest.TestCase):
+    # Based on the C tests in liboptv/tests/check_orientation.c
+    
+    def setUp(self):
+        control_file_name = r'testing_fodder/corresp/control.par'
+        self.control = ControlParams(4)
+        self.control.read_control_par(control_file_name)
+        
+        self.cal = Calibration()
+        self.cal.from_file(
+            "testing_fodder/calibration/cam1.tif.ori", 
+            "testing_fodder/calibration/cam1.tif.addpar")
+        self.orig_cal = Calibration()
+        self.orig_cal.from_file(
+            "testing_fodder/calibration/cam1.tif.ori", 
+            "testing_fodder/calibration/cam1.tif.addpar")
+    
+    def test_external_calibration(self):
+        """External calibration using clicked points."""
+        ref_pts = np.array([
+            [-40., -25., 8.],
+            [ 40., -15., 0.],
+            [ 40.,  15., 0.],
+            [ 40.,   0., 8.]])
+    
+        # Fake the image points by back-projection
+        targets = convert_arr_metric_to_pixel(image_coordinates(
+            ref_pts, self.cal, self.control.get_multimedia_params()),
+            self.control)
+        
+        # Jigg the fake detections to give raw_orient some challenge.
+        targets[:,1] -= 0.1
+        
+        self.assertTrue(external_calibration(
+            self.cal, ref_pts, targets, self.control))
+        np.testing.assert_array_almost_equal(
+            self.cal.get_angles(), self.orig_cal.get_angles(),
+            decimal=4)
+        np.testing.assert_array_almost_equal(
+            self.cal.get_pos(), self.orig_cal.get_pos(),
+            decimal=3)
 
 if __name__ == "__main__":
     unittest.main()
