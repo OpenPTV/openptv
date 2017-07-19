@@ -5,7 +5,7 @@ import unittest
 from optv.calibration import Calibration
 from optv.imgcoord import image_coordinates
 from optv.orientation import match_detection_to_ref, point_positions, \
-    external_calibration
+    external_calibration, full_calibration
 from optv.parameters import ControlParams
 from optv.tracking_framebuf import TargetArray
 from optv.transforms import convert_arr_metric_to_pixel
@@ -180,6 +180,35 @@ class TestGradientDescent(unittest.TestCase):
         np.testing.assert_array_almost_equal(
             self.cal.get_pos(), self.orig_cal.get_pos(),
             decimal=3)
-
+    
+    def test_full_calibration(self):
+        ref_pts = np.array([a.flatten() for a in np.meshgrid(
+            np.r_[-60:-30:4j], np.r_[0:15:4j], np.r_[0:15:4j])]).T
+        
+        # Fake the image points by back-projection
+        targets = convert_arr_metric_to_pixel(image_coordinates(
+            ref_pts, self.cal, self.control.get_multimedia_params()),
+            self.control)
+        
+        # Full calibration works with TargetArray objects, not NumPy.
+        target_array = TargetArray(len(targets))
+        for i in xrange(len(targets)):
+            target_array[i].set_pnr(i)
+            target_array[i].set_pos(targets[i])
+        
+        # Perturb the calibration object, then compore result to original.
+        self.cal.set_pos(self.cal.get_pos() + np.r_[15., -15., 15.])
+        self.cal.set_angles(self.cal.get_angles() + np.r_[-.5, .5, -.5])
+        
+        ret, used, err_est = full_calibration(
+            self.cal, ref_pts, target_array, self.control)
+        
+        np.testing.assert_array_almost_equal(
+            self.cal.get_angles(), self.orig_cal.get_angles(),
+            decimal=4)
+        np.testing.assert_array_almost_equal(
+            self.cal.get_pos(), self.orig_cal.get_pos(),
+            decimal=3)
+        
 if __name__ == "__main__":
     unittest.main()
