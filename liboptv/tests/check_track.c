@@ -441,7 +441,7 @@ START_TEST(test_trackcorr_no_add)
     npart = (double)run->npart / range;
     nlinks = (double)run->nlinks / range;
     
-    ck_assert_msg(fabs(npart - 208.0/210.0)<EPS,
+    ck_assert_msg(fabs(npart - 206.0/210.0)<EPS,
                   "Was expecting npart == 208/210 but found %f \n", npart);
     ck_assert_msg(fabs(nlinks - 198.0/210.0)<EPS,
                   "Was expecting nlinks == 198/210 but found %f \n", nlinks);
@@ -484,7 +484,7 @@ START_TEST(test_trackcorr_with_add)
     npart = (double)run->npart / range;
     nlinks = (double)run->nlinks / range;
     
-    ck_assert_msg(fabs(npart - 1930.0/210.0)<EPS,
+    ck_assert_msg(fabs(npart - 1928.0/210.0)<EPS,
                   "Was expecting npart == 208/210 but found %f \n", npart);
     ck_assert_msg(fabs(nlinks - 328.0/210.0)<EPS,
                   "Was expecting nlinks == 328/210 but found %f \n", nlinks);
