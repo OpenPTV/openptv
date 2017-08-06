@@ -14,6 +14,7 @@ import numpy as np
 from optv.transforms cimport pixel_to_metric, dist_to_flat
 from optv.parameters cimport ControlParams, VolumeParams
 from optv.calibration cimport Calibration, calibration
+from optv.orientation cimport COORD_UNUSED
 from optv.tracking_framebuf cimport TargetArray, Target, target, frame, \
     PT_UNUSED, CORRES_NONE
 
@@ -106,7 +107,7 @@ cdef class MatchedCoords:
             np.ndarray[ndim=2, dtype=np.float64_t] pos
             int pt
         
-        pos = np.full((len(pnrs), 2), PT_UNUSED, dtype=np.float64)
+        pos = np.full((len(pnrs), 2), COORD_UNUSED, dtype=np.float64)
         for pt in range(self._num_pts):
             which = np.flatnonzero(self.buf[pt].pnr == pnrs)
             if len(which) > 0:
