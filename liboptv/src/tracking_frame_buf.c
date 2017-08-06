@@ -38,7 +38,7 @@ int compare_targets(target *t1, target *t2) {
  *   means that no frame number should be added.
  * 
  * Returns:
- * the number of targets found in the file, or 0 if an error occurred.
+ * the number of targets found in the file, or -1 if an error occurred.
 */
 
 int read_targets(target buffer[], char* file_base, int frame_num) {
@@ -81,7 +81,7 @@ int read_targets(target buffer[], char* file_base, int frame_num) {
 
 handle_error:
     if (FILEIN != NULL) fclose (FILEIN);
-    return 0;
+    return -1;
 }
 
 /* Writes targets to a file. The number of targets is written to the first
@@ -218,7 +218,7 @@ void reset_links(P *self) {
  * between the name and the frame number.
  * 
  * Returns:
- * The number of points read for this frame. 0 on failure.
+ * The number of points read for this frame. -1 on failure.
 */
 int read_path_frame(corres *cor_buf, P *path_buf, \
     char *corres_file_base, char *linkage_file_base, char *prio_file_base,
@@ -226,7 +226,7 @@ int read_path_frame(corres *cor_buf, P *path_buf, \
 {
     FILE *filein, *linkagein = NULL, *prioin = NULL;
     char fname[STR_MAX_LEN];
-    int read_res = 0, targets = 0, alt_link = 0;
+    int read_res = 0, targets = -1, alt_link = 0;
     double discard; /* For position values that are to be read again from a 
                        differnt file. */
     
@@ -273,6 +273,7 @@ int read_path_frame(corres *cor_buf, P *path_buf, \
         if (!read_res) goto finalize;
     }
     
+    targets = 0;
     do {
         if (linkagein != NULL) {
             read_res = fscanf(linkagein, "%4d %4d %lf %lf %lf\n",
@@ -280,7 +281,7 @@ int read_path_frame(corres *cor_buf, P *path_buf, \
             if (!read_res) {
                 printf("Error with linkage file format in: %s.%d\n",
                     linkage_file_base, frame_num);
-                targets = 0;
+                targets = -1;
                 break;
             }
         } else {
@@ -296,7 +297,7 @@ int read_path_frame(corres *cor_buf, P *path_buf, \
             if (!read_res) {
                 printf("Error with linkage file format in: %s.%d\n",
                     linkage_file_base, frame_num);
-                targets = 0;
+                targets = -1;
                 break;
             }
         } else {
@@ -320,7 +321,7 @@ int read_path_frame(corres *cor_buf, P *path_buf, \
             &(cor_buf->p[3]) );
         
         if (read_res != 8) {
-            targets = 0;
+            targets = -1;
             break;
         }
         
@@ -498,12 +499,15 @@ int read_frame(frame *self, char *corres_file_base, char *linkage_file_base,
     
     self->num_parts = read_path_frame(self->correspond, self->path_info,
         corres_file_base, linkage_file_base, prio_file_base, frame_num);
+    if (self->num_parts == -1) return 0;
+    
+    /* Prevent crashes by testing for initial allocation */
     if (self->num_targets == 0) return 0;
     
     for (cam = 0; cam < self->num_cams; cam++) {
         self->num_targets[cam] = read_targets(
             self->targets[cam], target_file_base[cam], frame_num);
-        if (self->num_targets[cam] == 0) return 0;
+        if (self->num_targets[cam] == -1) return 0;
     }
     
     return 1;
