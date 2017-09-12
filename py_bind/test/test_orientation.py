@@ -3,9 +3,9 @@ import random
 import unittest
 
 from optv.calibration import Calibration
-from optv.imgcoord import image_coordinates
+from optv.imgcoord import image_coordinates, flat_image_coordinates
 from optv.orientation import match_detection_to_ref, point_positions, \
-    external_calibration, full_calibration
+    external_calibration, full_calibration, dumbbell_target_func
 from optv.parameters import ControlParams
 from optv.tracking_framebuf import TargetArray
 from optv.transforms import convert_arr_metric_to_pixel
@@ -138,6 +138,54 @@ class Test_Orientation(unittest.TestCase):
                     targ_num=np.nonzero(skew_dist_jigged[1] > 1e-10)[0][0]))
         if np.any(np.linalg.norm(points - skew_dist_jigged[0], axis=1) > 0.1):
             self.fail('Rays converge on wrong position after jigging.')
+    
+    def test_dumbbell(self):
+        # prepare MultimediaParams
+        mult_params = self.control.get_multimedia_params()
+        mult_params.set_n1(1.)
+        mult_params.set_layers(np.array([1.]), np.array([1.]))
+        mult_params.set_n3(1.)
+
+        # 3d point
+        points = np.array([[17.5, 42, 0],
+                           [-17.5, 42, 0]], dtype=float)
+        
+        num_cams = 4
+        ori_tmpl = r'testing_fodder/dumbbell/cam{cam_num}.tif.ori'
+        add_file = r'testing_fodder/calibration/cam1.tif.addpar'
+        calibs = []
+        targs_plain = []
+
+        # read calibration for each camera from files
+        for cam in range(num_cams):
+            ori_name = ori_tmpl.format(cam_num=cam + 1)
+            new_cal = Calibration()
+            new_cal.from_file(ori_file=ori_name, add_file=add_file)
+            calibs.append(new_cal)
+
+        for cam_num, cam_cal in enumerate(calibs):
+            new_plain_targ = flat_image_coordinates(
+                points, cam_cal, self.control.get_multimedia_params())
+            targs_plain.append(new_plain_targ)
+
+        targs_plain = np.array(targs_plain).transpose(1,0,2)
+        
+        # The cameras are not actually fully calibrated, so the result is not 
+        # an exact 0. The test is that changing the expected distance changes 
+        # the measure.
+        tf = dumbbell_target_func(targs_plain, self.control, calibs, 35., 0.)
+        self.assertAlmostEqual(tf, 7.14860, 5) # just a regression test
+        
+        # As we check the db length, the measure increases...
+        tf_len = dumbbell_target_func(
+            targs_plain, self.control, calibs, 35., 1.)
+        self.assertTrue(tf_len > tf)
+        
+        # ...but not as much as when giving the wrong length.
+        tf_too_long = dumbbell_target_func(
+            targs_plain, self.control, calibs, 25., 1.)
+        self.assertTrue(tf_too_long > tf_len > tf)
+        
 
 class TestGradientDescent(unittest.TestCase):
     # Based on the C tests in liboptv/tests/check_orientation.c

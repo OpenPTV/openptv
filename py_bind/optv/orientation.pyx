@@ -234,3 +234,35 @@ def full_calibration(Calibration cal,
     free(residuals)
     return ret, used, err_est
 
+def dumbbell_target_func(np.ndarray[ndim=3, dtype=pos_t] targets, 
+    ControlParams cparam, cals, db_length, db_weight):
+    """
+    Wrap the epipolar convergence test.
+    
+    Arguments:
+    np.ndarray[ndim=3, dtype=pos_t] targets - (num_targets, num_cams, 2) array,
+        containing the metric coordinates of each target on the image plane of
+        each camera. Cameras must be in the same order for all targets.
+    ControlParams cparam - needed for the parameters of the tank through which
+        we see the targets.
+    cals - a sequence of Calibration objects for each of the cameras, in the 
+        camera order of ``targets``.
+    db_length - distance between two dumbbell targets.
+    db_weight - weight of relative dumbbell size error in target function.
+    """
+    cdef:
+        np.ndarray[ndim=2, dtype=pos_t] targ
+        vec2d **ctargets
+        calibration **calib = cal_list2arr(cals)
+        int cam, num_cams
+    
+    num_cams = targets.shape[1]
+    num_pts = targets.shape[0]
+    ctargets = <vec2d **>calloc(num_pts, sizeof(vec2d*))
+    
+    for pt in range(num_pts):
+        targ = targets[pt]
+        ctargets[pt] = <vec2d *>(targ.data)
+    
+    return weighted_dumbbell_precision(ctargets, num_pts, num_cams, 
+        cparam._control_par.mm, calib,  db_length, db_weight)
