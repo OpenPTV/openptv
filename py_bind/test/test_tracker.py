@@ -69,6 +69,15 @@ class TestTracker(unittest.TestCase):
         # if it passes without error, we assume it's ok. The actual test is in 
         # the C code.
     
+    def test_full_backward(self):
+        """Automatic full backward correction phase."""
+        shutil.copytree(
+            "testing_fodder/track/res_orig/", "testing_fodder/track/res/")
+        self.tracker.full_forward()
+        self.tracker.full_backward()
+        # if it passes without error, we assume it's ok. The actual test is in 
+        # the C code.
+        
     def tearDown(self):
         if os.path.exists("testing_fodder/track/res/"):
             shutil.rmtree("testing_fodder/track/res/")

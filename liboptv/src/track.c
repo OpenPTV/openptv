@@ -1193,9 +1193,5 @@ double trackback_c (tracking_run *run_info)
     fb_next(fb);
     fb_write_frame_from_start(fb, step);
 
-    fb_free(fb);
-    free(fb);
-    free(tpar);
-
     return nlinks;
 }
