@@ -559,7 +559,7 @@ START_TEST(test_trackback)
                      (run->tpar->dvymin - run->tpar->dvymax), \
                      (run->tpar->dvzmin - run->tpar->dvzmax));
     
-    nlinks = trackback_c(run, run->seq_par->last);
+    nlinks = trackback_c(run);
     empty_res_dir();
     
     ck_assert_msg(fabs(nlinks - 1.043062)<EPS,

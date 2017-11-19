@@ -56,6 +56,6 @@ void point_to_pixel (vec2d v1, vec3d point, Calibration *cal, control_par *cpar)
 void track_forward_start(tracking_run *tr);
 void trackcorr_c_loop (tracking_run *run_info, int step);
 void trackcorr_c_finish(tracking_run *run_info, int step);
-double trackback_c(tracking_run *run_info, int step);
+double trackback_c(tracking_run *run_info);
 
 #endif

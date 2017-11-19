@@ -981,9 +981,10 @@ void trackcorr_c_finish(tracking_run *run_info, int step)
 }
 
 /*     track backwards */
-double trackback_c (tracking_run *run_info, int step)
+double trackback_c (tracking_run *run_info)
 {
     int i, j, h, in_volume = 0;
+    int step;
     int philf[4][MAX_CANDS];
     int count1 = 0, count2 = 0, num_added = 0;
     int quali = 0;
@@ -1191,10 +1192,6 @@ double trackback_c (tracking_run *run_info, int step)
 
     fb_next(fb);
     fb_write_frame_from_start(fb, step);
-
-    fb_free(fb);
-    free(fb);
-    free(tpar);
 
     return nlinks;
 }
