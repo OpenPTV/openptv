@@ -189,17 +189,18 @@ int compare_track_par(track_par *t1, track_par *t2) {
 
 /* read_volume_par() reads parameters of illuminated volume from a config file
    with the following format: each line is a value, in this order:
-   1. X_lay[0]
-   2. Zmin_lay[0]
-   3. Zmax_lay[0]
-   4. X_lay[1]
-   5. Zmin_lay[1]
-   6. Zmax_lay[1]
-   7. cnx
-   8. cny
-   9. cn
-   10.csumg
-   11.corrmin
+   1.  X_lay[0], (mm) leftmost X boundary 
+   2.  Zmin_lay[0], (mm), left size closest Z point 
+   3.  Zmax_lay[0], (mm), left side farest Z point
+   4.  X_lay[1], (mm) rightmost X boundary
+   5.  Zmin_lay[1] (mm), right side, closest Z
+   6.  Zmax_lay[1] (mm), right side, farest Z
+   7.  cnx, correlation limit for nx size of a candidate blob
+   8.  cny, correlation limit for ny size of a candidate blob
+   9.  cn, correlation limit for n particle size of a candidate blob
+   10. csumg, correlation limit for sum of grey scale of a candidate
+   11. corrmin, minimum correlation of all above parameters
+   12. eps0 (mm), flat coordinates, see docs/ptv_coordinates
    
    Arguments:
    char *filename - path to the text file containing the parameters.
