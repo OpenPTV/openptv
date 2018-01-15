@@ -348,10 +348,11 @@ control_par* read_control_par(char *filename) {
     
     /*  backward compatibility: Tcl/Tk version will look for 8 rows of strings 
         regardless of camera count.
-    */
+    
     for (cam = 0; cam < 2*(4 - ret->num_cams); cam++) {
         if (fscanf(par_file, "%s\n", line) == 0) goto handle_error; 
     }
+    */
     
     if(fscanf(par_file, "%d\n", &(ret->hp_flag)) == 0) goto handle_error;
     if(fscanf(par_file, "%d\n", &(ret->allCam_flag)) == 0) goto handle_error;
@@ -460,30 +461,40 @@ int compare_mm_np(mm_np *mm_np1, mm_np *mm_np2)
 
 /* Reads target recognition parameters from file.
  * Parameter: filename - the absolute/relative path to file from which the parameters will be read.
+ % Parameter: int num_cams - number of cameras in the experiment
  * Returns: pointer to a new target_par structure.
  */
-target_par* read_target_par(char *filename) {
+target_par* read_target_par(char *filename, , int num_cams) {
     FILE * file = fopen(filename, "r");
     if (file == NULL) {
         printf("Could not open target recognition parameters file %s.\n", filename);
         return NULL;
     }
 
+    int cam;
     target_par *ret;
     ret = malloc(sizeof(target_par));
+    
+    for (cam = 0; cam < num_cams; cam++) {
+        if !(fscanf(file, "%d", &ret->gvthres[cam])==1)   /* threshold for binarization %d cam images */
+        {
+         printf("Error reading target binarization thresholds from %s\n", filename);
+         free(ret);
+         fclose(file);
+         return NULL;
+        }
+    } 
+    
+    
 
-    if (   !(fscanf(file, "%d", &ret->gvthres[0])==1)   /* threshold for binarization 1.image */
-        || !(fscanf(file, "%d", &ret->gvthres[1])==1)   /* threshold for binarization 2.image */
-        || !(fscanf(file, "%d", &ret->gvthres[2])==1)   /* threshold for binarization 3.image */
-        || !(fscanf(file, "%d", &ret->gvthres[3])==1)   /* threshold for binarization 4.image */
-        || !(fscanf(file, "%d", &ret->discont)==1)      /* max discontinuity */
+    if (   !(fscanf(file, "%d", &ret->discont)==1)      /* max discontinuity */
         || !(fscanf(file, "%d  %d", &ret->nnmin, &ret->nnmax)==2) /* min. and max. number of */
         || !(fscanf(file, "%d  %d", &ret->nxmin, &ret->nxmax)==2) /* pixels per target,  */
         || !(fscanf(file, "%d  %d", &ret->nymin, &ret->nymax)==2) /* abs, in x, in y     */
         || !(fscanf(file, "%d", &ret->sumg_min)==1)               /* min. sumg */
         || !(fscanf(file, "%d", &ret->cr_sz)==1))                 /* size of crosses */
     {
-        printf("Error reading target recognition parameters from %s\n", filename);
+        printf("Error reading other target recognition parameters from %s\n", filename);
         free(ret);
         fclose(file);
         return NULL;
@@ -494,14 +505,22 @@ target_par* read_target_par(char *filename) {
 }
 
 /* Checks deep equality between two target_par structure variables.
+ * Parameters: two target_par structures 
+ * int n_cams : number of cameras in this experiment
  * Returns 1 for equality, 0 otherwise.
  */
-int compare_target_par(target_par *targ1, target_par *targ2) {
-    return (   targ1->discont ==    targ2->discont
-            && targ1->gvthres[0] == targ2->gvthres[0]
-            && targ1->gvthres[1] == targ2->gvthres[1]
-            && targ1->gvthres[2] == targ2->gvthres[2]
-            && targ1->gvthres[3] == targ2->gvthres[3]
+int compare_target_par(target_par *targ1, target_par *targ2, int n_cams) {
+
+    int gvthres_equal = 1;
+
+    for (cam = 0; cam < num_cams; cam++) {
+            gvthres_equal = gvthres_equal && (targ1->gvthres[cam] == targ2->gvthres[cam])
+    }
+
+
+
+    return (   gvthres_equal
+            && targ1->discont ==    targ2->discont
             && targ1->nnmin ==      targ2->nnmin
             && targ1->nnmax ==      targ2->nnmax
             && targ1->nxmin ==      targ2->nxmin
@@ -515,18 +534,19 @@ int compare_target_par(target_par *targ1, target_par *targ2) {
  * Parameters:
  * targ - a pointer to target_par structure that will be written to file
  * filename - pointer to char array representing the absolute/relative file name
+ * n_cams - number of cameras in this experiment
  */
-void write_target_par(target_par *targ, char *filename) {
+void write_target_par(target_par *targ, char *filename, int n_cams) {
     FILE *file = fopen(filename, "w");
 
     if (file == NULL)
         printf("Can't create file: %s\n", filename);
+        
+    for (cam = 0; cam < num_cams; cam++) {
+        fprintf(file, "%d\n", targ->gvthres[cam])
+    }
 
-    fprintf(file, "%d\n%d\n%d\n%d\n%d\n%d\n%d\n%d\n%d\n%d\n%d\n%d\n%d",
-            targ->gvthres[0],
-            targ->gvthres[1],
-            targ->gvthres[2],
-            targ->gvthres[3],
+    fprintf(file, "%d\n%d\n%d\n%d\n%d\n%d\n%d\n%d\n%d",
             targ->discont,
             targ->nnmin,
             targ->nnmax,
