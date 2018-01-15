@@ -464,7 +464,7 @@ int compare_mm_np(mm_np *mm_np1, mm_np *mm_np2)
  % Parameter: int num_cams - number of cameras in the experiment
  * Returns: pointer to a new target_par structure.
  */
-target_par* read_target_par(char *filename, , int num_cams) {
+target_par* read_target_par(char *filename, int num_cams) {
     FILE * file = fopen(filename, "r");
     if (file == NULL) {
         printf("Could not open target recognition parameters file %s.\n", filename);
@@ -476,7 +476,7 @@ target_par* read_target_par(char *filename, , int num_cams) {
     ret = malloc(sizeof(target_par));
     
     for (cam = 0; cam < num_cams; cam++) {
-        if !(fscanf(file, "%d", &ret->gvthres[cam])==1)   /* threshold for binarization %d cam images */
+        if (!(fscanf(file, "%d", &ret->gvthres[cam])==1))   /* threshold for binarization %d cam images */
         {
          printf("Error reading target binarization thresholds from %s\n", filename);
          free(ret);
@@ -512,9 +512,10 @@ target_par* read_target_par(char *filename, , int num_cams) {
 int compare_target_par(target_par *targ1, target_par *targ2, int n_cams) {
 
     int gvthres_equal = 1;
+    int cam;
 
-    for (cam = 0; cam < num_cams; cam++) {
-            gvthres_equal = gvthres_equal && (targ1->gvthres[cam] == targ2->gvthres[cam])
+    for (cam = 0; cam < n_cams; cam++) {
+            gvthres_equal = gvthres_equal && (targ1->gvthres[cam] == targ2->gvthres[cam]);
     }
 
 
@@ -538,12 +539,13 @@ int compare_target_par(target_par *targ1, target_par *targ2, int n_cams) {
  */
 void write_target_par(target_par *targ, char *filename, int n_cams) {
     FILE *file = fopen(filename, "w");
+    int cam;
 
     if (file == NULL)
         printf("Can't create file: %s\n", filename);
         
-    for (cam = 0; cam < num_cams; cam++) {
-        fprintf(file, "%d\n", targ->gvthres[cam])
+    for (cam = 0; cam < n_cams; cam++) {
+        fprintf(file, "%d\n", targ->gvthres[cam]);
     }
 
     fprintf(file, "%d\n%d\n%d\n%d\n%d\n%d\n%d\n%d\n%d",
