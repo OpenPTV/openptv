@@ -274,7 +274,7 @@ control_par * new_control_par(int cams) {
     control_par *ret = (control_par *) malloc(sizeof(control_par));
 
     ret->num_cams = cams;
-
+    
     ret->img_base_name = (char **) calloc(ret->num_cams, sizeof(char*));
     ret->cal_img_base_name = (char **) calloc(ret->num_cams, sizeof(char *));
 
