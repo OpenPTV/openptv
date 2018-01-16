@@ -1,4 +1,4 @@
-sudo: false
+sudo: enabled
 
 language: python
 python:
@@ -44,7 +44,7 @@ script:
   - cmake ../
   - make
   - make verify
-  - make install
+  - sudo make install
   - cd ../../py_bind
   - python setup.py build_ext -I/usr/local/include -L/usr/local/lib
   - python setup.py install
