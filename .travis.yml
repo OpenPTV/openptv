@@ -1,4 +1,4 @@
-sudo: enabled
+sudo: false
 
 language: python
 python:
@@ -44,9 +44,10 @@ script:
   - cmake ../
   - make
   - make verify
-  - sudo make install
+  - make install
   - cd ../../py_bind
   - python setup.py build_ext -I/usr/local/include -L/usr/local/lib
   - python setup.py install
   - cd test
-  - LD_LIBRARY_PATH=/usr/local/lib:$LD_LIBRARY_PATH nosetests
+  - export LD_LIBRARY_PATH=$HOME/lib:$LD_LIBRARY_PATH
+  - nosetests
