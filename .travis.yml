@@ -14,7 +14,7 @@ addons:
   - git
   - gcc
 
-install:
+before_install:
   # We do this conditionally because it saves us some downloading if the
   # version is the same.
   - if [[ "$TRAVIS_PYTHON_VERSION" == "2.7" ]]; then
@@ -36,7 +36,9 @@ install:
   - make
   - make verify
   - sudo make install
-  - echo $PATH
+  
+install:
+  - echo $(pwd)
   - cd ../../py_bind
   - python setup.py build_ext -I/usr/local/include -L/usr/local/lib
   - python setup.py install
