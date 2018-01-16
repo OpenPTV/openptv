@@ -37,6 +37,7 @@ install:
   - conda info
   - conda list
 
+script:
   - cd $TRAVIS_BUILD_DIR
   - cd liboptv
   - mkdir _build && cd _build
