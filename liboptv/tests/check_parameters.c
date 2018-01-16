@@ -20,11 +20,11 @@ START_TEST(test_read_write_compare_targ_rec_par)
         .sumg_min = 12, 
         .cr_sz = 13 };
     
-    target_par *targ_read = read_target_par(filename_read);
-    fail_unless(compare_target_par(&targ_correct, targ_read));
+    target_par *targ_read = read_target_par(filename_read, 4);
+    fail_unless(compare_target_par(&targ_correct, targ_read, 4));
 
-    write_target_par(targ_read, filename_write);
-    fail_unless(compare_target_par(&targ_correct, read_target_par(filename_write)));
+    write_target_par(targ_read, filename_write, 4);
+    fail_unless(compare_target_par(&targ_correct, read_target_par(filename_write, 4), 4));
 
     remove(filename_write);
 }

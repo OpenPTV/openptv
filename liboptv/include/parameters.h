@@ -84,17 +84,17 @@ typedef struct {
 /* Reads target recognition parameters from file.
  * Parameter: filename - the absolute/relative path to file from which the parameters will be read.
  * Returns: pointer to a new target_par structure. */
-target_par* read_target_par(char *filename);
+target_par* read_target_par(char *filename, int num_cams);
 
 /* Checks deep equality between two target_par structure variables.
  * Returns 1 for equality, 0 otherwise.*/
-int compare_target_par(target_par *targ1, target_par *targ2);
+int compare_target_par(target_par *targ1, target_par *targ2, int num_cams);
 
 /* Writes target_par structure contents to a file.
  * Parameters:
  * targ - a pointer to target_par structure that will be written to file
  * filename - pointer to char array representing the absolute/relative file name */
-void write_target_par(target_par *targ, char *filename) ;
+void write_target_par(target_par *targ, char *filename, int num_cams) ;
 
 /* Checks deep equality between two mm_np struct instances.
  * Returns 1 for equality, 0 otherwise. */

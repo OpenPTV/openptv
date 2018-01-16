@@ -27,7 +27,7 @@ cdef extern from "optv/parameters.h":
     void c_free_control_par "free_control_par"(control_par * cp);
     int c_compare_control_par "compare_control_par"(control_par * c1, control_par * c2);
     
-    target_par* read_target_par(char *filename)
+    target_par* read_target_par(char *filename, int cams);
 
 cdef numpy.ndarray wrap_1d_c_arr_as_ndarray(object base_obj, 
     int arr_size, int num_type, void * data, int copy):
@@ -785,7 +785,7 @@ cdef class TargetParams:
         return wrap_1d_c_arr_as_ndarray(self, num_cams, numpy.NPY_INT, 
             self._targ_par.gvthres, (1 if copy else 0))
         
-    def set_grey_thresholds(self, gvthresh):
+    def set_grey_thresholds(self, gvthresh, num_cams=4):
         """
         Arguments:
         gvthresh - a sequence of at most 4 ints.
@@ -793,7 +793,7 @@ cdef class TargetParams:
         if len(gvthresh) > 4:
             raise ValueError("Can't store more than 4 grey-level thresholds.")
         
-        for gvx in xrange(len(gvthresh)):
+        for gvx in xrange(num_cams):
             self._targ_par.gvthres[gvx] = gvthresh[gvx]
     
     def get_pixel_count_bounds(self):
@@ -850,15 +850,12 @@ cdef class TargetParams:
     def set_cross_size(self, int cr_sz):
         self._targ_par.cr_sz = cr_sz
     
-    def read(self, inp_filename):
+    def read(self, inp_filename, num_cams=4):
         """
         Reads target recognition parameters from a legacy .par file, which 
         holds one parameter per line. The arguments are read in this order:
         
-        1. gvthres[0]
-        2. gvthres[1]
-        3. gvthres[2]
-        4. gvthres[3]
+        1. gvthres[0..num_cams] <- number of lines as num_cams, typically 4
         5. discont
         6. nnmin
         7. nnmax
@@ -872,7 +869,7 @@ cdef class TargetParams:
         Fills up the fields of the object from the file and returns.
         """
         free(self._targ_par)
-        self._targ_par = read_target_par(inp_filename)
+        self._targ_par = read_target_par(inp_filename, num_cams)
         
         if self._targ_par == NULL:
             raise IOError("Problem reading target recognition parameters.")
