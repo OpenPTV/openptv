@@ -26,6 +26,7 @@ install:
   - hash -r
   - conda config --set always_yes yes --set changeps1 no
   - conda update -q conda
+  - conda install -q cython numpy scikit-image nose
 
 script:
   # Useful for debugging any issues with conda
