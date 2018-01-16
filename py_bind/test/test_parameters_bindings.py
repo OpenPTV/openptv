@@ -376,8 +376,8 @@ class TestTargetParams(unittest.TestCase):
     def test_read(self):
         inp_filename = "testing_fodder/target_parameters/targ_rec.par"
         num_cams = 4 # this test is with 4 cameras
-        tp = TargetParams(num_cams)
-        tp.read(inp_filename, num_cams) 
+        tp = TargetParams()
+        tp.read(inp_filename, num_cams=num_cams) 
 
         self.assertEqual(tp.get_max_discontinuity(), 5)
         self.assertEqual(tp.get_pixel_count_bounds(), (3, 100))
@@ -387,10 +387,25 @@ class TestTargetParams(unittest.TestCase):
 
         numpy.testing.assert_array_equal(
             tp.get_grey_thresholds(), [3, 2, 2, 3])
+            
+    def test_read_3cam(self):
+        inp_filename = "testing_fodder/target_parameters/targ_rec_3cam.par"
+        num_cams = 3 # this test is with 4 cameras
+        tp = TargetParams()
+        tp.read(inp_filename, num_cams=num_cams) 
+
+        self.assertEqual(tp.get_max_discontinuity(), 5)
+        self.assertEqual(tp.get_pixel_count_bounds(), (3, 100))
+        self.assertEqual(tp.get_xsize_bounds(), (1, 20))
+        self.assertEqual(tp.get_ysize_bounds(), (1, 20))
+        self.assertEqual(tp.get_min_sum_grey(), 3)
+
+        numpy.testing.assert_array_equal(
+            tp.get_grey_thresholds(), [10, 20, 30])
         
     
-    def test_instantiate_fast(self, num_cams=4):
-        tp = TargetParams(num_cams, discont=1, gvthresh=[2, 3, 4, 5], 
+    def test_instantiate_fast(self):
+        tp = TargetParams(discont=1, gvthresh=[2, 3, 4, 5], 
             pixel_count_bounds=(10, 100), xsize_bounds=(20, 200), 
             ysize_bounds=(30, 300), min_sum_grey=60, cross_size=3)
         
@@ -402,6 +417,21 @@ class TestTargetParams(unittest.TestCase):
 
         numpy.testing.assert_array_equal(
             tp.get_grey_thresholds(), [2, 3, 4, 5])
+            
+    def test_instantiate_fast_3cam(self):
+        tp = TargetParams(discont=1, gvthresh=[2, 3, 4], 
+            pixel_count_bounds=(10, 100), xsize_bounds=(20, 200), 
+            ysize_bounds=(30, 300), min_sum_grey=60, cross_size=3)
+        
+        self.assertEqual(tp.get_max_discontinuity(), 1)
+        self.assertEqual(tp.get_pixel_count_bounds(), (10, 100))
+        self.assertEqual(tp.get_xsize_bounds(), (20, 200))
+        self.assertEqual(tp.get_ysize_bounds(), (30, 300))
+        self.assertEqual(tp.get_min_sum_grey(), 60)
+
+        numpy.testing.assert_array_equal(
+            tp.get_grey_thresholds(), [2, 3, 4])
+
         
 if __name__ == "__main__":
     unittest.main()

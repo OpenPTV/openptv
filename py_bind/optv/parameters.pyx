@@ -738,15 +738,12 @@ cdef class TargetParams:
     pythonic access. Objects of this type can be checked for equality using 
     "==" and "!=" operators.
     """
-    def __init__(self, int num_cams, int discont=0, gvthresh=None, 
+    def __init__(self, int discont=0, gvthresh=None, 
         pixel_count_bounds=(0, 1000),
         xsize_bounds=(0, 100), ysize_bounds=(0, 100), int min_sum_grey=0, 
         int cross_size=2):
         """
-        Arguments :
-        int num_cams - number of cameras in the experiment
-        
-        (rest is all optional):
+        Arguments (all optional):
         int discont - maximum discontinuity parameter.
         gvthresh - sequence, per-camera grey-level threshold beneath which a 
             pixel is not considered. Currently limited to 4 cameras.
@@ -757,7 +754,7 @@ cdef class TargetParams:
         int cross_size - legacy parameter, don't use.
         """
         if gvthresh is None:
-            gvthresh = [0] * num_cams
+            gvthresh = [0] * 4
         
         self._targ_par = <target_par *> malloc(sizeof(target_par))
         
@@ -788,7 +785,7 @@ cdef class TargetParams:
         return wrap_1d_c_arr_as_ndarray(self, num_cams, numpy.NPY_INT, 
             self._targ_par.gvthres, (1 if copy else 0))
         
-    def set_grey_thresholds(self, gvthresh):
+    def set_grey_thresholds(self, gvthresh, num_cams=4):
         """
         Arguments:
         gvthresh - a sequence of at most 4 ints.
@@ -796,7 +793,7 @@ cdef class TargetParams:
         if len(gvthresh) > 4:
             raise ValueError("Can't store more than 4 grey-level thresholds.")
         
-        for gvx in xrange(len(gvthresh)):
+        for gvx in xrange(num_cams):
             self._targ_par.gvthres[gvx] = gvthresh[gvx]
     
     def get_pixel_count_bounds(self):
@@ -853,7 +850,7 @@ cdef class TargetParams:
     def set_cross_size(self, int cr_sz):
         self._targ_par.cr_sz = cr_sz
     
-    def read(self, inp_filename, num_cams):
+    def read(self, inp_filename, num_cams=4):
         """
         Reads target recognition parameters from a legacy .par file, which 
         holds one parameter per line. The arguments are read in this order:
