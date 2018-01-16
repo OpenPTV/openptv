@@ -47,7 +47,8 @@ script:
   - sudo make install
   - cd ../../py_bind
   - python setup.py build_ext -I/usr/local/include -L/usr/local/lib
-  - python setup.py install
+  - python setup.py install -I/usr/local/include -L/usr/local/lib
   - cd test
-  - export LD_LIBRARY_PATH=$HOME/lib:$LD_LIBRARY_PATH
+  - export LD_LIBRARY_PATH=/usr/local/lib:$LD_LIBRARY_PATH
+  - export PATH=/usr/local/lib:$PATH
   - nosetests
