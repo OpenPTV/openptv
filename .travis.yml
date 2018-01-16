@@ -1,17 +1,18 @@
-sudo: enabled
-
 language: python
 python:
-# We don't actually use the Travis Python, but this keeps it organized.
   - "2.7"
-  - "3.6"
 
-before_install:
-  - sudo apt-get -qq update
-  - sudo apt-get install -y cmake
-  - sudo apt-get install -y check
-  - sudo apt-get install -y build-essential
-  - sudo apt-get install -y git
+sudo: required
+dist: trusty
+
+
+addons:
+  apt:
+  - cmake
+  - check
+  - build-essential
+  - git
+  - gcc
 
 install:
   # We do this conditionally because it saves us some downloading if the
@@ -25,16 +26,9 @@ install:
   - export PATH="$HOME/miniconda/bin:$PATH"
   - hash -r
   - conda config --set always_yes yes --set changeps1 no
-  - conda update -q conda
-  - conda install -q cython numpy scikit-image nose
-
-script:
-  # Useful for debugging any issues with conda
-  - echo $(pwd)
-  - conda info -a
-  - which python
-  - conda info
-  - conda list
+  - conda update --yes conda
+  - conda create -n testenv --yes numpy scipy cython pytest pip setuptools python=$TRAVIS_PYTHON_VERSION
+  - source activate testenv
   - cd $TRAVIS_BUILD_DIR
   - cd liboptv
   - mkdir _build && cd _build
@@ -43,11 +37,11 @@ script:
   - make verify
   - sudo make install
   - echo $PATH
-  # 
   - cd ../../py_bind
   - python setup.py build_ext -I/usr/local/include -L/usr/local/lib
   - python setup.py install
-  - cd test
-  - export LD_LIBRARY_PATH=/usr/local/lib:$LD_LIBRARY_PATH
-  - export PATH=/usr/local/lib:$PATH
-  - nosetests
+  - export LD_LIBRARY_PATH="/usr/local/lib:$LD_LIBRARY_PATH"
+  - export PATH="/usr/local/lib:$PATH"
+
+script:
+  - "cd test; pytest"
