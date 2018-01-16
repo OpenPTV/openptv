@@ -27,16 +27,13 @@ install:
   - conda config --set always_yes yes --set changeps1 no
   - conda update -q conda
 
-  # Replace dep1 dep2 ... with your dependencies
-  - conda install -q cython numpy scikit-image nose
+script:
   # Useful for debugging any issues with conda
-  - echo $PATH
+  - echo $(pwd)
   - conda info -a
   - which python
   - conda info
   - conda list
-
-script:
   - cd $TRAVIS_BUILD_DIR
   - cd liboptv
   - mkdir _build && cd _build
@@ -48,7 +45,7 @@ script:
   # 
   - cd ../../py_bind
   - python setup.py build_ext -I/usr/local/include -L/usr/local/lib
-  - python setup.py install -I/usr/local/include -L/usr/local/lib
+  - python setup.py install
   - cd test
   - export LD_LIBRARY_PATH=/usr/local/lib:$LD_LIBRARY_PATH
   - export PATH=/usr/local/lib:$PATH
