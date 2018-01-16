@@ -28,8 +28,7 @@ install:
   - conda update -q conda
 
   # Replace dep1 dep2 ... with your dependencies
-  - conda create -q -n pyptv python=$TRAVIS_PYTHON_VERSION cython numpy scikit-image
-  - source activate pyptv
+  - conda install -q cython numpy scikit-image
   # Useful for debugging any issues with conda
   - echo $PATH
   - conda info -a
@@ -45,6 +44,8 @@ script:
   - make
   - make verify
   - sudo make install
+  - echo $PATH
+  # 
   - cd ../../py_bind
   - python setup.py build_ext -I/usr/local/include -L/usr/local/lib
   - python setup.py install -I/usr/local/include -L/usr/local/lib
