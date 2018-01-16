@@ -27,10 +27,8 @@ before_install:
   - hash -r
   - conda config --set always_yes yes --set changeps1 no
   - conda update --yes conda
-  - conda create -n testenv --yes numpy scipy cython pytest pip setuptools python=$TRAVIS_PYTHON_VERSION
+  - conda create -n testenv --yes numpy scipy cython nose pip setuptools python=$TRAVIS_PYTHON_VERSION
   - source activate testenv
-  - pip install pytest
-
   
 install:
   - cd $TRAVIS_BUILD_DIR
@@ -50,4 +48,5 @@ install:
 
 
 script:
-  - py.test tests
+  - cd test
+  - nosetest --verbose
