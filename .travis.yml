@@ -28,7 +28,7 @@ install:
   - conda update -q conda
 
   # Replace dep1 dep2 ... with your dependencies
-  - conda install -q cython numpy scikit-image
+  - conda install -q cython numpy scikit-image nose
   # Useful for debugging any issues with conda
   - echo $PATH
   - conda info -a
