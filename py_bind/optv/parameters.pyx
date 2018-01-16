@@ -27,7 +27,7 @@ cdef extern from "optv/parameters.h":
     void c_free_control_par "free_control_par"(control_par * cp);
     int c_compare_control_par "compare_control_par"(control_par * c1, control_par * c2);
     
-    target_par* read_target_par(char *filename)
+    target_par* read_target_par(char *filename, int cams);
 
 cdef numpy.ndarray wrap_1d_c_arr_as_ndarray(object base_obj, 
     int arr_size, int num_type, void * data, int copy):
@@ -738,12 +738,15 @@ cdef class TargetParams:
     pythonic access. Objects of this type can be checked for equality using 
     "==" and "!=" operators.
     """
-    def __init__(self, int discont=0, gvthresh=None, 
+    def __init__(self, int num_cams, int discont=0, gvthresh=None, 
         pixel_count_bounds=(0, 1000),
         xsize_bounds=(0, 100), ysize_bounds=(0, 100), int min_sum_grey=0, 
         int cross_size=2):
         """
-        Arguments (all optional):
+        Arguments :
+        int num_cams - number of cameras in the experiment
+        
+        (rest is all optional):
         int discont - maximum discontinuity parameter.
         gvthresh - sequence, per-camera grey-level threshold beneath which a 
             pixel is not considered. Currently limited to 4 cameras.
@@ -754,7 +757,7 @@ cdef class TargetParams:
         int cross_size - legacy parameter, don't use.
         """
         if gvthresh is None:
-            gvthresh = [0] * 4
+            gvthresh = [0] * num_cams
         
         self._targ_par = <target_par *> malloc(sizeof(target_par))
         
@@ -850,15 +853,12 @@ cdef class TargetParams:
     def set_cross_size(self, int cr_sz):
         self._targ_par.cr_sz = cr_sz
     
-    def read(self, inp_filename):
+    def read(self, inp_filename, num_cams):
         """
         Reads target recognition parameters from a legacy .par file, which 
         holds one parameter per line. The arguments are read in this order:
         
-        1. gvthres[0]
-        2. gvthres[1]
-        3. gvthres[2]
-        4. gvthres[3]
+        1. gvthres[0..num_cams] <- number of lines as num_cams, typically 4
         5. discont
         6. nnmin
         7. nnmax
@@ -872,7 +872,7 @@ cdef class TargetParams:
         Fills up the fields of the object from the file and returns.
         """
         free(self._targ_par)
-        self._targ_par = read_target_par(inp_filename)
+        self._targ_par = read_target_par(inp_filename, num_cams)
         
         if self._targ_par == NULL:
             raise IOError("Problem reading target recognition parameters.")

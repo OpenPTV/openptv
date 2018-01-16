@@ -24,7 +24,7 @@ class TestTargRec(unittest.TestCase):
         ], dtype=np.uint8)
         
         cpar = ControlParams(4, image_size=(5, 5))
-        tpar = TargetParams(gvthresh=[250, 100, 20, 20], discont=5,
+        tpar = TargetParams(4, gvthresh=[250, 100, 20, 20], discont=5,
             pixel_count_bounds=(1, 10), min_sum_grey=12, 
             xsize_bounds=(1, 10), ysize_bounds=(1, 10))
         
@@ -43,7 +43,7 @@ class TestTargRec(unittest.TestCase):
         ], dtype=np.uint8)
         
         cpar = ControlParams(4, image_size=(5, 5))
-        tpar = TargetParams(gvthresh=[250, 100, 20, 20], discont=5,
+        tpar = TargetParams(4, gvthresh=[250, 100, 20, 20], discont=5,
             pixel_count_bounds=(1, 10), min_sum_grey=12, 
             xsize_bounds=(1, 10), ysize_bounds=(1, 10))
         

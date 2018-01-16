@@ -375,8 +375,9 @@ class Test_ControlParams(unittest.TestCase):
 class TestTargetParams(unittest.TestCase):
     def test_read(self):
         inp_filename = "testing_fodder/target_parameters/targ_rec.par"
-        tp = TargetParams()
-        tp.read(inp_filename)
+        num_cams = 4 # this test is with 4 cameras
+        tp = TargetParams(num_cams)
+        tp.read(inp_filename, num_cams) 
 
         self.assertEqual(tp.get_max_discontinuity(), 5)
         self.assertEqual(tp.get_pixel_count_bounds(), (3, 100))
@@ -388,8 +389,8 @@ class TestTargetParams(unittest.TestCase):
             tp.get_grey_thresholds(), [3, 2, 2, 3])
         
     
-    def test_instantiate_fast(self):
-        tp = TargetParams(discont=1, gvthresh=[2, 3, 4, 5], 
+    def test_instantiate_fast(self, num_cams=4):
+        tp = TargetParams(num_cams, discont=1, gvthresh=[2, 3, 4, 5], 
             pixel_count_bounds=(10, 100), xsize_bounds=(20, 200), 
             ysize_bounds=(30, 300), min_sum_grey=60, cross_size=3)
         
