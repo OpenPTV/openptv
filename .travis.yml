@@ -29,6 +29,10 @@ before_install:
   - conda update --yes conda
   - conda create -n testenv --yes numpy scipy cython pytest pip setuptools python=$TRAVIS_PYTHON_VERSION
   - source activate testenv
+  - pip install pytest
+
+  
+install:
   - cd $TRAVIS_BUILD_DIR
   - cd liboptv
   - mkdir _build && cd _build
@@ -36,11 +40,9 @@ before_install:
   - make
   - make verify
   - sudo make install
-  
-install:
   - echo $(pwd)
   - cd ../../py_bind
-  - python setup.py build_ext -I/usr/local/include -L/usr/local/lib
+  - python setup.py build_ext -i -I/usr/local/include -L/usr/local/lib
   - python setup.py install
   - "export LD_LIBRARY_PATH=/usr/local/lib:$LD_LIBRARY_PATH"
   - "export PATH=/usr/local/lib:$PATH"
@@ -48,4 +50,4 @@ install:
 
 
 script:
-  - "cd test; pytest"
+  - py.test tests
