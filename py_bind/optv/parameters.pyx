@@ -169,26 +169,38 @@ cdef class TrackingParams:
     Binding the read_track_par C function
     Objects of this type can be checked for equality using "==" and "!=" operators
     """
-    def __init__(self, dacc, dangle, dvxmax, dvxmin,
-                 dvymax, dvymin, dvzmax, dvzmin,
-                 dsumg, dn, dnx, dny, add):
+    def __init__(self, **kwds):
+        """
+        Arguments (all optional):
+        accel_lim - the limit on the norm of acceleration, [L/frame**2]
+        angle_lim - the limit on angle between two path links, [gon]
+        velocity_lims - a 3x2 array, the min and max velocity in each axis,
+            [L/frame]
+        add_particle - whether or not to add a new particle in candidate
+            positions that have enough targets but no matching correspondence
+            result (boolean int).
+        """
         self._track_par = < track_par *> malloc(sizeof(track_par))
-
-        self.set_dacc(dacc)
-        self.set_dangle(dangle)
-        self.set_dvxmax(dvxmax)
-        self.set_dvxmin(dvxmin)
         
-        self.set_dvymax(dvymax)
-        self.set_dvymin(dvymin)
-        self.set_dvzmax(dvzmax)
-        self.set_dvzmin(dvzmin)
-        
-        self.set_dsumg(dsumg)
-        self.set_dn(dn)
-        self.set_dnx(dnx)
-        self.set_dny(dny)
-        self.set_add(add)
+        if 'accel_lim' in kwds:
+            self.set_dacc(kwds['accel_lim'])
+        if 'angle_lim' in kwds:
+            self.set_dangle(kwds['angle_lim'])
+        if 'velocity_lims' in kwds:
+            self.set_dvxmax(kwds['velocity_lims'][0][1])
+            self.set_dvxmin(kwds['velocity_lims'][0][0])
+            self.set_dvymax(kwds['velocity_lims'][1][1])
+            self.set_dvymin(kwds['velocity_lims'][1][0])
+            self.set_dvzmax(kwds['velocity_lims'][2][1])
+            self.set_dvzmin(kwds['velocity_lims'][2][0])
+        if 'add_particle' in kwds:
+            self.set_add(kwds['add_particle'])
+            
+        # The rest of the members are not used in the current algorithm.
+        self.set_dsumg(0)
+        self.set_dn(0)
+        self.set_dnx(0)
+        self.set_dny(0)
         
     # Reads tracking parameters from a config file with the 
     # following format: each line is a value, in this order:
@@ -210,6 +222,7 @@ cdef class TrackingParams:
         Reads tracjing parameters from an old-style .par file having the
         objects' arguments ordered one per line.
         """
+        free(self._track_par)
         self._track_par = c_read_track_par(file_name)
     
     # Checks for equality between this and other trackParams objects
@@ -230,9 +243,15 @@ cdef class TrackingParams:
         self._track_par[0].dacc = dacc
 
     def get_dangle(self):
+        """
+        The angle limit in [gon] (gradians)
+        """
         return self._track_par[0].dangle
     
     def set_dangle(self, dangle):
+        """
+        Set the angle limit for tracking, in [gon] (gradians)
+        """
         self._track_par[0].dangle = dangle
         
     def get_dvxmax(self):
@@ -315,12 +334,30 @@ cdef class SequenceParams:
     pythonic access. Binding the read_track_par C function. Objects of this 
     type can be checked for equality using "==" and "!=" operators.
     """
-    def __init__(self, num_cams):
+    def __init__(self, **kwargs):
         """
-        Arguments:
+        Arguments (all optional, but either num_cams or image_base required):
         num_cams - number of camras used in the scene.
+        image_base - a list of image base names, to which the frame number 
+            is added during sequence operations.
+        frame_range - (first, last)
         """
+        if 'num_cams' in kwargs:
+            num_cams = kwargs['num_cams']
+        elif 'image_base' in kwargs:
+            num_cams = len(kwargs['image_base'])
+        else:
+            raise ValueError(
+                "SequenceParams requires either num_cams or image_base")
+        
         self._sequence_par = c_new_sequence_par(num_cams)
+        
+        if 'frame_range' in kwargs:
+            self.set_first(kwargs['frame_range'][0])
+            self.set_last(kwargs['frame_range'][1])
+        if 'image_base' in kwargs:
+            for cam in range(num_cams):
+                self.set_img_base_name(cam, kwargs['image_base'][cam])
         
     def get_first(self):
         return self._sequence_par[0].first

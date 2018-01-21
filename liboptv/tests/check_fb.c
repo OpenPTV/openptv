@@ -29,6 +29,20 @@ START_TEST(test_read_targets)
 }
 END_TEST
 
+START_TEST(test_zero_targets)
+{
+    /* zero targets should not generate an error value, but just return 0 */
+    target tbuf[2]; /* There is extra space, of course. */
+    char *file_base = "testing_fodder/sample_";
+    int frame_num = 1;
+    int targets_read = 0;
+
+    targets_read = read_targets(tbuf, file_base, frame_num);
+    fail_unless(targets_read == 0);
+
+}
+END_TEST
+
 START_TEST(test_write_targets)
 {
     /* Write and read back two targets, make sure they're the same.
@@ -217,6 +231,8 @@ START_TEST(test_read_write_frame)
         frm.targets[cam_ix][42] = t_target;
         frm.num_targets[cam_ix] = 43;
     }
+    /* Zero out the second camera targets, should not complain */
+    frm.num_targets[cams - 1] = 0;
     
     fail_unless(write_frame(&frm, corres_base, linkage_base, NULL,
         target_files, frame_num));
@@ -264,6 +280,10 @@ Suite* fb_suite(void) {
     tcase_add_test(tc_trt, test_read_targets);
     suite_add_tcase (s, tc_trt);
 
+    tc_trt = tcase_create ("Read zero targets");
+    tcase_add_test(tc_trt, test_zero_targets);
+    suite_add_tcase (s, tc_trt);
+    
     TCase *tc_twt = tcase_create ("Write targets");
     tcase_add_test(tc_twt, test_write_targets);
     suite_add_tcase (s, tc_twt);

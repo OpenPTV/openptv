@@ -2,8 +2,14 @@
 [![gitcheese.com](https://api.gitcheese.com/v1/projects/055c2faf-6c1e-4f01-9cd3-15a2e005f8fc/badges)](https://www.gitcheese.com/app/#/projects/055c2faf-6c1e-4f01-9cd3-15a2e005f8fc/pledges/create)
 -->
 
+
+
 OpenPTV - framework for particle tracking velocimetry
 =====================================================
+
+[![Build Status](https://travis-ci.org/alexlib/openptv.svg?branch=master)](https://travis-ci.org/alexlib/openptv) [![DOI](https://zenodo.org/badge/6985516.svg)](https://zenodo.org/badge/latestdoi/6985516)
+
+
 
 This is the code collection of the OpenPTV project - an effort to create
 common code for different aspects of the Particle Tracking Velocimetry
@@ -12,8 +18,8 @@ all code here is therefore peer reviewed.
 
 The quality standards are decided upon open discussion on the community 
 mailing-list, 
-
-  openptv@googlegroups.com
+  
+  https://groups.google.com/forum/#!forum/openptv
 
 The peer-review process happens in the open on the same mailing list.
 

@@ -32,7 +32,7 @@ void read_all_calibration(Calibration *calib[], int num_cams) {
     }
 }
 
-int copy_res_dir() {
+int copy_res_dir(char *src, char *dest) {
     DIR *dirp;
     struct dirent *dp;
     FILE *in_f, *out_f;
@@ -41,16 +41,16 @@ int copy_res_dir() {
     char buf[8192];
     ssize_t result;
 
-    dirp = opendir("res_orig/");
+    dirp = opendir(src);
     while (dirp) {
         errno = 0;
         if ((dp = readdir(dirp)) != NULL) {
             if (dp->d_name[0] == '.') continue;
 
-            strncpy(file_name, "res_orig/", 255);
+            strncpy(file_name, src, 255);
             strncat(file_name, dp->d_name, 255);
             in_f = fopen(file_name, "r");
-            strncpy(file_name, "res/", 255);
+            strncpy(file_name, dest, 255);
             strncat(file_name, dp->d_name, 255);
             out_f = fopen(file_name, "w");
             
@@ -207,7 +207,7 @@ START_TEST(test_candsearch_in_pix)
 
 
     /* prepare test control parameters, basically for pix_x  */
-    int cam;
+    int cam, i;
     char img_format[] = "cam%d";
     char cal_format[] = "cal/cam%d.tif";
     control_par *test_cpar;
@@ -238,7 +238,7 @@ START_TEST(test_candsearch_in_pix)
 
     printf("counter %d \n",counter);
     printf("candidates: \n");
-    for (int i=0;i<counter;i++){
+    for (i=0;i<counter;i++){
         printf("%f,%f\n",test_pix[p[i]].x,test_pix[p[i]].y);
     }
     fail_unless(counter == 2);
@@ -252,7 +252,7 @@ START_TEST(test_candsearch_in_pix)
                                  dl, dr, du, dd, p, test_cpar);
     printf("counter %d \n",counter);
     printf("candidates:\n");
-    for (int i=0;i<counter;i++){
+    for (i=0;i<counter;i++){
         printf("%f,%f\n",test_pix[p[i]].x,test_pix[p[i]].y);
     }
 
@@ -266,6 +266,7 @@ START_TEST(test_sort)
     float test_array[] = {1.0, 2200.2, 0.3, -0.8, 100.0};
     int ix_array[] = {0,5,13,2,124};
     int len_array = 5;
+    int i;
 
     sort(len_array,test_array,ix_array);
 
@@ -276,7 +277,7 @@ START_TEST(test_sort)
              "Was expecting 1 but found %f \n", ix_array[len_array-1]);
 
     printf("Sorted array:\n");
-    for (int i=0;i<len_array;i++){
+    for (i=0;i<len_array;i++){
         printf("test_array[%d]=%f\n",ix_array[i],test_array[i]);
     }
 
@@ -291,6 +292,7 @@ START_TEST(test_copy_foundpix_array)
     foundpix *dest;
     int arr_len = 2;
     int num_cams = 2;
+    int i;
 
     dest = (foundpix *) calloc (arr_len, sizeof (foundpix));
 
@@ -310,7 +312,7 @@ START_TEST(test_copy_foundpix_array)
              "Was expecting dest[1].ftnr == 2 but found %d \n", dest[1].ftnr);
 
     printf(" destination foundpix array\n");
-    for (int i=0; i<arr_len; i++){
+    for (i=0; i<arr_len; i++){
         printf("ftnr = %d freq=%d whichcam = %d %d\n", dest[i].ftnr, dest[i].freq, \
         dest[i].whichcam[0],dest[i].whichcam[1]);
     }
@@ -411,7 +413,8 @@ START_TEST(test_trackcorr_no_add)
     control_par *cpar;
 
     chdir("testing_fodder/track");
-    copy_res_dir();
+    copy_res_dir("res_orig/", "res/");
+    copy_res_dir("img_orig/", "img/");
     
     printf("----------------------------\n");
     printf("Test tracking multiple files 2 cameras, 1 particle \n");
@@ -438,10 +441,10 @@ START_TEST(test_trackcorr_no_add)
     npart = (double)run->npart / range;
     nlinks = (double)run->nlinks / range;
     
-    ck_assert_msg(fabs(npart - 208.0/210.0)<EPS,
+    ck_assert_msg(fabs(npart - 206.0/210.0)<EPS,
                   "Was expecting npart == 208/210 but found %f \n", npart);
-    ck_assert_msg(fabs(nlinks - 78.0/210.0)<EPS,
-                  "Was expecting nlinks == 78/210 but found %f \n", nlinks);
+    ck_assert_msg(fabs(nlinks - 198.0/210.0)<EPS,
+                  "Was expecting nlinks == 198/210 but found %f \n", nlinks);
     
 }
 END_TEST
@@ -454,7 +457,8 @@ START_TEST(test_trackcorr_with_add)
     control_par *cpar;
 
     chdir("testing_fodder/track");
-    copy_res_dir();
+    copy_res_dir("res_orig/", "res/");
+    copy_res_dir("img_orig/", "img/");
     
     printf("----------------------------\n");
     printf("Test tracking multiple files 2 cameras, 1 particle \n");
@@ -480,10 +484,10 @@ START_TEST(test_trackcorr_with_add)
     npart = (double)run->npart / range;
     nlinks = (double)run->nlinks / range;
     
-    ck_assert_msg(fabs(npart - 1930.0/210.0)<EPS,
+    ck_assert_msg(fabs(npart - 1928.0/210.0)<EPS,
                   "Was expecting npart == 208/210 but found %f \n", npart);
-    ck_assert_msg(fabs(nlinks - 322.0/210.0)<EPS,
-                  "Was expecting nlinks == 322/210 but found %f \n", nlinks);
+    ck_assert_msg(fabs(nlinks - 328.0/210.0)<EPS,
+                  "Was expecting nlinks == 328/210 but found %f \n", nlinks);
     
 }
 END_TEST
@@ -499,8 +503,8 @@ START_TEST(test_cavity)
     printf("Test cavity case \n");
     
     chdir("testing_fodder/test_cavity");
-    copy_res_dir();
-    
+    copy_res_dir("res_orig/", "res/");
+    copy_res_dir("img_orig/", "img/");
     
     cpar = read_control_par("parameters/ptv.par");
     read_all_calibration(calib, cpar->num_cams);
@@ -515,8 +519,8 @@ START_TEST(test_cavity)
     
     ck_assert_msg(ret->npart == 672,
                   "Was expecting npart == 672 but found %d \n", ret->npart);
-    ck_assert_msg(ret->nlinks == 6,
-                  "Was expecting nlinks == 6 but found %d \n", ret->nlinks);
+    ck_assert_msg(ret->nlinks == 127,
+                  "Was expecting nlinks == 127 but found %d \n", ret->nlinks);
     
     trackcorr_c_finish(ret, 10002);
 }
@@ -524,34 +528,42 @@ END_TEST
 
 START_TEST(test_trackback)
 {
-    tracking_run *ret;
+    tracking_run *run;
     double nlinks;
+    int step;
     Calibration *calib[3];
     control_par *cpar;
     
     chdir("testing_fodder/track");
-    copy_res_dir();
+    copy_res_dir("res_orig/", "res/");
+    copy_res_dir("img_orig/", "img/");
     
     printf("----------------------------\n");
     printf("trackback test \n");
     
     cpar = read_control_par("parameters/ptv.par");
     read_all_calibration(calib, cpar->num_cams);
-    ret = tr_new_legacy("parameters/sequence.par",
+    run = tr_new_legacy("parameters/sequence.par",
         "parameters/track.par", "parameters/criteria.par",
         "parameters/ptv.par", calib);
-    ret->tpar->dvxmin =ret->tpar->dvymin=ret->tpar->dvzmin=-50;
-    ret->tpar->dvxmax =ret->tpar->dvymax=ret->tpar->dvzmax=50;
+    track_forward_start(run);
+    trackcorr_c_loop(run, run->seq_par->first);
     
-    ret->lmax = norm((ret->tpar->dvxmin - ret->tpar->dvxmax), \
-                     (ret->tpar->dvymin - ret->tpar->dvymax), \
-                     (ret->tpar->dvzmin - ret->tpar->dvzmax));
+    for (step = run->seq_par->first + 1; step < run->seq_par->last; step++) {
+        trackcorr_c_loop(run, step);
+    }
+    trackcorr_c_finish(run, run->seq_par->last);
+    run->tpar->dvxmin = run->tpar->dvymin = run->tpar->dvzmin = -50;
+    run->tpar->dvxmax = run->tpar->dvymax = run->tpar->dvzmax = 50;
+    run->lmax = norm((run->tpar->dvxmin - run->tpar->dvxmax), \
+                     (run->tpar->dvymin - run->tpar->dvymax), \
+                     (run->tpar->dvzmin - run->tpar->dvzmax));
     
-    nlinks = trackback_c(ret, ret->seq_par->last);
+    nlinks = trackback_c(run);
     empty_res_dir();
     
-    ck_assert_msg(fabs(nlinks - 0.980861)<EPS,
-                  "Was expecting nlinks to be 0.980861 but found %f\n", nlinks);
+    ck_assert_msg(fabs(nlinks - 1.043062)<EPS,
+                  "Was expecting nlinks to be 1.043062 but found %f\n", nlinks);
 }
 END_TEST
 
@@ -582,7 +594,8 @@ START_TEST(test_new_particle)
     }
     
     fail_unless((status = chdir("track/")) == 0);
-    copy_res_dir();
+    copy_res_dir("res_orig/", "res/");
+    copy_res_dir("img_orig/", "img/");
 
     spar = read_sequence_par("parameters/sequence_newpart.par", 3);
     cpar = read_control_par("parameters/control_newpart.par");
