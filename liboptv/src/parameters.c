@@ -4,6 +4,9 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <locale.h>
+
+
 
 /* read_sequence_par() reads sequence parameters from a config file with the
    following format: each line is a value, first num_cams values are image 
@@ -147,6 +150,13 @@ track_par* read_track_par(char *filename) {
     FILE* fpp;
     track_par *ret = (track_par *) malloc(sizeof(track_par));
     
+/* @WARNING: This is really important, some libraries (e.g. ROS, Qt4) seems to set the 
+system locale which takes decimal commata instead of points which causes the file input 
+parsing to fail */    
+    setlocale(LC_ALL, "C"); 
+    setlocale(LC_NUMERIC,"C");
+    setlocale(LC_ALL, "POSIX");
+    
     fpp = fopen(filename, "r");
     if(fscanf(fpp, "%lf\n", &(ret->dvxmin)) == 0) goto handle_error;
     if(fscanf(fpp, "%lf\n", &(ret->dvxmax)) == 0) goto handle_error;
@@ -212,6 +222,13 @@ int compare_track_par(track_par *t1, track_par *t2) {
 volume_par* read_volume_par(char *filename) {
     FILE* fpp;
     volume_par *ret = (volume_par *) malloc(sizeof(volume_par));
+
+/* @WARNING: This is really important, some libraries (e.g. ROS, Qt4) seems to set the 
+system locale which takes decimal commata instead of points which causes the file input 
+parsing to fail */
+    setlocale(LC_ALL, "C"); 
+    setlocale(LC_NUMERIC,"C");
+    setlocale(LC_ALL, "POSIX");
     
     fpp = fopen(filename, "r");
     if(fscanf(fpp, "%lf\n", &(ret->X_lay[0])) == 0) goto handle_error;
@@ -327,6 +344,13 @@ control_par* read_control_par(char *filename) {
     int cam;
     int num_cams;
     control_par *ret;
+
+/* @WARNING: This is really important, some libraries (e.g. ROS, Qt4) seems to set the 
+system locale which takes decimal commata instead of points which causes the file input 
+parsing to fail */
+    setlocale(LC_ALL, "C"); // Do not use the system locale
+    setlocale(LC_NUMERIC,"C");
+    setlocale(LC_ALL, "POSIX");
 
     if ((par_file = fopen(filename, "r")) == NULL) {
         printf("Could not open file %s", filename);
@@ -459,7 +483,8 @@ int compare_mm_np(mm_np *mm_np1, mm_np *mm_np2)
 }
 
 /* Reads target recognition parameters from file.
- * Parameter: filename - the absolute/relative path to file from which the parameters will be read.
+ * Parameter: filename - the absolute/relative path to file from which the parameters 
+              will be read.
  * Returns: pointer to a new target_par structure.
  */
 target_par* read_target_par(char *filename) {
