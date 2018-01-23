@@ -153,9 +153,7 @@ track_par* read_track_par(char *filename) {
 /* @WARNING: This is really important, some libraries (e.g. ROS, Qt4) seems to set the 
 system locale which takes decimal commata instead of points which causes the file input 
 parsing to fail */    
-    setlocale(LC_ALL, "C"); 
     setlocale(LC_NUMERIC,"C");
-    setlocale(LC_ALL, "POSIX");
     
     fpp = fopen(filename, "r");
     if(fscanf(fpp, "%lf\n", &(ret->dvxmin)) == 0) goto handle_error;
@@ -226,9 +224,7 @@ volume_par* read_volume_par(char *filename) {
 /* @WARNING: This is really important, some libraries (e.g. ROS, Qt4) seems to set the 
 system locale which takes decimal commata instead of points which causes the file input 
 parsing to fail */
-    setlocale(LC_ALL, "C"); 
     setlocale(LC_NUMERIC,"C");
-    setlocale(LC_ALL, "POSIX");
     
     fpp = fopen(filename, "r");
     if(fscanf(fpp, "%lf\n", &(ret->X_lay[0])) == 0) goto handle_error;
@@ -348,9 +344,7 @@ control_par* read_control_par(char *filename) {
 /* @WARNING: This is really important, some libraries (e.g. ROS, Qt4) seems to set the 
 system locale which takes decimal commata instead of points which causes the file input 
 parsing to fail */
-    setlocale(LC_ALL, "C"); // Do not use the system locale
     setlocale(LC_NUMERIC,"C");
-    setlocale(LC_ALL, "POSIX");
 
     if ((par_file = fopen(filename, "r")) == NULL) {
         printf("Could not open file %s", filename);
