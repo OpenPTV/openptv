@@ -102,9 +102,9 @@ START_TEST(test_orient)
              for (iz = 0; iz < 4; iz++) {
                 vec_set(fix[pt_id], (ix * 10)-60, iy * 5, iz*5);
                 pt_id ++;
-                }
-            } 
-        }
+            }
+        } 
+    }
 
     /* read the orientation and the parameters */
     char ori_file[] = "testing_fodder/cal/sym_cam1.tif.ori";

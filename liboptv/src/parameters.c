@@ -4,6 +4,9 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <locale.h>
+
+
 
 /* read_sequence_par() reads sequence parameters from a config file with the
    following format: each line is a value, first num_cams values are image 
@@ -147,6 +150,11 @@ track_par* read_track_par(char *filename) {
     FILE* fpp;
     track_par *ret = (track_par *) malloc(sizeof(track_par));
     
+/* @WARNING: This is really important, some libraries (e.g. ROS, Qt4) seems to set the 
+system locale which takes decimal commata instead of points which causes the file input 
+parsing to fail */    
+    setlocale(LC_NUMERIC,"C");
+    
     fpp = fopen(filename, "r");
     if(fscanf(fpp, "%lf\n", &(ret->dvxmin)) == 0) goto handle_error;
     if(fscanf(fpp, "%lf\n", &(ret->dvxmax)) == 0) goto handle_error;
@@ -189,17 +197,18 @@ int compare_track_par(track_par *t1, track_par *t2) {
 
 /* read_volume_par() reads parameters of illuminated volume from a config file
    with the following format: each line is a value, in this order:
-   1. X_lay[0]
-   2. Zmin_lay[0]
-   3. Zmax_lay[0]
-   4. X_lay[1]
-   5. Zmin_lay[1]
-   6. Zmax_lay[1]
-   7. cnx
-   8. cny
-   9. cn
-   10.csumg
-   11.corrmin
+   1.  X_lay[0], (mm) leftmost X boundary 
+   2.  Zmin_lay[0], (mm), left size closest Z point 
+   3.  Zmax_lay[0], (mm), left side farest Z point
+   4.  X_lay[1], (mm) rightmost X boundary
+   5.  Zmin_lay[1] (mm), right side, closest Z
+   6.  Zmax_lay[1] (mm), right side, farest Z
+   7.  cnx, correlation limit for nx size of a candidate blob
+   8.  cny, correlation limit for ny size of a candidate blob
+   9.  cn, correlation limit for n particle size of a candidate blob
+   10. csumg, correlation limit for sum of grey scale of a candidate
+   11. corrmin, minimum correlation of all above parameters
+   12. eps0 (mm), flat coordinates, see docs/ptv_coordinates
    
    Arguments:
    char *filename - path to the text file containing the parameters.
@@ -211,6 +220,11 @@ int compare_track_par(track_par *t1, track_par *t2) {
 volume_par* read_volume_par(char *filename) {
     FILE* fpp;
     volume_par *ret = (volume_par *) malloc(sizeof(volume_par));
+
+/* @WARNING: This is really important, some libraries (e.g. ROS, Qt4) seems to set the 
+system locale which takes decimal commata instead of points which causes the file input 
+parsing to fail */
+    setlocale(LC_NUMERIC,"C");
     
     fpp = fopen(filename, "r");
     if(fscanf(fpp, "%lf\n", &(ret->X_lay[0])) == 0) goto handle_error;
@@ -326,6 +340,11 @@ control_par* read_control_par(char *filename) {
     int cam;
     int num_cams;
     control_par *ret;
+
+/* @WARNING: This is really important, some libraries (e.g. ROS, Qt4) seems to set the 
+system locale which takes decimal commata instead of points which causes the file input 
+parsing to fail */
+    setlocale(LC_NUMERIC,"C");
 
     if ((par_file = fopen(filename, "r")) == NULL) {
         printf("Could not open file %s", filename);
@@ -458,7 +477,8 @@ int compare_mm_np(mm_np *mm_np1, mm_np *mm_np2)
 }
 
 /* Reads target recognition parameters from file.
- * Parameter: filename - the absolute/relative path to file from which the parameters will be read.
+ * Parameter: filename - the absolute/relative path to file from which the parameters 
+              will be read.
  * Returns: pointer to a new target_par structure.
  */
 target_par* read_target_par(char *filename) {

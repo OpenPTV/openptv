@@ -193,7 +193,6 @@ START_TEST(test_candsearch_in_pix)
 {
     double cent_x, cent_y, dl, dr, du, dd;
     int p[4], counter = 0;
-    int i;
 
     target test_pix[] = {
         {0, 0.0, -0.2, 5, 1, 2, 10, -999},
@@ -208,7 +207,7 @@ START_TEST(test_candsearch_in_pix)
 
 
     /* prepare test control parameters, basically for pix_x  */
-    int cam;
+    int cam, i;
     char img_format[] = "cam%d";
     char cal_format[] = "cal/cam%d.tif";
     control_par *test_cpar;
@@ -239,7 +238,7 @@ START_TEST(test_candsearch_in_pix)
 
     printf("counter %d \n",counter);
     printf("candidates: \n");
-    for (i=0; i<counter; i++){
+    for (i=0;i<counter;i++){
         printf("%f,%f\n",test_pix[p[i]].x,test_pix[p[i]].y);
     }
     fail_unless(counter == 2);
@@ -253,7 +252,7 @@ START_TEST(test_candsearch_in_pix)
                                  dl, dr, du, dd, p, test_cpar);
     printf("counter %d \n",counter);
     printf("candidates:\n");
-    for (i=0; i<counter; i++){
+    for (i=0;i<counter;i++){
         printf("%f,%f\n",test_pix[p[i]].x,test_pix[p[i]].y);
     }
 
@@ -278,8 +277,7 @@ START_TEST(test_sort)
              "Was expecting 1 but found %f \n", ix_array[len_array-1]);
 
     printf("Sorted array:\n");
-    for (
-    i=0;i<len_array;i++){
+    for (i=0;i<len_array;i++){
         printf("test_array[%d]=%f\n",ix_array[i],test_array[i]);
     }
 
@@ -292,7 +290,8 @@ START_TEST(test_copy_foundpix_array)
                         {2,5,{1,1}}
                     };
     foundpix *dest;
-    int arr_len = 2, num_cams = 2;
+    int arr_len = 2;
+    int num_cams = 2;
     int i;
 
     dest = (foundpix *) calloc (arr_len, sizeof (foundpix));
@@ -442,7 +441,7 @@ START_TEST(test_trackcorr_no_add)
     npart = (double)run->npart / range;
     nlinks = (double)run->nlinks / range;
     
-    ck_assert_msg(fabs(npart - 208.0/210.0)<EPS,
+    ck_assert_msg(fabs(npart - 206.0/210.0)<EPS,
                   "Was expecting npart == 208/210 but found %f \n", npart);
     ck_assert_msg(fabs(nlinks - 198.0/210.0)<EPS,
                   "Was expecting nlinks == 198/210 but found %f \n", nlinks);
@@ -485,7 +484,7 @@ START_TEST(test_trackcorr_with_add)
     npart = (double)run->npart / range;
     nlinks = (double)run->nlinks / range;
     
-    ck_assert_msg(fabs(npart - 1930.0/210.0)<EPS,
+    ck_assert_msg(fabs(npart - 1928.0/210.0)<EPS,
                   "Was expecting npart == 208/210 but found %f \n", npart);
     ck_assert_msg(fabs(nlinks - 328.0/210.0)<EPS,
                   "Was expecting nlinks == 328/210 but found %f \n", nlinks);
@@ -560,7 +559,7 @@ START_TEST(test_trackback)
                      (run->tpar->dvymin - run->tpar->dvymax), \
                      (run->tpar->dvzmin - run->tpar->dvzmax));
     
-    nlinks = trackback_c(run, run->seq_par->last);
+    nlinks = trackback_c(run);
     empty_res_dir();
     
     ck_assert_msg(fabs(nlinks - 1.043062)<EPS,
