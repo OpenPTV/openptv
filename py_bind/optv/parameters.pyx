@@ -219,7 +219,7 @@ cdef class TrackingParams:
       
     def read_track_par(self, file_name):
         """
-        Reads tracjing parameters from an old-style .par file having the
+        Reads tracking parameters from an old-style .par file having the
         objects' arguments ordered one per line.
         """
         free(self._track_par)
