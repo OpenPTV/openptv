@@ -4,7 +4,7 @@ Implementation of bindings for correspondences and related data structures.
 
 Created on Fri Oct 28 13:46:39 2016
 
-@author: yosef
+@author: Yosef Meller, Alex Liberzon, TAU
 """
 
 from libc.stdlib cimport malloc, calloc, free
@@ -17,6 +17,10 @@ from optv.calibration cimport Calibration, calibration
 from optv.orientation cimport COORD_UNUSED
 from optv.tracking_framebuf cimport TargetArray, Target, target, frame, \
     PT_UNUSED, CORRES_NONE
+    
+cdef extern from "optv/epi.h":
+    void  epi_mm_2D (double xl, double yl, Calibration *cal1, mm_np *mmp, 
+        VolumeParams *vpar, vec3d out); 
 
 cdef class MatchedCoords:
     """
@@ -148,6 +152,7 @@ def correspondences(list img_pts, list flat_coords, list cals,
     cdef:
         int pt, cam
         int num_cams = len(cals)
+        vec3d pos
         
         calibration **calib = <calibration **> malloc(
             num_cams * sizeof(calibration *))
@@ -172,44 +177,78 @@ def correspondences(list img_pts, list flat_coords, list cals,
         frm.num_targets[cam] = len(img_pts[cam])
         corrected[cam] = (<MatchedCoords>flat_coords[cam]).buf
         
-    # The biz:
-    corresp_buf = corresp(&frm, corrected, 
-        vparam._volume_par, cparam._control_par, calib, match_counts)
-    
     # Distribute data to return structures:
     sorted_pos = [None]*(num_cams - 1)
     sorted_corresp = [None]*(num_cams - 1)
     last_count = 0
     
-    for clique_type in xrange(num_cams - 1):
-        num_points = match_counts[clique_type]
+    if num_cams > 1:    
+        # The biz:
+        corresp_buf = corresp(&frm, corrected, 
+            vparam._volume_par, cparam._control_par, calib, match_counts)
+    
+        for clique_type in xrange(num_cams - 1):
+            num_points = match_counts[clique_type]
+            clique_targs = np.full((num_cams, num_points, 2), PT_UNUSED, 
+                dtype=np.float64)
+            clique_ids = np.full((num_cams, num_points), CORRES_NONE, 
+                dtype=np.int_)
+        
+            # Trace back the pixel target properties through the flat metric
+            # intermediary that's x-sorted.
+            for cam in range(num_cams):            
+                for pt in range(num_points):
+                    geo_id = corresp_buf[pt + last_count].p[cam]
+                    if geo_id < 0:
+                        continue
+                
+                    p1 = corrected[cam][geo_id].pnr
+                    clique_ids[cam, pt] = p1
+
+                    if p1 > -1:
+                        targ = img_pts[cam][p1]
+                        clique_targs[cam, pt, 0] = (<Target> targ)._targ.x
+                        clique_targs[cam, pt, 1] = (<Target> targ)._targ.y
+        
+            last_count += num_points
+            sorted_pos[clique_type] = clique_targs
+            sorted_corresp[clique_type] = clique_ids
+    
+        # Clean up.
+        num_targs = match_counts[num_cams - 1]
+        
+    elif num_cams == 1:
+        cam = 0 # only one camera
+        num_points = frm.num_targets[cam]
         clique_targs = np.full((num_cams, num_points, 2), PT_UNUSED, 
             dtype=np.float64)
         clique_ids = np.full((num_cams, num_points), CORRES_NONE, 
             dtype=np.int_)
-        
+    
         # Trace back the pixel target properties through the flat metric
         # intermediary that's x-sorted.
-        for cam in range(num_cams):            
-            for pt in range(num_points):
-                geo_id = corresp_buf[pt + last_count].p[cam]
-                if geo_id < 0:
-                    continue
-                
-                p1 = corrected[cam][geo_id].pnr
-                clique_ids[cam, pt] = p1
+        for pt in range(num_points):
+            epi_mm_2D (corrected[cam][pt].x,corrected[cam][pt].y,
+		      calib[cam], *(cparam._control_par.mm[0]), vparam, pos);
+            p1 = corrected[cam][pt].pnr
+            clique_ids[cam, pt] = p1
 
-                if p1 > -1:
-                    targ = img_pts[cam][p1]
-                    clique_targs[cam, pt, 0] = (<Target> targ)._targ.x
-                    clique_targs[cam, pt, 1] = (<Target> targ)._targ.y
-        
+            if p1 > -1:
+                targ = img_pts[cam][p1]
+                clique_targs[cam, pt, 0] = (<Target> targ)._targ.x
+                clique_targs[cam, pt, 1] = (<Target> targ)._targ.y
+    
         last_count += num_points
         sorted_pos[clique_type] = clique_targs
         sorted_corresp[clique_type] = clique_ids
     
-    # Clean up.
-    num_targs = match_counts[num_cams - 1]
+        # Clean up.
+        num_targs = match_counts[num_cams - 1]
+        
+        
+        
+        
+        
     free(frm.targets)
     free(frm.num_targets)
     free(calib)
