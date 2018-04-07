@@ -152,7 +152,6 @@ def correspondences(list img_pts, list flat_coords, list cals,
     cdef:
         int pt, cam
         int num_cams = len(cals)
-        vec3d pos
         
         calibration **calib = <calibration **> malloc(
             num_cams * sizeof(calibration *))
@@ -177,49 +176,29 @@ def correspondences(list img_pts, list flat_coords, list cals,
         frm.num_targets[cam] = len(img_pts[cam])
         corrected[cam] = (<MatchedCoords>flat_coords[cam]).buf
         
+    if num_cams == 1:
+        sorted_pos, sorted_corresp, num_targs = dummy_correspondence(calib, frm.targets, 
+            frm.num_targets, corrected, cparam, vparam)
+        free(frm.targets)
+        free(frm.num_targets)
+        free(calib)
+        free(match_counts)
+        free(corresp_buf) # Note this for future returning of correspondences.
+    
+        return sorted_pos, sorted_corresp, num_targs
+        
+        
     # Distribute data to return structures:
     sorted_pos = [None]*(num_cams - 1)
     sorted_corresp = [None]*(num_cams - 1)
     last_count = 0
     
-    if num_cams > 1:    
-        # The biz:
-        corresp_buf = corresp(&frm, corrected, 
-            vparam._volume_par, cparam._control_par, calib, match_counts)
-    
-        for clique_type in xrange(num_cams - 1):
-            num_points = match_counts[clique_type]
-            clique_targs = np.full((num_cams, num_points, 2), PT_UNUSED, 
-                dtype=np.float64)
-            clique_ids = np.full((num_cams, num_points), CORRES_NONE, 
-                dtype=np.int_)
-        
-            # Trace back the pixel target properties through the flat metric
-            # intermediary that's x-sorted.
-            for cam in range(num_cams):            
-                for pt in range(num_points):
-                    geo_id = corresp_buf[pt + last_count].p[cam]
-                    if geo_id < 0:
-                        continue
-                
-                    p1 = corrected[cam][geo_id].pnr
-                    clique_ids[cam, pt] = p1
+    # The biz:
+    corresp_buf = corresp(&frm, corrected, 
+        vparam._volume_par, cparam._control_par, calib, match_counts)
 
-                    if p1 > -1:
-                        targ = img_pts[cam][p1]
-                        clique_targs[cam, pt, 0] = (<Target> targ)._targ.x
-                        clique_targs[cam, pt, 1] = (<Target> targ)._targ.y
-        
-            last_count += num_points
-            sorted_pos[clique_type] = clique_targs
-            sorted_corresp[clique_type] = clique_ids
-    
-        # Clean up.
-        num_targs = match_counts[num_cams - 1]
-        
-    elif num_cams == 1:
-        cam = 0 # only one camera
-        num_points = frm.num_targets[cam]
+    for clique_type in xrange(num_cams - 1):
+        num_points = match_counts[clique_type]
         clique_targs = np.full((num_cams, num_points, 2), PT_UNUSED, 
             dtype=np.float64)
         clique_ids = np.full((num_cams, num_points), CORRES_NONE, 
@@ -227,25 +206,26 @@ def correspondences(list img_pts, list flat_coords, list cals,
     
         # Trace back the pixel target properties through the flat metric
         # intermediary that's x-sorted.
-        for pt in range(num_points):
-            epi_mm_2D (corrected[cam][pt].x,corrected[cam][pt].y,
-		      calib[cam], *(cparam._control_par.mm[0]), vparam, pos);
-            p1 = corrected[cam][pt].pnr
-            clique_ids[cam, pt] = p1
+        for cam in range(num_cams):            
+            for pt in range(num_points):
+                geo_id = corresp_buf[pt + last_count].p[cam]
+                if geo_id < 0:
+                    continue
+            
+                p1 = corrected[cam][geo_id].pnr
+                clique_ids[cam, pt] = p1
 
-            if p1 > -1:
-                targ = img_pts[cam][p1]
-                clique_targs[cam, pt, 0] = (<Target> targ)._targ.x
-                clique_targs[cam, pt, 1] = (<Target> targ)._targ.y
+                if p1 > -1:
+                    targ = img_pts[cam][p1]
+                    clique_targs[cam, pt, 0] = (<Target> targ)._targ.x
+                    clique_targs[cam, pt, 1] = (<Target> targ)._targ.y
     
         last_count += num_points
         sorted_pos[clique_type] = clique_targs
         sorted_corresp[clique_type] = clique_ids
-    
-        # Clean up.
-        num_targs = match_counts[num_cams - 1]
-        
-        
+
+    # Clean up.
+    num_targs = match_counts[num_cams - 1]
         
         
         
@@ -256,3 +236,48 @@ def correspondences(list img_pts, list flat_coords, list cals,
     free(corresp_buf) # Note this for future returning of correspondences.
     
     return sorted_pos, sorted_corresp, num_targs
+    
+    
+def dummy_correspondence(calib, targets, num_points, corrected, cparam, vparam)
+    """ single camera correspondence is not a real correspondence, only a projection 
+    of a 2D target from the image space into the 3D position, x,y,z using epi_mm_2d 
+    function
+    
+    Arguments:
+    xxx - description.
+    
+    Returns:
+    yyy - 
+
+    
+    """
+    cdef: 
+        int pt
+        vec3d pos
+
+    
+    cam = 0 # only one camera
+    clique_targs = np.full((1, num_points, 2), PT_UNUSED, 
+        dtype=np.float64)
+    clique_ids = np.full((1, num_points), CORRES_NONE, 
+        dtype=np.int_)
+
+    # Trace back the pixel target properties through the flat metric
+    # intermediary that's x-sorted.
+    for pt in range(num_points):
+        epi_mm_2D (corrected[0][pt].x,corrected[0][pt].y,
+          calib[0], *(cparam._control_par.mm[0]), vparam, pos);
+        p1 = corrected[cam][pt].pnr
+        clique_ids[cam, pt] = p1
+
+        if p1 > -1:
+            targ = img_pts[cam][p1]
+            clique_targs[cam, pt, 0] = (<Target> targ)._targ.x
+            clique_targs[cam, pt, 1] = (<Target> targ)._targ.y
+
+    last_count += num_points
+    sorted_pos[clique_type] = clique_targs
+    sorted_corresp[clique_type] = clique_ids
+
+    # Clean up.
+    num_targs = match_counts[num_cams - 1]
