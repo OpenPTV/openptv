@@ -364,12 +364,6 @@ parsing to fail */
         strncpy(ret->cal_img_base_name[cam], line, SEQ_FNAME_MAX_LEN);
     }
     
-    /*  backward compatibility: Tcl/Tk version will look for 8 rows of strings 
-        regardless of camera count.
-    */
-    for (cam = 0; cam < 2*(4 - ret->num_cams); cam++) {
-        if (fscanf(par_file, "%s\n", line) == 0) goto handle_error; 
-    }
     
     if(fscanf(par_file, "%d\n", &(ret->hp_flag)) == 0) goto handle_error;
     if(fscanf(par_file, "%d\n", &(ret->allCam_flag)) == 0) goto handle_error;
