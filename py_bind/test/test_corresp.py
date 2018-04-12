@@ -83,6 +83,8 @@ class TestCorresp(unittest.TestCase):
         
         sorted_pos, sorted_corresp, num_targs = correspondences(
             img_pts, corrected, cals, vpar, cpar)
+        print(sorted_pos)
+        print(sorted_corresp)
         self.failUnlessEqual(num_targs, 16)
 
     def test_single_cam_corresp(self):

@@ -17,10 +17,6 @@ from optv.calibration cimport Calibration, calibration
 from optv.orientation cimport COORD_UNUSED
 from optv.tracking_framebuf cimport TargetArray, Target, target, frame, \
     PT_UNUSED, CORRES_NONE
-    
-cdef extern from "optv/epi.h":
-    void  epi_mm_2D (double xl, double yl, Calibration *cal1, mm_np *mmp, 
-        VolumeParams *vpar, vec3d out); 
 
 cdef class MatchedCoords:
     """
@@ -233,7 +229,7 @@ def correspondences(list img_pts, list flat_coords, list cals,
     return sorted_pos, sorted_corresp, num_targs
     
     
-def single_cam_correspondence(list img_pts, list flat_coords, list cals)
+def single_cam_correspondence(list img_pts, list flat_coords, list cals):
     """ 
     Single camera correspondence is not a real correspondence, it will be only a projection 
     of a 2D target from the image space into the 3D position, x,y,z using epi_mm_2d 
@@ -260,6 +256,10 @@ def single_cam_correspondence(list img_pts, list flat_coords, list cals)
     """
     cdef: 
         int pt, num_points
+    
+    # Distribute data to return structures:
+    sorted_pos = []
+    sorted_corresp = []
 
     num_points = len(img_pts[0])
 
@@ -275,7 +275,7 @@ def single_cam_correspondence(list img_pts, list flat_coords, list cals)
         # From Beat code (issue #118) pix[0][geo[0][i].pnr].tnr=i;
 
         p1 = flat_coords[0][pt].pnr
-        clique_ids[cam, pt] = p1
+        clique_ids[0, pt] = p1
 
         if p1 > -1:
             targ = img_pts[0][p1]
