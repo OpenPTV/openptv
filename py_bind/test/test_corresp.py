@@ -38,7 +38,7 @@ class TestMatchedCoords(unittest.TestCase):
 class TestCorresp(unittest.TestCase):
     def test_full_corresp(self):
         """Full scene correspondences"""
-        print "about to dump core"
+        print("about to dump core")
         cpar = ControlParams(4)
         cpar.read_control_par("testing_fodder/corresp/control.par")
         vpar = VolumeParams()
@@ -83,4 +83,53 @@ class TestCorresp(unittest.TestCase):
         
         sorted_pos, sorted_corresp, num_targs = correspondences(
             img_pts, corrected, cals, vpar, cpar)
+        self.failUnlessEqual(num_targs, 16)
+
+    def test_single_cam_corresp(self):
+        """Single camera correspondence"""
+        print("about to dump core")
+        cpar = ControlParams(1)
+        cpar.read_control_par("testing_fodder/corresp/control.par")
+        vpar = VolumeParams()
+        vpar.read_volume_par("testing_fodder/corresp/criteria.par")
+        
+        # Cameras are at so high angles that opposing cameras don't see each 
+        # other in the normal air-glass-water setting.
+        cpar.get_multimedia_params().set_layers([1.0001], [1.])
+        cpar.get_multimedia_params().set_n3(1.0001)
+        
+        cals = []
+        img_pts = []
+        corrected = []
+        cal = Calibration()
+        cal.from_file(
+            "testing_fodder/calibration/sym_cam1.tif.ori",
+            "testing_fodder/calibration/cam1.tif.addpar")
+        cals.append(cal)
+        
+        # Generate test targets.
+        targs = TargetArray(16)
+        for row, col in np.ndindex(4, 4):
+            targ_ix = row*4 + col
+            targ = targs[targ_ix]
+            
+            pos3d = 10*np.array([[col, row, 0]], dtype=np.float64)
+            pos2d = image_coordinates(
+                pos3d, cal, cpar.get_multimedia_params())
+            targ.set_pos(convert_arr_metric_to_pixel(pos2d, cpar)[0])
+            
+            targ.set_pnr(targ_ix)
+            targ.set_pixel_counts(25, 5, 5)
+            targ.set_sum_grey_value(10)
+            
+            img_pts.append(targs)
+            mc = MatchedCoords(targs, cpar, cal)
+            corrected.append(mc)
+        
+        sorted_pos, sorted_corresp, num_targs = correspondences(
+            img_pts, corrected, cals, vpar, cpar)
+        print(sorted_pos)
+        print(sorted_corresp)
+        print(num_targs)
+        print(img_pts[0])
         self.failUnlessEqual(num_targs, 16)
