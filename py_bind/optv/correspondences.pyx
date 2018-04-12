@@ -149,9 +149,15 @@ def correspondences(list img_pts, list flat_coords, list cals,
     num_targs - total number of targets (must be greater than the sum of 
         previous 3).
     """
+    cdef int num_cams = len(cals)
+
+    # Special case of a single camera, follow the dummy_correspondences docstring    
+    if num_cams == 1:
+        sorted_pos, sorted_corresp, num_targs = single_cam_correspondence(img_pts, flat_coords, cals)
+        return sorted_pos, sorted_corresp, num_targs
+
     cdef:
         int pt, cam
-        int num_cams = len(cals)
         
         calibration **calib = <calibration **> malloc(
             num_cams * sizeof(calibration *))
@@ -175,18 +181,7 @@ def correspondences(list img_pts, list flat_coords, list cals,
         frm.targets[cam] = (<TargetArray>img_pts[cam])._tarr
         frm.num_targets[cam] = len(img_pts[cam])
         corrected[cam] = (<MatchedCoords>flat_coords[cam]).buf
-        
-    if num_cams == 1:
-        sorted_pos, sorted_corresp, num_targs = dummy_correspondence(calib, frm.targets, 
-            frm.num_targets, corrected, cparam, vparam)
-        free(frm.targets)
-        free(frm.num_targets)
-        free(calib)
-        free(match_counts)
-        free(corresp_buf) # Note this for future returning of correspondences.
-    
-        return sorted_pos, sorted_corresp, num_targs
-        
+
         
     # Distribute data to return structures:
     sorted_pos = [None]*(num_cams - 1)
@@ -238,24 +233,36 @@ def correspondences(list img_pts, list flat_coords, list cals,
     return sorted_pos, sorted_corresp, num_targs
     
     
-def dummy_correspondence(calib, targets, num_points, corrected, cparam, vparam)
-    """ single camera correspondence is not a real correspondence, only a projection 
+def single_cam_correspondence(list img_pts, list flat_coords, list cals)
+    """ 
+    Single camera correspondence is not a real correspondence, it will be only a projection 
     of a 2D target from the image space into the 3D position, x,y,z using epi_mm_2d 
-    function
+    function. Here we only update the pointers of the targets and return it in a proper format. 
     
-    Arguments:
-    xxx - description.
-    
-    Returns:
-    yyy - 
+     Arguments:
+    img_pts - a list of c := len(cals), containing TargetArray objects, each 
+        with the target coordinates of n detections in the respective image.
+        The target arrays are clobbered: returned arrays have the tnr property 
+        set. the pnr property should be set to the target index in its array.
+    flat_coords - a list of MatchedCoordinates objects, one per camera, holding
+        the x-sorted flat-coordinates conversion of the respective image 
+        targets.
+    cals - a list of Calibration objects, each for the camera taking one image.
 
-    
+    Returns:
+    sorted_pos - a tuple of (c,?,2) arrays, each with the positions in each of 
+        c image planes of points belonging to quadruplets, triplets, pairs 
+        found.
+    sorted_corresp - a tuple of (c,?) arrays, each with the point identifiers
+        of targets belonging to a quad/trip/etc per camera.
+    num_targs - total number of targets (must be greater than the sum of 
+        previous 3). 
     """
     cdef: 
-        int pt
-        vec3d pos
-    
-    cam = 0 # only one camera
+        int pt, num_points
+
+    num_points = len(img_pts[0])
+
     clique_targs = np.full((1, num_points, 2), PT_UNUSED, 
         dtype=np.float64)
     clique_ids = np.full((1, num_points), CORRES_NONE, 
@@ -264,19 +271,20 @@ def dummy_correspondence(calib, targets, num_points, corrected, cparam, vparam)
     # Trace back the pixel target properties through the flat metric
     # intermediary that's x-sorted.
     for pt in range(num_points):
-        epi_mm_2D (corrected[0][pt].x,corrected[0][pt].y,
-          calib[0], *(cparam._control_par.mm[0]), vparam, pos);
-        p1 = corrected[cam][pt].pnr
+
+        # From Beat code (issue #118) pix[0][geo[0][i].pnr].tnr=i;
+
+        p1 = flat_coords[0][pt].pnr
         clique_ids[cam, pt] = p1
 
         if p1 > -1:
-            targ = img_pts[cam][p1]
-            clique_targs[cam, pt, 0] = (<Target> targ)._targ.x
-            clique_targs[cam, pt, 1] = (<Target> targ)._targ.y
+            targ = img_pts[0][p1]
+            clique_targs[0, pt, 0] = targ._targ.x
+            clique_targs[0, pt, 1] = targ._targ.y
+            # we also update the tnr, see docstring of correspondences
+            targ.tnr = pt
 
-    last_count += num_points
-    sorted_pos[clique_type] = clique_targs
-    sorted_corresp[clique_type] = clique_ids
+    sorted_pos[0] = clique_targs
+    sorted_corresp[0] = clique_ids
 
-    # Clean up.
-    num_targs = match_counts[num_cams - 1]
+    return sorted_pos, sorted_corresp, num_points
