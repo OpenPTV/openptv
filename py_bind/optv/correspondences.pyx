@@ -254,7 +254,6 @@ def dummy_correspondence(calib, targets, num_points, corrected, cparam, vparam)
     cdef: 
         int pt
         vec3d pos
-
     
     cam = 0 # only one camera
     clique_targs = np.full((1, num_points, 2), PT_UNUSED, 
