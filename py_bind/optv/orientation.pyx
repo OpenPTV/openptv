@@ -70,6 +70,53 @@ cdef calibration** cal_list2arr(list cals):
 def point_positions(np.ndarray[ndim=3, dtype=pos_t] targets,
                     ControlParams cparam, cals):
     """
+    Calculate the 3D positions of the points given by their 2D projections
+    using one of the options: 
+    for a single camera, use single_cam_point_positions()
+    for multiple cameras, use multi_cam_point_positions()
+
+    Arguments:
+    np.ndarray[ndim=3, dtype=pos_t] targets - (num_targets, num_cams, 2) array,
+        containing the metric coordinates of each target on the image plane of
+        each camera. Cameras must be in the same order for all targets.
+    ControlParams cparam - needed for the parameters of the tank through which
+        we see the targets.
+    cals - a sequence of Calibration objects for each of the cameras, in the
+        camera order of ``targets``.
+
+    Returns:
+    res - (n,3) array for n points represented by their targets.
+    rcm - n-length array, the Ray Convergence Measure for eachpoint for multi camera
+        option, or zeros for a single camera option
+    """
+    cdef:
+        np.ndarray[ndim=2, dtype=pos_t] res
+        np.ndarray[ndim=1, dtype=pos_t] rcm
+
+    if len(cals) == 1:
+        res = single_cam_point_positions(targets)
+        rcm = np.zeros(num_targets)
+    elif len(cals) > 1:
+        res, rcm = multi_cam_point_positions(targets,cparam,cals)
+    else:
+        raise ValueError("wrong number of cameras in point_positions")
+    
+    return res, rcm
+
+
+def single_cam_point_positions(np.ndarray[ndim=3, dtype=pos_t] targets):
+    """
+    Calculates the 3D positions of the points from a single camera using
+    the 2D target positions given in metric coordinates
+
+    """
+    epi_mm_2D (corrected[0][pt].x,corrected[0][pt].y,
+          calib[0], *(cparam._control_par.mm[0]), vparam, pos);
+          
+
+def multi_cam_point_positions(np.ndarray[ndim=3, dtype=pos_t] targets,
+                    ControlParams cparam, cals):
+    """
     Calculate the 3D positions of the points given by their 2D projections.
 
     Arguments:
