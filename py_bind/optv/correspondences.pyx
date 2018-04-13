@@ -255,10 +255,12 @@ def single_cam_correspondence(list img_pts, list flat_coords, list cals):
     """
     cdef: 
         int pt, num_points
+        coord_2d *corrected = <coord_2d *> malloc(sizeof(coord_2d *))
     
-    # Distribute data to return structures:
-    sorted_pos = []
-    sorted_corresp = []
+    corrected = (<MatchedCoords>flat_coords[0]).buf
+
+    sorted_pos = [None]
+    sorted_corresp = [None]
 
     num_points = len(img_pts[0])
 
@@ -273,15 +275,15 @@ def single_cam_correspondence(list img_pts, list flat_coords, list cals):
 
         # From Beat code (issue #118) pix[0][geo[0][i].pnr].tnr=i;
 
-        p1 = flat_coords[0][pt].pnr
+        p1 = corrected[pt].pnr
         clique_ids[0, pt] = p1
 
         if p1 > -1:
             targ = img_pts[0][p1]
-            clique_targs[0, pt, 0] = targ._targ.x
-            clique_targs[0, pt, 1] = targ._targ.y
+            clique_targs[0, pt, 0] = (<Target> targ)._targ.x
+            clique_targs[0, pt, 1] = (<Target> targ)._targ.x
             # we also update the tnr, see docstring of correspondences
-            targ.tnr = pt
+            (<Target> targ)._targ.tnr = pt
 
     sorted_pos[0] = clique_targs
     sorted_corresp[0] = clique_ids

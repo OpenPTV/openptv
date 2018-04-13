@@ -6,7 +6,7 @@ from optv.calibration import Calibration
 from optv.imgcoord import image_coordinates, flat_image_coordinates
 from optv.orientation import match_detection_to_ref, point_positions, \
     external_calibration, full_calibration, dumbbell_target_func
-from optv.parameters import ControlParams
+from optv.parameters import ControlParams, VolumeParams
 from optv.tracking_framebuf import TargetArray
 from optv.transforms import convert_arr_metric_to_pixel
 
@@ -16,12 +16,15 @@ class Test_Orientation(unittest.TestCase):
         self.input_ori_file_name = r'testing_fodder/calibration/cam1.tif.ori'
         self.input_add_file_name = r'testing_fodder/calibration/cam2.tif.addpar'
         self.control_file_name = r'testing_fodder/control_parameters/control.par'
+        self.volume_file_name = r'testing_fodder/corresp/criteria.par'
 
         self.calibration = Calibration()
         self.calibration.from_file(
             self.input_ori_file_name, self.input_add_file_name)
         self.control = ControlParams(4)
         self.control.read_control_par(self.control_file_name)
+        self.vpar = VolumeParams()
+        self.vpar.read_volume_par(self.volume_file_name)
 
     def test_match_detection_to_ref(self):
         """Match detection to reference (sortgrid)"""
@@ -121,8 +124,8 @@ class Test_Orientation(unittest.TestCase):
 
         targs_plain = np.array(targs_plain).transpose(1,0,2)
         targs_jigged = np.array(targs_jigged).transpose(1,0,2)
-        skew_dist_plain = point_positions(targs_plain, self.control, calibs)
-        skew_dist_jigged = point_positions(targs_jigged, self.control, calibs)
+        skew_dist_plain = point_positions(targs_plain, self.control, calibs, self.vpar)
+        skew_dist_jigged = point_positions(targs_jigged, self.control, calibs, self.vpar)
 
         if np.any(skew_dist_plain[1] > 1e-10):
             self.fail(('skew distance of target#{targ_num} ' \
