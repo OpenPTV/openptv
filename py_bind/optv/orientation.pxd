@@ -37,5 +37,5 @@ cdef extern from "optv/orientation.h":
 cdef calibration** cal_list2arr(list cals)
 
 cdef extern from "optv/epi.h":
-    void  epi_mm_2D (double xl, double yl, calibration *cal1, mm_np *mmp, 
+    void  epi_mm_2D (double xl, double yl, calibration *cal, mm_np *mmp, 
         volume_par *vpar, vec3d out);

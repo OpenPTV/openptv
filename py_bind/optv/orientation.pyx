@@ -68,12 +68,12 @@ cdef calibration** cal_list2arr(list cals):
     return calib
 
 def point_positions(np.ndarray[ndim=3, dtype=pos_t] targets,
-                    ControlParams cparam, cals):
+                    ControlParams cparam, cals, VolumeParams vparam):
     """
     Calculate the 3D positions of the points given by their 2D projections
     using one of the options: 
-    for a single camera, use single_cam_point_positions()
-    for multiple cameras, use multi_cam_point_positions()
+    - for a single camera, uses single_cam_point_positions()
+    - for multiple cameras, uses multi_cam_point_positions()
 
     Arguments:
     np.ndarray[ndim=3, dtype=pos_t] targets - (num_targets, num_cams, 2) array,
@@ -83,6 +83,8 @@ def point_positions(np.ndarray[ndim=3, dtype=pos_t] targets,
         we see the targets.
     cals - a sequence of Calibration objects for each of the cameras, in the
         camera order of ``targets``.
+    VolumeParams vparam - an object holding observed volume size parameters, needed
+        for the single camera case only.
 
     Returns:
     res - (n,3) array for n points represented by their targets.
@@ -94,8 +96,7 @@ def point_positions(np.ndarray[ndim=3, dtype=pos_t] targets,
         np.ndarray[ndim=1, dtype=pos_t] rcm
 
     if len(cals) == 1:
-        res = single_cam_point_positions(targets)
-        rcm = np.zeros(num_targets)
+        res, rcm = single_cam_point_positions(targets, cparam, cals, vparam)
     elif len(cals) > 1:
         res, rcm = multi_cam_point_positions(targets,cparam,cals)
     else:
@@ -104,14 +105,38 @@ def point_positions(np.ndarray[ndim=3, dtype=pos_t] targets,
     return res, rcm
 
 
-def single_cam_point_positions(np.ndarray[ndim=3, dtype=pos_t] targets):
+def single_cam_point_positions(np.ndarray[ndim=3, dtype=pos_t] targets,
+                    ControlParams cparam, cals, VolumeParams vparam):
     """
     Calculates the 3D positions of the points from a single camera using
     the 2D target positions given in metric coordinates
 
     """
-    epi_mm_2D (corrected[0][pt].x,corrected[0][pt].y,
-          calib[0], *(cparam._control_par.mm[0]), vparam, pos);
+    cdef:
+        np.ndarray[ndim=2, dtype=pos_t] res
+        np.ndarray[ndim=1, dtype=pos_t] rcm
+        np.ndarray[ndim=2, dtype=pos_t] targ
+        calibration ** calib = cal_list2arr(cals)
+        int cam, num_cams
+
+    # So we can address targets.data directly instead of get_ptr stuff:
+    targets = np.ascontiguousarray(targets)
+
+    num_targets = targets.shape[0]
+    num_cams = targets.shape[1]
+    res = np.empty((num_targets, 3))
+    rcm = np.empty(num_targets)
+
+    for pt in range(num_targets):
+        targ = targets[pt]
+        # rcm[pt] = point_position(<vec2d *> (targ.data), num_cams,
+        #                          cparam._control_par.mm, calib,
+        #                          <vec3d> np.PyArray_GETPTR2(res, pt, 0))
+        rcm[pt] =  epi_mm_2D (targ.data[0], targ.data[1],
+                            calib, cparam._control_par.mm, vparam, 
+                            <vec3d> np.PyArray_GETPTR2(res, pt, 0));
+
+    return res, rcm
           
 
 def multi_cam_point_positions(np.ndarray[ndim=3, dtype=pos_t] targets,
