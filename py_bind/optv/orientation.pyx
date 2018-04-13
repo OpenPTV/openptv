@@ -6,7 +6,7 @@ from libc.stdlib cimport calloc, free
 
 from optv.tracking_framebuf cimport TargetArray
 from optv.calibration cimport Calibration
-from optv.parameters cimport ControlParams 
+from optv.parameters cimport ControlParams, VolumeParams
 
 def match_detection_to_ref(Calibration cal,
                            np.ndarray[ndim=2, dtype=pos_t] ref_pts,
@@ -125,15 +125,15 @@ def single_cam_point_positions(np.ndarray[ndim=3, dtype=pos_t] targets,
     num_targets = targets.shape[0]
     num_cams = targets.shape[1]
     res = np.empty((num_targets, 3))
-    rcm = np.empty(num_targets)
+    rcm = np.zeros(num_targets)
 
     for pt in range(num_targets):
         targ = targets[pt]
         # rcm[pt] = point_position(<vec2d *> (targ.data), num_cams,
         #                          cparam._control_par.mm, calib,
         #                          <vec3d> np.PyArray_GETPTR2(res, pt, 0))
-        rcm[pt] =  epi_mm_2D (targ.data[0], targ.data[1],
-                            calib, cparam._control_par.mm, vparam, 
+        epi_mm_2D (targ.data[0], targ.data[1],
+                            calib[0], cparam._control_par.mm, vparam._volume_par, 
                             <vec3d> np.PyArray_GETPTR2(res, pt, 0));
 
     return res, rcm

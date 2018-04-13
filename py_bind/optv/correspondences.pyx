@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 Implementation of bindings for correspondences and related data structures.
 
@@ -147,7 +146,7 @@ def correspondences(list img_pts, list flat_coords, list cals,
     """
     cdef int num_cams = len(cals)
 
-    # Special case of a single camera, follow the dummy_correspondences docstring    
+    # Special case of a single camera, follow the single_cam_correspondence docstring    
     if num_cams == 1:
         sorted_pos, sorted_corresp, num_targs = single_cam_correspondence(img_pts, flat_coords, cals)
         return sorted_pos, sorted_corresp, num_targs
