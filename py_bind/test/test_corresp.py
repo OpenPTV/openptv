@@ -40,9 +40,9 @@ class TestCorresp(unittest.TestCase):
         """Full scene correspondences"""
         print("about to dump core")
         cpar = ControlParams(4)
-        cpar.read_control_par("testing_fodder/corresp/control.par")
+        cpar.read_control_par(r"testing_fodder/corresp/control.par")
         vpar = VolumeParams()
-        vpar.read_volume_par("testing_fodder/corresp/criteria.par")
+        vpar.read_volume_par(r"testing_fodder/corresp/criteria.par")
         
         # Cameras are at so high angles that opposing cameras don't see each 
         # other in the normal air-glass-water setting.
@@ -110,9 +110,9 @@ class TestCorresp(unittest.TestCase):
         cals.append(cal)
         
         # Generate test targets.
-        targs = TargetArray(16)
-        for row, col in np.ndindex(4, 4):
-            targ_ix = row*4 + col
+        targs = TargetArray(9)
+        for row, col in np.ndindex(3, 3):
+            targ_ix = row*3 + col
             targ = targs[targ_ix]
             
             pos3d = 10*np.array([[col, row, 0]], dtype=np.float64)
@@ -132,6 +132,4 @@ class TestCorresp(unittest.TestCase):
             img_pts, corrected, cals, vpar, cpar)
         print(sorted_pos)
         print(sorted_corresp)
-        print(num_targs)
-        print(img_pts[0])
-        self.failUnlessEqual(num_targs, 16)
+        self.failUnlessEqual(num_targs, 9)
