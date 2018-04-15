@@ -695,16 +695,19 @@ void trackcorr_c_loop (tracking_run *run_info, int step) {
 
     /* try to track correspondences from previous 0 - corp, variable h */
     orig_parts = fb->buf[1]->num_parts;
+    // printf("orig_parts %d\n",orig_parts);
     for (h = 0; h < orig_parts; h++) {
         for (j = 0; j < 6; j++) vec_init(X[j]);
 
         curr_path_inf = &(fb->buf[1]->path_info[h]);
         curr_corres = &(fb->buf[1]->correspond[h]);
+        printf("current_corres %d %d %d\n",curr_corres->nr,curr_corres->p[0],curr_corres->p[1]);
 
         curr_path_inf->inlist = 0;
 
         /* 3D-position */
         vec_copy(X[1], curr_path_inf->x);
+        // printf("X[1] %f %f %f \n",X[1][0],X[1][1],X[1][2]);
 
         /* use information from previous to locate new search position
            and to calculate values for search area */
@@ -715,12 +718,16 @@ void trackcorr_c_loop (tracking_run *run_info, int step) {
 
             for (j = 0; j < fb->num_cams; j++) {
                 point_to_pixel (v1[j], X[2], cal[j], cpar);
+                printf("point_to_pixel: v1[%d][0,1] = %f,%f\n",j,v1[j][0],v1[j][1]);
+                printf("where X[2] is %f %f %f \n",X[2][0],X[2][1],X[2][2]);
             }
         } else {
             vec_copy(X[2], X[1]);
             for (j = 0; j < fb->num_cams; j++) {
                 if (curr_corres->p[j] == -1) {
                     point_to_pixel (v1[j], X[2], cal[j], cpar);
+                    printf("no prev: v1[%d][0,1] = %f,%f\n",j,v1[j][0],v1[j][1]);
+                    printf("where X[2] is %f %f %f \n",X[2][0],X[2][1],X[2][2]);
                 } else {
                     _ix = curr_corres->p[j];
                     v1[j][0] = curr_targets[j][_ix].x;
@@ -729,6 +736,8 @@ void trackcorr_c_loop (tracking_run *run_info, int step) {
             }
 
         }
+        //printf("v1[%d][0,1] = %f,%f\n",j,v1[j][0],v1[j][1]);
+        //printf("while X[2] is %f %f %f \n",X[2][0],X[2][1],X[2][2]);
 
         /* calculate search cuboid and reproject it to the image space */
         w = sorted_candidates_in_volume(X[2], v1, fb->buf[2], run_info);
@@ -766,6 +775,7 @@ void trackcorr_c_loop (tracking_run *run_info, int step) {
                     vec_copy(X[4], ref_path_inf->x);
 
                     vec_subt(X[4], X[3], diff_pos);
+                    printf("diff pos %f %f %f\n",diff_pos[0],diff_pos[1],diff_pos[2]);
                     if ( pos3d_in_bounds(diff_pos, tpar)) {
                         angle_acc(X[3], X[4], X[5], &angle1, &acc1);
                         if (curr_path_inf->prev >= 0) {
