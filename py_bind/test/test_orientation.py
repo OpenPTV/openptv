@@ -149,65 +149,59 @@ class Test_Orientation(unittest.TestCase):
 
     def test_single_camera_point_positions(self):
         """Point positions for a single camera case"""
-        # prepare MultimediaParams
-        mult_params = self.control.get_multimedia_params()
 
-        mult_params.set_n1(1.)
-        mult_params.set_layers(np.array([1.]), np.array([1.]))
-        mult_params.set_n3(1.)
+        num_cams = 1
+        # prepare MultimediaParams
+        cpar_file = r'testing_fodder/single_cam/parameters/ptv.par'
+        vpar_file = r'testing_fodder/single_cam/parameters/criteria.par'
+        cpar = ControlParams(num_cams)
+        cpar.read_control_par(cpar_file)
+        mult_params = cpar.get_multimedia_params()
+
+        vpar = VolumeParams()
+        vpar.read_volume_par(vpar_file)
+
+        ori_name = r'testing_fodder/single_cam/calibration/cam_1.tif.ori'
+        add_name = r'testing_fodder/single_cam/calibration/cam_1.tif.addpar'
+        calibs = []
+        
+
+        # read calibration for each camera from files
+        new_cal = Calibration()
+        new_cal.from_file(ori_file=ori_name, add_file=add_name)
+        calibs.append(new_cal)
+
 
         # 3d point
-        points = np.array([[17, 42, 0],
-                           [17, 42, 0]], dtype=float)
-        
-        num_cams = 1
-        ori_tmpl = r'testing_fodder/calibration/sym_cam{cam_num}.tif.ori'
-        add_file = r'testing_fodder/calibration/cam1.tif.addpar'
-        calibs = []
+        points = np.array([[1, 1, 0],
+                           [-1, -1, 0]], dtype=float)
+
         targs_plain = []
         targs_jigged = []
 
-        jigg_amp = 0.5
 
-        # read calibration for each camera from files
-        ori_name = ori_tmpl.format(cam_num=1)
-        new_cal = Calibration()
-        new_cal.from_file(ori_file=ori_name, add_file=add_file)
-        calibs.append(new_cal)
+        jigg_amp = 0.4
+
 
         new_plain_targ = image_coordinates(
-            points, calibs[0], self.control.get_multimedia_params())
+            points, calibs[0], mult_params)
         targs_plain.append(new_plain_targ)
             
         jigged_points = points - np.r_[0, jigg_amp, 0]
 
         new_jigged_targs = image_coordinates(
-            jigged_points, calibs[0], self.control.get_multimedia_params())
+            jigged_points, calibs[0], mult_params)
         targs_jigged.append(new_jigged_targs)
 
         targs_plain = np.array(targs_plain).transpose(1,0,2)
         targs_jigged = np.array(targs_jigged).transpose(1,0,2)
-        skew_dist_plain = point_positions(targs_plain, self.control, calibs, self.vpar)
-        skew_dist_jigged = point_positions(targs_jigged, self.control, calibs, self.vpar)
-
-        print('targs_plain',targs_plain)
-        print('targs_jigged',targs_jigged)
-        print('skew_dist_plain',skew_dist_plain)
-        print('skew_dist_jigged',skew_dist_jigged)
-
-        if np.any(skew_dist_plain[1] > 1e-10):
-            self.fail(('skew distance of target#{targ_num} ' \
-                + 'is more than allowed').format(
-                    targ_num=np.nonzero(skew_dist_plain[1] > 1e-10)[0][0]))
+        skew_dist_plain = point_positions(targs_plain, cpar, calibs, vpar)
+        skew_dist_jigged = point_positions(targs_jigged, cpar, calibs, vpar)
 
         if np.any(np.linalg.norm(points - skew_dist_plain[0], axis=1) > 1e-6):
             self.fail('Rays converge on wrong position.')
 
-        if np.any(skew_dist_jigged[1] > 0.7):
-            self.fail(('skew distance of target#{targ_num} ' \
-                + 'is more than allowed').format(
-                    targ_num=np.nonzero(skew_dist_jigged[1] > 1e-10)[0][0]))
-        if np.any(np.linalg.norm(points - skew_dist_jigged[0], axis=1) > 0.1):
+        if np.any(np.linalg.norm(jigged_points - skew_dist_jigged[0], axis=1) > 1e-6):
             self.fail('Rays converge on wrong position after jigging.')
     
     def test_dumbbell(self):

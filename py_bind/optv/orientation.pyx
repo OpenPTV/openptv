@@ -121,7 +121,7 @@ def single_cam_point_positions(np.ndarray[ndim=3, dtype=pos_t] targets,
 
     # So we can address targets.data directly instead of get_ptr stuff:
     targets = np.ascontiguousarray(targets)
-
+    
     num_targets = targets.shape[0]
     num_cams = targets.shape[1]
     res = np.empty((num_targets, 3))
@@ -129,10 +129,7 @@ def single_cam_point_positions(np.ndarray[ndim=3, dtype=pos_t] targets,
 
     for pt in range(num_targets):
         targ = targets[pt]
-        # rcm[pt] = point_position(<vec2d *> (targ.data), num_cams,
-        #                          cparam._control_par.mm, calib,
-        #                          <vec3d> np.PyArray_GETPTR2(res, pt, 0))
-        epi_mm_2D (targ.data[0], targ.data[1],
+        epi_mm_2D (targ[0][0], targ[0][1],
                             calib[0], cparam._control_par.mm, vparam._volume_par, 
                             <vec3d> np.PyArray_GETPTR2(res, pt, 0));
 

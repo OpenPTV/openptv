@@ -91,22 +91,22 @@ class TestCorresp(unittest.TestCase):
         """Single camera correspondence"""
         print("about to dump core")
         cpar = ControlParams(1)
-        cpar.read_control_par("testing_fodder/corresp/control.par")
+        cpar.read_control_par("testing_fodder/single_cam/parameters/ptv.par")
         vpar = VolumeParams()
-        vpar.read_volume_par("testing_fodder/corresp/criteria.par")
+        vpar.read_volume_par("testing_fodder/single_cam/parameters/criteria.par")
         
         # Cameras are at so high angles that opposing cameras don't see each 
         # other in the normal air-glass-water setting.
-        cpar.get_multimedia_params().set_layers([1.0001], [1.])
-        cpar.get_multimedia_params().set_n3(1.0001)
+        cpar.get_multimedia_params().set_layers([1.], [1.])
+        cpar.get_multimedia_params().set_n3(1.)
         
         cals = []
         img_pts = []
         corrected = []
         cal = Calibration()
         cal.from_file(
-            "testing_fodder/calibration/sym_cam1.tif.ori",
-            "testing_fodder/calibration/cam1.tif.addpar")
+            "testing_fodder/single_cam/calibration/cam_1.tif.ori",
+            "testing_fodder/single_cam/calibration/cam_1.tif.addpar")
         cals.append(cal)
         
         # Generate test targets.
