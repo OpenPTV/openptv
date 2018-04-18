@@ -176,16 +176,15 @@ def correspondences(list img_pts, list flat_coords, list cals,
         frm.targets[cam] = (<TargetArray>img_pts[cam])._tarr
         frm.num_targets[cam] = len(img_pts[cam])
         corrected[cam] = (<MatchedCoords>flat_coords[cam]).buf
-
-        
-    # Distribute data to return structures:
-    sorted_pos = [None]*(num_cams - 1)
-    sorted_corresp = [None]*(num_cams - 1)
-    last_count = 0
     
     # The biz:
     corresp_buf = corresp(&frm, corrected, 
         vparam._volume_par, cparam._control_par, calib, match_counts)
+
+    # Distribute data to return structures:
+    sorted_pos = [None]*(num_cams - 1)
+    sorted_corresp = [None]*(num_cams - 1)
+    last_count = 0
 
     for clique_type in xrange(num_cams - 1):
         num_points = match_counts[clique_type]
