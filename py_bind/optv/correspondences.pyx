@@ -16,7 +16,7 @@ from optv.calibration cimport Calibration, calibration
 from optv.orientation cimport COORD_UNUSED
 from optv.tracking_framebuf cimport TargetArray, Target, target, frame, \
     PT_UNUSED, CORRES_NONE
-
+    
 cdef class MatchedCoords:
     """
     Keeps a block of 2D flat coordinates, each with a "point number", the same

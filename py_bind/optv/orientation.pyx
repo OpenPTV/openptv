@@ -7,6 +7,8 @@ from libc.stdlib cimport calloc, free
 from optv.tracking_framebuf cimport TargetArray
 from optv.calibration cimport Calibration
 from optv.parameters cimport ControlParams, VolumeParams
+from optv.epipolar cimport epi_mm_2D
+
 
 def match_detection_to_ref(Calibration cal,
                            np.ndarray[ndim=2, dtype=pos_t] ref_pts,
