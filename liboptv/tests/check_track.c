@@ -65,7 +65,6 @@ int copy_res_dir(char *src, char *dest) {
             return 1;
         }
     }
-    return 0;
 }
 
 int empty_res_dir() {
@@ -88,7 +87,6 @@ int empty_res_dir() {
             return 1;
         }
     }
-    return 0;
 }
 
 START_TEST(test_predict)

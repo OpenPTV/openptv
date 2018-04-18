@@ -6,7 +6,7 @@ from optv.calibration import Calibration
 from optv.imgcoord import image_coordinates, flat_image_coordinates
 from optv.orientation import match_detection_to_ref, point_positions, \
     external_calibration, full_calibration, dumbbell_target_func
-from optv.parameters import ControlParams, VolumeParams
+from optv.parameters import ControlParams
 from optv.tracking_framebuf import TargetArray
 from optv.transforms import convert_arr_metric_to_pixel
 
@@ -16,15 +16,12 @@ class Test_Orientation(unittest.TestCase):
         self.input_ori_file_name = r'testing_fodder/calibration/cam1.tif.ori'
         self.input_add_file_name = r'testing_fodder/calibration/cam2.tif.addpar'
         self.control_file_name = r'testing_fodder/control_parameters/control.par'
-        self.volume_file_name = r'testing_fodder/corresp/criteria.par'
 
         self.calibration = Calibration()
         self.calibration.from_file(
             self.input_ori_file_name, self.input_add_file_name)
         self.control = ControlParams(4)
         self.control.read_control_par(self.control_file_name)
-        self.vpar = VolumeParams()
-        self.vpar.read_volume_par(self.volume_file_name)
 
     def test_match_detection_to_ref(self):
         """Match detection to reference (sortgrid)"""
@@ -124,13 +121,8 @@ class Test_Orientation(unittest.TestCase):
 
         targs_plain = np.array(targs_plain).transpose(1,0,2)
         targs_jigged = np.array(targs_jigged).transpose(1,0,2)
-        skew_dist_plain = point_positions(targs_plain, self.control, calibs, self.vpar)
-        skew_dist_jigged = point_positions(targs_jigged, self.control, calibs, self.vpar)
-
-        print('targs_plain',targs_plain)
-        print('targs_jigged',targs_jigged)
-        print('skew_dist_plain',skew_dist_plain)
-        print('skew_dist_jigged',skew_dist_jigged)
+        skew_dist_plain = point_positions(targs_plain, self.control, calibs)
+        skew_dist_jigged = point_positions(targs_jigged, self.control, calibs)
 
         if np.any(skew_dist_plain[1] > 1e-10):
             self.fail(('skew distance of target#{targ_num} ' \
@@ -145,63 +137,6 @@ class Test_Orientation(unittest.TestCase):
                 + 'is more than allowed').format(
                     targ_num=np.nonzero(skew_dist_jigged[1] > 1e-10)[0][0]))
         if np.any(np.linalg.norm(points - skew_dist_jigged[0], axis=1) > 0.1):
-            self.fail('Rays converge on wrong position after jigging.')
-
-    def test_single_camera_point_positions(self):
-        """Point positions for a single camera case"""
-
-        num_cams = 1
-        # prepare MultimediaParams
-        cpar_file = r'testing_fodder/single_cam/parameters/ptv.par'
-        vpar_file = r'testing_fodder/single_cam/parameters/criteria.par'
-        cpar = ControlParams(num_cams)
-        cpar.read_control_par(cpar_file)
-        mult_params = cpar.get_multimedia_params()
-
-        vpar = VolumeParams()
-        vpar.read_volume_par(vpar_file)
-
-        ori_name = r'testing_fodder/single_cam/calibration/cam_1.tif.ori'
-        add_name = r'testing_fodder/single_cam/calibration/cam_1.tif.addpar'
-        calibs = []
-        
-
-        # read calibration for each camera from files
-        new_cal = Calibration()
-        new_cal.from_file(ori_file=ori_name, add_file=add_name)
-        calibs.append(new_cal)
-
-
-        # 3d point
-        points = np.array([[1, 1, 0],
-                           [-1, -1, 0]], dtype=float)
-
-        targs_plain = []
-        targs_jigged = []
-
-
-        jigg_amp = 0.4
-
-
-        new_plain_targ = image_coordinates(
-            points, calibs[0], mult_params)
-        targs_plain.append(new_plain_targ)
-            
-        jigged_points = points - np.r_[0, jigg_amp, 0]
-
-        new_jigged_targs = image_coordinates(
-            jigged_points, calibs[0], mult_params)
-        targs_jigged.append(new_jigged_targs)
-
-        targs_plain = np.array(targs_plain).transpose(1,0,2)
-        targs_jigged = np.array(targs_jigged).transpose(1,0,2)
-        skew_dist_plain = point_positions(targs_plain, cpar, calibs, vpar)
-        skew_dist_jigged = point_positions(targs_jigged, cpar, calibs, vpar)
-
-        if np.any(np.linalg.norm(points - skew_dist_plain[0], axis=1) > 1e-6):
-            self.fail('Rays converge on wrong position.')
-
-        if np.any(np.linalg.norm(jigged_points - skew_dist_jigged[0], axis=1) > 1e-6):
             self.fail('Rays converge on wrong position after jigging.')
     
     def test_dumbbell(self):
