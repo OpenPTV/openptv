@@ -38,7 +38,6 @@ class TestMatchedCoords(unittest.TestCase):
 class TestCorresp(unittest.TestCase):
     def test_full_corresp(self):
         """Full scene correspondences"""
-        print("about to dump core")
         cpar = ControlParams(4)
         cpar.read_control_par(r"testing_fodder/corresp/control.par")
         vpar = VolumeParams()
@@ -83,13 +82,11 @@ class TestCorresp(unittest.TestCase):
         
         sorted_pos, sorted_corresp, num_targs = correspondences(
             img_pts, corrected, cals, vpar, cpar)
-        print(sorted_pos)
-        print(sorted_corresp)
+
         self.failUnlessEqual(num_targs, 16)
 
     def test_single_cam_corresp(self):
         """Single camera correspondence"""
-        print("about to dump core")
         cpar = ControlParams(1)
         cpar.read_control_par("testing_fodder/single_cam/parameters/ptv.par")
         vpar = VolumeParams()
@@ -130,6 +127,5 @@ class TestCorresp(unittest.TestCase):
         
         sorted_pos, sorted_corresp, num_targs = correspondences(
             img_pts, corrected, cals, vpar, cpar)
-        print(sorted_pos)
-        print(sorted_corresp)
+
         self.failUnlessEqual(num_targs, 9)
