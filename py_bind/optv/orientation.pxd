@@ -1,5 +1,5 @@
 from optv.calibration cimport calibration
-from optv.parameters cimport control_par, mm_np
+from optv.parameters cimport control_par, mm_np, volume_par
 from optv.tracking_framebuf cimport target
 from optv.vec_utils cimport vec3d
 
@@ -21,6 +21,10 @@ cdef extern from "optv/orientation.h":
 
     double point_position(vec2d targets[], int num_cams, mm_np *multimed_pars,
         calibration* cals[], vec3d res);
+    double single_cam_point_position(vec2d targets[], int num_cams, mm_np *multimed_pars,
+        calibration* cals[], vec3d res);
+    double multi_cam_point_position(vec2d targets[], int num_cams, mm_np *multimed_pars,
+        calibration* cals[], vec3d res);
     int raw_orient(calibration* cal, control_par *cpar, int nfix, vec3d fix[], 
         target pix[]);
     double* orient (calibration* cal_in, control_par *cpar, int nfix, 
@@ -31,3 +35,7 @@ cdef extern from "optv/orientation.h":
         int db_length, double db_weight)
 
 cdef calibration** cal_list2arr(list cals)
+
+cdef extern from "optv/epi.h":
+    void  epi_mm_2D (double xl, double yl, calibration *cal, mm_np *mmp, 
+        volume_par *vpar, vec3d out);
