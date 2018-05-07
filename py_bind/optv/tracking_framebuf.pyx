@@ -1,5 +1,4 @@
 # Implementation of the trackin_frame_buf minimal interface.
-
 from libc.stdlib cimport malloc, free
 cimport numpy as np
 import numpy as np

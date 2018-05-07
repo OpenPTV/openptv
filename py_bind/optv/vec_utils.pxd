@@ -1,5 +1,4 @@
 # Vector utilities definitions for import in to other Cython files.
-
 cdef extern from "optv/vec_utils.h":
     ctypedef double vec3d[3]
     
