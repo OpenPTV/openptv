@@ -651,7 +651,8 @@ n_tupel *correspondences (frame *frm, coord_2d **corrected,
     }
     con0[i].corr = 0.0;
   }
-  match_counts[3] = 0;
+  
+  for (i=0; i<4; i++)  match_counts[i] = 0; 
 
   /* Generate adjacency lists: mark candidates for correspondence.
      matching  1 -> 2,3,4  +  2 -> 3,4  +  3 -> 4 */
