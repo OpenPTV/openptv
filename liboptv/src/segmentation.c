@@ -113,6 +113,7 @@ int targ_rec (unsigned char *img, target_par *targ_par, int xmin,
 
                 for (n=0; n<4; n++) {
                     xn = x4[n];  yn = y4[n];
+                    if (!(xn < xmax) || !(yn < ymax)) continue;
                     gv = *(img0 + imx*yn + xn);
 
                     /* conditions for threshold, discontinuity, image borders */
