@@ -165,8 +165,6 @@ def correspondences(list img_pts, list flat_coords, list cals,
     frm.targets = <target**> calloc(num_cams, sizeof(target*))
     frm.num_targets = <int *> calloc(num_cams, sizeof(int))
     
-    print(num_cams)
-
     for cam in range(num_cams):
         calib[cam] = (<Calibration>cals[cam])._calibration
         frm.targets[cam] = (<TargetArray>img_pts[cam])._tarr
@@ -184,7 +182,6 @@ def correspondences(list img_pts, list flat_coords, list cals,
     
     for clique_type in xrange(num_cams - 1): 
         num_points = match_counts[4 - num_cams + clique_type] # for 1-4 cameras
-        print(num_points,clique_type)
         clique_targs = np.full((num_cams, num_points, 2), PT_UNUSED, 
             dtype=np.float64)
         clique_ids = np.full((num_cams, num_points), CORRES_NONE, 
