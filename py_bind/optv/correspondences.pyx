@@ -146,7 +146,6 @@ def correspondences(list img_pts, list flat_coords, list cals,
         previous 3).
     """
     cdef:
-        int pt, cam
         int num_cams = len(cals)
         
         calibration **calib = <calibration **> malloc(
@@ -181,8 +180,8 @@ def correspondences(list img_pts, list flat_coords, list cals,
     sorted_corresp = [None]*(num_cams - 1)
     last_count = 0
     
-    for clique_type in xrange(num_cams - 1):
-        num_points = match_counts[clique_type]
+    for clique_type in xrange(num_cams - 1): 
+        num_points = match_counts[4 - num_cams + clique_type] # for 1-4 cameras
         clique_targs = np.full((num_cams, num_points, 2), PT_UNUSED, 
             dtype=np.float64)
         clique_ids = np.full((num_cams, num_points), CORRES_NONE, 
