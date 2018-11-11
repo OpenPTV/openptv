@@ -18,9 +18,9 @@
 #include <string.h>
 #include <math.h>
 
-#define NUM_ITER  80
+// #define num_iter  80
 #define POS_INF 1E20
-#define CONVERGENCE 0.00001
+// #define convergence 0.00001
 
 /*  skew_midpoint() finds the middle of the minimal distance segment between
     skew rays. Undefined for parallel rays.
@@ -239,6 +239,9 @@ void num_deriv_exterior(Calibration* cal, control_par *cpar, double dpos, double
     the calibration structure, cal.
     double sigmabeta[] - array of deviations for each of the interior and 
         exterior parameters and glass interface vector (19 in total).
+    int num_iter  - (typical 80 - 200) number of iterations for convergence of the orientation routine
+    double convergence - (0.000001-0.01) a threshold that defines if the change is 
+        sufficiently small and the result has converged.  
 
     Returns:
     On success, a pointer to an array of residuals. For each observation point
@@ -247,9 +250,11 @@ void num_deriv_exterior(Calibration* cal, control_par *cpar, double dpos, double
     between initial guess and final solution for internal and distortion 
     parameters, which are also part of the G-M model and described in it.
     On failure returns NULL.
+    
 */
 double* orient (Calibration* cal_in, control_par *cpar, int nfix, vec3d fix[],
-            target pix[], orient_par *flags, double sigmabeta[20]) 
+            target pix[], orient_par *flags, double sigmabeta[20], int num_iter, 
+            double convergence) 
 {
     int  	i,j,n, itnum, stopflag, n_obs=0, maxsize;
 
@@ -341,7 +346,7 @@ double* orient (Calibration* cal_in, control_par *cpar, int nfix, vec3d fix[],
 
     itnum = 0;  
     stopflag = 0;
-    while ((stopflag == 0) && (itnum < NUM_ITER)) {
+    while ((stopflag == 0) && (itnum < num_iter)) {
       itnum++;
 
       for (i = 0, n = 0; i < nfix; i++) {
@@ -516,7 +521,7 @@ double* orient (Calibration* cal_in, control_par *cpar, int nfix, vec3d fix[],
 
       stopflag = 1;
       for (i = 0; i < numbers; i++) {
-          if (fabs (beta[i]) > CONVERGENCE)  stopflag = 0;
+          if (fabs (beta[i]) > convergence)  stopflag = 0;
       }
 
       if ( ! flags->ccflag) beta[6] = 0.0;
