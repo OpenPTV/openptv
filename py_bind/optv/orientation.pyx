@@ -193,6 +193,8 @@ def full_calibration(Calibration cal,
         np.ndarray[ndim=1, dtype=np.int_t] used
         np.ndarray[ndim=1, dtype=pos_t] err_est
         orient_par *orip
+        int num_iter = 80
+        double convergence = 0.00001
         double *residuals
     
     ref_pts = np.ascontiguousarray(ref_pts)
@@ -216,7 +218,8 @@ def full_calibration(Calibration cal,
     
     err_est = np.empty((NPAR + 1) * sizeof(double))
     residuals = orient(cal._calibration, cparam._control_par, len(ref_pts), 
-        ref_coord, img_pts._tarr, orip, <double *>err_est.data)
+        ref_coord, img_pts._tarr, orip, <double *>err_est.data, num_iter, 
+        convergence)
     
     free(orip)
     

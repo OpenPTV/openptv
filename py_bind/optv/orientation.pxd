@@ -25,7 +25,8 @@ cdef extern from "optv/orientation.h":
     int raw_orient(calibration* cal, control_par *cpar, int nfix, vec3d fix[], 
         target pix[]);
     double* orient (calibration* cal_in, control_par *cpar, int nfix, 
-        vec3d fix[], target pix[], orient_par *flags, double sigmabeta[20])
+        vec3d fix[], target pix[], orient_par *flags, double sigmabeta[20], int num_iter, 
+        double correspondence)
     orient_par* read_orient_par(char *filename)
     double weighted_dumbbell_precision(vec2d** targets, int num_targs, 
         int num_cams, mm_np *multimed_pars, calibration* cals[], 
