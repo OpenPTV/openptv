@@ -35,8 +35,8 @@ def match_detection_to_ref(Calibration cal,
     TargetArray holding the sorted targets.
     """
 
-    if len(img_pts) < len(ref_pts):
-        raise ValueError('Must have at least as many targets as ref. points.')
+#     if len(img_pts) < len(ref_pts):
+#         raise ValueError('Must have at least as many targets as ref. points.')
 
     cdef:
         vec3d *ref_coord
@@ -228,7 +228,7 @@ def full_calibration(Calibration cal,
     '''
     while residuals == NULL and num_iter < 500:
         num_iter += 100
-        print("number of iterations increased to %f\n",num_iter)
+        print("number of iterations increased to %f\n" % num_iter)
         residuals = orient(cal._calibration, cparam._control_par, len(ref_pts), 
         ref_coord, img_pts._tarr, orip, <double *>err_est.data, num_iter, 
         convergence)
@@ -236,7 +236,7 @@ def full_calibration(Calibration cal,
 
     while residuals == NULL and convergence < .5:
         convergence *= 10
-        print("convergence threshold increased tenfold to %f\n",convergence)
+        print("convergence threshold increased tenfold to %f\n" % convergence)
         residuals = orient(cal._calibration, cparam._control_par, len(ref_pts), 
         ref_coord, img_pts._tarr, orip, <double *>err_est.data, num_iter, 
         convergence)
