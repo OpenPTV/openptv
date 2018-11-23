@@ -36,7 +36,7 @@ def match_detection_to_ref(Calibration cal,
     """
 
     if len(img_pts) < len(ref_pts):
-        raise ValueError('Must have at least as many targets as ref. points.')
+        print('Warning: there are not as many targets as ref. points.')
 
     cdef:
         vec3d *ref_coord
