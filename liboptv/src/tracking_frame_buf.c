@@ -401,7 +401,7 @@ int write_path_frame(corres *cor_buf, P *path_buf, int num_parts,\
     for(pix = 0; pix < num_parts; pix++) {
         fprintf(linkage_file, "%4d %4d %10.3f %10.3f %10.3f\n",
 	        path_buf[pix].prev, path_buf[pix].next, path_buf[pix].x[0],
-	        path_buf[pix].x[1], path_buf[pix].x[2]);
+	        path_buf[pix].x[1], path_buf[pix].x[2]);   
         
         fprintf(corres_file, "%4d %9.3f %9.3f %9.3f %4d %4d %4d %4d\n",
 	        pix + 1, path_buf[pix].x[0], path_buf[pix].x[1], path_buf[pix].x[2],

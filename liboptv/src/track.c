@@ -257,7 +257,7 @@ int candsearch_in_pix (target next[], int num_targets, double cent_x, double cen
 
             j0 -= 12;  if (j0 < 0) j0 = 0;             /* due to trunc */
             for (j = j0; j<num_targets; j++) {           /* candidate search */
-                if (next[j].tnr != -1 ) {
+                if (next[j].tnr != TR_UNUSED ) {
                     if (next[j].y > ymax ) break;                     /* finish search */
                     if (next[j].x > xmin && next[j].x < xmax \
                         && next[j].y > ymin && next[j].y < ymax) {
@@ -347,7 +347,7 @@ int candsearch_in_pix_rest (target next[], int num_targets, double cent_x, doubl
 
             j0 -= 12;  if (j0 < 0) j0 = 0;             /* due to trunc */
             for (j = j0; j<num_targets; j++) {           /* candidate search */
-                if (next[j].tnr == -1 ) {
+                if (next[j].tnr == TR_UNUSED ) {
                     if (next[j].y > ymax ) break;                     /* finish search */
                     if (next[j].x > xmin && next[j].x < xmax \
                         && next[j].y > ymin && next[j].y < ymax) {
@@ -793,7 +793,7 @@ void trackcorr_c_loop (tracking_run *run_info, int step) {
         } else {
             vec_copy(X[2], X[1]);
             for (j = 0; j < fb->num_cams; j++) {
-                if (curr_corres->p[j] == -1) {
+                if (curr_corres->p[j] == CORRES_NONE) {
                     point_to_pixel (v1[j], X[2], cal[j], cpar);
                 } else {
                     _ix = curr_corres->p[j];
@@ -1023,6 +1023,7 @@ void trackcorr_c_loop (tracking_run *run_info, int step) {
         if (curr_path_inf->next != NEXT_NONE ) count1++;
     }
     /* end of creation of links with decision check */
+
 
     printf ("step: %d, curr: %d, next: %d, links: %d, lost: %d, add: %d\n",
             step, fb->buf[1]->num_parts, fb->buf[2]->num_parts, count1,
