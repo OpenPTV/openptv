@@ -367,9 +367,9 @@ int candsearch_in_pix_rest (target next[], int num_targets, double cent_x, doubl
             p[2] = p3;
             p[3] = p4;
 
-            for (j = 0; j<4; j++) if ( p[j] != PT_UNUSED ) counter++;
-        }         /* if x is within the image boundaries */
-    }     /* if y is within the image boundaries */
+            if ( p[0] != PT_UNUSED ) counter++;
+        }  /* if y is within the image boundaries */
+    }     /* if x is within the image boundaries */
     return (counter);
 }
 
@@ -1098,8 +1098,6 @@ double trackback_c (tracking_run *run_info)
 
     /* sequence loop */
     for (step = seq_par->last - 1; step > seq_par->first; step--) {
-        printf ("Time step: %d, seqnr: %d:\n",
-                step - seq_par->first, step);
 
         for (h = 0; h < fb->buf[1]->num_parts; h++) {
             curr_path_inf = &(fb->buf[1]->path_info[h]);
@@ -1245,7 +1243,7 @@ double trackback_c (tracking_run *run_info)
             if (curr_path_inf->prev != PREV_NONE ) count1++;
         }         /* end of creation of links with decision check */
 
-        printf ("step: %d, curr: %d, next: %d, links: %d, lost: %d, add: %d",
+        printf ("step: %d, curr: %d, next: %d, links: %d, lost: %d, add: %d\n",
                 step, fb->buf[1]->num_parts, fb->buf[2]->num_parts, count1,
                 fb->buf[1]->num_parts - count1, num_added);
 
