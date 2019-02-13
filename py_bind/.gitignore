@@ -1,1 +1,4 @@
 include/
+dist/
+c-src/
+optv-egg.info/
