@@ -1,11 +1,26 @@
 # -*- coding: utf-8 -*-
-from distutils.core import setup
-from Cython.Distutils import build_ext
-from Cython.Distutils.extension import Extension
+from __future__ import print_function
 
-import numpy as np
+from distutils.core import setup
 import os
 import shutil
+
+# We need to have Cython and Numpy installed.
+# setup_requires does not play nice with setup_requires, so we need this hack. There are better hacks that
+# work better (we need to check conda), but this may not be needed
+try:
+    from Cython.Distutils import build_ext
+    from Cython.Distutils.extension import Extension
+except ImportError:
+    os.system('pip install cython')
+    from Cython.Distutils import build_ext
+    from Cython.Distutils.extension import Extension
+
+try:
+    import numpy as np
+except ImportError:
+    os.system('pip install numpy')
+    import numpy as np
 
 # The python bindings have been redone, so they do not require the liboptv.so to be installed.
 # We do the following:
@@ -68,6 +83,11 @@ setup(
     ext_modules = ext_mods,
     package_data = {'optv': ['*.pxd']},
     version = '0.1.0',
+    install_requires = [
+        'numpy', 
+        'pyyaml',
+    ],
+    setup_requires = ['numpy', 'cython']
 )
 
 
