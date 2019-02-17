@@ -68,16 +68,35 @@ class BuildExt(build_ext, object):
         # We inherite from object to make super() work, see here: https://stackoverflow.com/a/18392639/871910
 
     @staticmethod
-    def get_include_dirs():
-        import numpy as np
-        inc_dirs = [np.get_include(), '.', './liboptv/include', './liboptv/include/optv']
-        return inc_dirs
+    def get_numpy_include_dir():
+        # Get the numpy include directory, adapted from the following  RLs:
+        # https://www.programcreek.com/python/example/60953/__builtin__.__NUMPY_SETUP__
+        # https://github.com/astropy/astropy-helpers/blob/master/astropy_helpers/utils.py
+        if sys.version_info[0] >= 3:
+            import builtins
+            if hasattr(builtins, '__NUMPY_SETUP__'):
+                del builtins.__NUMPY_SETUP__
+            import imp
+            import numpy
+            imp.reload(numpy)
+        else:
+            import __builtin__
+            if hasattr(__builtin__, '__NUMPY_SETUP__'):
+                del __builtin__.__NUMPY_SETUP__
+            import numpy
+            reload(numpy)
+
+        try:
+            return numpy.get_include()
+        except AttributeError:
+            return numpy.get_include_dir()
 
     def add_include_dirs(self):
         # All the Extension objects do not have their include_dir specified, we add it here as it requires
         # importing numpy, which we do not want to do unless build_ext is really running.
         # This allows pip to install numpy as it processes dependencies before building extensions
-        include_dirs = self.get_include_dirs()
+        np_include_dir = BuildExt.get_numpy_include_dir()
+        include_dirs = [np_include_dir, '.', './liboptv/include', './liboptv/include/optv']
 
         for extension in self.extensions:  # We dug into setuptools and distutils to find the properties to change
             extension.include_dirs = include_dirs
@@ -131,7 +150,7 @@ setup(
     package_data={
         'optv': ['*.pxd', '*.c', '*.h'],
     },
-    version='0.2.0',
+    version='0.2.1',
     install_requires=[
         'numpy==1.10.4',
         'pyyaml',
