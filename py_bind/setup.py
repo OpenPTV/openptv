@@ -62,9 +62,25 @@ class BuildExt(build_ext, object):
         if not os.path.exists('./liboptv') or not glob.glob('./optv/*.c'):
             print('You must run setup.py prepare before building the extension', file=sys.stderr)
             raise Exception('You must run setup.py prepare before building the extension')
+        self.add_include_dirs()
         super(BuildExt, self).run()
 
         # We inherite from object to make super() work, see here: https://stackoverflow.com/a/18392639/871910
+
+    @staticmethod
+    def get_include_dirs():
+        import numpy as np
+        inc_dirs = [np.get_include(), '.', './liboptv/include', './liboptv/include/optv']
+        return inc_dirs
+
+    def add_include_dirs(self):
+        # All the Extension objects do not have their include_dir specified, we add it here as it requires
+        # importing numpy, which we do not want to do unless build_ext is really running.
+        # This allows pip to install numpy as it processes dependencies before building extensions
+        include_dirs = self.get_include_dirs()
+
+        for extension in self.extensions:  # We dug into setuptools and distutils to find the properties to change
+            extension.include_dirs = include_dirs
 
 # The python bindings have been redone, so they do not require the liboptv.so to be installed.
 # We do the following:
@@ -77,17 +93,13 @@ class BuildExt(build_ext, object):
 # 
 # Tell Cython to look for header files in c-src/include/ (for the Cython code) and c-src/include/optv (for the C code) 
 
-def get_include_dirs():
-    import numpy as np
-    inc_dirs = [np.get_include(), '.', './liboptv/include', './liboptv/include/optv']
-    return inc_dirs
-
 def get_liboptv_sources():
     return glob.glob('./liboptv/src/*.c')
 
 
 def mk_ext(name, files):
-    return Extension(name, files + get_liboptv_sources(), include_dirs=get_include_dirs())
+    # Do not specify include dirs, as they require numpy to be installed. Add them in BuildExt
+    return Extension(name, files + get_liboptv_sources())
 
 
 ext_mods = [
