@@ -476,13 +476,14 @@ int compare_mm_np(mm_np *mm_np1, mm_np *mm_np2)
  * Returns: pointer to a new target_par structure.
  */
 target_par* read_target_par(char *filename) {
+    target_par *ret;
+
     FILE * file = fopen(filename, "r");
     if (file == NULL) {
         printf("Could not open target recognition parameters file %s.\n", filename);
         return NULL;
     }
 
-    target_par *ret;
     ret = malloc(sizeof(target_par));
 
     if (   !(fscanf(file, "%d", &ret->gvthres[0])==1)   /* threshold for binarization 1.image */

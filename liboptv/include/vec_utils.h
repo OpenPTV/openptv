@@ -7,7 +7,18 @@ doubles.
 
 #include <math.h>
 
-#define EMPTY_CELL 0.0/0.0
+#ifdef NAN
+    #define EMPTY_CELL NAN
+#else
+    #if _MSC_VER <= 1500 // Visual C 2008 - for Python 2.7, or earlier
+        #define MSVC_NAN_REQUIRED
+        double return_nan(void);
+        #define EMPTY_CELL return_nan()
+    #else // More modern compilers or non Visual Studio
+        #define EMPTY_CELL 0.0/0.0
+    #endif
+#endif
+
 #define is_empty(x) isnan(x)
 #define norm(x,y,z) sqrt((x)*(x) + (y)*(y) + (z)*(z))
 
