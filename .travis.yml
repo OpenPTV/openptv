@@ -4,6 +4,9 @@ before_install:
   - sudo apt-get -qq update
   - sudo apt-get install -y build-essential
   - sudo apt-get install -y git
+  - sudo apt install python-pip
+  - pip install numpy
+  - pip install cython
   
 install: true
 
