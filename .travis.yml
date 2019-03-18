@@ -11,6 +11,6 @@ script:
 - cd py_bind
 - python setup.py prepare
 - python setup.py install
-- cd tests
+- cd test
 - pip install nose
 - nosetests
