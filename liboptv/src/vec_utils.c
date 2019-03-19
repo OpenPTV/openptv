@@ -9,6 +9,17 @@ the logical structure, and allow optimizing for size as well.
 #include "vec_utils.h"
 #include <math.h>
 
+#ifdef MSVC_NAN_REQUIRED
+
+/* Returns a NAN, which is surprisingly  non-trivial on Visual C for Python 2.7 */
+
+static const unsigned long _explicit_dNAN[2] = {0x00000000, 0x7ff80000};
+double return_nan(void) {
+    return *( double* )_explicit_dNAN;
+}
+
+#endif
+
 /*  vec_init() initializes all components of a 3D vector to NaN.
     
     Arguments:
