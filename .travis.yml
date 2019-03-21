@@ -35,7 +35,7 @@ install:
   # the first package to install (for every conda install command) otherwise
   # numpy may be automatically upgraded.
 
-  - conda install --yes numpy=$NUMPY pyyaml nose pip
+  - conda install --yes numpy=$NUMPY cython pyyaml nose pip
 
   # You can also install some dependencies with pip if not available in conda
 
