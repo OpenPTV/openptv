@@ -127,11 +127,6 @@ class Test_Orientation(unittest.TestCase):
         skew_dist_plain = point_positions(targs_plain, self.control, calibs, self.vpar)
         skew_dist_jigged = point_positions(targs_jigged, self.control, calibs, self.vpar)
 
-        print('targs_plain',targs_plain)
-        print('targs_jigged',targs_jigged)
-        print('skew_dist_plain',skew_dist_plain)
-        print('skew_dist_jigged',skew_dist_jigged)
-
         if np.any(skew_dist_plain[1] > 1e-10):
             self.fail(('skew distance of target#{targ_num} ' \
                 + 'is more than allowed').format(

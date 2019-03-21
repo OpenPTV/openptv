@@ -51,7 +51,7 @@ class TestCorresp(unittest.TestCase):
         cals = []
         img_pts = []
         corrected = []
-        for c in xrange(4):
+        for c in range(4):
             cal = Calibration()
             cal.from_file(
                 "testing_fodder/calibration/sym_cam%d.tif.ori" % (c + 1),
