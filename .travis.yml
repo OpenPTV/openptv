@@ -1,19 +1,49 @@
 language: python
-  
+
+matrix:
+  include:
+
+    # Here you can add or remove specific builds, and Python versions. You
+    # should currently be able to use Python 2.6, 2.7, or 3.3 or later. The
+    # NUMPY and SCIPY versions are set here as an example, but you can
+    # add/remove environment variables, and use them below during the install.
+
+    - python: 2.7
+      env: NUMPY=1.16.1
+
 before_install:
-  - sudo apt-get -qq update
-  - sudo apt-get install -y build-essential
-  - sudo apt-get install -y git
-  - sudo apt install python-pip
-  - pip install numpy
-  - pip install cython
-  
-install: true
+
+  # Here we just install Miniconda, which you shouldn't have to change.
+
+  - wget http://repo.continuum.io/miniconda/Miniconda-latest-Linux-x86_64.sh -O miniconda.sh
+  - chmod +x miniconda.sh
+  - ./miniconda.sh -b
+  - export PATH=/home/travis/miniconda/bin:$PATH
+  - conda update --yes conda
+
+install:
+
+  # We just set up a conda environment with the right Python version. This
+  # should not need changing.
+
+  - conda create --yes -n test python=$TRAVIS_PYTHON_VERSION
+  - source activate test
+
+  # Below, include the dependencies you want to install with conda, optionally
+  # specifying versions used in the matrix above. If you split this into
+  # multiple conda install commands, you should always include numpy=$NUMPY as
+  # the first package to install (for every conda install command) otherwise
+  # numpy may be automatically upgraded.
+
+  - conda install --yes numpy=$NUMPY pyyaml nose pip
+
+  # You can also install some dependencies with pip if not available in conda
+
+  # - pip install ...
 
 script:
 - cd py_bind
 - python setup.py prepare
 - python setup.py install
 - cd test
-- pip install nose
-- nosetests
+- nosetests --verbose
