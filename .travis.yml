@@ -42,8 +42,8 @@ install:
   # - pip install ...
 
 script:
-- cd py_bind
-- python setup.py prepare
-- python setup.py install
-- cd test
-- nosetests --verbose
+  - cd py_bind
+  - python setup.py prepare
+  - python setup.py install
+  - cd test
+  - nosetests --verbose
