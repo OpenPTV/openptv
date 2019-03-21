@@ -1,41 +1,16 @@
 language: python
 
-matrix:
-  include:
-
-    # Here you can add or remove specific builds, and Python versions. You
-    # should currently be able to use Python 2.6, 2.7, or 3.3 or later. The
-    # NUMPY and SCIPY versions are set here as an example, but you can
-    # add/remove environment variables, and use them below during the install.
-
-    - python: 2.7
-      env: NUMPY=1.16.1
-
 before_install:
-
-  # Here we just install Miniconda, which you shouldn't have to change.
-  - pip install conda
-  - conda update --yes conda
-
-install:
-
-  # We just set up a conda environment with the right Python version. This
-  # should not need changing.
-
-  - conda create --yes -n test python=$TRAVIS_PYTHON_VERSION
-  - source activate test
-
-  # Below, include the dependencies you want to install with conda, optionally
-  # specifying versions used in the matrix above. If you split this into
-  # multiple conda install commands, you should always include numpy=$NUMPY as
-  # the first package to install (for every conda install command) otherwise
-  # numpy may be automatically upgraded.
-
-  - conda install --yes numpy=$NUMPY cython pyyaml nose pip
-
-  # You can also install some dependencies with pip if not available in conda
-
-  # - pip install ...
+  - sudo apt-get -qq update
+  - sudo apt-get install -y build-essential
+  - sudo apt-get install -y git
+  - sudo apt install python-pip
+  - pip install numpy
+  - pip install cython
+  - pip install pyyaml
+  - pip install nose
+  
+install: true
 
 script:
   - cd py_bind
