@@ -54,7 +54,8 @@ def epipolar_curve(np.ndarray[ndim=1, dtype=np.float64_t] image_point,
         vec3d vertex, direct, pos
         int pt_ix
         double Z
-        double *x, *y
+        double *x
+        double *y
         double img_pt[2]
     
     line_points = np.empty((num_points, 2))
