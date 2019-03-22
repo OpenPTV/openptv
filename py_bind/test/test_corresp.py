@@ -80,7 +80,7 @@ class TestCorresp(unittest.TestCase):
             mc = MatchedCoords(targs, cpar, cal)
             corrected.append(mc)
         
-        sorted_pos, sorted_corresp, num_targs = correspondences(
+        _, _, num_targs = correspondences(
             img_pts, corrected, cals, vpar, cpar)
 
         self.failUnlessEqual(num_targs, 16)
@@ -125,7 +125,7 @@ class TestCorresp(unittest.TestCase):
             mc = MatchedCoords(targs, cpar, cal)
             corrected.append(mc)
         
-        sorted_pos, sorted_corresp, num_targs = correspondences(
+        _, _, num_targs = correspondences(
             img_pts, corrected, cals, vpar, cpar)
 
         self.failUnlessEqual(num_targs, 9)
