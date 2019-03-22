@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 """
 Implementation of bindings for the tracking code.
 
@@ -11,10 +12,6 @@ from optv.parameters cimport ControlParams, TrackingParams, SequenceParams, \
     VolumeParams
 from optv.orientation cimport cal_list2arr
 from optv.tracking_framebuf cimport fb_free
-
-cdef extern from "optv/track.h":
-    int TR_MAX_CAMS
-    int MAX_TARGETS
 
 default_naming = {
     'corres': 'res/rt_is',

@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 """
 Implementation of bindings for correspondences and related data structures.
 
@@ -12,7 +13,7 @@ import numpy as np
 
 from optv.transforms cimport pixel_to_metric, dist_to_flat
 from optv.parameters cimport ControlParams, VolumeParams
-from optv.calibration cimport Calibration, calibration
+from optv.calibration cimport Calibration
 from optv.orientation cimport COORD_UNUSED
 from optv.tracking_framebuf cimport TargetArray, Target, target, frame, \
     PT_UNUSED, CORRES_NONE
@@ -144,7 +145,8 @@ def correspondences(list img_pts, list flat_coords, list cals,
     num_targs - total number of targets (must be greater than the sum of 
         previous 3).
     """
-    cdef int num_cams = len(cals)
+    cdef: 
+        int num_cams = len(cals)
 
     # Special case of a single camera, follow the single_cam_correspondence docstring    
     if num_cams == 1:
@@ -176,23 +178,23 @@ def correspondences(list img_pts, list flat_coords, list cals,
         frm.targets[cam] = (<TargetArray>img_pts[cam])._tarr
         frm.num_targets[cam] = len(img_pts[cam])
         corrected[cam] = (<MatchedCoords>flat_coords[cam]).buf
-    
+        
     # The biz:
     corresp_buf = corresp(&frm, corrected, 
         vparam._volume_par, cparam._control_par, calib, match_counts)
-
+    
     # Distribute data to return structures:
     sorted_pos = [None]*(num_cams - 1)
     sorted_corresp = [None]*(num_cams - 1)
     last_count = 0
-
-    for clique_type in xrange(num_cams - 1):
-        num_points = match_counts[clique_type]
+    
+    for clique_type in range(num_cams - 1): 
+        num_points = match_counts[4 - num_cams + clique_type] # for 1-4 cameras
         clique_targs = np.full((num_cams, num_points, 2), PT_UNUSED, 
             dtype=np.float64)
         clique_ids = np.full((num_cams, num_points), CORRES_NONE, 
             dtype=np.int_)
-    
+        
         # Trace back the pixel target properties through the flat metric
         # intermediary that's x-sorted.
         for cam in range(num_cams):            
@@ -200,7 +202,7 @@ def correspondences(list img_pts, list flat_coords, list cals,
                 geo_id = corresp_buf[pt + last_count].p[cam]
                 if geo_id < 0:
                     continue
-            
+                
                 p1 = corrected[cam][geo_id].pnr
                 clique_ids[cam, pt] = p1
 
@@ -208,16 +210,13 @@ def correspondences(list img_pts, list flat_coords, list cals,
                     targ = img_pts[cam][p1]
                     clique_targs[cam, pt, 0] = (<Target> targ)._targ.x
                     clique_targs[cam, pt, 1] = (<Target> targ)._targ.y
-    
+        
         last_count += num_points
         sorted_pos[clique_type] = clique_targs
         sorted_corresp[clique_type] = clique_ids
-
+    
     # Clean up.
     num_targs = match_counts[num_cams - 1]
-        
-        
-        
     free(frm.targets)
     free(frm.num_targets)
     free(calib)
@@ -225,8 +224,7 @@ def correspondences(list img_pts, list flat_coords, list cals,
     free(corresp_buf) # Note this for future returning of correspondences.
     
     return sorted_pos, sorted_corresp, num_targs
-    
-    
+
 def single_cam_correspondence(list img_pts, list flat_coords, list cals):
     """ 
     Single camera correspondence is not a real correspondence, it will be only a projection 
