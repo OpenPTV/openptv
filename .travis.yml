@@ -1,17 +1,21 @@
-language: c
+language: python
 
 before_install:
-  - sudo apt-get -qq update
-  - sudo apt-get install -y build-essential
-  - sudo apt-get install -y git
-  - sudo apt install python-pip
-  - pip install --upgrade pip
-  - pip install numpy
-  - pip install cython
-  - pip install pyyaml
-  - pip install nose
+  - if [ ${TRAVIS_PYTHON_VERSION:0:1} == "2" ]; then wget http://repo.continuum.io/miniconda/Miniconda-latest-Linux-x86_64.sh -O miniconda.sh; else wget http://repo.continuum.io/miniconda/Miniconda3-latest-Linux-x86_64.sh -O miniconda.sh; fi
+  - chmod +x miniconda.sh
+  - ./miniconda.sh -b -p /home/travis/mc
+  - export PATH=/home/travis/mc/bin:$PATH
   
-install: true
+install:
+  - conda update --yes conda
+  - conda create -n testenv --yes $DEPS numpy cython pyyaml nose python=$TRAVIS_PYTHON_VERSION
+  - source activate testenv
+
+  # for debugging...
+  - echo $PATH
+  - which python
+  - conda info
+  - conda list
 
 script:
   - cd py_bind
