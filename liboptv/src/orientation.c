@@ -262,6 +262,9 @@ double* orient (Calibration* cal_in, control_par *cpar, int nfix, vec3d fix[],
     double *P, *y, *yh, *Xbeta, *resi;
     vec3d glass_dir, tmp_vec, e1, e2;
 
+    double (*X)[NPAR];
+    double (*Xh)[NPAR];
+
     Calibration *cal;
 
     /* small perturbation for translation/rotation in meters and in radians */
@@ -278,8 +281,8 @@ double* orient (Calibration* cal_in, control_par *cpar, int nfix, vec3d fix[],
     Xbeta = (double *) calloc(maxsize, sizeof(double));
     resi = (double *) calloc(maxsize, sizeof(double));
 
-    double (*X)[NPAR] = malloc(sizeof (*X) * maxsize);
-    double (*Xh)[NPAR] = malloc(sizeof (*Xh) * maxsize);
+    X = malloc(sizeof (*X) * maxsize);
+    Xh = malloc(sizeof (*Xh) * maxsize);
 
     for(i = 0; i < maxsize; i++) {
         for(j = 0; j < NPAR; j++) {
@@ -759,13 +762,13 @@ handle_error:
  * Returns: pointer to a new orient_par structure.
  */
 orient_par* read_orient_par(char *filename) {
+    orient_par *ret;
     FILE * file = fopen(filename, "r");
     if (file == NULL) {
         printf("Could not open orientation parameters file %s.\n", filename);
         return NULL;
     }
 
-    orient_par *ret;
     ret = malloc(sizeof(orient_par));
 
     if (   !(fscanf(file, "%d", &ret->useflag)==1)  /* use every point or every other pt */
