@@ -22,7 +22,7 @@ framebuf_naming = {
 class TestTracker(unittest.TestCase):
     def setUp(self):
         with open("testing_fodder/track/conf.yaml") as f:
-            yaml_conf = yaml.load(f)
+            yaml_conf = yaml.load(f,Loader=yaml.FullLoader)
         seq_cfg = yaml_conf['sequence']
         
         cals = []
