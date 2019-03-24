@@ -1,4 +1,4 @@
-Cython
-nose
-numpy
-PyYAML
+Cython==0.29.5
+nose==1.3.7
+numpy==1.16.1
+PyYAML>=4.2b1
