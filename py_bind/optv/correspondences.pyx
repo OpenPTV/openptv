@@ -153,9 +153,7 @@ def correspondences(list img_pts, list flat_coords, list cals,
         sorted_pos, sorted_corresp, num_targs = single_cam_correspondence(img_pts, flat_coords, cals)
         return sorted_pos, sorted_corresp, num_targs
 
-    cdef:
-        int num_cams = len(cals)
-        
+    cdef:        
         calibration **calib = <calibration **> malloc(
             num_cams * sizeof(calibration *))
         coord_2d **corrected = <coord_2d **> malloc(
