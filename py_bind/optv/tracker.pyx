@@ -52,7 +52,10 @@ cdef class Tracker:
         Prepare a tracking run. Sets up initial buffers and performs the
         one-time calculations used throughout the loop.
         """
+        print('inside tracker restart\n')
         self.step = self.run_info.seq_par.first
+        print("self.step again\n")
+        print(self.step)
         track_forward_start(self.run_info)
     
     def step_forward(self):
