@@ -836,6 +836,7 @@ void trackcorr_c_loop (tracking_run *run_info, int step) {
 
 
             if (curr_path_inf->prev >= 0) {
+                printf("previous pointer is %d\n",curr_path_inf->prev);
                 printf("use previous X[0,1,3] to find X[5]\n");
                 printf("position in X[0] %f %f %f \n",X[0][0],X[0][1],X[0][2]);
                 printf("position in X[1] %f %f %f \n",X[1][0],X[1][1],X[1][2]);
