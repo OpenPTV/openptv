@@ -197,6 +197,8 @@ void angle_acc(vec3d start, vec3d pred, vec3d cand, double *angle, double *acc)
 
     vec_subt(pred, start, v0);
     vec_subt(cand, start, v1);
+    printf("v0 start to predict %f %f %f \n",v0[0],v0[1],v0[2]);
+    printf("v1 start to candidate %f %f %f \n",v1[0],v1[1],v1[2]);
 
     *acc = vec_diff_norm(v0, v1);
 
