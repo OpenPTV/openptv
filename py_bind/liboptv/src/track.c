@@ -118,6 +118,7 @@ void register_closest_neighbs(target *targets, int num_targets, int cam,
 
     cand = candsearch_in_pix (targets, num_targets, cent_x, cent_y, dl, dr,
                               du, dd, all_cands, cpar);
+    printf("found %d candidates\n",cand);
 
     for (cand = 0; cand < MAX_CANDS; cand++) {
         if(all_cands[cand] == -999) {
@@ -431,6 +432,7 @@ void searchquader(vec3d point, double xr[4], double xl[4], double yd[4], \
 
         /* pixel position of a search center */
         point_to_pixel (center, point, cal[i], cpar);
+        printf("looking around a center %f %f \n",center[0],center[1]);
 
         /* mark 4 corners of the search region in pixels */
         for (pt = 0; pt < 8; pt++) {
@@ -454,6 +456,8 @@ void searchquader(vec3d point, double xr[4], double xl[4], double yd[4], \
         xl[i] = center[0] - xl[i];
         yd[i] = yd[i]     - center[1];
         yu[i] = center[1] - yu[i];
+        printf("xr[%d] xl,yd,yu %f %f %f %f\n",i,xr[i],xl[i],yd[i],yu[i]);
+
     }
 }
 
@@ -610,6 +614,7 @@ foundpix *sorted_candidates_in_volume(vec3d center, vec2d center_proj[],
 
     /* fill and sort candidate struct */
     num_cands = sort_candidates_by_freq(points, num_cams);
+    printf("found %d candidates\n",num_cands);
     if (num_cands > 0) {
         points = (foundpix *) realloc(
             points, (num_cands + 1)*sizeof(foundpix));
