@@ -124,6 +124,7 @@ void register_closest_neighbs(target *targets, int num_targets, int cam,
         if(all_cands[cand] == -999) {
             reg[cand].ftnr = TR_UNUSED;
         } else {
+            printf("assigned a pointer %d \n",targets[all_cands[cand]].tnr);
             reg[cand].whichcam[cam] = 1;
             reg[cand].ftnr = targets[all_cands[cand]].tnr;
         }
@@ -456,7 +457,8 @@ void searchquader(vec3d point, double xr[4], double xl[4], double yd[4], \
         xl[i] = center[0] - xl[i];
         yd[i] = yd[i]     - center[1];
         yu[i] = center[1] - yu[i];
-        printf("xr[%d] xl,yd,yu %f %f %f %f\n",i,xr[i],xl[i],yd[i],yu[i]);
+        printf("cam%d xl center xr %f %f %f \n",i,xl[i],center[0],xr[i]);
+        printf("yd, center, yu, %f %f %f\n",yd[i],center[1],yu[i]);
 
     }
 }
@@ -835,9 +837,8 @@ void trackcorr_c_loop (tracking_run *run_info, int step) {
             /* found 3D-position */
             ref_path_inf = &(fb->buf[2]->path_info[w[mm].ftnr]);
             vec_copy(X[3], ref_path_inf->x);
-            printf("in while loop for the %d time pointer \n",mm);
-            printf("%d\n", w[mm].ftnr);
-            printf("position in X[3] %f %f %f \n",X[3][0],X[3][1],X[3][2]);
+            printf("in while loop through candidates for the %d time with pointer %d \n",mm,w[mm].ftnr);
+            printf("position in 3D is X[3] %f %f %f \n",X[3][0],X[3][1],X[3][2]);
 
 
             if (curr_path_inf->prev >= 0) {
@@ -849,7 +850,7 @@ void trackcorr_c_loop (tracking_run *run_info, int step) {
                 for (j = 0; j < 3; j++)
                     X[5][j] = 0.5*(5.0*X[3][j] - 4.0*X[1][j] + X[0][j]);
             } else {
-                printf("use volume moving\n");
+                printf("no previous, use volume moving from X[1] TO X[3] TO GET X[5]\n");
                 search_volume_center_moving(X[1], X[3], X[5]);
             }
             printf("X[5] after search %f %f %f \n",X[5][0],X[5][1],X[5][2]);
@@ -868,18 +869,23 @@ void trackcorr_c_loop (tracking_run *run_info, int step) {
                 while (wn[kk].ftnr != TR_UNUSED) {
                     ref_path_inf = &(fb->buf[3]->path_info[wn[kk].ftnr]);
                     vec_copy(X[4], ref_path_inf->x);
+                    printf("X[4] is %f %f %f\n",X[4][0],X[4][1],X[4][2]);
 
                     vec_subt(X[4], X[3], diff_pos);
                     if ( pos3d_in_bounds(diff_pos, tpar)) {
+                        printf("X[4] is in bounds from X[3]\n");
                         angle_acc(X[3], X[4], X[5], &angle1, &acc1);
                         if (curr_path_inf->prev >= 0) {
                             angle_acc(X[1], X[2], X[3], &angle0, &acc0);
                         } else {
                             acc0 = acc1; angle0 = angle1;
                         }
+                        printf("acc0, angle0 is %f %f, acc1,angle1 is %f %f\n",acc0,angle0,acc1,angle1);
 
                         acc = (acc0+acc1)/2; angle = (angle0+angle1)/2;
+                        printf("acc and angle are %f %f, relative to %f %f \n",acc,angle,tpar->dacc,tpar->dangle);
                         quali = wn[kk].freq+w[mm].freq;
+                        printf("quali of X[4] is %d\n",quali);
 
                         if ((acc < tpar->dacc && angle < tpar->dangle) || \
                             (acc < tpar->dacc/10))
@@ -888,6 +894,7 @@ void trackcorr_c_loop (tracking_run *run_info, int step) {
                                 vec_diff_norm(X[4], X[3]) )/2;
                             rr = (dl/run_info->lmax + acc/tpar->dacc + \
                                 angle/tpar->dangle)/(quali);
+                            printf("registering candidate with dl,rr = %f,%f\n",dl,rr);
                             register_link_candidate(
                                 curr_path_inf, rr, w[mm].ftnr);
                         }
@@ -903,7 +910,7 @@ void trackcorr_c_loop (tracking_run *run_info, int step) {
              */
             printf("X[5] %f %f %f \n",X[5][0],X[5][1],X[5][2]);
             quali = assess_new_position(X[5], v2, philf, fb->buf[3], run_info); 
-            printf("quali is %d \n",quali);
+            printf("quali of new positions is %d \n",quali);
                         
             /* quali >=2 means at least in two cameras
              * we found a candidate

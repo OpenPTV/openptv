@@ -27,9 +27,9 @@ correspondences:
         - [-20., 20.]
         - [-20., 20.]
     
-    pixels_x: 0.02
-    pixels_y: 0.02
-    pixels_tot: 0.02
+    pixels_x: 2
+    pixels_y: 2
+    pixels_tot: 5
     
     ref_gray: 0.02
     min_correlation: 33
@@ -41,7 +41,7 @@ sequence:
     last: 5
 
 tracking:
-    velocity_lims: [[-15, 15], [-15, 15], [-15, 15]]
+    velocity_lims: [[-0.15, 0.15], [-0.15, 0.15], [-0.15, 0.15]]
     angle_lim: 100
-    accel_lim: 2
+    accel_lim: 0.2
     add_particle: 1
