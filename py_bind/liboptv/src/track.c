@@ -35,7 +35,6 @@
 #include <math.h>
 
 /* internal-use defines, not needed by the outside world. */
-#define TR_UNUSED -1
 
 /* track_forward_start() - initializes the tracking frame buffer with the 
    first frames.
@@ -870,6 +869,8 @@ void trackcorr_c_loop (tracking_run *run_info, int step) {
                 kk = 0;
                 while (wn[kk].ftnr != TR_UNUSED) {
                     ref_path_inf = &(fb->buf[3]->path_info[wn[kk].ftnr]);
+                    printf("in X[4] loop through candidates for the %d time with pointer %d \n",kk,\
+                    wn[kk].ftnr);
                     vec_copy(X[4], ref_path_inf->x);
                     printf("X[4] is %f %f %f\n",X[4][0],X[4][1],X[4][2]);
 
