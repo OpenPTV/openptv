@@ -36,7 +36,7 @@ foundpix;
 
 int candsearch_in_pix(target  next[], int num_targets, double x, double y,
     double dl, double dr, double du, double dd, int p[4], control_par *cpar);
-int candsearch_in_pix_rest(target  next[], int num_targets, double x, double y,
+int candsearch_in_pixrest(target  next[], int num_targets, double x, double y,
     double dl, double dr, double du, double dd, int p[4], control_par *cpar);
 int sort_candidates_by_freq (foundpix item[16], int num_cams);
 void searchquader(vec3d point, double xr[4], double xl[4], double yd[4], \
