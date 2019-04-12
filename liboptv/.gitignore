@@ -27,4 +27,9 @@ tests/.libs/
 tests/check_fb
 tests/*.o
 
+CMakeCache.txt
+*.cmake
+CMakeFiles/
+install_manifest.txt
+*.so
 stamp-h1

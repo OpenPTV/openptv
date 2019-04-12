@@ -3,14 +3,21 @@
 .pydevproject
 .pydevproject.bak
 
-py_bind/optv/*.c
+.idea/
+.vscode/
+env/
 
-*.pyc
+py_bind/c_src
+py_bind/optv/*.c
+py_bind/dist
+py_bind/build
+py_bind/liboptv
 
 liboptv/config.h.in~
-
 liboptv/tests/check_fb.trs
 liboptv/build
-py_bind/build
 *~
 
+py_bind/optv/*.c
+py_bind/build
+*.pyc
