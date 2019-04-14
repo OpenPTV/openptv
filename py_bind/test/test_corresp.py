@@ -20,10 +20,10 @@ class TestMatchedCoords(unittest.TestCase):
         cpar = ControlParams(4)
         
         cal.from_file(
-            "testing_fodder/calibration/cam1.tif.ori",
-            "testing_fodder/calibration/cam2.tif.addpar")
-        cpar.read_control_par("testing_fodder/corresp/control.par")
-        targs = read_targets("testing_fodder/frame/cam1.", 333)
+            b"testing_fodder/calibration/cam1.tif.ori",
+            b"testing_fodder/calibration/cam2.tif.addpab")
+        cpar.read_control_par(b"testing_fodder/corresp/control.pab")
+        targs = read_targets(b"testing_fodder/frame/cam1.", 333)
         
         mc = MatchedCoords(targs, cpar, cal)
         pos, pnr = mc.as_arrays()
@@ -39,9 +39,9 @@ class TestCorresp(unittest.TestCase):
     def test_full_corresp(self):
         """Full scene correspondences"""
         cpar = ControlParams(4)
-        cpar.read_control_par(r"testing_fodder/corresp/control.par")
+        cpar.read_control_par(b"testing_fodder/corresp/control.pab")
         vpar = VolumeParams()
-        vpar.read_volume_par(r"testing_fodder/corresp/criteria.par")
+        vpar.read_volume_par(b"testing_fodder/corresp/criteria.pab")
         
         # Cameras are at so high angles that opposing cameras don't see each 
         # other in the normal air-glass-water setting.
@@ -54,8 +54,8 @@ class TestCorresp(unittest.TestCase):
         for c in range(4):
             cal = Calibration()
             cal.from_file(
-                "testing_fodder/calibration/sym_cam%d.tif.ori" % (c + 1),
-                "testing_fodder/calibration/cam1.tif.addpar")
+                b"testing_fodder/calibration/sym_cam%d.tif.ori" % (c + 1),
+                b"testing_fodder/calibration/cam1.tif.addpab")
             cals.append(cal)
         
             # Generate test targets.
@@ -87,9 +87,9 @@ class TestCorresp(unittest.TestCase):
     def test_single_cam_corresp(self):
         """Single camera correspondence"""
         cpar = ControlParams(1)
-        cpar.read_control_par("testing_fodder/single_cam/parameters/ptv.par")
+        cpar.read_control_par(b"testing_fodder/single_cam/parameters/ptv.pab")
         vpar = VolumeParams()
-        vpar.read_volume_par("testing_fodder/single_cam/parameters/criteria.par")
+        vpar.read_volume_par(b"testing_fodder/single_cam/parameters/criteria.pab")
         
         # Cameras are at so high angles that opposing cameras don't see each 
         # other in the normal air-glass-water setting.
@@ -101,8 +101,8 @@ class TestCorresp(unittest.TestCase):
         corrected = []
         cal = Calibration()
         cal.from_file(
-            "testing_fodder/single_cam/calibration/cam_1.tif.ori",
-            "testing_fodder/single_cam/calibration/cam_1.tif.addpar")
+            b"testing_fodder/single_cam/calibration/cam_1.tif.ori",
+            b"testing_fodder/single_cam/calibration/cam_1.tif.addpab")
         cals.append(cal)
         
         # Generate test targets.
@@ -128,3 +128,8 @@ class TestCorresp(unittest.TestCase):
             img_pts, corrected, cals, vpar, cpar)
 
         self.failUnlessEqual(num_targs, 9)
+
+
+
+if __name__ == "__main__":
+    unittest.main()
