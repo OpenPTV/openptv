@@ -343,7 +343,7 @@ class Test_ControlParams(unittest.TestCase):
         
         self.cp_obj.set_image_size((4, 5))
         self.failUnless(self.cp_obj.get_image_size()== (4, 5))
-        print self.cp_obj.get_pixel_size()
+        print(self.cp_obj.get_pixel_size())
         self.cp_obj.set_pixel_size((6.1, 7.0))
         numpy.testing.assert_array_equal(self.cp_obj.get_pixel_size(), (6.1, 7))
         

@@ -23,7 +23,7 @@ class TestMatchedCoords(unittest.TestCase):
             b"testing_fodder/calibration/cam1.tif.ori",
             b"testing_fodder/calibration/cam2.tif.addpar")
         cpar.read_control_par(b"testing_fodder/corresp/control.par")
-        targs = read_targets(b"testing_fodder/frame/cam1.", 333)
+        targs = read_targets("testing_fodder/frame/cam1.", 333)
         
         mc = MatchedCoords(targs, cpar, cal)
         pos, pnr = mc.as_arrays()
