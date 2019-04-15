@@ -50,7 +50,7 @@ class Test_Orientation(unittest.TestCase):
 
         # create randomized target array
         indices = range(coords_count)
-        shuffled_indices = range(coords_count)
+        shuffled_indices = list(range(coords_count))
 
         while indices == shuffled_indices:
             random.shuffle(shuffled_indices)
@@ -93,7 +93,7 @@ class Test_Orientation(unittest.TestCase):
                            [17, 42, 0]], dtype=float)
         
         num_cams = 4
-        ori_tmpl = b'testing_fodder/calibration/sym_cam{cam_num}.tif.ori'
+        ori_tmpl = 'testing_fodder/calibration/sym_cam{cam_num}.tif.ori'
         add_file = b'testing_fodder/calibration/cam1.tif.addpar'
         calibs = []
         targs_plain = []
@@ -103,7 +103,7 @@ class Test_Orientation(unittest.TestCase):
 
         # read calibration for each camera from files
         for cam in range(num_cams):
-            ori_name = ori_tmpl.format(cam_num=cam + 1)
+            ori_name = ori_tmpl.format(cam_num=cam + 1).encode()
             new_cal = Calibration()
             new_cal.from_file(ori_file=ori_name, add_file=add_file)
             calibs.append(new_cal)
@@ -223,7 +223,7 @@ class Test_Orientation(unittest.TestCase):
             new_cal.from_file(ori_file=ori_name.encode(), add_file=add_file.encode())
             calibs.append(new_cal)
 
-        for cam_num, cam_cal in enumerate(calibs):
+        for cam_cal in calibs:
             new_plain_targ = flat_image_coordinates(
                 points, cam_cal, self.control.get_multimedia_params())
             targs_plain.append(new_plain_targ)
@@ -308,7 +308,7 @@ class TestGradientDescent(unittest.TestCase):
         self.cal.set_pos(self.cal.get_pos() + np.r_[15., -15., 15.])
         self.cal.set_angles(self.cal.get_angles() + np.r_[-.5, .5, -.5])
         
-        ret, used, err_est = full_calibration(
+        _, _, _ = full_calibration(
             self.cal, ref_pts, target_array, self.control)
         
         np.testing.assert_array_almost_equal(
