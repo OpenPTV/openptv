@@ -10,6 +10,16 @@ python:
   - "3.6"
   - "3.7"
 
+matrix:
+  include:
+    - sudo: required
+      services:
+        - docker
+      env: PIP=pip
+    - os: osx
+      language: generic
+      env: PIP=pip2
+
 dist: xenial
     
 install:
@@ -22,8 +32,7 @@ script:
   - cd test
   - nosetests --verbose
 
-jobs:
-  include:
-    - stage: deploy
-      script: echo Deploy is here
-
+after_success:
+  - $PIP install cibuildwheel==0.10.2
+  - cibuildwheel --output-dir wheelhouse
+  - ls -l wheelhouse
