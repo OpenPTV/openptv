@@ -8,7 +8,7 @@ before_install:
   
 install:
   - conda update --yes conda
-  - conda create -n testenv --yes $DEPS numpy cython pyyaml nose python=$TRAVIS_PYTHON_VERSION
+  - conda create -n testenv --yes $DEPS numpy cython pyyaml nose six python=$TRAVIS_PYTHON_VERSION
   - source activate testenv
 
   # for debugging...
