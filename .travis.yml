@@ -1,20 +1,31 @@
 language: python
 
-python:
-  - "2.7"
-  - "3.5"
-  - "3.6"
-  - "3.7"
+stages:
+  - test
+  - deploy
 
-dist: xenial
+jobs:
+  include:
+    - stage: test
+      python:
+      - "2.7"
+      - "3.5"
+      - "3.6"
+      - "3.7"
+      dist: xenial
+        
+      install:
+        - cd py_bind
+        - pip install -r requirements.txt
+        - python setup.py prepare
+        - python setup.py install
 
-install:
-  - cd py_bind
-  - pip install -r requirements.txt
-  - python setup.py prepare
-  - python setup.py install
+      script:
+        - cd test
+        - nosetests --verbose
+    
+    - stage: deploy
+      script:
+        - echo Deploy is here
 
-script:
-  - cd test
-  - nosetests --verbose
 
