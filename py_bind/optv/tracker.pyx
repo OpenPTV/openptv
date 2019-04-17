@@ -14,9 +14,9 @@ from optv.orientation cimport cal_list2arr
 from optv.tracking_framebuf cimport fb_free
 
 default_naming = {
-    'corres': 'res/rt_is',
-    'linkage': 'res/ptv_is',
-    'prio': 'res/added'
+    'corres': b'res/rt_is',
+    'linkage': b'res/ptv_is',
+    'prio': b'res/added'
 }
 
 cdef class Tracker:
