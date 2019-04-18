@@ -48,7 +48,7 @@ class TestTargets(unittest.TestCase):
     def test_write_targets(self):
         """Round-trip test of writing targets."""
         targs = read_targets("../../liboptv/tests/testing_fodder/sample_", 42)
-        targs.write("testing_fodder/round_trip.", 1)
+        targs.write(b"testing_fodder/round_trip.", 1)
         tback = read_targets("testing_fodder/round_trip.", 1)
         
         self.failUnlessEqual(len(targs), len(tback))
@@ -67,9 +67,9 @@ class TestTargets(unittest.TestCase):
 class TestFrame(unittest.TestCase):
     def test_read_frame(self):
         """reading a frame"""
-        targ_files = ["testing_fodder/frame/cam%d." % c for c in xrange(1, 5)]
-        frm = Frame(4, corres_file_base="testing_fodder/frame/rt_is",
-            linkage_file_base="testing_fodder/frame/ptv_is", 
+        targ_files = ["testing_fodder/frame/cam%d.".encode() % c for c in range(1, 5)]
+        frm = Frame(4, corres_file_base=b"testing_fodder/frame/rt_is",
+            linkage_file_base=b"testing_fodder/frame/ptv_is", 
             target_file_base=targ_files, frame_num=333)
         
         pos = frm.positions()

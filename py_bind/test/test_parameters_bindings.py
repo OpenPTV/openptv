@@ -39,7 +39,7 @@ class Test_MultimediaParams(unittest.TestCase):
 class Test_TrackingParams(unittest.TestCase):
     
     def setUp(self):
-        self.input_tracking_par_file_name = "testing_fodder/tracking_parameters/track.par"
+        self.input_tracking_par_file_name = b"testing_fodder/tracking_parameters/track.par"
             
         # create an instance of TrackingParams class
         # testing setters that are used in constructor
@@ -101,7 +101,7 @@ class Test_TrackingParams(unittest.TestCase):
                 
 class Test_SequenceParams(unittest.TestCase):
     def setUp(self):
-        self.input_sequence_par_file_name = "testing_fodder/sequence_parameters/sequence.par"
+        self.input_sequence_par_file_name = b"testing_fodder/sequence_parameters/sequence.par"
             
         # create an instance of SequencParams class
         self.seq_obj = SequenceParams(num_cams=4)
@@ -111,10 +111,10 @@ class Test_SequenceParams(unittest.TestCase):
         self.seq_obj.read_sequence_par(self.input_sequence_par_file_name, 4)
         
         # check that all parameters are equal to the contents of test file
-        self.failUnless(self.seq_obj.get_img_base_name(0) == "dumbbell/cam1_Scene77_") 
-        self.failUnless(self.seq_obj.get_img_base_name(1) == "dumbbell/cam2_Scene77_")
-        self.failUnless(self.seq_obj.get_img_base_name(2) == "dumbbell/cam3_Scene77_")
-        self.failUnless(self.seq_obj.get_img_base_name(3) == "dumbbell/cam4_Scene77_")
+        self.failUnless(self.seq_obj.get_img_base_name(0) == b"dumbbell/cam1_Scene77_") 
+        self.failUnless(self.seq_obj.get_img_base_name(1) == b"dumbbell/cam2_Scene77_")
+        self.failUnless(self.seq_obj.get_img_base_name(2) == b"dumbbell/cam3_Scene77_")
+        self.failUnless(self.seq_obj.get_img_base_name(3) == b"dumbbell/cam4_Scene77_")
         self.failUnless(self.seq_obj.get_first() == 497)
         self.failUnless(self.seq_obj.get_last() == 597)
       
@@ -123,7 +123,7 @@ class Test_SequenceParams(unittest.TestCase):
         for cam in range(cams_num):
             newStr = str(cam) + "some string" + str(cam)
             self.seq_obj.set_img_base_name(cam, newStr)
-            self.failUnless(self.seq_obj.get_img_base_name(cam) == newStr)
+            self.failUnless(self.seq_obj.get_img_base_name(cam) == newStr.encode())
              
         self.seq_obj.set_first(1234)
         self.failUnless(self.seq_obj.get_first() == 1234)
@@ -152,15 +152,17 @@ class Test_SequenceParams(unittest.TestCase):
         """Instantiate a SequenceParams object from keywords."""
         spar = SequenceParams(
             image_base=['test1', 'test2'], frame_range=(1, 100))
-        self.failUnless(spar.get_img_base_name(0) == "test1") 
-        self.failUnless(spar.get_img_base_name(1) == "test2")
+        
+        print(spar.get_img_base_name(0))
+        self.failUnless(spar.get_img_base_name(0) == b"test1") 
+        self.failUnless(spar.get_img_base_name(1) == b"test2")
         self.failUnless(spar.get_first() == 1)
         self.failUnless(spar.get_last() == 100)
         
 class Test_VolumeParams(unittest.TestCase):
     def setUp(self):
-        self.input_volume_par_file_name = "testing_fodder/volume_parameters/volume.par"
-        self.temp_output_directory = "testing_fodder/volume_parameters/testing_output"
+        self.input_volume_par_file_name = b"testing_fodder/volume_parameters/volume.par"
+        self.temp_output_directory = b"testing_fodder/volume_parameters/testing_output"
         
         # create a temporary output directory (will be deleted by the end of test)
         if not os.path.exists(self.temp_output_directory):
@@ -259,8 +261,8 @@ class Test_VolumeParams(unittest.TestCase):
 
 class Test_ControlParams(unittest.TestCase):
     def setUp(self):
-        self.input_control_par_file_name = "testing_fodder/control_parameters/control.par"
-        self.temp_output_directory = "testing_fodder/control_parameters/testing_output"
+        self.input_control_par_file_name = b"testing_fodder/control_parameters/control.par"
+        self.temp_output_directory = b"testing_fodder/control_parameters/testing_output"
         
         # create a temporary output directory (will be deleted by the end of test)
         if not os.path.exists(self.temp_output_directory):
@@ -272,15 +274,15 @@ class Test_ControlParams(unittest.TestCase):
         # Fill the ControlParams object with parameters from test file
         self.cp_obj.read_control_par(self.input_control_par_file_name)
         # check if all parameters are equal to the contents of test file
-        self.failUnless(self.cp_obj.get_img_base_name(0) == "dumbbell/cam1_Scene77_4085") 
-        self.failUnless(self.cp_obj.get_img_base_name(1) == "dumbbell/cam2_Scene77_4085")
-        self.failUnless(self.cp_obj.get_img_base_name(2) == "dumbbell/cam3_Scene77_4085")
-        self.failUnless(self.cp_obj.get_img_base_name(3) == "dumbbell/cam4_Scene77_4085")
+        self.failUnless(self.cp_obj.get_img_base_name(0) == b"dumbbell/cam1_Scene77_4085") 
+        self.failUnless(self.cp_obj.get_img_base_name(1) == b"dumbbell/cam2_Scene77_4085")
+        self.failUnless(self.cp_obj.get_img_base_name(2) == b"dumbbell/cam3_Scene77_4085")
+        self.failUnless(self.cp_obj.get_img_base_name(3) == b"dumbbell/cam4_Scene77_4085")
         
-        self.failUnless(self.cp_obj.get_cal_img_base_name(0) == "cal/cam1.tif")
-        self.failUnless(self.cp_obj.get_cal_img_base_name(1) == "cal/cam2.tif")
-        self.failUnless(self.cp_obj.get_cal_img_base_name(2) == "cal/cam3.tif")
-        self.failUnless(self.cp_obj.get_cal_img_base_name(3) == "cal/cam4.tif")
+        self.failUnless(self.cp_obj.get_cal_img_base_name(0) == b"cal/cam1.tif")
+        self.failUnless(self.cp_obj.get_cal_img_base_name(1) == b"cal/cam2.tif")
+        self.failUnless(self.cp_obj.get_cal_img_base_name(2) == b"cal/cam3.tif")
+        self.failUnless(self.cp_obj.get_cal_img_base_name(3) == b"cal/cam4.tif")
         
         self.failUnless(self.cp_obj.get_num_cams() == 4)
         self.failUnless(self.cp_obj.get_hp_flag())
@@ -321,10 +323,10 @@ class Test_ControlParams(unittest.TestCase):
             new_str = str(cam) + "some string" + str(cam)
             
             self.cp_obj.set_img_base_name(cam, new_str)
-            self.failUnless(self.cp_obj.get_img_base_name(cam) == new_str)
+            self.failUnless(self.cp_obj.get_img_base_name(cam) == new_str.encode())
             
             self.cp_obj.set_cal_img_base_name(cam, new_str)
-            self.failUnless(self.cp_obj.get_cal_img_base_name(cam) == new_str)
+            self.failUnless(self.cp_obj.get_cal_img_base_name(cam) == new_str.encode())
         
         self.cp_obj.set_hp_flag(True)
         self.failUnless(self.cp_obj.get_hp_flag())
@@ -343,7 +345,7 @@ class Test_ControlParams(unittest.TestCase):
         
         self.cp_obj.set_image_size((4, 5))
         self.failUnless(self.cp_obj.get_image_size()== (4, 5))
-        print self.cp_obj.get_pixel_size()
+        print(self.cp_obj.get_pixel_size())
         self.cp_obj.set_pixel_size((6.1, 7.0))
         numpy.testing.assert_array_equal(self.cp_obj.get_pixel_size(), (6.1, 7))
         
@@ -374,7 +376,7 @@ class Test_ControlParams(unittest.TestCase):
 
 class TestTargetParams(unittest.TestCase):
     def test_read(self):
-        inp_filename = "testing_fodder/target_parameters/targ_rec.par"
+        inp_filename = b"testing_fodder/target_parameters/targ_rec.par"
         tp = TargetParams()
         tp.read(inp_filename)
 

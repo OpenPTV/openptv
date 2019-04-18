@@ -9,7 +9,6 @@ import numpy
 cimport numpy as cnp
 
 from optv.calibration import Calibration
-from mhlib import isnumeric
 
 cdef extern from "optv/calibration.h":
     calibration *read_calibration(char *ori_file, char *add_file,
@@ -160,7 +159,7 @@ cdef class Calibration:
             of point from sensor middle and sensor-point distance, in this 
             order.
         """
-        if (object>prim_point_pos).shape != (3,):
+        if (<object>prim_point_pos).shape != (3,):
             raise ValueError("Expected a 3-element array")
         
         self._calibration[0].int_par.xh = prim_point_pos[0]
