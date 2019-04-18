@@ -9,7 +9,6 @@ import numpy
 cimport numpy as cnp
 
 from optv.calibration import Calibration
-# from mhlib import isnumeric
 
 cdef extern from "optv/calibration.h":
     calibration *read_calibration(char *ori_file, char *add_file,
