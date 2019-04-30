@@ -4,8 +4,8 @@ environment:
 
 build_script:
   - pip install cibuildwheel==0.10.2
-  - cibuildwheel --output-dir wheelhouse
-  
+  - cibuildwheel py_bind --output-dir wheelhouse
+
 artifacts:
   - path: "wheelhouse\\*.whl"
     name: Wheels
