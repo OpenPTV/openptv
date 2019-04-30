@@ -1,10 +1,5 @@
 language: python
 
-env:
-  global:
-    - CIBW_TEST_REQUIRES='pytest'
-    - CIBW_TEST_COMMAND='pytest -v {project}/test'
-
 matrix:
   include:
     - sudo: required
