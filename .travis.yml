@@ -2,16 +2,16 @@ language: python
 
 env:
   global:
-    - CIBW_BEFORE_BUILD="pip install -r requirements.txt && python setup.py prepare --liboptv-dir liboptv-src"
+    - CIBW_BEFORE_BUILD="pwd && pip install -r requirements.txt && python setup.py prepare --liboptv-dir liboptv-src"
 
 matrix:
   include:
-    - sudo: required
-      services:
-        - docker
-      env:
-        - CIBW_SKIP=*manylinux1_i686* 
-        - PIP=pip
+    # - sudo: required
+    #  services:
+    #    - docker
+    #  env:
+    #    - CIBW_SKIP=*manylinux1_i686* 
+    #    - PIP=pip
     - os: osx
       language: generic
       env: 
