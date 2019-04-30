@@ -19,4 +19,4 @@ matrix:
 script:
   - $PIP install cibuildwheel==0.10.2
   - cp -R liboptv py_bind/liboptv-src
-  - cibuildwheel py_bind --output-dir wheelhouse
+  # - cibuildwheel py_bind --output-dir wheelhouse
