@@ -15,6 +15,8 @@ class PrepareCommand(setuptools.Command):
     # First, we should copy the liboptv sources to a subdirectory, so they can be included with the sdist package.
     # Second, we convert the pyx files to c files, so the package can be installed from source without requiring Cython
     description = "Copy the liboptv sources and convert pyx files to C before building"
+
+    # We allow specifying the liboptv dir, for cibuildwheel, which must have everything under py_bind
     user_options = [('liboptv-dir=', None, 'Path for liboptv, default is "../liboptv"')]
 
     def initialize_options(self):
