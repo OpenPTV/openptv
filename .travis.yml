@@ -1,38 +1,22 @@
 language: python
 
-stages:
-  - test
-  - deploy
-
-python:
-  - "2.7"
-  - "3.5"
-  - "3.6"
-  - "3.7"
+env:
+  global:
+    - CIBW_BEFORE_BUILD=cd py_bind && pip install -r requirements.txt && python setup.py prepare
 
 matrix:
   include:
     - sudo: required
       services:
         - docker
-      env: PIP=pip
+      env:
+        - CIBW_SKIP=*manylinux1_i686* 
+        - PIP=pip
     - os: osx
       language: generic
-      env: PIP=pip2
-
-dist: xenial
-    
-install:
-  - cd py_bind
-  - pip install -r requirements.txt
-  - python setup.py prepare
-  - python setup.py install
+      env: 
+        - PIP=pip2
 
 script:
-  - cd test
-  - nosetests --verbose
-
-after_success:
   - $PIP install cibuildwheel==0.10.2
   - cibuildwheel --output-dir wheelhouse
-  - ls -l wheelhouse
