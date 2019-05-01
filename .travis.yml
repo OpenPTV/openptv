@@ -20,3 +20,9 @@ script:
   - $PIP install cibuildwheel==0.10.2
   - cp -R liboptv py_bind/liboptv-src
   - cibuildwheel py_bind --output-dir wheelhouse
+
+deploy:
+  provider: s3
+  access_key_id: "AKIA2TAFTQ25652UGD47"
+  secret_access_key: "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"
+  bucket: "S3 Bucket"
