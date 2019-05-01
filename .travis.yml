@@ -1,28 +1,29 @@
 language: python
-
 matrix:
   include:
-    - sudo: required
-      services:
-        - docker
-      env:
-        - CIBW_SKIP="*manylinux1_i686* cp34-*" 
-        - CIBW_BEFORE_BUILD="pip install -r requirements.txt && python setup.py prepare --liboptv-dir liboptv-src"
-        - PIP=pip
-    - os: osx
-      language: generic
-      env: 
-        - PIP=pip2
-        - CIBW_BEFORE_BUILD="cd py_bind && pip install -r requirements.txt && python setup.py prepare --liboptv-dir liboptv-src"
-        - CIBW_SKIP=cp34-*
-
+  - sudo: required
+    services:
+    - docker
+    env:
+    - CIBW_SKIP="*manylinux1_i686* cp34-*"
+    - CIBW_BEFORE_BUILD="pip install -r requirements.txt && python setup.py prepare
+      --liboptv-dir liboptv-src"
+    - PIP=pip
+  - os: osx
+    language: generic
+    env:
+    - PIP=pip2
+    - CIBW_BEFORE_BUILD="cd py_bind && pip install -r requirements.txt && python setup.py
+      prepare --liboptv-dir liboptv-src"
+    - CIBW_SKIP=cp34-*
 script:
-  - $PIP install cibuildwheel==0.10.2
-  - cp -R liboptv py_bind/liboptv-src
-  - cibuildwheel py_bind --output-dir wheelhouse
-
+- "$PIP install cibuildwheel==0.10.2"
+- cp -R liboptv py_bind/liboptv-src
+- cibuildwheel py_bind --output-dir wheelhouse
 deploy:
   provider: s3
-  access_key_id: "AKIA2TAFTQ25652UGD47"
-  secret_access_key: "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"
-  bucket: "S3 Bucket"
+  bucket: optv
+  access_key_id: "AKIA2TAFTQ25RF5U6CTR"
+  secret_access_key:
+    secure: N7xnNzwUHvs0ST/lO1vbJ5PWiKIaUZxDAWSpovCdkAzSC4T8PFqK4BxnRF06nzyTfp9gcO/Ob0r6PjJnLo1OMnESiUfeVIV10RkXEdoyNdkv1t19BcVV+3D1KMfT89x4f1YM6xokKDwFGdAaqHu7hS0ASeQqEKgPcj5H12PAYGbLumh6gklaJKizTzaXeHA3juo1Ho3EJ6opDK3QFNDB0pJDXJoFg2Kkcdcl+4o5d1dScZNA5vrqSVjI6Exzx+x9Ud+UQCcqUcuir8tszT6E+J5gt1PjdMD1RPb2yl2fEVcGDHrTD/iGwN2jmSsWSrdGcHOZxtX7oQAW+cxeDM2oEh8phpP988BywVpZcleDszHjYvT4JVXr9IAxfg9P0wC7g6GtpreNfY1L9MlvAhqkzXqvB4WmIezIge6DsoMCCkwXzL78ICDjcpJiGoCTs74rGvtcuV4/YM2OfWAf1yEwCsN80/2dUSsL9HmimvnGtxeZwxIoDBHU0sosnSrSQITpMFaR7v6+hRkrCyDmxkUUwcZTYm7Gw8JTXfFYbfIMxfoXMf9I2lxNlP5Q1xUl2isV6avqFzFkfVdWUAZVHRAJ6v9qpuCreyh+TC595BqQJe9xTu6+Co5U0K57Ggvh4Kd0dDZ6/I+PJwu0vPrFbMZc70+jZFZXWJvFN2l0LQuqwqU=
+
