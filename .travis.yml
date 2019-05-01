@@ -26,7 +26,7 @@ deploy:
   secret_access_key:
     secure: RqA1jJHVnUJA4eF34F+bojZqCBwAGmbRIdiB+gpO7dk+OVHSXX767x1BIkslWOQhN6PwHibmpQN5jCr4gNFV/21FiCrY9FD8cG/DqzBlpHplYuArPUod6ZHYTaREGV8nJ+WbdgXY63ta2G4vWMikUgoeePXlNqgxZL2z9HO0dzi41A2UJH/BLWjGGkTzFfFyTyOsWXlz7EdjqXGK5wZO7j2R5kJXYje994Eb9mVii2ukgSvXGGt16N4clQPQq23wiGMKhm3ifD37zu4hIjR9fycPkZLHgduCMAgC8q4sqKHMCgWaYaBlHx1VmEYfHbZpADJ3E7fowUHSv/2jw3SnSX/u8QVp50iMQ363oUq59jSFivWf7gAHvY/3tduP7SSGLWAW3jdmHJtWzSK7yitAUdokMn3AQShc9se/ZMzm8xUfX10m9xo+b2Gd7MgrrFMWfGMqZOpSHut9usWIjNak8k4R52XAnedbPtrZ43UZStmjXe61+5Zj8O9v+119mA41E24nmZADZSljlMWFcK/LWG7Mve4YfmwE1k9Gpxx1kXlvZn8Qx3O4ra0NLZNG4/u5SlASggZ3efyYfq0lVTDqVbYsaY4+iy/DRqOJ2ubvJLoJJRQkyW8x7/GAWEf55sKis/4wianqy/4vjHUaGZNe1J4S06y4G4J9mFJFww3iNZw=
   bucket: optv
-  acl: ''
+  acl: public_read_write
   on:
     repo: zmbq/openptv
     branch: travis
