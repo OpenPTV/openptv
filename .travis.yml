@@ -20,15 +20,13 @@ script:
 - "$PIP install cibuildwheel==0.10.2"
 - cp -R liboptv py_bind/liboptv-src
 - cibuildwheel py_bind --output-dir wheelhouse
-
 deploy:
   provider: s3
-  bucket: "optv"
-  access_key_id: "AKIA2TAFTQ25RF5U6CTR"
+  access_key_id: AKIA2TAFTQ25RF5U6CTR
   secret_access_key:
-    secure: N7xnNzwUHvs0ST/lO1vbJ5PWiKIaUZxDAWSpovCdkAzSC4T8PFqK4BxnRF06nzyTfp9gcO/Ob0r6PjJnLo1OMnESiUfeVIV10RkXEdoyNdkv1t19BcVV+3D1KMfT89x4f1YM6xokKDwFGdAaqHu7hS0ASeQqEKgPcj5H12PAYGbLumh6gklaJKizTzaXeHA3juo1Ho3EJ6opDK3QFNDB0pJDXJoFg2Kkcdcl+4o5d1dScZNA5vrqSVjI6Exzx+x9Ud+UQCcqUcuir8tszT6E+J5gt1PjdMD1RPb2yl2fEVcGDHrTD/iGwN2jmSsWSrdGcHOZxtX7oQAW+cxeDM2oEh8phpP988BywVpZcleDszHjYvT4JVXr9IAxfg9P0wC7g6GtpreNfY1L9MlvAhqkzXqvB4WmIezIge6DsoMCCkwXzL78ICDjcpJiGoCTs74rGvtcuV4/YM2OfWAf1yEwCsN80/2dUSsL9HmimvnGtxeZwxIoDBHU0sosnSrSQITpMFaR7v6+hRkrCyDmxkUUwcZTYm7Gw8JTXfFYbfIMxfoXMf9I2lxNlP5Q1xUl2isV6avqFzFkfVdWUAZVHRAJ6v9qpuCreyh+TC595BqQJe9xTu6+Co5U0K57Ggvh4Kd0dDZ6/I+PJwu0vPrFbMZc70+jZFZXWJvFN2l0LQuqwqU=
-  skip_cleanup: true #prevent Travis CI from deleting your build artifacts
+    secure: RqA1jJHVnUJA4eF34F+bojZqCBwAGmbRIdiB+gpO7dk+OVHSXX767x1BIkslWOQhN6PwHibmpQN5jCr4gNFV/21FiCrY9FD8cG/DqzBlpHplYuArPUod6ZHYTaREGV8nJ+WbdgXY63ta2G4vWMikUgoeePXlNqgxZL2z9HO0dzi41A2UJH/BLWjGGkTzFfFyTyOsWXlz7EdjqXGK5wZO7j2R5kJXYje994Eb9mVii2ukgSvXGGt16N4clQPQq23wiGMKhm3ifD37zu4hIjR9fycPkZLHgduCMAgC8q4sqKHMCgWaYaBlHx1VmEYfHbZpADJ3E7fowUHSv/2jw3SnSX/u8QVp50iMQ363oUq59jSFivWf7gAHvY/3tduP7SSGLWAW3jdmHJtWzSK7yitAUdokMn3AQShc9se/ZMzm8xUfX10m9xo+b2Gd7MgrrFMWfGMqZOpSHut9usWIjNak8k4R52XAnedbPtrZ43UZStmjXe61+5Zj8O9v+119mA41E24nmZADZSljlMWFcK/LWG7Mve4YfmwE1k9Gpxx1kXlvZn8Qx3O4ra0NLZNG4/u5SlASggZ3efyYfq0lVTDqVbYsaY4+iy/DRqOJ2ubvJLoJJRQkyW8x7/GAWEf55sKis/4wianqy/4vjHUaGZNe1J4S06y4G4J9mFJFww3iNZw=
+  bucket: optv
+  acl: ''
   on:
-    all_branches: true
-
-
+    repo: zmbq/openptv
+    branch: travis
