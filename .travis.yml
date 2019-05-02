@@ -5,28 +5,30 @@ matrix:
     services:
     - docker
     env:
-    - CIBW_SKIP="*manylinux1_i686* cp34-* cp36-* cp35-*"
+    - CIBW_SKIP="*manylinux1_i686*"
     - CIBW_BEFORE_BUILD="pip install -r requirements.txt && python setup.py prepare
       --liboptv-dir liboptv-src"
     - PIP=pip
-  #- os: osx
-  #  language: generic
-  #  env:
-  #  - PIP=pip2
-  #  - CIBW_BEFORE_BUILD="cd py_bind && pip install -r requirements.txt && python setup.py
-  #    prepare --liboptv-dir liboptv-src"
-  #  - CIBW_SKIP=cp34-*
+  - os: osx
+    language: generic
+    env:
+    - PIP=pip2
+    - CIBW_BEFORE_BUILD="cd py_bind && pip install -r requirements.txt && python setup.py
+      prepare --liboptv-dir liboptv-src"
+    - CIBW_SKIP=cp34-*
 script:
 - "$PIP install cibuildwheel==0.10.2"
 - cp -R liboptv py_bind/liboptv-src
 - cibuildwheel py_bind --output-dir wheelhouse
-
+before_deploy: echo 'start deploy'
 deploy:
   provider: s3
-  access_key_id: $AWS_ACCESS_KEY
-  secret_access_key: $AWS_SECRET_ACCESS_KEY
-  bucket: "optv"
-  skip_cleanup: true
+  access_key_id: 
+      secure: O8ZAXYHBUsysF6LGNr1OMzRs708jU0bpDDClv4a0P0lTc5Zj9hhZP/de7ru6o+R3fs6V60EDDuRXLQnlo8irpIUGCpsVsTcjZtzYMpLaMJyfgFSW9sXA3vDfs2W0lrnYX/9gDumiPNIouPLq2s2MzVtry3Kd7Gpjki97bJ/N/NpQV3qLzP0+ZK+LPqgAdxLkIEgZGkkkGiOgYvht+BOvIAj/bUJxiVFarseoZZzXGJ3dT49RgYvGgtBXWnY/w+WuyDKVkQppUtnb7WoefQ7W0oWmm24dwDwrMpt0vYe92e4Ia+/omBH79cwgPxi3u35hTq7+s9fk9dsrwAW3/DX8WSvKK1TzqhiE/D041rAaRjBywsG1grwR8e7mQqmdmrIG0IP9WkMOoQaPZSncJ2lfB6Wm7rgBYElTcasb+pt6VlLu1mQq58y+83fzq4AQCjfvxNYsvW+wtwlmRDbQoRszP/kNY3KRUd0ABaMN/nRX56+aWSkCI75VXMqKdY/nr8CZPGPEnYcjNewbhdgviKgaLx0otHZiWwQp8/EKxWxkwYM1+JQd6b3nkenQEbm32qRs7y9IDqGdUh6l2nq03fsvEPu1JT6+1rJXn2YqzJhkrWGGO3RgJA7gZSgO8DKeBmEv+EpBLPXN4rGBOZsqQkF75Qt3drfE20AzEZCZfio0shA=
+  secret_access_key:
+    secure: bfrPWMP4S01MF9wUWpAqoYnAAda17+Iwlx3G3tZ9mp5WQqqNh0zt6x6T8rvVHmLwtZlwnmUIdFEfT50e8uTpMXv13wU3K24FtFXhMgFQXfeEr7cPmbqslUQJDbWzlh6VnPBTKX7Gr1dpH5CqMJCLA28gitZ7RW7ejgyTktxB82swk0Zl/HrpwJ3PCKLOoX8BBx/B3TOMf1U4EJpqWuylkbr+0kvDeWBG5hJ1usfzPWbOYheRD16gbzcLhKfv4+AW01ZG+aOaLayOY0VMcPVNfzLZ8EBALfUkq6Na41zRvWsCmjNLFj1nUkRq2+n2bfzTntGaYYVvJ4itOsSV92zK4B1oNHuyhZOiT8iDq0u1SDjhmVPAMDZt3oOAFx8COqnm8K27K7DGDZTrbA0KpkfpsXb9FnyVI/SxhmmMeJTNdxU22Q5eIzN+COmVwfN6J35V1iL7rkD1WN7kVDL8DlFdld36jYqg6wqEdyjljAmAn9Q13uWV/q4fzVdDnhCn/YqNlSBCpyOk40e/aVa2BN7C4ADh/o5pxjK0ifC8smYzQLTwiu0GR31JyjLh/KwfxpBszg85pTGcA9/FDJrjjUAAofGjd5wNiLcFIrjfM+gC5ZQvTrQKtocLaapHbOX/h50+7h5RiaEEoazyWaE9nTaL2jQoBgQgbYakemBT56YYIvc=
+  bucket: optv
   local_dir: wheelhouse
+  skip_cleanup: true
   on:
     branch: travis
