@@ -17,10 +17,9 @@ matrix:
   #    prepare --liboptv-dir liboptv-src"
   #  - CIBW_SKIP=cp34-*
 script:
-- echo AWS Access key ID is $AWS_ACCESS_KEY_ID
-- #"$PIP install cibuildwheel==0.10.2"
-- #cp -R liboptv py_bind/liboptv-src
-- #cibuildwheel py_bind --output-dir wheelhouse
+- "$PIP install cibuildwheel==0.10.2"
+- cp -R liboptv py_bind/liboptv-src
+- cibuildwheel py_bind --output-dir wheelhouse
 before_deploy: echo 'start deploy'
 deploy:
   provider: s3
