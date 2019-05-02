@@ -19,3 +19,6 @@ deploy:
   folder: "/"
   bucket: "optv"
   artifact: Wheels
+  on:
+    branch: travis
+    APPVEYOR_REPO_TAG: true
