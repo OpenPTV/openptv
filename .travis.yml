@@ -22,12 +22,6 @@ script:
 - cp -R liboptv py_bind/liboptv-src
 - cibuildwheel py_bind --output-dir wheelhouse
 
-script:
-  if: branch = master
-  - cd test
-  - nosetests --verbose
-
-
 deploy:
   provider: s3
   local_dir: wheelhouse
