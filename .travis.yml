@@ -5,7 +5,7 @@ matrix:
     services:
     - docker
     env:
-    - CIBW_SKIP="*manylinux1_i686* cp34-* cp35-* cp36-*"
+    - CIBW_SKIP="*manylinux1_i686* cp34-*"
     - CIBW_BEFORE_BUILD="pip install -r requirements.txt && python setup.py prepare
       --liboptv-dir liboptv-src"
     - PIP=pip
@@ -17,19 +17,16 @@ matrix:
       prepare --liboptv-dir liboptv-src"
     - CIBW_SKIP=cp34-*
 
-install:
-  - pip install -r py_bind/requirements.txt
+script:
+- "$PIP install cibuildwheel==0.10.2"
+- cp -R liboptv py_bind/liboptv-src
+- cibuildwheel py_bind --output-dir wheelhouse
 
 script:
-  - cd py_bind
-  - python setup.py prepare
-  - python setup.py install
-  - "$PIP install cibuildwheel==0.10.2"
-  - cp -R liboptv py_bind/liboptv-src
-  - cibuildwheel py_bind --output-dir wheelhouse
   if: branch = master
   - cd test
   - nosetests --verbose
+
 
 deploy:
   provider: s3
