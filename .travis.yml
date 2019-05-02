@@ -32,7 +32,6 @@ deploy:
     - branch: travis
     - /v\d+\.\d+[a-z]/
 
-
 env:
   global:
   - secure: tL89kbRhiZfmXG/NJwn6KQSN36PxO+6x0N/MdOEUTAXN5jgOtPSkDlgjuUcMNh6pA8hLWZrsvW8YDxRuL+fvcjHsm4Mb5fZsdSQQ7Szd3rzvnkZ6ZxU+y6SZ/gihJ1WZ8x2WC4Q+5uDW/ZkfqimBlJ3/iwNww25iW0wjXD0NP0sgqre0vDOQQCY1lO0Rva/BkhtlGz4zbg49TgA115PTrPush4/KpT6OtQstVjAvTBBuUK2o4tojYF87RvZMA+zhsMuwIt94AjIsXWs/f6KG2h8uNpdFty9qPvzoQtuKypHRon5W+JNtjT13pg+hzxznx30gUiDtCzCRk5qeGOgsLdOgvSRgktsXyj6RPq+iiKF6wUUe5+HxHm5TOHfeAzbxi6fM4+1dZRZUN8rq3az6ZtFY/rPAwN/j5I+jGRkdAjD1b+2mxbeB/kxkfMPpGmV2yjS6g+LffOm+J4kRdUDXLTn71Ih5q924YACJv6CqtP9PSkkpcVKKK9RN8l46tH6m6QRAE7PaecYOKNByguAkkUm3CB/VNCyxxsrsId6ZTpgPe/5g5vsIgTRmRbNOP7wgXqDRt0N5kTMyU7s1Hm2BYo3WWiH+CSlFw1zUmzIp6aUIrXeLGRbhfwOFAd/zz1d6roWFIpiaCmHNyqaMgV96DLM/rOfnWv5JREiUdZ7HV7A=
