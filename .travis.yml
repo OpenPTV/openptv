@@ -30,7 +30,6 @@ script:
   if: branch = master
   - cd test
   - nosetests --verbose
-  - cd ../..
 
 deploy:
   provider: s3
