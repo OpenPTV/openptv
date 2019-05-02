@@ -17,10 +17,20 @@ matrix:
       prepare --liboptv-dir liboptv-src"
     - CIBW_SKIP=cp34-*
 
+install:
+  - pip install -r py_bind/requirements.txt
+
 script:
-- "$PIP install cibuildwheel==0.10.2"
-- cp -R liboptv py_bind/liboptv-src
-- cibuildwheel py_bind --output-dir wheelhouse
+  - cd py_bind
+  - python setup.py prepare
+  - python setup.py install
+  - "$PIP install cibuildwheel==0.10.2"
+  - cp -R liboptv py_bind/liboptv-src
+  - cibuildwheel py_bind --output-dir wheelhouse
+  if: branch = master
+  - cd test
+  - nosetests --verbose
+  - cd ../..
 
 deploy:
   provider: s3
@@ -31,7 +41,6 @@ deploy:
   bucket: "optv"
   on:
       tags: true
-      branch: travis
 
 env:
   global:
