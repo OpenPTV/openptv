@@ -7,7 +7,7 @@ build_script:
   - cibuildwheel py_bind --output-dir wheelhouse
 
 artifacts:
-  - path: "wheelhouse\\*.whl"
+  - path: wheelhouse\*.whl
     name: Wheels
 
 deploy:
