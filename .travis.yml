@@ -16,7 +16,7 @@ matrix:
     #- CIBW_BEFORE_BUILD="cd py_bind && pip install -r requirements.txt && python setup.py
      # prepare --liboptv-dir liboptv-src"
     #- CIBW_SKIP=cp34-*
-    
+
 script:
 - "$PIP install cibuildwheel==0.10.2"
 - cp -R liboptv py_bind/liboptv-src
@@ -29,9 +29,9 @@ deploy:
   access_key_id: "$AWS_ACCESS_KEY_ID"
   secret_access_key: "$AWS_SECRET_ACCESS_KEY"
   bucket: "optv"
-  only:
-    - branch: travis
-    - /v\d+\.\d+[a-z]/
+  on:
+      tags: true
+      branch: travis
 
 env:
   global:
