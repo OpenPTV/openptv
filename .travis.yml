@@ -5,17 +5,17 @@ matrix:
     services:
     - docker
     env:
-    - CIBW_SKIP="*manylinux1_i686* cp34-*"
+    - CIBW_SKIP="*manylinux1_i686* cp34-* cp35-* cp36-*"
     - CIBW_BEFORE_BUILD="pip install -r requirements.txt && python setup.py prepare
       --liboptv-dir liboptv-src"
     - PIP=pip
-  - os: osx
-    language: generic
-    env:
-    - PIP=pip2
-    - CIBW_BEFORE_BUILD="cd py_bind && pip install -r requirements.txt && python setup.py
-      prepare --liboptv-dir liboptv-src"
-    - CIBW_SKIP=cp34-*
+  #- os: osx
+   # language: generic
+    #env:
+    #- PIP=pip2
+    #- CIBW_BEFORE_BUILD="cd py_bind && pip install -r requirements.txt && python setup.py
+     # prepare --liboptv-dir liboptv-src"
+    #- CIBW_SKIP=cp34-*
 script:
 - "$PIP install cibuildwheel==0.10.2"
 - cp -R liboptv py_bind/liboptv-src
