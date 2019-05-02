@@ -28,8 +28,10 @@ deploy:
   access_key_id: "$AWS_ACCESS_KEY_ID"
   secret_access_key: "$AWS_SECRET_ACCESS_KEY"
   bucket: "optv"
-  on:
-    branch: travis
+  only:
+    - branch: travis
+    - /v\d+\.\d+[a-z]/
+
 
 env:
   global:
