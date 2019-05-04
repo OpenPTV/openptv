@@ -1,0 +1,24 @@
+environment:
+  CIBW_SKIP: "*manylinux1_i686* cp34-*" 
+  CIBW_BEFORE_BUILD: "cd py_bind && pip install -r requirements.txt && python setup.py prepare"
+
+build_script:
+  - pip install cibuildwheel==0.10.2
+  - cibuildwheel py_bind --output-dir wheelhouse
+
+artifacts:
+  - path: wheelhouse\*.whl
+    name: Wheels
+
+deploy:
+  provider: S3
+  access_key_id:
+    secure: Z5XlsfbeKf8Dnv8pokN/nRCfrFT9KsnW0xbFEZbApMU=
+  secret_access_key:
+    secure: /JuFSSXLD8mY91HBC4qY92sPqxlzxaqoGIJuXynrbk1a0h5FBRN9HGKXSDTAUIyZ
+  folder: "/"
+  bucket: "optv"
+  artifact: Wheels
+
+  on:
+    APPVEYOR_REPO_TAG: true

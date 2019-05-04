@@ -15,25 +15,26 @@ from optv.parameters import ControlParams, VolumeParams, TrackingParams, \
     SequenceParams
 
 framebuf_naming = {
-    'corres': 'testing_fodder/track/res/particles',
-    'linkage': 'testing_fodder/track/res/linkage',
-    'prio': 'testing_fodder/track/res/whatever'
+    'corres': b'testing_fodder/track/res/particles',
+    'linkage': b'testing_fodder/track/res/linkage',
+    'prio': b'testing_fodder/track/res/whatever'
 }
 class TestTracker(unittest.TestCase):
     def setUp(self):
-        with open("testing_fodder/track/conf.yaml") as f:
-            yaml_conf = yaml.load(f,Loader=yaml.FullLoader)
+        with open(b"testing_fodder/track/conf.yaml") as f:
+            yaml_conf = yaml.load(f)
         seq_cfg = yaml_conf['sequence']
         
         cals = []
         img_base = []
+        print(yaml_conf['cameras'])
         for cix, cam_spec in enumerate(yaml_conf['cameras']):
-            cam_spec.setdefault('addpar_file', None)
+            cam_spec.setdefault(b'addpar_file', None)
             cal = Calibration()
-            cal.from_file(cam_spec['ori_file'], cam_spec['addpar_file'])
+            cal.from_file(cam_spec['ori_file'].encode(), cam_spec['addpar_file'].encode())
             cals.append(cal)
             img_base.append(seq_cfg['targets_template'].format(cam=cix + 1))
-            
+  
         cpar = ControlParams(len(yaml_conf['cameras']), **yaml_conf['scene'])
         vpar = VolumeParams(**yaml_conf['correspondences'])
         tpar = TrackingParams(**yaml_conf['tracking'])

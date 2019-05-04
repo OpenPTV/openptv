@@ -1,26 +1,39 @@
 language: python
-
-before_install:
-  - if [ ${TRAVIS_PYTHON_VERSION:0:1} == "2" ]; then wget http://repo.continuum.io/miniconda/Miniconda-latest-Linux-x86_64.sh -O miniconda.sh; else wget http://repo.continuum.io/miniconda/Miniconda3-latest-Linux-x86_64.sh -O miniconda.sh; fi
-  - chmod +x miniconda.sh
-  - ./miniconda.sh -b -p /home/travis/mc
-  - export PATH=/home/travis/mc/bin:$PATH
-  
-install:
-  - conda update --yes conda
-  - conda create -n testenv --yes $DEPS numpy cython pyyaml nose python=$TRAVIS_PYTHON_VERSION
-  - source activate testenv
-
-  # for debugging...
-  - echo $PATH
-  - which python
-  - conda info
-  - conda list
+matrix:
+  include:
+  - sudo: required
+    services:
+    - docker
+    env:
+    - CIBW_SKIP="*manylinux1_i686* cp34-* cp35-* cp36-*"
+    - CIBW_BEFORE_BUILD="pip install -r requirements.txt && python setup.py prepare
+      --liboptv-dir liboptv-src"
+    - PIP=pip
+  - os: osx
+    language: generic
+    env:
+    - PIP=pip2
+    - CIBW_BEFORE_BUILD="cd py_bind && pip install -r requirements.txt && python setup.py
+      prepare --liboptv-dir liboptv-src"
+    - CIBW_SKIP=cp34-*
 
 script:
-  - cd py_bind
-  - python setup.py prepare
-  - python setup.py install
-  - cd test
-  - nosetests --verbose
+- "$PIP install cibuildwheel==0.10.2"
+- cp -R liboptv py_bind/liboptv-src
+- cibuildwheel py_bind --output-dir wheelhouse
 
+deploy:
+  provider: s3
+  local_dir: wheelhouse
+  skip_cleanup: true
+  access_key_id: "$AWS_ACCESS_KEY_ID"
+  secret_access_key: "$AWS_SECRET_ACCESS_KEY"
+  bucket: "optv"
+  on:
+      tags: true
+      branch: travis
+
+env:
+  global:
+  - secure: tL89kbRhiZfmXG/NJwn6KQSN36PxO+6x0N/MdOEUTAXN5jgOtPSkDlgjuUcMNh6pA8hLWZrsvW8YDxRuL+fvcjHsm4Mb5fZsdSQQ7Szd3rzvnkZ6ZxU+y6SZ/gihJ1WZ8x2WC4Q+5uDW/ZkfqimBlJ3/iwNww25iW0wjXD0NP0sgqre0vDOQQCY1lO0Rva/BkhtlGz4zbg49TgA115PTrPush4/KpT6OtQstVjAvTBBuUK2o4tojYF87RvZMA+zhsMuwIt94AjIsXWs/f6KG2h8uNpdFty9qPvzoQtuKypHRon5W+JNtjT13pg+hzxznx30gUiDtCzCRk5qeGOgsLdOgvSRgktsXyj6RPq+iiKF6wUUe5+HxHm5TOHfeAzbxi6fM4+1dZRZUN8rq3az6ZtFY/rPAwN/j5I+jGRkdAjD1b+2mxbeB/kxkfMPpGmV2yjS6g+LffOm+J4kRdUDXLTn71Ih5q924YACJv6CqtP9PSkkpcVKKK9RN8l46tH6m6QRAE7PaecYOKNByguAkkUm3CB/VNCyxxsrsId6ZTpgPe/5g5vsIgTRmRbNOP7wgXqDRt0N5kTMyU7s1Hm2BYo3WWiH+CSlFw1zUmzIp6aUIrXeLGRbhfwOFAd/zz1d6roWFIpiaCmHNyqaMgV96DLM/rOfnWv5JREiUdZ7HV7A=
+  - secure: HMrkGj2w/CR4KXbGYC60lPA4YhRjBWude6fzkDLcdIzbqW/tLXf9LxqRu4RcQRa8u+vcuqJ122RTF6mnhIjs6U86Zfk3Zbl7UAlAoyLRVSP43ej07nepWtvIWG9UmfupyZm5niUJ/+mUb8S6owPik9OXfsIx/k0NmFZWP2OH8KNmgTZW9i2GvdUo3e8Vyr47LJO6K4pQCBB3HJ+UpRZ5vEetaljgeqa0n2t3UEomC0efiAoVuN1Bn/HDFAKKRNedHv58DV1YRGNG1XTEMTlEJx5VjIuiqAfgm9Uiqs5B9QOyd+6hcg7bjhFbSItBNwPDVUcfU2bN3gbgxrWo+sn6tuSKmLvHtGuMnhsrS2Q36QMeDPt+u6ElKi27xBGT4jVpX7KBxKa24F1tl1jxuY7hoJleokXD4481gXfJeT85LXj4xnD+kwt7I7MvxYYIFuYfGvr+HFye2otIjGSL7OjFTnwWZXG/MacIy2CdvLSXMmyZzEXm3iU3NKQrKaOaT4ZJ5nlh99Ihkx9dqnkdWUfkkCwMAVeNjyh84V6tw2GlZ3YiW22VhcOTHnRMSUES80U02kj9jfBX0qFEhCpcBQVm48RVsFQqJgvMw0ZSOc2LjDsyfpDY+/xcowPsBXTluchkRarpuBDRnTWe/CZ6CyFxEiN2eLQYLmTePBhO46NrFFo=

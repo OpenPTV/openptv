@@ -44,7 +44,7 @@ Testing the installation
 Regardless of the system you installed on, the shell commands are the same:
 
   cd tests/
-  nosetests .
+  nosetests *
 
 Usage example
 -------------

@@ -17,24 +17,24 @@ from optv.epipolar import epipolar_curve
 
 class TestEpipolarCurve(unittest.TestCase):
     def test_two_cameras(self):
-        ori_tmpl = r'testing_fodder/calibration/sym_cam{cam_num}.tif.ori'
-        add_file = r'testing_fodder/calibration/cam1.tif.addpar'
+        ori_tmpl = "testing_fodder/calibration/sym_cam{cam_num}.tif.ori"
+        add_file = "testing_fodder/calibration/cam1.tif.addpar"
         
         orig_cal = Calibration()
-        orig_cal.from_file(ori_tmpl.format(cam_num=1), add_file)
+        orig_cal.from_file(ori_tmpl.format(cam_num=1).encode(), add_file.encode())
         proj_cal = Calibration()
-        proj_cal.from_file(ori_tmpl.format(cam_num=3), add_file)
+        proj_cal.from_file(ori_tmpl.format(cam_num=3).encode(), add_file.encode())
         
         # reorient cams:
         orig_cal.set_angles(np.r_[0., -np.pi/4., 0.])
         proj_cal.set_angles(np.r_[0., 3*np.pi/4., 0.])
         
         cpar = ControlParams(4)
-        cpar.read_control_par("testing_fodder/corresp/control.par")
+        cpar.read_control_par(b"testing_fodder/corresp/control.par")
         sens_size = cpar.get_image_size()
         
         vpar = VolumeParams()
-        vpar.read_volume_par("testing_fodder/corresp/criteria.par")
+        vpar.read_volume_par(b"testing_fodder/corresp/criteria.par")
         vpar.set_Zmin_lay([-10, -10])
         vpar.set_Zmax_lay([10, 10])
         
