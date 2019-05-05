@@ -18,12 +18,9 @@ matrix:
     - CIBW_SKIP=cp34-*
 
 script:
-  - cd py_bind
-  - python setup.py prepare
-  - python setup.py install
-  - "$PIP install cibuildwheel==0.10.2"
-  - cp -R liboptv py_bind/liboptv-src
-  - cibuildwheel py_bind --output-dir wheelhouse
+- "$PIP install cibuildwheel==0.10.2"
+- cp -R liboptv py_bind/liboptv-src
+- cibuildwheel py_bind --output-dir wheelhouse
   if: branch = master
   - cd test
   - nosetests --verbose
