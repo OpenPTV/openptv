@@ -11,14 +11,9 @@ artifacts:
     name: Wheels
 
 deploy:
-  provider: S3
-  access_key_id:
-    secure: Z5XlsfbeKf8Dnv8pokN/nRCfrFT9KsnW0xbFEZbApMU=
-  secret_access_key:
-    secure: /JuFSSXLD8mY91HBC4qY92sPqxlzxaqoGIJuXynrbk1a0h5FBRN9HGKXSDTAUIyZ
-  folder: "/"
-  bucket: "optv"
+  provider: GitHub
+  auth_token: ${GITHUB_TOKEN}
   artifact: Wheels
-
   on:
+    branch: master
     APPVEYOR_REPO_TAG: true

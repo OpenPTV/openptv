@@ -23,12 +23,11 @@ script:
 - cibuildwheel py_bind --output-dir wheelhouse
 
 deploy:
-  provider: gcs
-  local_dir: wheelhouse
+  provider: releases
   skip_cleanup: true
-  access_key_id: "$GCS_ACCESS_KEY_ID"
-  secret_access_key: "$GCS_SECRET_ACCESS_KEY"
-  bucket: "optv_wheels"
+  api_key: "$GITHUB_TOKEN"
+  file_glob: true
+  file: wheelhouse/*
   on:
       tags: true
       branch: master
