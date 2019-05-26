@@ -15,30 +15,33 @@ class PrepareCommand(setuptools.Command):
     # First, we should copy the liboptv sources to a subdirectory, so they can be included with the sdist package.
     # Second, we convert the pyx files to c files, so the package can be installed from source without requiring Cython
     description = "Copy the liboptv sources and convert pyx files to C before building"
-    user_options = []
+
+    # We allow specifying the liboptv dir, for cibuildwheel, which must have everything under py_bind
+    user_options = [('liboptv-dir=', None, 'Path for liboptv, default is "../liboptv"')]
 
     def initialize_options(self):
-        pass
+        self.liboptv_dir = False
 
     def finalize_options(self):
-        pass
+        if not self.liboptv_dir:
+            self.liboptv_dir = '../liboptv'
 
     def run(self):
         self.copy_source_files()
         self.convert_to_c()
 
     def copy_source_files(self):
-        if not os.path.exists('../liboptv'):
-            print('../liboptv does not exist. You must run setup.py prepare from with the full liboptv repository',
+        if not os.path.exists(self.liboptv_dir):
+            print('liboptv does not exist at %s. You must run setup.py prepare from with the full liboptv repository' % self.liboptv_dir,
                   file=sys.stderr)
-            raise Exception('.//liboptv does not exist')
+            raise Exception('liboptv does not exist at %s' % self.liboptv_dir)
         
-        print('Copying the liboptv source files...')
+        print('Copying the liboptv source files from %s...' % self.liboptv_dir)
         if os.path.exists('./liboptv'):
             shutil.rmtree('./liboptv')
         os.makedirs('./liboptv')
-        shutil.copytree('../liboptv/include', 'liboptv/include/optv')
-        shutil.copytree('../liboptv/src', 'liboptv/src')
+        shutil.copytree(os.path.join(self.liboptv_dir, 'include'), 'liboptv/include/optv')
+        shutil.copytree(os.path.join(self.liboptv_dir, 'src'), 'liboptv/src')
 
     def convert_to_c(self):
         print('Converting pyx files to C sources...')
