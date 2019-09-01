@@ -423,7 +423,7 @@ finalize:
     return success;
 }
 
-/* init_frame() initializes a frame object, allocates its arrays and sets up 
+/* frame_init() initializes a frame object, allocates its arrays and sets up 
  * the frame data.
  *  
  * Arguments:
