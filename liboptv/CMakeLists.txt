@@ -4,9 +4,9 @@ set (CMAKE_INSTALL_RPATH "$ORIGIN/../lib:$ORIGIN/")
 
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/CMakeModules/")
 project(OpenPTV)
-# enable_testing()
+enable_testing()
 add_subdirectory(src)
-# add_subdirectory(tests)
+add_subdirectory(tests)
 
 INSTALL(DIRECTORY include/ DESTINATION include/optv/)
 
