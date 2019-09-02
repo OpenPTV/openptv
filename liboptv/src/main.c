@@ -20,7 +20,6 @@ int main( int argc, const char* argv[] )
     coord_2d **corrected;
     int match_counts[4];
     n_tupel *con; // for correspondences
-    frame frm;
     tracking_run *run;
 
 
@@ -96,16 +95,14 @@ int main( int argc, const char* argv[] )
             // c. segmentation
             // detection
             //ntargets = peak_fit(img_hp, targ_read, 0, run->cpar->imx, 0, run->cpar->imy, run->cpar, 1, pix);
-            ntargets = targ_rec(img_hp, targ_read, 0, run->cpar->imx, 0, run->cpar->imy, run->cpar, 1, pix);
+            run->fb->buf[step]->num_targets[i] = targ_rec(img_hp, targ_read, 0, run->cpar->imx, 0, run->cpar->imy, run->cpar, 1, pix);
             // here we fill the frame with the targets for the next step - correspondence
-            frm.num_targets[i] = ntargets;
-            frm.targets[i] = targ_t;
+            run->fb->buf[step]->targets[i] = targ_t;
        } // inner loop is camera
         // corrected = correct_frame(frm, calib, cpar, 0.0001);
-        con = correspondences(&frm, corrected, run->vpar, run->cpar, calib, match_counts);
+        con = correspondences(run->fb->buf[step], corrected, run->vpar, run->cpar, calib, match_counts);
        // so here is missing frame into run->frame ?
        // WORK HERE 
-       run->fb->buf[step]
 
     } // external loop is through frames
 
@@ -118,7 +115,7 @@ int main( int argc, const char* argv[] )
 
     run->tpar->add = 0;
     track_forward_start(run);
-    
+
     for (step = run->seq_par->first + 1; step < run->seq_par->last; step++) {
         trackcorr_c_loop(run, step);
     }
