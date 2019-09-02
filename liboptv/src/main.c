@@ -19,7 +19,8 @@ int main( int argc, const char* argv[] )
     target pix[MAXTARGETS], targ_t[MAXTARGETS];
     coord_2d **corrected;
     int match_counts[4];
-    frame frm;
+    n_tupel *con; // for correspondences
+    frame *frm;
 
 
     // read parameters from the working directory
@@ -99,8 +100,9 @@ int main( int argc, const char* argv[] )
             frm.num_targets[i] = ntargets;
             frm.targets[i] = targ_t;
        } // inner loop is camera
-       
-       correspondences(&frm, corrected, run->vpar, run->cpar, calib, match_counts);
+        frm = generate_test_set(calib, cpar, vpar);
+        // corrected = correct_frame(frm, calib, cpar, 0.0001);
+        con = correspondences(frm, corrected, run->vpar, run->cpar, calib, match_counts);
        // so here is missing frame into run->frame ?
        // WORK HERE 
 
