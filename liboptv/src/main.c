@@ -71,9 +71,6 @@ int main( int argc, const char* argv[] )
 
             // for each camera and for each time step the images are processed
     for (step = run->seq_par->first; step < run->seq_par->last+1; step++) {
-        // prepare frame for correspondences, see below below image segmentation
-        frame_init(&frm, run->cpar->num_cams, MAXTARGETS);
-
         for (i = 1; i<run->cpar->num_cams+1; i++) {
         
             // a. read image
@@ -95,11 +92,9 @@ int main( int argc, const char* argv[] )
             // c. segmentation
             // detection
             //ntargets = peak_fit(img_hp, targ_read, 0, run->cpar->imx, 0, run->cpar->imy, run->cpar, 1, pix);
-            run->fb->buf[step]->num_targets[i] = targ_rec(img_hp, targ_read, 0, run->cpar->imx, 0, run->cpar->imy, run->cpar, 1, pix);
-            // here we fill the frame with the targets for the next step - correspondence
-            run->fb->buf[step]->targets[i] = targ_t;
+            run->fb->buf[step]->num_targets[i] = targ_rec(img_hp, targ_read, 0, run->cpar->imx, 0, run->cpar->imy, run->cpar, 1, run->fb->buf[step]->targets[i]);
        } // inner loop is camera
-        // corrected = correct_frame(frm, calib, cpar, 0.0001);
+        corrected = correct_frame(run->fb->buf[step], calib, cpar, 0.0001);
         con = correspondences(run->fb->buf[step], corrected, run->vpar, run->cpar, calib, match_counts);
        // so here is missing frame into run->frame ?
        // WORK HERE 
