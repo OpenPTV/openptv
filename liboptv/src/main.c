@@ -101,30 +101,34 @@ int main( int argc, const char* argv[] )
        } // inner loop is camera
        
        correspondences(&frm, corrected, run->vpar, run->cpar, calib, match_counts);
+       // so here is missing frame into run->frame ?
+       // WORK HERE 
 
-    } // external loop is frames
+    } // external loop is through frames
 
+    // ok, theoretically we have now a buffer full of stuff from 4 frames
+    // it's a good buffer on which we can just track stuff
+    // and then we need to jump to a next chunk, remove all and start over.
+    // the missing part is how to "chain the chunks" or make a smart use of
+    // memory and buffers, it's beyond me now
 
+    track_forward_start(run);
 
-        // image segmentation of this step and 4 steps forward
-        for (i = 0; i<BUFFER_LENGTH; i++){
-            // per camera:
-            for (cam = 0; cam < NUM_CAMS; cam++){
-                // highpass filter this frame 
-                // detect
-                // fill buffer of targets
-            } 
-         
-            // stereomatching
-            // find correspondences in this frame
-            // fill buffer of correspondences
-
-
-            // 3d triangulation of this frame
-            // fill buffer of 3d positions 
-        }
-        // apparently all the buffers are full and we can just start tracking
-        // fill buffer with path_info (path is a trajectory)
-        // plot and move to the next chunk, jump 4 frames forward and do it again
+    for (step = run->seq_par->first; step < run->seq_par->last; step++) {
+        trackcorr_c_loop(run, step);
     }
-}
+    trackcorr_c_finish(run, run->seq_par->last);
+
+    // probably here we need to send something to plot it 
+    // or store in some memory for the next chunk? 
+    // basically we have a human in the loop here - his/her brain
+    // will simply follow the velocity values in time like a movie
+    // and we will store it to binary files. Later if someone wants to do
+    // tracking, our simmple solution is not good enough. we kind of doing 3D-PIV here
+    // of 4 frames and show the vectors. The quasi-vectors are not really connected. if we
+    // will create nice animation - then the user will build trajectories him/herself. 
+
+    return 0;
+
+
+} // should be end of main now 
