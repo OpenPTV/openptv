@@ -20,7 +20,8 @@ int main( int argc, const char* argv[] )
     coord_2d **corrected;
     int match_counts[4];
     n_tupel *con; // for correspondences
-    frame *frm;
+    frame frm;
+    tracking_run *run;
 
 
     // read parameters from the working directory
@@ -100,11 +101,11 @@ int main( int argc, const char* argv[] )
             frm.num_targets[i] = ntargets;
             frm.targets[i] = targ_t;
        } // inner loop is camera
-        frm = generate_test_set(calib, cpar, vpar);
         // corrected = correct_frame(frm, calib, cpar, 0.0001);
-        con = correspondences(frm, corrected, run->vpar, run->cpar, calib, match_counts);
+        con = correspondences(&frm, corrected, run->vpar, run->cpar, calib, match_counts);
        // so here is missing frame into run->frame ?
        // WORK HERE 
+       run->fb->buf[step]
 
     } // external loop is through frames
 
@@ -114,9 +115,11 @@ int main( int argc, const char* argv[] )
     // the missing part is how to "chain the chunks" or make a smart use of
     // memory and buffers, it's beyond me now
 
-    track_forward_start(run);
 
-    for (step = run->seq_par->first; step < run->seq_par->last; step++) {
+    run->tpar->add = 0;
+    track_forward_start(run);
+    
+    for (step = run->seq_par->first + 1; step < run->seq_par->last; step++) {
         trackcorr_c_loop(run, step);
     }
     trackcorr_c_finish(run, run->seq_par->last);
@@ -129,6 +132,16 @@ int main( int argc, const char* argv[] )
     // tracking, our simmple solution is not good enough. we kind of doing 3D-PIV here
     // of 4 frames and show the vectors. The quasi-vectors are not really connected. if we
     // will create nice animation - then the user will build trajectories him/herself. 
+
+
+    /* Clean up */
+    for (cam = 0; cam < cpar->num_cams; cam++) 
+        free(corrected[cam]);
+    deallocate_adjacency_lists(list, cpar->num_cams);
+    deallocate_target_usage_marks(tusage, cpar->num_cams);
+    free(con);
+    free(run->vpar);
+    free_control_par(run->cpar);
 
     return 0;
 
