@@ -96,6 +96,7 @@ int main( int argc, const char* argv[] )
        } // inner loop is camera
         corrected = correct_frame(run->fb->buf[step], calib, cpar, 0.0001);
         con = correspondences(run->fb->buf[step], corrected, run->vpar, run->cpar, calib, match_counts);
+        run->fb->buf[step]->num_parts = match_counts[3]; // sum of all matches? 
        // so here is missing frame into run->frame ?
        // WORK HERE 
 
