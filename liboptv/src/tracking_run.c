@@ -60,8 +60,8 @@ tracking_run *tr_new(sequence_par *seq_par, track_par *tpar,
     tr->cal = cal;
     tr->flatten_tol = flatten_tol;
     
-    tr->fb = (framebuf *) malloc(sizeof(framebuf));
-    fb_init(tr->fb, buf_len, cpar->num_cams, max_targets,
+    tr->fb = (framebuf_base*) malloc(sizeof(framebuf));
+    fb_init((framebuf*)tr->fb, buf_len, cpar->num_cams, max_targets,
         corres_file_base, linkage_file_base, prio_file_base, seq_par->img_base_name);
     
     tr->lmax = norm((tpar->dvxmin - tpar->dvxmax), \
