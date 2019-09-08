@@ -20,8 +20,8 @@ instructions for adding libraries; consult your IDE/compiler manual for the
 details.
 
 
-Installing on Linux/Mac 
-======================= 
+Installing on Linux 
+=================== 
 Installing directly from the source tree in Git is fast and simple, using CMake. 
 Before installation first we need to make sure that the dependencies are 
 installed.
@@ -53,6 +53,32 @@ can run cmake with parameters that would change the install locations (see
 below on the Windows install process). If you do so, remmember to make sure 
 that your compiler knows the path to the installed location.
 
+Installing on Mac
+=================
+
+The best way is to use Homebrew. Install it as explained here 
+https://www.howtogeek.com/211541/homebrew-for-os-x-easily-installs-desktop-apps-and-terminal-utilities/
+
+and then:  
+
+    $ brew install cmake
+    $ brew install check 
+    
+then get the `liboptv` from the Github:  
+
+    $ git clone https://github.com/openptv/openptv
+    $ cd openptv/liboptv
+    $ mkdir build && cd build
+    $ cmake ../ 
+    $ make
+    $ make install 
+    $ make verify
+    
+If you get an error that `cmake` cannot find `check` package, then try to find your `check` library location and add it 
+to the `pkg-config` and run `cmake` :  
+
+    $PKG_CONFIG_PATH=/usr/local/Cellar/check/0.12.0/lib/pkgconfig cmake ../
+    
 
 Installing on Windows
 =====================
