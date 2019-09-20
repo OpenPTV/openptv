@@ -6,6 +6,65 @@ I need this file to start preparing some structure in my head. Alex
 #define BUFFER_LENGTH 4 // we do something very simple and studpid here 
 #include "main.h"
 
+// These functions are part of the a test suite, see under /tests 
+
+void read_all_calibration(Calibration *calib[4], control_par *cpar) {
+    char ori_tmpl[] = "testing_fodder/cal/sym_cam%d.tif.ori";
+    char added_name[] = "testing_fodder/cal/cam1.tif.addpar";
+    char ori_name[40];
+    int cam;
+    
+    for (cam = 0; cam < cpar->num_cams; cam++) {
+        sprintf(ori_name, ori_tmpl, cam + 1);
+        calib[cam] = read_calibration(ori_name, added_name, NULL);
+    }
+}
+
+/*  correct_frame() performs the transition from pixel to metric to flat 
+    coordinates and x-sorting as required by the correspondence code.
+    
+    Arguments:
+    frame *frm - target information for all cameras.
+    control_par *cpar - parameters of image size, pixel size etc.
+    tol - tolerance parameter for iterative flattening phase, see 
+        trafo.h:correct_brown_affine_exact().
+*/
+coord_2d **correct_frame(frame *frm, Calibration *calib[], control_par *cpar, 
+    double tol) 
+{
+    coord_2d **corrected;
+    int cam, part;
+    
+    corrected = (coord_2d **) malloc(cpar->num_cams * sizeof(coord_2d *));
+    for (cam = 0; cam < cpar->num_cams; cam++) {
+        corrected[cam] = (coord_2d *) malloc(
+            frm->num_targets[cam] * sizeof(coord_2d));
+        if (corrected[cam] == NULL) {
+            /* roll back allocations and fail */
+            for (cam -= 1; cam >= 0; cam--) free(corrected[cam]);
+            free(corrected);
+            return NULL;
+        }
+        
+        for (part = 0; part < frm->num_targets[cam]; part++) {
+            pixel_to_metric(&corrected[cam][part].x, &corrected[cam][part].y,
+                          frm->targets[cam][part].x, frm->targets[cam][part].y,
+                          cpar);
+            
+            dist_to_flat(corrected[cam][part].x, corrected[cam][part].y,
+                calib[cam], &corrected[cam][part].x, &corrected[cam][part].y,
+                tol);
+        
+            corrected[cam][part].pnr = frm->targets[cam][part].pnr;
+        }
+        
+        /* This is expected by find_candidate() */
+        quicksort_coord2d_x(corrected[cam], frm->num_targets[cam]);
+    }
+    return corrected;
+}
+
+
 int main( int argc, const char* argv[] )
 {
     // initialize variables
@@ -14,13 +73,13 @@ int main( int argc, const char* argv[] )
     // DIR *dirp;
     // struct dirent *dp;
     char file_name[256];
-    int step;
+    int step, cam;
     unsigned char *img, *img_hp;
     target pix[MAXTARGETS], targ_t[MAXTARGETS];
     coord_2d **corrected;
     int match_counts[4];
-    n_tupel *con; // for correspondences
-    tracking_run *run;
+    n_tupel *con;
+    
 
 
     // read parameters from the working directory
@@ -48,7 +107,7 @@ int main( int argc, const char* argv[] )
     Calibration *calib[4]; // sorry only for 4 cameras now
     
     control_par *cpar = read_control_par("parameters/ptv.par");
-    read_all_calibration(calib, cpar->num_cams);
+    read_all_calibration(calib, cpar);
     free_control_par(cpar);
     
     tracking_run *run = tr_new_legacy("parameters/sequence.par",
@@ -96,7 +155,7 @@ int main( int argc, const char* argv[] )
             free(img);
             free(img_hp);
        } // inner loop is camera
-        corrected = correct_frame(run->fb->buf[step], calib, cpar, 0.0001);
+        coord_2d **corrected = correct_frame(run->fb->buf[step], calib, cpar, 0.0001);
         con = correspondences(run->fb->buf[step], corrected, run->vpar, run->cpar, calib, match_counts);
         run->fb->buf[step]->num_parts = match_counts[3]; // sum of all matches? 
        // so here is missing frame into run->frame ?
@@ -130,10 +189,10 @@ int main( int argc, const char* argv[] )
 
 
     /* Clean up */
-    for (cam = 0; cam < cpar->num_cams; cam++) 
-        free(corrected[cam]);
-    deallocate_adjacency_lists(list, cpar->num_cams);
-    deallocate_target_usage_marks(tusage, cpar->num_cams);
+    for (i = 1; i<run->cpar->num_cams+1; i++) 
+        free(corrected[i]);
+    // deallocate_adjacency_lists(correspond* lists[4][4], cpar->num_cams);
+    // deallocate_target_usage_marks(tusage, cpar->num_cams);
     free(con);
     free(run->vpar);
     free_control_par(run->cpar);
