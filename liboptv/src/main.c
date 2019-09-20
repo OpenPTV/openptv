@@ -9,8 +9,8 @@ I need this file to start preparing some structure in my head. Alex
 // These functions are part of the a test suite, see under /tests 
 
 void read_all_calibration(Calibration *calib[4], control_par *cpar) {
-    char ori_tmpl[] = "testing_fodder/cal/sym_cam%d.tif.ori";
-    char added_name[] = "testing_fodder/cal/cam1.tif.addpar";
+    char ori_tmpl[] = "cal/cam%d.tif.ori";
+    char added_name[] = "cal/cam1.tif.addpar";
     char ori_name[40];
     int cam;
     
@@ -103,6 +103,8 @@ int main( int argc, const char* argv[] )
 
     // change directory to the user-supplied working folder
     chdir(argv[1]);
+
+    printf ("changed directory to %s\n",argv[1]);
     
     // 2. read parameters and calibrations
     Calibration *calib[4]; // sorry only for 4 cameras now
@@ -110,6 +112,7 @@ int main( int argc, const char* argv[] )
     control_par *cpar = read_control_par("parameters/ptv.par");
     read_all_calibration(calib, cpar);
     free_control_par(cpar);
+    printf("read calibrations\n");
     
     run = tr_new_legacy("parameters/sequence.par",
                                       "parameters/track.par", "parameters/criteria.par",
@@ -122,7 +125,7 @@ int main( int argc, const char* argv[] )
     }
     printf("from frame %d to frame %d \n", run->seq_par->first, run->seq_par->last);
     
-    target_par *targ_read = read_target_par("parameters/targ_rec.par");
+    // target_par *targ_read = read_target_par("parameters/targ_rec.par");
 
     // initialize memory buffers
 
@@ -133,10 +136,12 @@ int main( int argc, const char* argv[] )
     for (step = run->seq_par->first; step < run->seq_par->last+1; step++) {
         for (cam = 0; cam < run->cpar->num_cams; cam++) {
         // we decided to focus just on the _targets, so we will read them from the
-        // test directory test_cavity         
+        // test directory test_cavity
+        printf("reading targets from cam %d %s\n", cam,run->fb->target_file_base[cam]);         
         run->fb->buf[step]->num_targets[cam] = read_targets(
             run->fb->buf[step]->targets[cam], run->fb->target_file_base[cam], step);
-        // if (run->fb-buf[step]->num_targets[cam] == -1) return 0;        
+        // if (run->fb-buf[step]->num_targets[cam] == -1) return 0;
+        printf("done \n");        
     
        } // inner loop is camera
         corrected = correct_frame(run->fb->buf[step], calib, cpar, 0.0001);
