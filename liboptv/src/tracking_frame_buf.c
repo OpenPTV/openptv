@@ -46,15 +46,13 @@ int read_targets(target buffer[], char* file_base, int frame_num) {
     int	tix, num_targets, scanf_ok;
     char filein[STR_MAX_LEN + 1];
 
-    printf("inside read_targets\n");
-
     if (frame_num > 0) {
         sprintf(filein, "%s%04d%s", file_base, frame_num, "_targets");
     } else {
         strncpy(filein, file_base, STR_MAX_LEN);
         strncat(filein, "_targets", STR_MAX_LEN);
     }
-    printf("filein %s",filein);
+
     FILEIN = fopen (filein, "r");
     if (! FILEIN) {
         printf("Can't open ascii file: %s\n", filein);

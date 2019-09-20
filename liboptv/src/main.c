@@ -137,16 +137,38 @@ int main( int argc, const char* argv[] )
         for (cam = 0; cam < run->cpar->num_cams; cam++) {
         // we decided to focus just on the _targets, so we will read them from the
         // test directory test_cavity
-        printf("reading targets from cam %d %s\n", cam,run->fb->target_file_base[cam]);         
-        run->fb->buf[step]->num_targets[cam] = read_targets(
-            run->fb->buf[step]->targets[cam], run->fb->target_file_base[cam], step);
+        printf("reading targets from cam %d %s\n", cam,run->fb->target_file_base[cam]);
+        printf("step is %d\n",step);
+
+    /*
+    target tbuf[2]; 
+    target t1 = {0, 1127.0000, 796.0000, 13320, 111, 120, 828903, 1};
+    target t2 = {1, 796.0000, 809.0000, 13108, 113, 116, 658928, 0};
+    
+    char *file_base = "testing_fodder/sample_";
+    int frame_num = 42;
+    int targets_read = 0;
+    
+    targets_read = read_targets(tbuf, file_base, frame_num);
+
+    */
+
+           run->fb->buf[step - run->seq_par->first]->num_targets[cam] = read_targets(
+            run->fb->buf[step - run->seq_par->first]->targets[cam], run->fb->target_file_base[cam], step);
+            printf("run->fb->buf[step]->num_targets[cam] is %d\n",run->fb->buf[step - run->seq_par->first]->num_targets[cam]);
+            printf("and first x is %f\n",run->fb->buf[step - run->seq_par->first]->targets[cam][0].x);
+         // run->fb->buf[step]->num_targets[cam] = target_reads;
+         //run->fb->buf[step]->targets[cam] = pix;
+
+        // run->fb->buf[step]->num_targets[cam] = read_targets(
+        //     run->fb->buf[step]->targets[cam], run->fb->target_file_base[cam], step);
         // if (run->fb-buf[step]->num_targets[cam] == -1) return 0;
         printf("done \n");        
     
        } // inner loop is camera
-        corrected = correct_frame(run->fb->buf[step], calib, cpar, 0.0001);
-        con = correspondences(run->fb->buf[step], corrected, run->vpar, run->cpar, calib, match_counts);
-        run->fb->buf[step]->num_parts = match_counts[3]; // sum of all matches? 
+        corrected = correct_frame(run->fb->buf[step - run->seq_par->first], calib, cpar, 0.0001);
+        con = correspondences(run->fb->buf[step - run->seq_par->first], corrected, run->vpar, run->cpar, calib, match_counts);
+        run->fb->buf[step - run->seq_par->first]->num_parts = match_counts[3]; // sum of all matches? 
        // so here is missing frame into run->frame ?
        // WORK HERE 
 
