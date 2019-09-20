@@ -87,12 +87,14 @@ int main( int argc, const char* argv[] )
             } else {
                 memcpy(img_hp, img, run->cpar->imx*run->cpar->imy);
             }
-            free(img);
-            free(img_hp);
             // c. segmentation
             // detection
             //ntargets = peak_fit(img_hp, targ_read, 0, run->cpar->imx, 0, run->cpar->imy, run->cpar, 1, pix);
             run->fb->buf[step]->num_targets[i] = targ_rec(img_hp, targ_read, 0, run->cpar->imx, 0, run->cpar->imy, run->cpar, 1, run->fb->buf[step]->targets[i]);
+            
+            // release temporary memory
+            free(img);
+            free(img_hp);
        } // inner loop is camera
         corrected = correct_frame(run->fb->buf[step], calib, cpar, 0.0001);
         con = correspondences(run->fb->buf[step], corrected, run->vpar, run->cpar, calib, match_counts);
