@@ -70,16 +70,18 @@ coord_2d **correct_frame(frame *frm, Calibration *calib[], control_par *cpar,
     return corrected;
 }
 
-int main(int argc, const char *argv[])
+// int main(int argc, const char *argv[])
+int main()
 {
     // initialize variables
 
-    int i, j, ntargets, step, cam, geo_id;
+    int i, cam, ntargets, step, geo_id;
     coord_2d **corrected;
     int match_counts[4];
     n_tupel *corresp_buf;
     tracking_run *run;
     vec3d res;
+    vec2d targ; 
 
     corres t_corres = { 3, {96, 66, 26, 26} };
     P t_path = {
@@ -96,21 +98,31 @@ int main(int argc, const char *argv[])
 
     // 1. process inputs: directory, first frame, last frame
 
-    printf("This program was called with \"%s\".\n", argv[0]);
+    // printf("This program was called with \"%s\".\n", argv[0]);
 
-    if (argc != 2 && argc != 4)
-    {
-        printf("Wrong number of inputs, expecting: \n");
-        printf(" ./openptv test_cavity \n");
-        printf(" or \n");
-        printf(" ./openptv test_cavity 10000 10004 \n");
-        return 0;
-    }
+    // argc = 4;
+
+    // argv[1] = '../tests/testing_fodder/test_cavity/';
+    // argv[2] = 10001;
+    // argv[3] = 10004;
+
+    // if (argc != 2 && argc != 4)
+    // {
+    //     printf("Wrong number of inputs, expecting: \n");
+    //     printf(" ./main ../tests/testing_fodder/test_cavity/ 10001 10004 \n");
+    //     return 0;
+    // }
+
+    // argv[1] = '../tests/testing_fodder/test_cavity/';
+    // argv[2] = 10001;
+    // argv[3] = 10004;
 
     // change directory to the user-supplied working folder
-    chdir(argv[1]);
+    // chdir(argv[1]);
 
-    printf("changed directory to %s\n", argv[1]);
+    chdir("../tests/testing_fodder/test_cavity/");
+
+    // printf("changed directory to %s\n", argv[1]);
 
     // 2. read parameters and calibrations
     Calibration *calib[4]; // sorry only for 4 cameras now
@@ -124,11 +136,14 @@ int main(int argc, const char *argv[])
                         "parameters/track.par", "parameters/criteria.par",
                         "parameters/ptv.par", calib);
 
-    if (argc == 4)
-    {
-        run->seq_par->first = atoi(argv[2]);
-        run->seq_par->last = atoi(argv[3]);
-    }
+    // if (argc == 4)
+    // {
+    //     run->seq_par->first = atoi(argv[2]);
+    //     run->seq_par->last = atoi(argv[3]);
+    // }
+    run->seq_par->first = 10001;
+    run->seq_par->last = 10004;
+
     printf("from frame %d to frame %d \n", run->seq_par->first, run->seq_par->last);
 
     // target_par *targ_read = read_target_par("parameters/targ_rec.par");
@@ -136,14 +151,14 @@ int main(int argc, const char *argv[])
     // initialize memory buffers
 
     // for (step = 0; step < N_FRAMES_IN_DIRECTORY-BUFFER_LENGTH-1; step+BUFFER_LENGTH){
-    // MAIN LOOP - see below we will just give inputs of 10000 10004 as a very simple approach
+    // MAIN LOOP - see below we will camust give inputs of 10000 10004 as a very simple approach
 
     // for each camera and for each time step the images are processed
     for (step = run->seq_par->first; step < run->seq_par->last + 1; step++)
     {
         for (cam = 0; cam < run->cpar->num_cams; cam++)
         {
-            // we decided to focus just on the _targets, so we will read them from the
+            // we decided to focus camust on the _targets, so we will read them from the
             // test directory test_cavity
             printf("reading targets from %s%d\n", run->fb->target_file_base[cam], step);
 
@@ -184,35 +199,29 @@ int main(int argc, const char *argv[])
 
 
         for (i=0; i<num_parts; i++) {
-		
-            for (j=0; j<run->cpar->num_cams; j++) {
-                if (corresp_buf[i].p[j] >= 0)  
-                    p[j] = corrected[j][corresp_buf[i].p[j]].pnr; 
-                else				   
-                    p[j] = -1;
-            }
-		
-            for (j=0; j<run->cpar->num_cams; j++) {
-                if (p[j] > -1) {
-                    x[j] = run->fb->buf[step - run->seq_par->first]->targets[j][p[j]].x;	  // crd is pix likely 
-                    y[j] = run->fb->buf[step - run->seq_par->first]->targets[j][p[j]].y;
-                    // n++;
-                }
-                else {
-                    x[j] = -1e10;	
-                    y[j] = -1e10;
-                    // if (p[j] == -2) n = -100;
-                }
+            for (cam=0; cam < run->cpar->num_cams; cam++) {
+                if (corresp_buf[i].p[cam] >= 0)  
+                    p[cam] = corrected[cam][corresp_buf[i].p[cam]].pnr;
+                else
+                    p[cam] = -1;
             }
 
-            vec2d targ; 
-            targ[0] = corrected[j][i].x;
-            targ[1] = corrected[j][i].y;
+
+            // printf("corrected %d %f %f \n ",corrected[cam][corresp_buf[i].p[cam]].pnr, corrected[cam][corresp_buf[i].p[cam]].x,corrected[cam][corresp_buf[i].p[cam]].y);
+            if (p[cam] > -1){
+                pixel_to_metric(&targ[0], &targ[1], \
+                    run->fb->buf[step - run->seq_par->first]->targets[cam][p[cam]].x, \
+                    run->fb->buf[step - run->seq_par->first]->targets[cam][p[cam]].y, \
+                    run->cpar);
+            } else {
+                targ[0] = 1e-10;
+                targ[1] = 1e-10;
+            }
             skew_dist = point_position(&targ, run->cpar->num_cams, run->cpar->mm, calib, res);
 
             t_corres.nr = i;
             for (cam=0; cam < cpar->num_cams; cam++){
-                t_corres.p[cam] = run->fb->buf[step - run->seq_par->first]->targets[cam][p[j]].pnr;
+                t_corres.p[cam] = run->fb->buf[step - run->seq_par->first]->targets[cam][p[cam]].pnr;
             }
             run->fb->buf[step - run->seq_par->first]->correspond[i] = t_corres;
 
@@ -241,7 +250,7 @@ int main(int argc, const char *argv[])
     // and we will store it to binary files. Later if someone wants to do
     // tracking, our simmple solution is not good enough. we kind of doing 3D-PIV here
     // of 4 frames and show the vectors. The quasi-vectors are not really connected. if we
-    // will create nice animation - then the user will build trajectories him/herself.
+    // will create nice animation - then the user will build tracamectories him/herself.
 
     for (cam -= 1; cam >= 0; cam--)
         free(corrected[cam]);
