@@ -78,13 +78,14 @@ int main(int argc, const char *argv[])
     // DIR *dirp;
     // struct dirent *dp;
     char file_name[256];
-    int step, cam;
-    unsigned char *img, *img_hp;
-    target pix[MAXTARGETS], targ_t[MAXTARGETS];
-    coord_2d **corrected;
+    int step, cam, geo_id;
+    target pix[MAXTARGETS], targ_t[MAXTARGETS], targ;
+    coord_2d **corrected, **sorted_pos;
+    int **sorted_corresp;
     int match_counts[4];
-    n_tupel *con;
+    n_tupel *corresp_buf;
     tracking_run *run;
+    vec3d res;
 
     // read parameters from the working directory
     // for simplicity all names are default and hard coded (sorry)
@@ -140,36 +141,128 @@ int main(int argc, const char *argv[])
         {
             // we decided to focus just on the _targets, so we will read them from the
             // test directory test_cavity
-            printf("reading targets from cam %d %s\n", cam, run->fb->target_file_base[cam]);
-            printf("step is %d\n", step);
-
-            /*
-    target tbuf[2]; 
-    target t1 = {0, 1127.0000, 796.0000, 13320, 111, 120, 828903, 1};
-    target t2 = {1, 796.0000, 809.0000, 13108, 113, 116, 658928, 0};
-    
-    char *file_base = "testing_fodder/sample_";
-    int frame_num = 42;
-    int targets_read = 0;
-    
-    targets_read = read_targets(tbuf, file_base, frame_num);
-
-    */
+            printf("reading targets from %s%d\n", run->fb->target_file_base[cam], step);
 
             run->fb->buf[step - run->seq_par->first]->num_targets[cam] = read_targets(
                 run->fb->buf[step - run->seq_par->first]->targets[cam], run->fb->target_file_base[cam], step);
-            printf("run->fb->buf[step]->num_targets[cam] is %d\n", run->fb->buf[step - run->seq_par->first]->num_targets[cam]);
-            printf("and first x is %f\n", run->fb->buf[step - run->seq_par->first]->targets[cam][0].x);
+
+            quicksort_target_y(run->fb->buf[step - run->seq_par->first]->targets[cam], run->fb->buf[step - run->seq_par->first]->num_targets[cam]);
+
+            for (i = 0; i < run->fb->buf[step - run->seq_par->first]->num_targets[cam]; i++)
+                run->fb->buf[step - run->seq_par->first]->targets[cam][i].pnr = i;
+
+            // debugging purposes print the status of targets - see below another print.
+            printf("%d targets and the first is %f,%f \n ",
+                   run->fb->buf[step - run->seq_par->first]->num_targets[cam],
+                   run->fb->buf[step - run->seq_par->first]->targets[cam][0].x,
+                   run->fb->buf[step - run->seq_par->first]->targets[cam][0].y);
+
         } // inner loop is per camera
         corrected = correct_frame(run->fb->buf[step - run->seq_par->first], calib, cpar, 0.0001);
-        con = correspondences(run->fb->buf[step - run->seq_par->first], corrected, run->vpar, run->cpar, calib, match_counts);
-        run->fb->buf[step - run->seq_par->first]->num_parts = match_counts[3]; // sum of all matches?
+        corresp_buf = correspondences(run->fb->buf[step - run->seq_par->first], corrected, run->vpar, run->cpar, calib, match_counts);
+        run->fb->buf[step - run->seq_par->first]->num_parts = match_counts[3];
         printf("number of matched points is %d \n ", run->fb->buf[step - run->seq_par->first]->num_parts);
-        // so here is missing frame into run->frame ?
-        // WORK HERE
 
-        // we need to push con into the run->fb somehow . 
-        
+        // first we need to create 3d points after correspondences and fill it into the buffer
+        // use point_position and loop through the num_parts
+        // probably feed it directly into the buffer
+
+        // so we split into two parts:
+        // first i copy the code from correspondences.pyx
+        // and create the same types of arrays in C
+        // then we will convert those to 3D using similar approach to what is now in Python
+
+    
+        // return structures
+        sorted_pos = (coord_2d **)malloc(run->cpar->num_cams * sizeof(coord_2d *));
+        sorted_corresp = (int **)malloc(run->cpar->num_cams * sizeof(int *));
+
+        int last_count = 0;
+
+        for (int clique_type = 0; clique_type < run->cpar->num_cams; clique_type++)
+        {
+            num_points = match_counts[4 - run->cpar->num_cams + clique_type] // for 1-4 cameras
+            
+            sorted_pos[clique_type] = (coord_2d *)malloc(num_points * sizeof(coord_2d));
+            
+            if (sorted_pos[clique_type] == NULL)
+            {
+                /* roll back allocations and fail */
+                for (cam -= 1; cam >= 0; cam--)
+                    free(sorted_pos[clique_type]);
+                free(sorted_pos);
+                return NULL;
+            }
+            
+            sorted_corresp[clique_type] = (int *)malloc(num_points * sizeof(int));
+
+            if (sorted_corresp[clique_type] == NULL)
+            {
+                /* roll back allocations and fail */
+                for (cam -= 1; cam >= 0; cam--)
+                    free(sorted_corresp[clique_type]);
+                free(sorted_corresp);
+                return NULL;
+            }
+
+
+            coord_2d *clique_targs = (coord_2d *)malloc(cpar->num_cams*sizeof(coord_2d *)); 
+            //np.full((num_cams, num_points, 2), PT_UNUSED,
+                //         dtype=np.float64)
+            int *clique_ids = (int *)malloc(cnp.full((num_cams, num_points), CORRES_NONE,
+                //         dtype=np.int_)
+
+                // Trace back the pixel target properties through the flat metric
+                // intermediary that's x-sorted.
+                
+            for (cam = 0; cam < run->cpar->num_cams; cam++) 
+            {
+                for ( pt = 0; pt < num_points; pt++)
+                {
+                    geo_id = corresp_buf[pt + last_count].p[cam];
+                    if (geo_id < 0)
+                        continue;
+
+                    p1 = corrected[cam][geo_id].pnr;
+                    clique_ids[cam][pt] = p1;
+
+                    if (p1 > -1) 
+                    {
+                        targ = run->fb->buf[step - run->seq_par->first]->targets[cam][p1];
+                        clique_targs[cam][pt][0] = targ.x;
+                        clique_targs[cam][pt][1] = targ.y;
+                    }
+                } // points
+            } // cam 
+
+            last_count += num_points;
+            sorted_pos[clique_type] = clique_targs;
+            sorted_corresp[clique_type] = clique_ids;
+        } // cliquies
+
+        // Clean up.
+        num_targs = match_counts[run->cpar->num_cams - 1];
+
+    flat = np.array([corrected[i].get_by_pnrs(sorted_corresp[i]) \
+                     for i in range(len(cals))])
+    pos, rcm = point_positions(
+        flat.transpose(1,0,2), cpar, cals, vpar)
+
+
+        vec2d targs_plain[4]; // x,y coordinates in image space for 4 Cameras
+
+    skew_dist = point_position(targs_plain, num_cams, &media_par, calib, res);
+
+        for
+            pt in range(num_targets) : 
+            targ = targets[pt] 
+            rcm[pt] = point_position(<vec2d *>(targ.data), num_cams,
+                      cparam._control_par.mm, calib, <vec3d> np.PyArray_GETPTR2(res, pt, 0))
+
+        // second we need to reassign pointers to targets and refill the buffer with targets
+        // probably we do not:
+        // if I understand correctly, this line inside correspondences says that we already updated the frame buffer with the right tnr pointers.
+        // frm->targets[j][p1].tnr= i;
 
     } // external loop is through frames
 
@@ -197,8 +290,9 @@ int main(int argc, const char *argv[])
     // of 4 frames and show the vectors. The quasi-vectors are not really connected. if we
     // will create nice animation - then the user will build trajectories him/herself.
 
-    for (cam -= 1; cam >= 0; cam--) free(corrected[cam]);
-    
+    for (cam -= 1; cam >= 0; cam--)
+        free(corrected[cam]);
+
     free(corrected);
     free(con);
     free(run->vpar);
