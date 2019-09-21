@@ -74,18 +74,22 @@ int main(int argc, const char *argv[])
 {
     // initialize variables
 
-    int i, ntargets;
-    // DIR *dirp;
-    // struct dirent *dp;
-    char file_name[256];
-    int step, cam, geo_id;
-    target pix[MAXTARGETS], targ_t[MAXTARGETS], targ;
-    coord_2d **corrected, **sorted_pos, **flat;
-    int **sorted_corresp;
+    int i, j, ntargets, step, cam, geo_id;
+    coord_2d **corrected;
     int match_counts[4];
     n_tupel *corresp_buf;
     tracking_run *run;
     vec3d res;
+
+    corres t_corres = { 3, {96, 66, 26, 26} };
+    P t_path = {
+        .x = {45.219, -20.269, 25.946},
+        .prev = -1,
+        .next = -2,
+        .prio = 4,
+        .finaldecis = 1000000.0,
+        .inlist = 0.
+    };
 
     // read parameters from the working directory
     // for simplicity all names are default and hard coded (sorry)
@@ -174,117 +178,45 @@ int main(int argc, const char *argv[])
 
 
         // shortcut
-        int num_parts = run->fb->buf[step - run->seq_par->first]->num_parts; 
+        int num_parts = run->fb->buf[step - run->seq_par->first]->num_parts;
+        int p[4];
+        float x[4],y[4],skew_dist; 
 
-        // return structures
-        sorted_pos = (coord_2d **)malloc(run->cpar->num_cams * sizeof(coord_2d *));
-        sorted_corresp = (int **)malloc(run->cpar->num_cams * sizeof(int *));
 
-        for (cam = 0; cam < run->cpar->num_cams; cam++)
-        {
-            sorted_pos[cam] = (coord_2d *)malloc(num_parts * sizeof(coord_2d));
-            if (sorted_pos[cam] == NULL)
-            {
-                /* roll back allocations and fail */
-                for (cam -= 1; cam >= 0; cam--)
-                    free(sorted_pos[cam]);
-                free(sorted_pos);
-                return NULL;
+        for (i=0; i<num_parts; i++) {
+		
+            for (j=0; j<run->cpar->num_cams; j++) {
+                if (corresp_buffer[i].p[j] >= 0)  
+                    p[j] = corrected[j][con[i].p[j]].pnr; 
+                else				   
+                    p[j] = -1;
             }
-                        
-            sorted_corresp[cam]  = (int *)malloc(num_parts * sizeof(int));
-
-            if (sorted_corresp[cam] == NULL)
-            {
-                /* roll back allocations and fail */
-                for (cam -= 1; cam >= 0; cam--)
-                    free(sorted_corresp[cam]);
-                free(sorted_corresp);
-                return NULL;
+		
+            for (j=0, n=0; j<run->cpar->num_cams; j++) {
+                if (p[j] > -1) {
+                    x[j] = run->fb->buf[step - run->seq_par->first]->num_targets[j][p[j]].x;	  // crd is pix likely 
+                    y[j] = run->fb->buf[step - run->seq_par->first]->num_targets[j][p[j]].y;
+                    n++;
+                }
+                else {
+                    x[j] = -1e10;	
+                    y[j] = -1e10;
+                    if (p[j] == -2) n = -100;
+                }
             }
-        }
 
-        int last_count = 0;
+            skew_dist = point_position(corrected[j][i], run->cpar->num_cams, run->cpar->mm, calib, res);
 
-        for (int clique_type = 0; clique_type < run->cpar->num_cams; clique_type++)
-        {
-            num_points = match_counts[4 - run->cpar->num_cams + clique_type] // for 1-4 cameras
-                
-            for (cam = 0; cam < run->cpar->num_cams; cam++) 
-            {
-                for ( pt = last_count; pt < num_points; pt++)
-                {
-                    geo_id = corresp_buf[pt + last_count].p[cam];
-                    if (geo_id < 0)
-                        continue;
+            t_corres[0] = i;
+            for (cam=0; cam < cpar->num_cams; cam++){
+                t_corres[1][cam] = run->fb->buf[step - run->seq_par->first]->targets[cam][p[j]].pnr
+            }
+            run->fb->buf[step - run->seq_par->first].correspond[i] = t_corres;
 
-                    p1 = corrected[cam][geo_id].pnr;
-                    sorted_corresp[cam][pt] = p1;
-
-                    if (p1 > -1) 
-                    {
-                        targ = run->fb->buf[step - run->seq_par->first]->targets[cam][p1];
-                        sorted_pos[cam][pt][0] = targ.x;
-                        sorted_pos[cam][pt][1] = targ.y;
-                    }
-                } // points
-            } // cam 
-
-            last_count += num_points;
-        } // 
-
-
-    // sort corrected by the sorted_corresp:
-    // prepare the memory for
-
-    flat = (coord_2d **)malloc(cpar->num_cams * sizeof(coord_2d *));
-    for (cam = 0; cam < run->cpar->num_cams; cam++)
-    {
-        flat[cam] = (coord_2d *)malloc(
-            run->fb->buf[step - run->seq_par->first]->num_targets[cam] * sizeof(coord_2d));
-        if (flat[cam] == NULL)
-        {
-            /* roll back allocations and fail */
-            for (cam -= 1; cam >= 0; cam--)
-                free(flat[cam]);
-            free(flat);
-            return NULL;
-        }
-    }
-
-    
-    for (i=0;i<num_points;i++){
-
-
-    }
-    flat = np.array([corrected[i].get_by_pnrs(sorted_corresp[i]) \
-                     for i in range(len(cals))])
-    pos, rcm = point_positions(
-        flat.transpose(1,0,2), cpar, cals, vpar)
-
-
-        vec2d targs_plain[4]; // x,y coordinates in image space for 4 Cameras
-
-    skew_dist = point_position(targs_plain, num_cams, &media_par, calib, res);
-
-        for
-            pt in range(num_targets) : 
-            targ = targets[pt] 
-            rcm[pt] = point_position(<vec2d *>(targ.data), num_cams,
-                      cparam._control_par.mm, calib, <vec3d> np.PyArray_GETPTR2(res, pt, 0))
-
-        // second we need to reassign pointers to targets and refill the buffer with targets
-        // probably we do not:
-        // if I understand correctly, this line inside correspondences says that we already updated the frame buffer with the right tnr pointers.
-        // frm->targets[j][p1].tnr= i;
+            t_path.x = res;
+            run->fb->buf[step - run->seq_par->first].path_info[i] = t_path;
 
     } // external loop is through frames
-
-    // ok, theoretically we have now a buffer full of stuff from 4 frames
-    // it's a good buffer on which we can just track stuff
-    // and then we need to jump to a next chunk, remove all and start over.
-    // the missing part is how to "chain the chunks" or make a smart use of
-    // memory and buffers, it's beyond me now
 
     run->tpar->add = 0;
     track_forward_start(run);
