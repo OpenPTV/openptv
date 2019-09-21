@@ -220,7 +220,7 @@ int main()
             skew_dist = point_position(&targ, run->cpar->num_cams, run->cpar->mm, calib, res);
 
             t_corres.nr = i;
-            for (cam=0; cam < cpar->num_cams; cam++){
+            for (cam=0; cam < run->cpar->num_cams; cam++){
                 t_corres.p[cam] = run->fb->buf[step - run->seq_par->first]->targets[cam][p[cam]].pnr;
             }
             run->fb->buf[step - run->seq_par->first]->correspond[i] = t_corres;
