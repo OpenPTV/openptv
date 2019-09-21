@@ -186,35 +186,42 @@ int main(int argc, const char *argv[])
         for (i=0; i<num_parts; i++) {
 		
             for (j=0; j<run->cpar->num_cams; j++) {
-                if (corresp_buffer[i].p[j] >= 0)  
-                    p[j] = corrected[j][con[i].p[j]].pnr; 
+                if (corresp_buf[i].p[j] >= 0)  
+                    p[j] = corrected[j][corresp_buf[i].p[j]].pnr; 
                 else				   
                     p[j] = -1;
             }
 		
-            for (j=0, n=0; j<run->cpar->num_cams; j++) {
+            for (j=0; j<run->cpar->num_cams; j++) {
                 if (p[j] > -1) {
-                    x[j] = run->fb->buf[step - run->seq_par->first]->num_targets[j][p[j]].x;	  // crd is pix likely 
-                    y[j] = run->fb->buf[step - run->seq_par->first]->num_targets[j][p[j]].y;
-                    n++;
+                    x[j] = run->fb->buf[step - run->seq_par->first]->targets[j][p[j]].x;	  // crd is pix likely 
+                    y[j] = run->fb->buf[step - run->seq_par->first]->targets[j][p[j]].y;
+                    // n++;
                 }
                 else {
                     x[j] = -1e10;	
                     y[j] = -1e10;
-                    if (p[j] == -2) n = -100;
+                    // if (p[j] == -2) n = -100;
                 }
             }
 
-            skew_dist = point_position(corrected[j][i], run->cpar->num_cams, run->cpar->mm, calib, res);
+            vec2d targ; 
+            targ[0] = corrected[j][i].x;
+            targ[1] = corrected[j][i].y;
+            skew_dist = point_position(&targ, run->cpar->num_cams, run->cpar->mm, calib, res);
 
-            t_corres[0] = i;
+            t_corres.nr = i;
             for (cam=0; cam < cpar->num_cams; cam++){
-                t_corres[1][cam] = run->fb->buf[step - run->seq_par->first]->targets[cam][p[j]].pnr
+                t_corres.p[cam] = run->fb->buf[step - run->seq_par->first]->targets[cam][p[j]].pnr;
             }
-            run->fb->buf[step - run->seq_par->first].correspond[i] = t_corres;
+            run->fb->buf[step - run->seq_par->first]->correspond[i] = t_corres;
 
-            t_path.x = res;
-            run->fb->buf[step - run->seq_par->first].path_info[i] = t_path;
+            t_path.x[0] = res[0];
+            t_path.x[1] = res[1];
+            t_path.x[2] = res[2];
+
+             run->fb->buf[step - run->seq_par->first]->path_info[i] = t_path;
+        }
 
     } // external loop is through frames
 
@@ -240,7 +247,7 @@ int main(int argc, const char *argv[])
         free(corrected[cam]);
 
     free(corrected);
-    free(con);
+    free(corresp_buf);
     free(run->vpar);
     free_control_par(run->cpar);
 
