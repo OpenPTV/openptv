@@ -80,7 +80,7 @@ int main(int argc, const char *argv[])
     char file_name[256];
     int step, cam, geo_id;
     target pix[MAXTARGETS], targ_t[MAXTARGETS], targ;
-    coord_2d **corrected, **sorted_pos;
+    coord_2d **corrected, **sorted_pos, **flat;
     int **sorted_corresp;
     int match_counts[4];
     n_tupel *corresp_buf;
@@ -160,7 +160,7 @@ int main(int argc, const char *argv[])
         } // inner loop is per camera
         corrected = correct_frame(run->fb->buf[step - run->seq_par->first], calib, cpar, 0.0001);
         corresp_buf = correspondences(run->fb->buf[step - run->seq_par->first], corrected, run->vpar, run->cpar, calib, match_counts);
-        run->fb->buf[step - run->seq_par->first]->num_parts = match_counts[3];
+        run->fb->buf[step - run->seq_par->first]->num_parts = match_counts[run->cpar->num_cams - 1];
         printf("number of matched points is %d \n ", run->fb->buf[step - run->seq_par->first]->num_parts);
 
         // first we need to create 3d points after correspondences and fill it into the buffer
@@ -172,77 +172,91 @@ int main(int argc, const char *argv[])
         // and create the same types of arrays in C
         // then we will convert those to 3D using similar approach to what is now in Python
 
-    
+
+        // shortcut
+        int num_parts = run->fb->buf[step - run->seq_par->first]->num_parts; 
+
         // return structures
         sorted_pos = (coord_2d **)malloc(run->cpar->num_cams * sizeof(coord_2d *));
         sorted_corresp = (int **)malloc(run->cpar->num_cams * sizeof(int *));
+
+        for (cam = 0; cam < run->cpar->num_cams; cam++)
+        {
+            sorted_pos[cam] = (coord_2d *)malloc(num_parts * sizeof(coord_2d));
+            if (sorted_pos[cam] == NULL)
+            {
+                /* roll back allocations and fail */
+                for (cam -= 1; cam >= 0; cam--)
+                    free(sorted_pos[cam]);
+                free(sorted_pos);
+                return NULL;
+            }
+                        
+            sorted_corresp[cam]  = (int *)malloc(num_parts * sizeof(int));
+
+            if (sorted_corresp[cam] == NULL)
+            {
+                /* roll back allocations and fail */
+                for (cam -= 1; cam >= 0; cam--)
+                    free(sorted_corresp[cam]);
+                free(sorted_corresp);
+                return NULL;
+            }
+        }
 
         int last_count = 0;
 
         for (int clique_type = 0; clique_type < run->cpar->num_cams; clique_type++)
         {
             num_points = match_counts[4 - run->cpar->num_cams + clique_type] // for 1-4 cameras
-            
-            sorted_pos[clique_type] = (coord_2d *)malloc(num_points * sizeof(coord_2d));
-            
-            if (sorted_pos[clique_type] == NULL)
-            {
-                /* roll back allocations and fail */
-                for (cam -= 1; cam >= 0; cam--)
-                    free(sorted_pos[clique_type]);
-                free(sorted_pos);
-                return NULL;
-            }
-            
-            sorted_corresp[clique_type] = (int *)malloc(num_points * sizeof(int));
-
-            if (sorted_corresp[clique_type] == NULL)
-            {
-                /* roll back allocations and fail */
-                for (cam -= 1; cam >= 0; cam--)
-                    free(sorted_corresp[clique_type]);
-                free(sorted_corresp);
-                return NULL;
-            }
-
-
-            coord_2d *clique_targs = (coord_2d *)malloc(cpar->num_cams*sizeof(coord_2d *)); 
-            //np.full((num_cams, num_points, 2), PT_UNUSED,
-                //         dtype=np.float64)
-            int *clique_ids = (int *)malloc(cnp.full((num_cams, num_points), CORRES_NONE,
-                //         dtype=np.int_)
-
-                // Trace back the pixel target properties through the flat metric
-                // intermediary that's x-sorted.
                 
             for (cam = 0; cam < run->cpar->num_cams; cam++) 
             {
-                for ( pt = 0; pt < num_points; pt++)
+                for ( pt = last_count; pt < num_points; pt++)
                 {
                     geo_id = corresp_buf[pt + last_count].p[cam];
                     if (geo_id < 0)
                         continue;
 
                     p1 = corrected[cam][geo_id].pnr;
-                    clique_ids[cam][pt] = p1;
+                    sorted_corresp[cam][pt] = p1;
 
                     if (p1 > -1) 
                     {
                         targ = run->fb->buf[step - run->seq_par->first]->targets[cam][p1];
-                        clique_targs[cam][pt][0] = targ.x;
-                        clique_targs[cam][pt][1] = targ.y;
+                        sorted_pos[cam][pt][0] = targ.x;
+                        sorted_pos[cam][pt][1] = targ.y;
                     }
                 } // points
             } // cam 
 
             last_count += num_points;
-            sorted_pos[clique_type] = clique_targs;
-            sorted_corresp[clique_type] = clique_ids;
-        } // cliquies
+        } // 
 
-        // Clean up.
-        num_targs = match_counts[run->cpar->num_cams - 1];
 
+    // sort corrected by the sorted_corresp:
+    // prepare the memory for
+
+    flat = (coord_2d **)malloc(cpar->num_cams * sizeof(coord_2d *));
+    for (cam = 0; cam < run->cpar->num_cams; cam++)
+    {
+        flat[cam] = (coord_2d *)malloc(
+            run->fb->buf[step - run->seq_par->first]->num_targets[cam] * sizeof(coord_2d));
+        if (flat[cam] == NULL)
+        {
+            /* roll back allocations and fail */
+            for (cam -= 1; cam >= 0; cam--)
+                free(flat[cam]);
+            free(flat);
+            return NULL;
+        }
+    }
+
+    
+    for (i=0;i<num_points;i++){
+
+
+    }
     flat = np.array([corrected[i].get_by_pnrs(sorted_corresp[i]) \
                      for i in range(len(cals))])
     pos, rcm = point_positions(
