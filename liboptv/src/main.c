@@ -170,16 +170,16 @@ int main()
                 run->fb->buf[lstep]->targets[cam][i].pnr = i;
 
             // debugging purposes print the status of targets - see below another print.
-            printf("%d targets and the first is %f,%f \n ",
-                   run->fb->buf[lstep]->num_targets[cam],
-                   run->fb->buf[lstep]->targets[cam][0].x,
-                   run->fb->buf[lstep]->targets[cam][0].y);
+            // printf("%d targets and the first is %f,%f \n ",
+            //        run->fb->buf[lstep]->num_targets[cam],
+            //        run->fb->buf[lstep]->targets[cam][0].x,
+            //        run->fb->buf[lstep]->targets[cam][0].y);
 
         } // inner loop is per camera
         corrected = correct_frame(run->fb->buf[lstep], calib, cpar, 0.0001);
         corresp_buf = correspondences(run->fb->buf[lstep], corrected, run->vpar, run->cpar, calib, match_counts);
         run->fb->buf[lstep]->num_parts = match_counts[run->cpar->num_cams - 1];
-        printf("number of matched points is %d \n ", run->fb->buf[lstep]->num_parts);
+        // printf("number of matched points is %d \n ", run->fb->buf[lstep]->num_parts);
 
         // first we need to create 3d points after correspondences and fill it into the buffer
         // use point_position and loop through the num_parts
@@ -213,13 +213,13 @@ int main()
                         run->fb->buf[lstep]->targets[cam][p[cam]].x, \
                         run->fb->buf[lstep]->targets[cam][p[cam]].y, \
                         run->cpar);
-                        printf("%f %f %d\n",targ[0],targ[1],p[cam]);
+                        // printf("%f %f %d\n",targ[0],targ[1],p[cam]);
                 } else {
                     targ[0] = 1e-10;
                     targ[1] = 1e-10;
                 }
                 skew_dist = point_position(&targ, run->cpar->num_cams, run->cpar->mm, calib, res);
-                printf("skew_dist = %f\n",skew_dist);
+                // printf("skew_dist = %f\n",skew_dist);
 
 
                 // for (cam=0; cam < run->cpar->num_cams; cam++){
