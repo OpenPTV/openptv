@@ -556,66 +556,6 @@ int write_frame(frame *self, char *corres_file_base, char *linkage_file_base,
     return 1;
 }
 
-// ----- Virtual functions redirection
-
-void fb_free(framebuf_base *self) {
-    self->_vptr->free(self);
-}
-
-int fb_read_frame_at_end(framebuf_base *self, int frame_num, int read_links) {
-    return self->_vptr->read_frame_at_end(self, frame_num, read_links);
-}
-
-int fb_write_frame_from_start(framebuf_base *self, int frame_num) {
-    return self->_vptr->write_frame_from_start(self, frame_num);
-}
-
-void fb_base_init(framebuf_base *new_buf, int buf_len, int num_cams, int max_targets) {
-    frame *alloc_frame;
-
-    new_buf->buf_len = buf_len;
-    new_buf->num_cams = num_cams;
-
-    new_buf->_ring_vec = (frame **) calloc(buf_len*2, sizeof(frame *));
-    new_buf->buf = new_buf->_ring_vec + buf_len;
-    
-    while (new_buf->buf != new_buf->_ring_vec) {
-        new_buf->buf--;
-        
-        alloc_frame = (frame *) malloc(sizeof(frame));
-        frame_init(alloc_frame, num_cams, max_targets);
-        
-        /* The second half of _ring_vec points to the same objects as the
-           first half. This allows direct indexing like fb->buf[buf_len - 1]
-           even when fb->buf moves forward. */
-        *(new_buf->buf) = alloc_frame;
-        *(new_buf->buf + buf_len) = alloc_frame;
-    }
-    /* Leaves new_buf->buf pointing to the beginning of _ring_vec,
-    which is what we want. */
-    
-    new_buf->_vptr = (fb_vtable*) malloc(sizeof(fb_vtable));
-}
-
-void fb_base_free(framebuf_base *self) {
-    self->buf = self->_ring_vec;
-    
-    while (self->buf != self->_ring_vec + self->buf_len) {
-        free_frame(*(self->buf));
-        free(*(self->buf));
-        self->buf++;
-    }
-    self->buf = NULL;
-    
-    free(self->_ring_vec);
-    self->_ring_vec = NULL;
-    
-    free(self->_vptr);
-    self->_vptr = NULL;
-}
-
-// -------- Specific Implementations of virtual functions.
-
 /* fb_init() allocates a frame buffer object and creates the frames
  * it buffers. The buffer is a ring-buffer based on a double-size vector.
  *  
@@ -634,18 +574,32 @@ void fb_init(framebuf *new_buf, int buf_len, int num_cams, int max_targets,\
     char *corres_file_base, char *linkage_file_base, char *prio_file_base,
     char **target_file_base)
 {
-    fb_base_init(&new_buf->base, buf_len, num_cams, max_targets);
+    frame *alloc_frame;
     
-    // Subclass-specific parameters:
+    new_buf->buf_len = buf_len;
+    new_buf->num_cams = num_cams;
     new_buf->corres_file_base = corres_file_base;
     new_buf->linkage_file_base = linkage_file_base;
     new_buf->prio_file_base = prio_file_base;
     new_buf->target_file_base = target_file_base;
     
-    // Set up the virtual functions table:
-    new_buf->base._vptr->free = fb_disk_free;
-    new_buf->base._vptr->read_frame_at_end = fb_disk_read_frame_at_end;
-    new_buf->base._vptr->write_frame_from_start = fb_disk_write_frame_from_start;
+    new_buf->_ring_vec = (frame **) calloc(buf_len*2, sizeof(frame *));
+    new_buf->buf = new_buf->_ring_vec + buf_len;
+    
+    while (new_buf->buf != new_buf->_ring_vec) {
+        new_buf->buf--;
+        
+        alloc_frame = (frame *) malloc(sizeof(frame));
+        frame_init(alloc_frame, num_cams, max_targets);
+        
+        /* The second half of _ring_vec points to the same objects as the
+           first half. This allows direct indexing like fb->buf[buf_len - 1]
+           even when fb->buf moves forward. */
+        *(new_buf->buf) = alloc_frame;
+        *(new_buf->buf + buf_len) = alloc_frame;
+    }
+    /* Leaves new_buf->buf pointing to the beginning of _ring_vec,
+    which is what we want. */
 }
 
 /* fb_free() frees all memory allocated for the frames and ring vector in a
@@ -654,8 +608,18 @@ void fb_init(framebuf *new_buf, int buf_len, int num_cams, int max_targets,\
  * Arguments:
  * framebuf *self - the framebuf holding the memory to free.
  */
-void fb_disk_free(framebuf_base *self_base) {
-    fb_base_free(self_base);
+void fb_free(framebuf *self) {
+    self->buf = self->_ring_vec;
+    
+    while (self->buf != self->_ring_vec + self->buf_len) {
+        free_frame(*(self->buf));
+        free(*(self->buf));
+        self->buf++;
+    }
+    self->buf = NULL;
+    
+    free(self->_ring_vec);
+    self->_ring_vec = NULL;
 }
 
 /* fb_next() advances the start pointer of the frame buffer, resetting it to the
@@ -664,7 +628,7 @@ void fb_disk_free(framebuf_base *self_base) {
  * Arguments:
  * framebuf *self - the framebuf to advance.
  */
-void fb_next(framebuf_base *self) {
+void fb_next(framebuf *self) {
     self->buf++;
     if (self->buf - self->_ring_vec >= self->buf_len)
         self->buf = self->_ring_vec;
@@ -676,7 +640,7 @@ void fb_next(framebuf_base *self) {
  * Arguments:
  * framebuf *self - the framebuf to advance.
  */
-void fb_prev(framebuf_base *self) {
+void fb_prev(framebuf *self) {
     self->buf--;
     if (self->buf < self->_ring_vec)
         self->buf = self->_ring_vec + self->buf_len - 1;
@@ -692,15 +656,13 @@ void fb_prev(framebuf_base *self) {
  * Returns:
  * True on success, false on failure.
  */
-int fb_disk_read_frame_at_end(framebuf_base *self_base, int frame_num, int read_links) {
-    framebuf* self = (framebuf*)self_base;
-    
+int fb_read_frame_at_end(framebuf *self, int frame_num, int read_links) {
     if (read_links) {
-        return read_frame(self->base.buf[self->base.buf_len - 1], self->corres_file_base,
+        return read_frame(self->buf[self->buf_len - 1], self->corres_file_base,
             self->linkage_file_base, self->prio_file_base, 
             self->target_file_base, frame_num);
     } else {
-        return read_frame(self->base.buf[self->base.buf_len - 1], self->corres_file_base,
+        return read_frame(self->buf[self->buf_len - 1], self->corres_file_base,
             NULL, NULL, self->target_file_base, frame_num);
     }
 }
@@ -708,16 +670,14 @@ int fb_disk_read_frame_at_end(framebuf_base *self_base, int frame_num, int read_
 /* fb_write_frame_from_start() writes the frame to the first position in the ring.
  *
  * Arguments:
- * *self - the framebuf object doing the reading.
+ * framebuf *self - the framebuf object doing the reading.
  * int frame_num - number of the frame to write in the sequence of frames.
  *
  * Returns:
  * True on success, false on failure.
  */
-int fb_disk_write_frame_from_start(framebuf_base *self_base, int frame_num) {
-    framebuf* self = (framebuf*)self_base;
-    
-    return write_frame(self->base.buf[0], self->corres_file_base,
+int fb_write_frame_from_start(framebuf *self, int frame_num) {
+    return write_frame(self->buf[0], self->corres_file_base,
         self->linkage_file_base, self->prio_file_base, self->target_file_base,
         frame_num);
 }

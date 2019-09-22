@@ -12,7 +12,7 @@
 #include "tracking_frame_buf.h"
 
 typedef struct {
-    framebuf_base *fb;
+    framebuf *fb;
     sequence_par *seq_par;
     track_par *tpar;
     volume_par *vpar;
