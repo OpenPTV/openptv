@@ -81,7 +81,8 @@ int main()
     n_tupel *corresp_buf;
     tracking_run *run;
     vec3d res;
-    vec2d targ; 
+    vec2d targ;
+    framebuf *frm; 
 
     corres t_corres = { 3, {96, 66, 26, 26} };
     P t_path = {
@@ -136,6 +137,9 @@ int main()
                         "parameters/track.par", "parameters/criteria.par",
                         "parameters/ptv.par", calib);
 
+
+    frm = *(run->fb);
+
     // if (argc == 4)
     // {
     //     run->seq_par->first = atoi(argv[2]);
@@ -160,6 +164,7 @@ int main()
         {
             // we decided to focus camust on the _targets, so we will read them from the
             // test directory test_cavity
+
             printf("reading targets from %s%d\n", run->fb->target_file_base[cam], step);
 
             run->fb->buf[step - run->seq_par->first]->num_targets[cam] = read_targets(
@@ -235,7 +240,8 @@ int main()
     } // external loop is through frames
 
     run->tpar->add = 0;
-    track_forward_start(run);
+    // we do not need to read frames - it's all in memory now
+    // track_forward_start(run); 
 
     for (step = run->seq_par->first + 1; step < run->seq_par->last; step++)
     {
