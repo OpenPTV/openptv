@@ -197,13 +197,12 @@ int main()
 
         for (i=0; i<run->fb->buf[lstep]->num_parts; i++) {
             for (cam = 0; cam < run->cpar->num_cams; cam++) {
-                printf("cam = %d\n",cam);
                 if (corresp_buf[i].p[cam] > -1){  
                     p[cam] = corrected[cam][corresp_buf[i].p[cam]].pnr;
-                    printf("p[%d] = %d,%d\n",cam,corresp_buf[i].p[cam],corrected[cam][corresp_buf[i].p[cam]].pnr);
+                    // printf("p[%d] = %d,%d\n",cam,corresp_buf[i].p[cam],corrected[cam][corresp_buf[i].p[cam]].pnr);
                 }else{
                     p[cam] = -1;
-                    printf("p[%d] = -1\n",cam);
+                    // printf("p[%d] = -1\n",cam);
                     }
             
 
@@ -214,16 +213,19 @@ int main()
                         run->fb->buf[lstep]->targets[cam][p[cam]].x, \
                         run->fb->buf[lstep]->targets[cam][p[cam]].y, \
                         run->cpar);
+                        printf("%f %f %d\n",targ[0],targ[1],p[cam]);
                 } else {
                     targ[0] = 1e-10;
                     targ[1] = 1e-10;
                 }
                 skew_dist = point_position(&targ, run->cpar->num_cams, run->cpar->mm, calib, res);
+                printf("skew_dist = %f\n",skew_dist);
 
+
+                // for (cam=0; cam < run->cpar->num_cams; cam++){
+                t_corres.p[cam] = run->fb->buf[lstep]->targets[cam][p[cam]].pnr;
+            }
                 t_corres.nr = i;
-                for (cam=0; cam < run->cpar->num_cams; cam++){
-                    t_corres.p[cam] = run->fb->buf[lstep]->targets[cam][p[cam]].pnr;
-                }
                 run->fb->buf[lstep]->correspond[i] = t_corres;
 
                 t_path.x[0] = res[0];
@@ -231,7 +233,7 @@ int main()
                 t_path.x[2] = res[2];
 
                 run->fb->buf[lstep]->path_info[i] = t_path;
-            }
+            //}
         }
 
     } // external loop is through frames
@@ -240,12 +242,14 @@ int main()
     // we do not need to read frames - it's all in memory now
     // track_forward_start(run); 
 
-    for (step = run->seq_par->first; step < run->seq_par->last; step++)
-    // for (step = run->seq_par->first + 1; step < run->seq_par->last; step++)
-    {
-        trackcorr_c_loop(run, step);
-    }
-    trackcorr_c_finish(run, run->seq_par->last);
+    // for (step = run->seq_par->first + 1 ; step < run->seq_par->last; step++)
+    // // for (step = run->seq_par->first + 1; step < run->seq_par->last; step++)
+    // {
+    //     trackcorr_c_loop(run, step);
+    // }
+    // trackcorr_c_finish(run, run->seq_par->last);
+
+    trackcorr_c_loop(run, run->seq_par->first);
 
     // probably here we need to send something to plot it
     // or store in some memory for the next chunk?
