@@ -209,17 +209,26 @@ int main()
 
                 // printf("corrected %d %f %f \n ",corrected[cam][corresp_buf[i].p[cam]].pnr, corrected[cam][corresp_buf[i].p[cam]].x,corrected[cam][corresp_buf[i].p[cam]].y);
                 if (p[cam] > -1){
-                    pixel_to_metric(&targ[0], &targ[1], \
-                        run->fb->buf[lstep]->targets[cam][p[cam]].x, \
-                        run->fb->buf[lstep]->targets[cam][p[cam]].y, \
-                        run->cpar);
+                    // Here I'm kind of lost that should be sent to point_position()?
+                    // apparently it says: "the 2D metric, flat, centred coordinates 
+                    // of the identified point projection"
+                    // so it's corrected? 
+                    // the skew_distance is then huge and positions are wrong as printed
+                        targ[0] = corrected[cam][p[cam]].x;
+                        targ[1] = corrected[cam][p[cam]].y;
+                    // pixel_to_metric(&targ[0], &targ[1], \
+                    //     run->fb->buf[lstep]->targets[cam][p[cam]].x, \
+                    //     run->fb->buf[lstep]->targets[cam][p[cam]].y, \
+                    //     run->cpar);
                         // printf("%f %f %d\n",targ[0],targ[1],p[cam]);
+                        printf("2D is %f %f %d\n",targ[0],targ[1],p[cam]);
                 } else {
                     targ[0] = 1e-10;
                     targ[1] = 1e-10;
                 }
                 skew_dist = point_position(&targ, run->cpar->num_cams, run->cpar->mm, calib, res);
-                // printf("skew_dist = %f\n",skew_dist);
+                printf("skew_dist = %f\n",skew_dist);
+                printf("3d pos = %f, %f, %f\n",res[0],res[1],res[2]);
 
 
                 // for (cam=0; cam < run->cpar->num_cams; cam++){
