@@ -132,7 +132,6 @@ int main()
     control_par *cpar = read_control_par("parameters/ptv.par");
     read_all_calibration(calib, cpar);
     free_control_par(cpar);
-    printf("read calibrations\n");
 
     run = tr_new_legacy("parameters/sequence.par",
                         "parameters/track.par", "parameters/criteria.par",
@@ -176,9 +175,12 @@ int main()
             //        run->fb->buf[lstep]->targets[cam][0].y);
 
         } // inner loop is per camera
-        corrected = correct_frame(run->fb->buf[lstep], calib, cpar, 0.0001);
-        corresp_buf = correspondences(run->fb->buf[lstep], corrected, run->vpar, run->cpar, calib, match_counts);
-        run->fb->buf[lstep]->num_parts = match_counts[run->cpar->num_cams - 1];
+        corrected = correct_frame(run->fb->buf[lstep], run->cal, run->cpar, 0.00001);
+        corresp_buf = correspondences(run->fb->buf[lstep], corrected, run->vpar, run->cpar, run->cal, match_counts);
+        
+        // run->fb->buf[lstep]->num_parts = match_counts[run->cpar->num_cams - 1];
+        // let's try to take only quadruplets
+        run->fb->buf[lstep]->num_parts = match_counts[0];
         // printf("number of matched points is %d \n ", run->fb->buf[lstep]->num_parts);
 
         // first we need to create 3d points after correspondences and fill it into the buffer
@@ -199,36 +201,19 @@ int main()
             for (cam = 0; cam < run->cpar->num_cams; cam++) {
                 if (corresp_buf[i].p[cam] > -1){  
                     p[cam] = corrected[cam][corresp_buf[i].p[cam]].pnr;
+                    targ[0] = corrected[cam][p[cam]].x;
+                    targ[1] = corrected[cam][p[cam]].y;
+                    // printf("2D is %f %f %d\n",targ[0],targ[1],p[cam]);
                     // printf("p[%d] = %d,%d\n",cam,corresp_buf[i].p[cam],corrected[cam][corresp_buf[i].p[cam]].pnr);
                 }else{
-                    p[cam] = -1;
-                    // printf("p[%d] = -1\n",cam);
-                    }
-            
-
-
-                // printf("corrected %d %f %f \n ",corrected[cam][corresp_buf[i].p[cam]].pnr, corrected[cam][corresp_buf[i].p[cam]].x,corrected[cam][corresp_buf[i].p[cam]].y);
-                if (p[cam] > -1){
-                    // Here I'm kind of lost that should be sent to point_position()?
-                    // apparently it says: "the 2D metric, flat, centred coordinates 
-                    // of the identified point projection"
-                    // so it's corrected? 
-                    // the skew_distance is then huge and positions are wrong as printed
-                        targ[0] = corrected[cam][p[cam]].x;
-                        targ[1] = corrected[cam][p[cam]].y;
-                    // pixel_to_metric(&targ[0], &targ[1], \
-                    //     run->fb->buf[lstep]->targets[cam][p[cam]].x, \
-                    //     run->fb->buf[lstep]->targets[cam][p[cam]].y, \
-                    //     run->cpar);
-                        // printf("%f %f %d\n",targ[0],targ[1],p[cam]);
-                        printf("2D is %f %f %d\n",targ[0],targ[1],p[cam]);
-                } else {
                     targ[0] = 1e-10;
                     targ[1] = 1e-10;
+                    // printf("p[%d] = -1\n",cam);
                 }
+                
                 skew_dist = point_position(&targ, run->cpar->num_cams, run->cpar->mm, calib, res);
-                printf("skew_dist = %f\n",skew_dist);
-                printf("3d pos = %f, %f, %f\n",res[0],res[1],res[2]);
+                // printf("skew_dist = %f\n",skew_dist);
+                // printf("3d pos = %f, %f, %f\n",res[0],res[1],res[2]);
 
 
                 // for (cam=0; cam < run->cpar->num_cams; cam++){
