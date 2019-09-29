@@ -191,6 +191,8 @@ int main()
         double x,y;
         float skew_dist; 
 
+        printf("looks like rt_is.%d\n",step);
+
         for (i=0; i<run->fb->buf[lstep]->num_parts; i++) {
             for (cam = 0; cam < run->cpar->num_cams; cam++) {
                 if (corresp_buf[i].p[cam] > -1){  
@@ -211,12 +213,21 @@ int main()
                 t_corres.p[cam] = p[cam];
             }
 
-                t_corres.nr = i;
+                t_corres.nr = i+1; // identical to what I see in rt_is.10004 file
                 run->fb->buf[lstep]->correspond[i] = t_corres;
+                
+
+
+
 
                 skew_dist = point_position(targ, run->cpar->num_cams, run->cpar->mm, run->cal, res);
-                // printf("skew_dist = %f\n",skew_dist);
-                // printf("3d pos = %f, %f, %f\n",res[0],res[1],res[2]);
+
+                printf("%d \t ",run->fb->buf[lstep]->correspond[i].nr);
+                printf("%f,\t %f,\t %f\t ",res[0],res[1],res[2]);
+                for (cam=0;cam<run->cpar->num_cams; cam++) {
+                    printf("%d\t ",run->fb->buf[lstep]->correspond[i].p[cam]);
+                }
+                printf("\n");
 
 
                 t_path.x[0] = res[0];
