@@ -149,7 +149,7 @@ int main()
     run->seq_par->first = 10000;
     run->seq_par->last = 10004;
 
-    printf("from frame %d to frame %d \n", run->seq_par->first, run->seq_par->last);
+    // printf("from frame %d to frame %d \n", run->seq_par->first, run->seq_par->last);
 
     // for each camera and for each time step the images are processed
     for (step = run->seq_par->first; step < run->seq_par->last + 1; step++)
@@ -191,7 +191,7 @@ int main()
         double x,y;
         float skew_dist; 
 
-        printf("looks like rt_is.%d\n",step);
+        //printf("looks like rt_is.%d\n",step);
 
         for (i=0; i<run->fb->buf[lstep]->num_parts; i++) {
             for (cam = 0; cam < run->cpar->num_cams; cam++) {
@@ -222,12 +222,12 @@ int main()
 
                 skew_dist = point_position(targ, run->cpar->num_cams, run->cpar->mm, run->cal, res);
 
-                printf("%d \t ",run->fb->buf[lstep]->correspond[i].nr);
-                printf("%f,\t %f,\t %f\t ",res[0],res[1],res[2]);
-                for (cam=0;cam<run->cpar->num_cams; cam++) {
-                    printf("%d\t ",run->fb->buf[lstep]->correspond[i].p[cam]);
-                }
-                printf("\n");
+                // printf("%d \t ",run->fb->buf[lstep]->correspond[i].nr);
+                // printf("%f,\t %f,\t %f\t ",res[0],res[1],res[2]);
+                // for (cam=0;cam<run->cpar->num_cams; cam++) {
+                //     printf("%d\t ",run->fb->buf[lstep]->correspond[i].p[cam]);
+                // }
+                // printf("\n");
 
 
                 t_path.x[0] = res[0];
@@ -240,7 +240,7 @@ int main()
 
     } // external loop is through frames
 
-    run->tpar->add = 1;
+    run->tpar->add = 0; 
     // we do not need to read frames - it's all in memory now
     // track_forward_start(run); 
 
