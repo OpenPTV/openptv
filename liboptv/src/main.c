@@ -34,14 +34,16 @@ void read_all_calibration(Calibration *calib[4], control_par *cpar)
 coord_2d **correct_frame(frame *frm, Calibration *calib[], control_par *cpar,
                          double tol)
 {
-    coord_2d **corrected;
+    coord_2d **corrected, **tmp;
     int cam, part;
 
     corrected = (coord_2d **)malloc(cpar->num_cams * sizeof(coord_2d *));
+    tmp = (coord_2d **)malloc(cpar->num_cams * sizeof(coord_2d *));
     for (cam = 0; cam < cpar->num_cams; cam++)
     {
         corrected[cam] = (coord_2d *)malloc(
             frm->num_targets[cam] * sizeof(coord_2d));
+        tmp[cam] = (coord_2d *)malloc(frm->num_targets[cam] * sizeof(coord_2d));
         if (corrected[cam] == NULL)
         {
             /* roll back allocations and fail */
@@ -53,14 +55,13 @@ coord_2d **correct_frame(frame *frm, Calibration *calib[], control_par *cpar,
 
         for (part = 0; part < frm->num_targets[cam]; part++)
         {
-            pixel_to_metric(&corrected[cam][part].x, &corrected[cam][part].y,
+            pixel_to_metric(&tmp[cam][part].x, &tmp[cam][part].y,
                             frm->targets[cam][part].x, frm->targets[cam][part].y,
                             cpar);
 
-            dist_to_flat(corrected[cam][part].x, corrected[cam][part].y,
+            dist_to_flat(tmp[cam][part].x, tmp[cam][part].y,
                          calib[cam], &corrected[cam][part].x, &corrected[cam][part].y,
                          tol);
-
             corrected[cam][part].pnr = frm->targets[cam][part].pnr;
         }
 
@@ -81,7 +82,7 @@ int main()
     n_tupel *corresp_buf;
     tracking_run *run;
     vec3d res;
-    vec2d targ;
+    vec2d targ[4],tmp;
     framebuf *frm; 
 
     // temporary variables will be replaced per particle 
@@ -122,7 +123,9 @@ int main()
     // change directory to the user-supplied working folder
     // chdir(argv[1]);
 
-    chdir("../tests/testing_fodder/test_cavity/");
+    // chdir("../tests/testing_fodder/test_cavity/");
+    chdir("/Users/alex/Documents/OpenPTV/test_cavity");
+    // chdir("/Users/alex/Documents/OpenPTV/one-dot-example/working_folder");
 
     // printf("changed directory to %s\n", argv[1]);
 
@@ -143,7 +146,7 @@ int main()
     //     run->seq_par->first = atoi(argv[2]);
     //     run->seq_par->last = atoi(argv[3]);
     // }
-    run->seq_par->first = 10001;
+    run->seq_par->first = 10000;
     run->seq_par->last = 10004;
 
     printf("from frame %d to frame %d \n", run->seq_par->first, run->seq_par->last);
@@ -158,30 +161,20 @@ int main()
             // we decided to focus camust on the _targets, so we will read them from the
             // test directory test_cavity
 
-            printf("reading targets from %s%d\n", run->fb->target_file_base[cam], step);
-
             run->fb->buf[lstep]->num_targets[cam] = read_targets(
                 run->fb->buf[lstep]->targets[cam], run->fb->target_file_base[cam], step);
 
             quicksort_target_y(run->fb->buf[lstep]->targets[cam], run->fb->buf[lstep]->num_targets[cam]);
 
             for (i = 0; i < run->fb->buf[lstep]->num_targets[cam]; i++)
-                run->fb->buf[lstep]->targets[cam][i].pnr = i;
+               run->fb->buf[lstep]->targets[cam][i].pnr = i;
 
-            // debugging purposes print the status of targets - see below another print.
-            // printf("%d targets and the first is %f,%f \n ",
-            //        run->fb->buf[lstep]->num_targets[cam],
-            //        run->fb->buf[lstep]->targets[cam][0].x,
-            //        run->fb->buf[lstep]->targets[cam][0].y);
 
         } // inner loop is per camera
         corrected = correct_frame(run->fb->buf[lstep], run->cal, run->cpar, 0.00001);
         corresp_buf = correspondences(run->fb->buf[lstep], corrected, run->vpar, run->cpar, run->cal, match_counts);
-        
-        // run->fb->buf[lstep]->num_parts = match_counts[run->cpar->num_cams - 1];
-        // let's try to take only quadruplets
+
         run->fb->buf[lstep]->num_parts = match_counts[0];
-        // printf("number of matched points is %d \n ", run->fb->buf[lstep]->num_parts);
 
         // first we need to create 3d points after correspondences and fill it into the buffer
         // use point_position and loop through the num_parts
@@ -195,32 +188,36 @@ int main()
 
         // shortcut
         int p[4];
-        float x[4],y[4],skew_dist; 
+        double x,y;
+        float skew_dist; 
 
         for (i=0; i<run->fb->buf[lstep]->num_parts; i++) {
             for (cam = 0; cam < run->cpar->num_cams; cam++) {
                 if (corresp_buf[i].p[cam] > -1){  
                     p[cam] = corrected[cam][corresp_buf[i].p[cam]].pnr;
-                    targ[0] = corrected[cam][p[cam]].x;
-                    targ[1] = corrected[cam][p[cam]].y;
-                    // printf("2D is %f %f %d\n",targ[0],targ[1],p[cam]);
-                    // printf("p[%d] = %d,%d\n",cam,corresp_buf[i].p[cam],corrected[cam][corresp_buf[i].p[cam]].pnr);
+                    x = run->fb->buf[lstep]->targets[cam][p[cam]].x;
+                    y = run->fb->buf[lstep]->targets[cam][p[cam]].y;
+
+                    pixel_to_metric(&x, &y, x, y, run->cpar);
+                    dist_to_flat(x, y,run->cal[cam], &x, &y,0.00001);
+
+                    targ[cam][0] = x;  
+                    targ[cam][1] = y;       
                 }else{
-                    targ[0] = 1e-10;
-                    targ[1] = 1e-10;
-                    // printf("p[%d] = -1\n",cam);
+                    targ[cam][0] = 1e-10;
+                    targ[cam][1] = 1e-10;
                 }
-                
-                skew_dist = point_position(&targ, run->cpar->num_cams, run->cpar->mm, calib, res);
+
+                t_corres.p[cam] = p[cam];
+            }
+
+                t_corres.nr = i;
+                run->fb->buf[lstep]->correspond[i] = t_corres;
+
+                skew_dist = point_position(targ, run->cpar->num_cams, run->cpar->mm, run->cal, res);
                 // printf("skew_dist = %f\n",skew_dist);
                 // printf("3d pos = %f, %f, %f\n",res[0],res[1],res[2]);
 
-
-                // for (cam=0; cam < run->cpar->num_cams; cam++){
-                t_corres.p[cam] = run->fb->buf[lstep]->targets[cam][p[cam]].pnr;
-            }
-                t_corres.nr = i;
-                run->fb->buf[lstep]->correspond[i] = t_corres;
 
                 t_path.x[0] = res[0];
                 t_path.x[1] = res[1];
@@ -232,7 +229,7 @@ int main()
 
     } // external loop is through frames
 
-    run->tpar->add = 0;
+    run->tpar->add = 1;
     // we do not need to read frames - it's all in memory now
     // track_forward_start(run); 
 
