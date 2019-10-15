@@ -521,8 +521,8 @@ double* orient (Calibration* cal_in, control_par *cpar, int nfix, vec3d fix[],
       stopflag = 1;
       for (i = 0; i < numbers; i++) {
           diff = fabs(old_beta[i]-beta[i]);
-          if ( (fabs (beta[i]) > CONVERGENCE) & (diff > 10*CONVERGENCE) ) {
-              // printf("failing beta[%d] = %f, diff: %f\n",i,beta[i],diff);
+          if ( (fabs (beta[i]) > CONVERGENCE) & (diff/beta[i] > 0.01) & (fabs(diff/beta[i] - 2.0) > 0.01) ) {
+              printf("failing beta[%d] = %f, diff/beta: %f\n",i,beta[i],diff/beta[i]);
               stopflag = 0;
               }
         old_beta[i] = beta[i];
