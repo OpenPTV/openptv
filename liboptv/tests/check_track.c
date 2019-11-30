@@ -602,8 +602,13 @@ START_TEST(test_new_particle)
     tpar = read_track_par("parameters/track.par");
     vpar = read_volume_par("parameters/criteria.par");
     
-    run = tr_new(spar, tpar, vpar, cpar, 4, MAX_TARGETS, 
-        "res/particles", "res/linkage", "res/whatever", calib, 0.1);
+    framebuf *fb = (framebuf*) malloc(sizeof(framebuf));
+    fb_init(fb, 4, cpar->num_cams, MAX_TARGETS,
+        "res/particles", "res/linkage", "res/whatever", 
+        spar->img_base_name
+    );
+    run = tr_new(spar, tpar, vpar, cpar, calib, (framebuf_base*)fb, 0.1);
+    
     track_forward_start(run);
     trackcorr_c_loop(run, 1);
     trackcorr_c_loop(run, 2);
@@ -625,10 +630,12 @@ END_TEST
 
 Suite* fb_suite(void) {
     Suite *s = suite_create ("ttools");
-    TCase *tc = tcase_create ("predict test");
+    TCase *tc;
+    
+    tc = tcase_create ("predict test");
     tcase_add_test(tc, test_predict);
     suite_add_tcase (s, tc);
-
+    
     tc = tcase_create ("search_volume_center_moving");
     tcase_add_test(tc, test_search_volume_center_moving);
     suite_add_tcase (s, tc);
