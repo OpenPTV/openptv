@@ -7,11 +7,11 @@ Created on Sun Apr 23 15:41:32 2017
 @author: yosef
 """
 
-from libc.stdlib cimport free
+from libc.stdlib cimport malloc, free
 from optv.parameters cimport ControlParams, TrackingParams, SequenceParams, \
     VolumeParams
 from optv.orientation cimport cal_list2arr
-from optv.tracking_framebuf cimport fb_free
+from optv.tracking_framebuf cimport fb_init, fb_free
 
 default_naming = {
     'corres': b'res/rt_is',
@@ -41,11 +41,14 @@ cdef class Tracker:
         # We need to keep a reference to the Python objects so that their
         # allocations are not freed.
         self._keepalive = (cpar, vpar, tpar, spar, cals)
+
+        self.fb = <framebuf*> malloc(sizeof(framebuf))
+        fb_init(self.fb, TR_BUFSPACE, cpar._control_par.num_cams, MAX_TARGETS,
+            naming['corres'], naming['linkage'], naming['prio'], 
+            spar._sequence_par.img_base_name);
         
         self.run_info = tr_new(spar._sequence_par, tpar._track_par,
-            vpar._volume_par, cpar._control_par, TR_BUFSPACE, MAX_TARGETS,
-            naming['corres'], naming['linkage'], naming['prio'], 
-            cal_list2arr(cals), flatten_tol)
+            vpar._volume_par, cpar._control_par, cal_list2arr(cals), <framebuf_base *>self.fb, flatten_tol)
     
     def restart(self):
         """
