@@ -104,11 +104,11 @@ int write_frame(frame *self, char *corres_file_base, char *linkage_file_base,
  * frame information from *_target files. This is the original mode of 
  * liboptv. The struct framebuf *inherits* from framebuf_base (by incorporating
  * the base as 1st member - the order is important). fb_init(), the constructor,
- * then populates the vtable with fb_disk_* functions. These are the derived
+ * then populates the vtable with e.g. fb_disk_* functions. These are the derived
  * implementations of the base-class virtual functions. 
  * 
  * There is also a virtual destructor, fb_free(), which delegates to the free() 
- * virtual function, and implemented in the example by fb_disk_free().
+ * virtual function, and implemented in the example by e.g. fb_disk_free().
  * 
  * Note: fb_disk_free does not release the strings it holds, as I don't remember if
  * it owns them. 
@@ -152,12 +152,52 @@ typedef struct {
     char **target_file_base;
 } framebuf;
 
-void fb_init(framebuf *new_buf, int buf_len, int num_cams, int max_targets,\
+void fb_init(framebuf *new_buf, int buf_len, int num_cams, int max_targets,
     char *corres_file_base, char* linkage_file_base, char *prio_file_base,
     char **target_file_base);
 
 void fb_disk_free(framebuf_base *self);
 int fb_disk_read_frame_at_end(framebuf_base *self, int frame_num, int read_links);
 int fb_disk_write_frame_from_start(framebuf_base *self, int frame_num);
+
+// Child class that reads from memory. The incoming/outgoing frames are read
+// or written to a memory in address changed from outside on each frame. The 
+// tracking code is responsible for managing those pointers. The information
+// on when to change them is passed by using callbacks: whenever the framebuf
+// finishes a read or write it calls the respective callback, to let the 
+// tracker do the necessary updates.
+typedef int (*mem_io_fun)(int frame_num, void* tracker_info);
+typedef struct {
+    framebuf_base base; // must be 1st member.
+    
+    frame **incoming, **outgoing; 
+    mem_io_fun read_callback;
+    mem_io_fun write_callback;
+    void* tracker_info; // constant pointe, passed to the callbacks.
+    
+    // pointer to pointer: the outside pointer is constant, and describes 
+    // where the driver code keeps the address of the (changing) incoming
+    // frame, or the possibly-changing place to write the outgoing frame.
+    // Note that the incoming/outgoing `frame` struct is copied from/to
+    // incoming/outgoing mmemory, but the subordinate allocations (corres, 
+    // target, etc.) are not - it's up to you to recycle or delete them,
+    // just like it's up to you to allocate them.
+} framebuf_inmem;
+
+void fb_inmem_init(
+    framebuf_inmem *new_buf, 
+    int buf_len, int num_cams, int max_targets,
+    frame **incoming, frame **outgoing, void* tracker_info,
+    mem_io_fun read_callback, mem_io_fun write_callback
+);
+
+void fb_inmem_free(framebuf_base *self);
+// Note: frame number is not currently used. When we fold the threaded 
+// code into here, we might have an objects that can translate frame-num to 
+// pointer, instead of using **incoming etc. Anyway, we must have this
+// argument because that's how the base-class defines this virtual function.
+// read_links is ignored because either the incoming frame has them or it doesn't.
+int fb_inmem_read_frame_at_end(framebuf_base *self, int frame_num, int read_links);
+int fb_inmem_write_frame_from_start(framebuf_base *self, int frame_num);
 
 #endif
