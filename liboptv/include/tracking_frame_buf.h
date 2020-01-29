@@ -173,7 +173,7 @@ typedef struct {
     frame **incoming, **outgoing; 
     mem_io_fun read_callback;
     mem_io_fun write_callback;
-    void* tracker_info; // constant pointe, passed to the callbacks.
+    void* tracker_info; // constant pointer, passed to the callbacks.
     
     // pointer to pointer: the outside pointer is constant, and describes 
     // where the driver code keeps the address of the (changing) incoming
