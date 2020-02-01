@@ -731,6 +731,7 @@ void fb_inmem_init(
     frame **incoming, frame **outgoing, void* tracker_info,
     mem_io_fun read_callback, mem_io_fun write_callback) 
 {
+    frame ** bufloc;
     fb_base_init(&new_buf->base, buf_len, num_cams, max_targets);
    
     // Subclass-specific parameters:
@@ -740,7 +741,7 @@ void fb_inmem_init(
     new_buf->read_callback = read_callback;
     new_buf->write_callback = write_callback;
     
-    for (frame** bufloc = new_buf->base._ring_vec; bufloc < new_buf->base._ring_vec + new_buf->base.buf_len*2; ++bufloc) 
+    for (bufloc = new_buf->base._ring_vec; bufloc < new_buf->base._ring_vec + new_buf->base.buf_len*2; ++bufloc) 
         *bufloc = 0;
     
     // Set up the virtual functions table:
