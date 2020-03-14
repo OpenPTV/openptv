@@ -4,9 +4,9 @@ import numpy, os, filecmp, shutil
 
 class Test_Calibration(unittest.TestCase):
     def setUp(self):        
-        self.input_ori_file_name = "testing_fodder/calibration/cam1.tif.ori"
-        self.input_add_file_name = "testing_fodder/calibration/cam2.tif.addpar"
-        self.output_directory = "testing_fodder/calibration/testing_output/"
+        self.input_ori_file_name = b"testing_fodder/calibration/cam1.tif.ori"
+        self.input_add_file_name = b"testing_fodder/calibration/cam2.tif.addpar"
+        self.output_directory = b"testing_fodder/calibration/testing_output/"
         
         # create a temporary output directory (will be deleted by the end of test)
         if not os.path.exists(self.output_directory):
@@ -37,8 +37,8 @@ class Test_Calibration(unittest.TestCase):
         
     def test_Calibration_instantiation(self):
         """Filling a calibration object by reading ori files"""
-        self.output_ori_file_name = self.output_directory + "output_ori"
-        self.output_add_file_name = self.output_directory + "output_add"
+        self.output_ori_file_name = self.output_directory + b"output_ori"
+        self.output_add_file_name = self.output_directory + b"output_add"
                 
         # Using a round-trip test.
         self.cal.from_file(self.input_ori_file_name, self.input_add_file_name)

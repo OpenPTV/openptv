@@ -1,0 +1,12 @@
+# Set up the Ubuntu container so we can develop the Cython code on it
+version: '3'
+services:
+  optv-dev-python3:
+    image: ptv-ubuntu:python3
+    build: 
+      context: ./
+      dockerfile: Dockerfile.python3
+    volumes:
+      - ../:/src
+    command: tail -f /dev/null
+

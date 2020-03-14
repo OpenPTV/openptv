@@ -13,56 +13,38 @@ The plan is to add more wrappers as other contributors of liboptv find them
 necessary and choose to add them here.
 
 
-Installation on Linux / OS X
-----------------------------
-This package assumes that liboptv is already installed. If it is not, see the 
-instructions for installing it in the liboptv source code.
+Installation
+------------
+Run pip install openptv, which should install everything.
 
-To build the wrapper, Cython must also be installed. Binary installers are 
-available at www.cython.org. Linux users may simply install from the package 
-manager, Windows users can get it through Python(x,y). If you have installed
-openptv-python from source, then you already have Cython working.
+Building the Package
+--------------------
+The package has to be built from the full repository. Make sure all the dependencies
+in requirements.txt are installed, then run:
 
-The test suite consists of Python code that may be run automatically using the 
-Nose test harness: https://nose.readthedocs.org/en/latest/#
+python setup.py prepare   # This copies the liboptv sources and converts pyx files to C
+python setup.py build     # This builds the package
 
-With the dependencies installed, the optv package is installed by typing the
-following command in a terminal:
+You can then create source distributions and binary wheels:
 
-  sudo python setup.py install
+python setup.py sdist bdist_wheel
 
-Note that on many systems you will first need to obtain administrator 
-privileges. On Linux the 'sudo' command is recommended, as shown above.
+You can upload them to your favorite repository, as they reside in the dist subdirectory.
 
-Installation on Windows
------------------------
-Install liboptv as instructed in the Windows installation section of 
-liboptv/README.txt. This way you already have an MSYS environment,
-which you continue to use here.
+Note: You need to build wheels for each platform you want to support.
 
-At this point, since we are building a Python module, you must have a 
-Python version installed. The Python(x,y) distribution, available from
-https://code.google.com/p/pythonxy/ contains all you need. During the
-installation you will be asked to choose packages. To the default 
-selection add the Cython package. For testing your installation later,
-make sure the ``nose`` package is also installed.
+On Windows, you must install the Visual C++ Compiler for Python 2.7. It can be found here:
+https://www.microsoft.com/en-us/download/details.aspx?id=44266
 
-The commands for installing the Python modules are a bit more elaborate 
-than the Linux instructions because Windows is evil. First one builds the
-package:
+You will need to build the package from a Visual C++ for Python Command Prompt.
 
-  python setup.py build_ext -I/usr/include -L/usr/lib/ --compiler=mingw32
-
-Then installation is simply
-
-  python setup.py install
 
 Testing the installation
 ------------------------
 Regardless of the system you installed on, the shell commands are the same:
 
   cd tests/
-  nosetests .
+  nosetests *
 
 Usage example
 -------------

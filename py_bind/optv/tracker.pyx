@@ -13,14 +13,10 @@ from optv.parameters cimport ControlParams, TrackingParams, SequenceParams, \
 from optv.orientation cimport cal_list2arr
 from optv.tracking_framebuf cimport fb_free
 
-cdef extern from "optv/track.h":
-    int TR_MAX_CAMS
-    int MAX_TARGETS
-
 default_naming = {
-    'corres': 'res/rt_is',
-    'linkage': 'res/ptv_is',
-    'prio': 'res/added'
+    'corres': b'res/rt_is',
+    'linkage': b'res/ptv_is',
+    'prio': b'res/added'
 }
 
 cdef class Tracker:

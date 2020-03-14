@@ -6,7 +6,9 @@ from libc.stdlib cimport calloc, free
 
 from optv.tracking_framebuf cimport TargetArray
 from optv.calibration cimport Calibration
-from optv.parameters cimport ControlParams
+from optv.parameters cimport ControlParams, VolumeParams
+from optv.epipolar cimport epi_mm_2D
+
 
 def match_detection_to_ref(Calibration cal,
                            np.ndarray[ndim=2, dtype=pos_t] ref_pts,
@@ -68,6 +70,75 @@ cdef calibration** cal_list2arr(list cals):
     return calib
 
 def point_positions(np.ndarray[ndim=3, dtype=pos_t] targets,
+                    ControlParams cparam, cals, VolumeParams vparam):
+    """
+    Calculate the 3D positions of the points given by their 2D projections
+    using one of the options: 
+    - for a single camera, uses single_cam_point_positions()
+    - for multiple cameras, uses multi_cam_point_positions()
+
+    Arguments:
+    np.ndarray[ndim=3, dtype=pos_t] targets - (num_targets, num_cams, 2) array,
+        containing the metric coordinates of each target on the image plane of
+        each camera. Cameras must be in the same order for all targets.
+    ControlParams cparam - needed for the parameters of the tank through which
+        we see the targets.
+    cals - a sequence of Calibration objects for each of the cameras, in the
+        camera order of ``targets``.
+    VolumeParams vparam - an object holding observed volume size parameters, needed
+        for the single camera case only.
+
+    Returns:
+    res - (n,3) array for n points represented by their targets.
+    rcm - n-length array, the Ray Convergence Measure for eachpoint for multi camera
+        option, or zeros for a single camera option
+    """
+    cdef:
+        np.ndarray[ndim=2, dtype=pos_t] res
+        np.ndarray[ndim=1, dtype=pos_t] rcm
+
+    if len(cals) == 1:
+        res, rcm = single_cam_point_positions(targets, cparam, cals, vparam)
+    elif len(cals) > 1:
+        res, rcm = multi_cam_point_positions(targets,cparam,cals)
+    else:
+        raise ValueError("wrong number of cameras in point_positions")
+    
+    return res, rcm
+
+
+def single_cam_point_positions(np.ndarray[ndim=3, dtype=pos_t] targets,
+                    ControlParams cparam, cals, VolumeParams vparam):
+    """
+    Calculates the 3D positions of the points from a single camera using
+    the 2D target positions given in metric coordinates
+
+    """
+    cdef:
+        np.ndarray[ndim=2, dtype=pos_t] res
+        np.ndarray[ndim=1, dtype=pos_t] rcm
+        np.ndarray[ndim=2, dtype=pos_t] targ
+        calibration ** calib = cal_list2arr(cals)
+        int cam, num_cams
+
+    # So we can address targets.data directly instead of get_ptr stuff:
+    targets = np.ascontiguousarray(targets)
+    
+    num_targets = targets.shape[0]
+    num_cams = targets.shape[1]
+    res = np.empty((num_targets, 3))
+    rcm = np.zeros(num_targets)
+
+    for pt in range(num_targets):
+        targ = targets[pt]
+        epi_mm_2D (targ[0][0], targ[0][1],
+                            calib[0], cparam._control_par.mm, vparam._volume_par, 
+                            <vec3d> np.PyArray_GETPTR2(res, pt, 0));
+
+    return res, rcm
+          
+
+def multi_cam_point_positions(np.ndarray[ndim=3, dtype=pos_t] targets,
                     ControlParams cparam, cals):
     """
     Calculate the 3D positions of the points given by their 2D projections.

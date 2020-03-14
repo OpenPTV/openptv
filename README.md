@@ -7,7 +7,8 @@
 OpenPTV - framework for particle tracking velocimetry
 =====================================================
 
-[![Build Status](https://travis-ci.org/alexlib/openptv.svg?branch=master)](https://travis-ci.org/alexlib/openptv) [![DOI](https://zenodo.org/badge/6985516.svg)](https://zenodo.org/badge/latestdoi/6985516)
+[![Build Status](https://travis-ci.org/OpenPTV/openptv.svg?branch=master)](https://travis-ci.org/OpenPTV/openptv) [![Build status](https://ci.appveyor.com/api/projects/status/wo8y5krf8g3dq83i?svg=true)](https://ci.appveyor.com/project/alexlib/openptv)
+ [![DOI](https://zenodo.org/badge/6985516.svg)](https://zenodo.org/badge/latestdoi/6985516)
 
 
 
