@@ -323,7 +323,6 @@ int candsearch_in_pix_rest (target next[], int num_targets, double cent_x, doubl
     int j, j0, dj;
     int counter = 0, p1, p2, p3, p4;
     double d, dmin = 1e20, xmin, xmax, ymin, ymax;
-    double d1, d2, d3, d4;
 
     xmin = cent_x - dl;  xmax = cent_x + dr;  ymin = cent_y - du;  ymax = cent_y + dd;
 
