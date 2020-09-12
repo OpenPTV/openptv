@@ -1,9 +1,5 @@
 environment:
-  matrix:
-  - TOXENV: py38
-  - TOXENV: py36
-  - TOXENV: py37
-  CIBW_SKIP: "*manylinux1_i686* cp34-*" 
+  CIBW_SKIP: "*manylinux1_i686* cp34-* cp27-*" 
   CIBW_BEFORE_BUILD: "cd py_bind && pip install -r requirements.txt && python setup.py prepare"
 
 build_script:
