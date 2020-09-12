@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-from __future__ import print_function
+
 from distutils.core import setup
 import setuptools
 import os
@@ -8,6 +8,7 @@ import sys
 import glob
 from setuptools import Extension
 from setuptools.command.build_ext import build_ext
+import importlib
 
 
 class PrepareCommand(setuptools.Command):
@@ -83,11 +84,11 @@ class BuildExt(build_ext, object):
             import numpy
             imp.reload(numpy)
         else:
-            import __builtin__
+            import builtins
             if hasattr(__builtin__, '__NUMPY_SETUP__'):
-                del __builtin__.__NUMPY_SETUP__
+                del builtins.__NUMPY_SETUP__
             import numpy
-            reload(numpy)
+            importlib.reload(numpy)
 
         try:
             return numpy.get_include()

@@ -47,11 +47,11 @@ class TestEpipolarCurve(unittest.TestCase):
         # directly at each other.
         mid = np.r_[sens_size]/2.
         line = epipolar_curve(mid, orig_cal, proj_cal, 5, cpar, vpar)
-        self.failUnless(np.all(abs(line - mid) < 1e-6))
+        self.assertTrue(np.all(abs(line - mid) < 1e-6))
         
         # An equatorial point draws a latitude.
         line = epipolar_curve(
             mid - np.r_[100., 0.], orig_cal, proj_cal, 5, cpar, vpar)
         np.testing.assert_array_equal(np.argsort(line[:,0]), np.arange(5)[::-1])
-        self.failUnless(np.all(abs(line[:,1] - mid[1]) < 1e-6))
+        self.assertTrue(np.all(abs(line[:,1] - mid[1]) < 1e-6))
         

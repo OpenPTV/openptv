@@ -143,7 +143,7 @@ class Test_transforms(unittest.TestCase):
         # Some small radial distortion:
         cal.set_radial_distortion(np.r_[0.001, 0., 0.])
         distorted = distort_arr_brown_affine(ref_pos, cal)
-        self.failUnless(np.all(abs(distorted) > abs(ref_pos)))
+        self.assertTrue(np.all(abs(distorted) > abs(ref_pos)))
     
     def test_full_correction(self):
         """Round trip distortion/correction."""
