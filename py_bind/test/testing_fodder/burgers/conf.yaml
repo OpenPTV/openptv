@@ -44,7 +44,7 @@ sequence:
     last:  10006
 
 tracking:
-    velocity_lims: [[-1, 1], [-1, 1], [-1, 1]]
-    angle_lim: 110
-    accel_lim: 1.0
+    velocity_lims: [[-0.1, 0.1], [-0.1, 0.1], [-0.1, 0.1]]
+    angle_lim: 100
+    accel_lim: 0.1
     add_particle: 1
