@@ -187,8 +187,6 @@ START_TEST(test_angle_acc)
 END_TEST
 
 
-
-
 START_TEST(test_candsearch_in_pix)
 {
     double cent_x, cent_y, dl, dr, du, dd;
@@ -257,6 +255,67 @@ START_TEST(test_candsearch_in_pix)
     }
 
     fail_unless(counter == 4);
+
+}
+END_TEST
+
+START_TEST(test_candsearch_in_pix_rest)
+{
+    double cent_x, cent_y, dl, dr, du, dd;
+    int p[4], counter = 0;
+
+    target test_pix[] = {
+        {0, 0.0, -0.2, 5, 1, 2, 10, 0},
+        {6, 100.0, 100.0, 10, 8, 1, 20, -1},
+        {3, 102.0, 102.0, 10, 3, 3, 30, -1},
+        {4, 103.0, 103.0, 10, 3, 3, 40, 2},
+        {1, -0.7, 1.2, 10, 3, 3, 50, 5}, /* should fall on imx,imy */
+        {7, 1.2, 1.3, 10, 3, 3, 60, 7},
+        {5, 1200, 201.1, 10, 3, 3, 70, 11}
+    };
+    int num_targets = 7;
+
+
+    /* prepare test control parameters, basically for pix_x  */
+    int cam, i;
+    char img_format[] = "cam%d";
+    char cal_format[] = "cal/cam%d.tif";
+    control_par *test_cpar;
+
+    test_cpar = new_control_par(4);
+    for (cam = 0; cam < 4; cam++) {
+        sprintf(test_cpar->img_base_name[cam], img_format, cam + 1);
+        sprintf(test_cpar->cal_img_base_name[cam], cal_format, cam + 1);
+    }
+    test_cpar->hp_flag = 1;
+    test_cpar->allCam_flag = 0;
+    test_cpar->tiff_flag = 1;
+    test_cpar->imx = 1280;
+    test_cpar->imy = 1024;
+    test_cpar->pix_x = 0.02; /* 20 micron pixel */
+    test_cpar->pix_y = 0.02;
+    test_cpar->chfield = 0;
+    test_cpar->mm->n1 = 1;
+    test_cpar->mm->n2[0] = 1.49;
+    test_cpar->mm->n3 = 1.33;
+    test_cpar->mm->d[0] = 5;
+
+    cent_x = cent_y = 98.9;
+    dl = dr = du = dd = 3;
+
+    counter = candsearch_in_pix_rest (test_pix, num_targets, cent_x, cent_y, \
+                                 dl, dr, du, dd, p, test_cpar);
+
+    printf("in candsearch_in_pix_rest\n");
+    printf("counter %d \n",counter);
+    printf("candidates: \n");
+    for (i=0;i<counter;i++){
+        printf("%f,%f\n",test_pix[p[i]].x,test_pix[p[i]].y);
+    }
+    fail_unless(counter == 1);
+
+    ck_assert_msg(fabs(test_pix[p[0]].x - 100.0)<EPS,
+                  "Was expecting 100.0 but found %f \n", test_pix[p[0]].x);
 
 }
 END_TEST
@@ -639,6 +698,11 @@ Suite* fb_suite(void) {
 
     tc = tcase_create ("angle_acc");
     tcase_add_test(tc, test_angle_acc);
+    suite_add_tcase (s, tc);
+
+
+    tc = tcase_create ("candsearch_in_pix_rest");
+    tcase_add_test(tc, test_candsearch_in_pix_rest);
     suite_add_tcase (s, tc);
 
     tc = tcase_create ("candsearch_in_pix");
