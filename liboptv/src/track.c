@@ -644,7 +644,7 @@ int assess_new_position(vec3d pos, vec2d targ_pos[],
         targ_pos[cam][0] = targ_pos[cam][1] = COORD_UNUSED;
         
         /* here we shall use only the 1st neigbhour */
-        num_cands = candsearch_in_pix_rest (frm->targets[cam], frm->num_targets[cam],
+        num_cands = candsearch_in_pix(frm->targets[cam], frm->num_targets[cam],
             pixel[0], pixel[1], left, right, up, down, 
             cand_inds[cam], run->cpar);
 
@@ -1241,7 +1241,7 @@ double trackback_c (tracking_run *run_info)
             if (curr_path_inf->prev != PREV_NONE ) count1++;
         }         /* end of creation of links with decision check */
 
-        printf ("step: %d, curr: %d, next: %d, links: %d, lost: %d, add: %d",
+        printf ("step: %d, curr: %d, next: %d, links: %d, lost: %d, add: %d \n",
                 step, fb->buf[1]->num_parts, fb->buf[2]->num_parts, count1,
                 fb->buf[1]->num_parts - count1, num_added);
 

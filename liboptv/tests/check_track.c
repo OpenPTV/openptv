@@ -587,35 +587,48 @@ END_TEST
 
 START_TEST(test_burgers)
 {
-    tracking_run *ret;
+    tracking_run *run;
     Calibration *calib[4];
     control_par *cpar;
+    int status, step;
     
     
     printf("----------------------------\n");
     printf("Test Burgers vortex case \n");
     
-    chdir("testing_fodder/test_burgers");
-    copy_res_dir("res_orig/", "res/");
-    copy_res_dir("img_orig/", "img/");
-    
-    cpar = read_control_par("parameters/ptv.par");
+
+    fail_unless((status = chdir("testing_fodder/burgers")) == 0); 
+    fail_if((cpar = read_control_par("parameters/ptv.par"))== 0);
+    printf("In test_burgers num cams = %d\n",cpar->num_cams);
     read_all_calibration(calib, cpar->num_cams);
-    printf("In test_cavity num cams = %d\n",cpar->num_cams);
-    ret = tr_new_legacy("parameters/sequence.par", 
+
+    // copy_res_dir("res_orig/", "res/");
+    // copy_res_dir("img_orig/", "img/");
+
+    run = tr_new_legacy("parameters/sequence.par", 
         "parameters/track.par", "parameters/criteria.par", 
         "parameters/ptv.par", calib);
-    track_forward_start(ret);
+
+
+    track_forward_start(run);
+    trackcorr_c_loop(run, run->seq_par->first);
     
-    trackcorr_c_loop (ret, 10002);
-    empty_res_dir();
+    for (step = run->seq_par->first + 1; step < run->seq_par->last; step++) {
+        trackcorr_c_loop(run, step);
+    }
+    trackcorr_c_finish(run, run->seq_par->last);
+
+    // track_forward_start(ret);
     
-    ck_assert_msg(ret->npart == 5,
-                  "Was expecting npart == 672 but found %d \n", ret->npart);
-    ck_assert_msg(ret->nlinks == 5,
-                  "Was expecting nlinks == 5 but found %d \n", ret->nlinks);
+    // trackcorr_c_loop (ret, 10002);
+    // empty_res_dir();
     
-    trackcorr_c_finish(ret, 10002);
+    ck_assert_msg(run->npart == 5,
+                  "Was expecting npart == 5 but found %d \n", run->npart);
+    ck_assert_msg(run->nlinks == 5,
+                  "Was expecting nlinks == 5 but found %d \n", run->nlinks);
+    
+    // trackcorr_c_finish(ret, 10002);
 }
 END_TEST
 
