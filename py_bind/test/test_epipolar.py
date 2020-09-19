@@ -17,24 +17,24 @@ from optv.epipolar import epipolar_curve
 
 class TestEpipolarCurve(unittest.TestCase):
     def test_two_cameras(self):
-        ori_tmpl = r'testing_fodder/calibration/sym_cam{cam_num}.tif.ori'
-        add_file = r'testing_fodder/calibration/cam1.tif.addpar'
+        ori_tmpl = "testing_fodder/calibration/sym_cam{cam_num}.tif.ori"
+        add_file = "testing_fodder/calibration/cam1.tif.addpar"
         
         orig_cal = Calibration()
-        orig_cal.from_file(ori_tmpl.format(cam_num=1), add_file)
+        orig_cal.from_file(ori_tmpl.format(cam_num=1).encode(), add_file.encode())
         proj_cal = Calibration()
-        proj_cal.from_file(ori_tmpl.format(cam_num=3), add_file)
+        proj_cal.from_file(ori_tmpl.format(cam_num=3).encode(), add_file.encode())
         
         # reorient cams:
         orig_cal.set_angles(np.r_[0., -np.pi/4., 0.])
         proj_cal.set_angles(np.r_[0., 3*np.pi/4., 0.])
         
         cpar = ControlParams(4)
-        cpar.read_control_par("testing_fodder/corresp/control.par")
+        cpar.read_control_par(b"testing_fodder/corresp/control.par")
         sens_size = cpar.get_image_size()
         
         vpar = VolumeParams()
-        vpar.read_volume_par("testing_fodder/corresp/criteria.par")
+        vpar.read_volume_par(b"testing_fodder/corresp/criteria.par")
         vpar.set_Zmin_lay([-10, -10])
         vpar.set_Zmax_lay([10, 10])
         
@@ -47,11 +47,11 @@ class TestEpipolarCurve(unittest.TestCase):
         # directly at each other.
         mid = np.r_[sens_size]/2.
         line = epipolar_curve(mid, orig_cal, proj_cal, 5, cpar, vpar)
-        self.failUnless(np.all(abs(line - mid) < 1e-6))
+        self.assertTrue(np.all(abs(line - mid) < 1e-6))
         
         # An equatorial point draws a latitude.
         line = epipolar_curve(
             mid - np.r_[100., 0.], orig_cal, proj_cal, 5, cpar, vpar)
         np.testing.assert_array_equal(np.argsort(line[:,0]), np.arange(5)[::-1])
-        self.failUnless(np.all(abs(line[:,1] - mid[1]) < 1e-6))
+        self.assertTrue(np.all(abs(line[:,1] - mid[1]) < 1e-6))
         

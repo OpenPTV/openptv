@@ -30,9 +30,9 @@
 #include "track.h"
 #include <stdlib.h>
 #include <stdio.h>
-
 #define _USE_MATH_DEFINES
 #include <math.h>
+
 
 /* internal-use defines, not needed by the outside world. */
 #define TR_UNUSED -1
@@ -260,7 +260,7 @@ int candsearch_in_pix (target next[], int num_targets, double cent_x, double cen
 
             j0 -= 12;  if (j0 < 0) j0 = 0;             /* due to trunc */
             for (j = j0; j<num_targets; j++) {           /* candidate search */
-                if (next[j].tnr != TR_UNUSED ) {
+                if (next[j].tnr != -1 ) {
                     if (next[j].y > ymax ) break;                     /* finish search */
                     if (next[j].x > xmin && next[j].x < xmax \
                         && next[j].y > ymin && next[j].y < ymax) {
@@ -299,79 +299,6 @@ int candsearch_in_pix (target next[], int num_targets, double cent_x, double cen
             for (j = 0; j<4; j++) if ( p[j] != PT_UNUSED ) counter++;
         }         /* if x is within the image boundaries */
     }     /* if y is within the image boundaries */
-    return (counter);
-}
-
-/* candsearch_in_pix_rest searches for a nearest candidate in unmatched target list
- * 
- * Arguments:
- * target next[] - array of targets (pointer, x,y, n, nx,ny, sumg, track ID),
- *     assumed to be y sorted.
- * int num_targets - target array length.
- * double cent_x, cent_y - image coordinates of the position of a particle [pixel]
- * double dl, dr, du, dd - respectively the left, right, up, down distance to
- *   the search area borders from its center, [pixel]
- * int p[] - indices in ``next`` of the candidates found.
- * control_par *cpar array of parameters (cpar->imx,imy are needed)
- * 
- * Returns:
- * int, the number of candidates found, between 0 - 1
- */
-
-int candsearch_in_pix_rest (target next[], int num_targets, double cent_x, double cent_y,
-                       double dl, double dr, double du, double dd, int p[4], control_par *cpar) {
-
-    int j, j0, dj;
-    int counter = 0, p1, p2, p3, p4;
-    double d, dmin = 1e20, xmin, xmax, ymin, ymax;
-
-    xmin = cent_x - dl;  xmax = cent_x + dr;  ymin = cent_y - du;  ymax = cent_y + dd;
-
-    if(xmin<0.0) xmin = 0.0;
-    if(xmax > cpar->imx)
-        xmax = cpar->imx;
-    if(ymin<0.0) ymin = 0.0;
-    if(ymax > cpar->imy)
-        ymax = cpar->imy;
-
-    for (j = 0; j<4; j++) ( p[j] = PT_UNUSED );
-    p1 = p2 = p3 = p4 = PT_UNUSED;
-
-    if (cent_x >= 0.0 && cent_x <= cpar->imx ) {
-        if (cent_y >= 0.0 && cent_y <= cpar->imy ) {
-
-            /* binarized search for start point of candidate search */
-            for (j0 = num_targets/2, dj = num_targets/4; dj>1; dj /= 2)
-            {
-                if (next[j0].y < ymin) j0 += dj;
-                else j0 -= dj;
-            }
-
-            j0 -= 12;  if (j0 < 0) j0 = 0;             /* due to trunc */
-            for (j = j0; j<num_targets; j++) {           /* candidate search */
-                if (next[j].tnr == TR_UNUSED ) {
-                    if (next[j].y > ymax ) break;                     /* finish search */
-                    if (next[j].x > xmin && next[j].x < xmax \
-                        && next[j].y > ymin && next[j].y < ymax) {
-                        d = sqrt ((cent_x-next[j].x)*(cent_x-next[j].x) + \
-                                  (cent_y-next[j].y)*(cent_y-next[j].y));
-
-                        if (d < dmin) {
-                            dmin = d;
-                            p1 = j;
-                        }   
-                    }
-                }
-            }
-
-            p[0] = p1;
-            p[1] = p2;
-            p[2] = p3;
-            p[3] = p4;
-
-            if ( p[0] != PT_UNUSED ) counter++;
-        }  /* if y is within the image boundaries */
-    }     /* if x is within the image boundaries */
     return (counter);
 }
 
@@ -644,12 +571,12 @@ int assess_new_position(vec3d pos, vec2d targ_pos[],
     double right, left, down, up; /* search rectangle limits */
     
     left = right = up = down = ADD_PART;
-    for (cam = 0; cam < frm->num_cams; cam++) {
+    for (cam = 0; cam < run->cpar->num_cams; cam++) {
         point_to_pixel(pixel, pos, run->cal[cam], run->cpar);
         targ_pos[cam][0] = targ_pos[cam][1] = COORD_UNUSED;
         
         /* here we shall use only the 1st neigbhour */
-        num_cands = candsearch_in_pix_rest (frm->targets[cam], frm->num_targets[cam],
+        num_cands = candsearch_in_pix (frm->targets[cam], frm->num_targets[cam],
             pixel[0], pixel[1], left, right, up, down, 
             cand_inds[cam], run->cpar);
 
@@ -661,7 +588,7 @@ int assess_new_position(vec3d pos, vec2d targ_pos[],
     }
 
     valid_cams = 0;
-    for (cam = 0; cam < frm->num_cams; cam++) {
+    for (cam = 0; cam < run->cpar->num_cams; cam++) {
         if ((targ_pos[cam][0] != COORD_UNUSED) && \
             (targ_pos[cam][1] != COORD_UNUSED)) 
         {
@@ -795,7 +722,7 @@ void trackcorr_c_loop (tracking_run *run_info, int step) {
         } else {
             vec_copy(X[2], X[1]);
             for (j = 0; j < fb->num_cams; j++) {
-                if (curr_corres->p[j] == CORRES_NONE) {
+                if (curr_corres->p[j] == -1) {
                     point_to_pixel (v1[j], X[2], cal[j], cpar);
                 } else {
                     _ix = curr_corres->p[j];
@@ -1026,7 +953,6 @@ void trackcorr_c_loop (tracking_run *run_info, int step) {
     }
     /* end of creation of links with decision check */
 
-
     printf ("step: %d, curr: %d, next: %d, links: %d, lost: %d, add: %d\n",
             step, fb->buf[1]->num_parts, fb->buf[2]->num_parts, count1,
             fb->buf[1]->num_parts - count1, num_added);
@@ -1100,6 +1026,8 @@ double trackback_c (tracking_run *run_info)
 
     /* sequence loop */
     for (step = seq_par->last - 1; step > seq_par->first; step--) {
+        printf ("Time step: %d, seqnr: %d:\n",
+                step - seq_par->first, step);
 
         for (h = 0; h < fb->buf[1]->num_parts; h++) {
             curr_path_inf = &(fb->buf[1]->path_info[h]);
@@ -1245,7 +1173,7 @@ double trackback_c (tracking_run *run_info)
             if (curr_path_inf->prev != PREV_NONE ) count1++;
         }         /* end of creation of links with decision check */
 
-        printf ("step: %d, curr: %d, next: %d, links: %d, lost: %d, add: %d\n",
+        printf ("step: %d, curr: %d, next: %d, links: %d, lost: %d, add: %d",
                 step, fb->buf[1]->num_parts, fb->buf[2]->num_parts, count1,
                 fb->buf[1]->num_parts - count1, num_added);
 

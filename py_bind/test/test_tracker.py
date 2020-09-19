@@ -15,25 +15,26 @@ from optv.parameters import ControlParams, VolumeParams, TrackingParams, \
     SequenceParams
 
 framebuf_naming = {
-    'corres': 'testing_fodder/track/res/particles',
-    'linkage': 'testing_fodder/track/res/linkage',
-    'prio': 'testing_fodder/track/res/whatever'
+    'corres': b'testing_fodder/track/res/particles',
+    'linkage': b'testing_fodder/track/res/linkage',
+    'prio': b'testing_fodder/track/res/whatever'
 }
 class TestTracker(unittest.TestCase):
     def setUp(self):
-        with open("testing_fodder/track/conf.yaml") as f:
+        with open(b"testing_fodder/track/conf.yaml") as f:
             yaml_conf = yaml.load(f)
         seq_cfg = yaml_conf['sequence']
         
         cals = []
         img_base = []
+        print((yaml_conf['cameras']))
         for cix, cam_spec in enumerate(yaml_conf['cameras']):
-            cam_spec.setdefault('addpar_file', None)
+            cam_spec.setdefault(b'addpar_file', None)
             cal = Calibration()
-            cal.from_file(cam_spec['ori_file'], cam_spec['addpar_file'])
+            cal.from_file(cam_spec['ori_file'].encode(), cam_spec['addpar_file'].encode())
             cals.append(cal)
             img_base.append(seq_cfg['targets_template'].format(cam=cix + 1))
-            
+  
         cpar = ControlParams(len(yaml_conf['cameras']), **yaml_conf['scene'])
         vpar = VolumeParams(**yaml_conf['correspondences'])
         tpar = TrackingParams(**yaml_conf['tracking'])
@@ -51,13 +52,13 @@ class TestTracker(unittest.TestCase):
         self.tracker.restart()
         last_step = 1
         while self.tracker.step_forward():
-            self.failUnless(self.tracker.current_step() > last_step)
+            self.assertTrue(self.tracker.current_step() > last_step)
             with open("testing_fodder/track/res/linkage.%d" % last_step) as f:
                 lines = f.readlines()
                 if last_step < 3:
-                    self.failUnless(lines[0] == "1\n")
+                    self.assertTrue(lines[0] == "1\n")
                 else:
-                    self.failUnless(lines[0] == "2\n")
+                    self.assertTrue(lines[0] == "2\n")
             last_step += 1
         self.tracker.finalize()
     
