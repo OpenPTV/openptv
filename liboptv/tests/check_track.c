@@ -585,6 +585,40 @@ START_TEST(test_cavity)
 }
 END_TEST
 
+START_TEST(test_burgers)
+{
+    tracking_run *ret;
+    Calibration *calib[4];
+    control_par *cpar;
+    
+    
+    printf("----------------------------\n");
+    printf("Test Burgers vortex case \n");
+    
+    chdir("testing_fodder/test_burgers");
+    copy_res_dir("res_orig/", "res/");
+    copy_res_dir("img_orig/", "img/");
+    
+    cpar = read_control_par("parameters/ptv.par");
+    read_all_calibration(calib, cpar->num_cams);
+    printf("In test_cavity num cams = %d\n",cpar->num_cams);
+    ret = tr_new_legacy("parameters/sequence.par", 
+        "parameters/track.par", "parameters/criteria.par", 
+        "parameters/ptv.par", calib);
+    track_forward_start(ret);
+    
+    trackcorr_c_loop (ret, 10002);
+    empty_res_dir();
+    
+    ck_assert_msg(ret->npart == 5,
+                  "Was expecting npart == 672 but found %d \n", ret->npart);
+    ck_assert_msg(ret->nlinks == 5,
+                  "Was expecting nlinks == 5 but found %d \n", ret->nlinks);
+    
+    trackcorr_c_finish(ret, 10002);
+}
+END_TEST
+
 START_TEST(test_trackback)
 {
     tracking_run *run;
@@ -727,6 +761,10 @@ Suite* fb_suite(void) {
     
     tc = tcase_create ("Test cavity case");
     tcase_add_test(tc, test_cavity);
+    suite_add_tcase (s, tc);
+
+    tc = tcase_create ("Test Burgers case");
+    tcase_add_test(tc, test_burgers);
     suite_add_tcase (s, tc);
 
     tc = tcase_create ("Tracking forward without additions");
