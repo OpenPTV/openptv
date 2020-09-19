@@ -27,6 +27,9 @@
 #define MAX_TARGETS 20000
 #define MAX_CANDS 4         // max candidates, nearest neighbours
 #define ADD_PART 3          // search region 3 pix around a particle
+#define TR_UNUSED -1
+#define _USE_MATH_DEFINES
+
 
 typedef struct /* struct for what was found to corres */
 {

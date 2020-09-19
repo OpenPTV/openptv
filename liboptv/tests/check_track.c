@@ -303,7 +303,7 @@ START_TEST(test_candsearch_in_pix_rest)
     cent_x = cent_y = 98.9;
     dl = dr = du = dd = 3;
 
-    counter = candsearch_in_pix_rest (test_pix, num_targets, cent_x, cent_y, \
+    counter = candsearch_in_pix_rest(test_pix, num_targets, cent_x, cent_y, \
                                  dl, dr, du, dd, p, test_cpar);
 
     printf("in candsearch_in_pix_rest\n");
