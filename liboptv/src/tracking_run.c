@@ -19,50 +19,46 @@ tracking_run* tr_new_legacy(char *seq_par_fname, char *tpar_fname,
 {
     control_par *cpar = read_control_par(cpar_fname);
     sequence_par *seq_par = read_sequence_par(seq_par_fname, cpar->num_cams);
+    
+    framebuf* fb = (framebuf*) malloc(sizeof(framebuf));
+    fb_init(fb, 4, cpar->num_cams, 20000,
+        "res/rt_is", "res/ptv_is", "res/added", 
+        seq_par->img_base_name
+    );
+    
     return tr_new(seq_par, read_track_par(tpar_fname), 
-        read_volume_par(vpar_fname), cpar, 4, 20000,
-        "res/rt_is", "res/ptv_is", "res/added", cal, 10000);
+        read_volume_par(vpar_fname), cpar, cal, (framebuf_base*)fb, 10000);
 }
 
 /* tr_new() aggregates several parameter structs used by tracking, and
-   allocates necessary strucures like the frame buffer. It then initializes
-   some tracking related metadata. 
-   
-   There are a lot of arguments to this one, partly because of the frame
-   buffer initialization. In the future, when the frame buffer details are
-   abstracted away, we can just pass one in. But this is way in the future.
+   initializes some tracking related metadata. 
    
    Arguments:
-   tracking_run *tr - points to the TrackingRun object to initialize.
    sequence_par *seq_par - sequence parameters.
    track_par *tpar - tracking parameters.
    volume_par *vpar - volume parameters.
    control_par *cpar - control parameters, such as sensor size etc.
-   int buf_len - how many consecutive frames to hold in the buffer.
-   int max_targets - number of targets to make place for in each buffer.
-   char *corres_file_base, *linkage_file_base, *prio_file_base
-      - naming scheme in the frame buffer, passed forward
-      without tampering. See tracking_frame_buf.c:fb_init()
    Calibration **cal - camra positions etc.
+   framebuf_base *fb - the framebuffer supplying frames for tracking.
    double flatten_tol - tolerance for the action of transforming distorted 
       image coordinates to flat coordinates.
+    
+   Returns:
+   tracking_run *tr - points to the TrackingRun object created.
 */
-tracking_run *tr_new(sequence_par *seq_par, track_par *tpar,
-    volume_par *vpar, control_par *cpar, int buf_len, int max_targets,
-    char *corres_file_base, char *linkage_file_base, char *prio_file_base, 
-    Calibration **cal, double flatten_tol)
+tracking_run *tr_new(
+    sequence_par *seq_par, track_par *tpar, volume_par *vpar, control_par *cpar, 
+    Calibration **cal, framebuf_base *fb, double flatten_tol)
 {
     tracking_run *tr = (tracking_run *) malloc(sizeof(tracking_run));
+    
     tr->tpar = tpar;
     tr->vpar = vpar;
     tr->cpar = cpar;
     tr->seq_par = seq_par;
     tr->cal = cal;
+    tr->fb = fb;
     tr->flatten_tol = flatten_tol;
-    
-    tr->fb = (framebuf *) malloc(sizeof(framebuf));
-    fb_init(tr->fb, buf_len, cpar->num_cams, max_targets,
-        corres_file_base, linkage_file_base, prio_file_base, seq_par->img_base_name);
     
     tr->lmax = norm((tpar->dvxmin - tpar->dvxmax), \
                     (tpar->dvymin - tpar->dvymax), \

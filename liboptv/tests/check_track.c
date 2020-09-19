@@ -567,43 +567,61 @@ START_TEST(test_trackback)
 }
 END_TEST
 
-START_TEST(test_new_particle)
-{
-    /* this test also has the side-effect of testing instantiation of a 
-       tracking_run struct without the legacy stuff. */
-
+typedef struct {
     Calibration *calib[3];
     control_par *cpar;
     sequence_par *spar;
     track_par *tpar;
-    volume_par *vpar;
-    tracking_run *run;
-    
+    volume_par *vpar;    
+} track_env;
+
+int prepare_env_new_particle(track_env* env) 
+{
     char ori_tmpl[] = "cal/sym_cam%d.tif.ori";
     char added_name[] = "cal/cam1.tif.addpar";
     char ori_name[256];
     int cam, status;
 
-    fail_unless((status = chdir("testing_fodder/")) == 0);
+    if((status = chdir("testing_fodder/")) != 0)
+        return 0;
     
     /* Set up all scene parameters to track one specially-contrived 
        trajectory. */
     for (cam = 0; cam < 3; cam++) {
         sprintf(ori_name, ori_tmpl, cam + 1);
-        calib[cam] = read_calibration(ori_name, added_name, NULL);
+        env->calib[cam] = read_calibration(ori_name, added_name, NULL);
     }
     
-    fail_unless((status = chdir("track/")) == 0);
+    if((status = chdir("track/")) != 0)
+        return 0;
+    
     copy_res_dir("res_orig/", "res/");
     copy_res_dir("img_orig/", "img/");
 
-    spar = read_sequence_par("parameters/sequence_newpart.par", 3);
-    cpar = read_control_par("parameters/control_newpart.par");
-    tpar = read_track_par("parameters/track.par");
-    vpar = read_volume_par("parameters/criteria.par");
+    env->spar = read_sequence_par("parameters/sequence_newpart.par", 3);
+    env->cpar = read_control_par("parameters/control_newpart.par");
+    env->tpar = read_track_par("parameters/track.par");
+    env->vpar = read_volume_par("parameters/criteria.par");
     
-    run = tr_new(spar, tpar, vpar, cpar, 4, MAX_TARGETS, 
-        "res/particles", "res/linkage", "res/whatever", calib, 0.1);
+    return 1;
+}
+
+START_TEST(test_new_particle)
+{
+    /* this test also has the side-effect of testing instantiation of a 
+       tracking_run struct without the legacy stuff. */
+    track_env env;
+    tracking_run *run;
+    framebuf *fb = (framebuf*) malloc(sizeof(framebuf));
+    
+    fail_unless(prepare_env_new_particle(&env) == 1);
+    
+    fb_init(fb, 4, env.cpar->num_cams, MAX_TARGETS,
+        "res/particles", "res/linkage", "res/whatever", 
+        env.spar->img_base_name
+    );
+    run = tr_new(env.spar, env.tpar, env.vpar, env.cpar, env.calib, (framebuf_base*)fb, 0.1);
+    
     track_forward_start(run);
     trackcorr_c_loop(run, 1);
     trackcorr_c_loop(run, 2);
@@ -611,7 +629,7 @@ START_TEST(test_new_particle)
     fb_prev(run->fb); /* because each loop step moves the FB forward */
     fail_unless(run->fb->buf[1]->path_info[0].next == 1);
     
-    tpar->add = 0;
+    env.tpar->add = 0;
     track_forward_start(run);
     trackcorr_c_loop(run, 1);
     trackcorr_c_loop(run, 2);
@@ -623,12 +641,81 @@ START_TEST(test_new_particle)
 }
 END_TEST
 
+
+typedef struct {
+    track_env *env;
+    frame* incoming;
+    frame* outgoing;
+} inmem_tracker;
+
+int gen_frame(int frame_num, void* tracker_info) {
+    inmem_tracker *self = (inmem_tracker*)tracker_info;
+    
+    // framebuf has taken ownership of previous self->incoming.
+    // we now create a new one.
+    self->incoming = (frame*) malloc(sizeof(frame));
+    frame_init(self->incoming, self->env->cpar->num_cams, MAX_TARGETS);
+    read_frame(
+        self->incoming, "res/particles", NULL, NULL, 
+        self->env->spar->img_base_name, frame_num
+    );
+}
+
+int dispose_frame(int frame_num, void* tracker_info) {
+    inmem_tracker *self = (inmem_tracker*)tracker_info;
+    // framebuf has released ownership of outgoing frame.
+    write_frame(self->outgoing, "res/particles", "res/linkage", "res/whatever", 
+        self->env->spar->img_base_name, frame_num);
+}
+
+START_TEST(test_new_particle_inmem)
+{
+    // this test also has the side-effect of testing instantiation of a 
+    //   tracking_run struct using the inmeme framebuf. 
+    track_env env;
+    inmem_tracker itr;
+    tracking_run *run;
+    framebuf_inmem *fb = (framebuf_inmem*) malloc(sizeof(framebuf_inmem));
+    
+    fail_unless(prepare_env_new_particle(&env) == 1);
+    
+    itr.env = &env;
+    gen_frame(1, (void*)&itr);
+    
+    fb_inmem_init(fb, 4, env.cpar->num_cams, MAX_TARGETS,
+        &itr.incoming, &itr.outgoing, (void*)&itr, gen_frame, dispose_frame
+    );
+    
+    run = tr_new(env.spar, env.tpar, env.vpar, env.cpar, env.calib, (framebuf_base*)fb, 0.1);
+    
+    track_forward_start(run);
+    trackcorr_c_loop(run, 1);
+    trackcorr_c_loop(run, 2);
+    fb_prev(run->fb); // because each loop step moves the FB forward 
+    fail_unless(run->fb->buf[1]->path_info[0].next == 1);
+    
+    env.tpar->add = 0;
+    //reset the tracker:
+    gen_frame(1, (void*)&itr);
+    track_forward_start(run);
+    trackcorr_c_loop(run, 1);
+    trackcorr_c_loop(run, 2);
+    fb_prev(run->fb); 
+    
+    empty_res_dir();
+
+    fail_unless(run->fb->buf[1]->path_info[0].next == 0);
+}
+END_TEST
+
 Suite* fb_suite(void) {
     Suite *s = suite_create ("ttools");
-    TCase *tc = tcase_create ("predict test");
+    TCase *tc;
+    
+    tc = tcase_create ("predict test");
     tcase_add_test(tc, test_predict);
     suite_add_tcase (s, tc);
-
+    
     tc = tcase_create ("search_volume_center_moving");
     tcase_add_test(tc, test_search_volume_center_moving);
     suite_add_tcase (s, tc);
@@ -679,6 +766,10 @@ Suite* fb_suite(void) {
     
     tc = tcase_create ("Tracking a constructed frame");
     tcase_add_test(tc, test_new_particle);
+    suite_add_tcase (s, tc);
+
+    tc = tcase_create ("Tracking a constructed frame - inmem framebuf");
+    tcase_add_test(tc, test_new_particle_inmem);
     suite_add_tcase (s, tc);
 
     return s;

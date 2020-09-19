@@ -681,7 +681,7 @@ void trackcorr_c_loop (tracking_run *run_info, int step) {
 
     /* Shortcuts into the tracking_run struct */ 
     Calibration **cal;
-    framebuf *fb;
+    framebuf_base *fb;
     track_par *tpar;
     volume_par *vpar;
     control_par *cpar;
@@ -1002,7 +1002,7 @@ double trackback_c (tracking_run *run_info)
     track_par *tpar;
     volume_par *vpar;
     control_par *cpar;
-    framebuf *fb;
+    framebuf_base *fb;
     Calibration **cal;
 
     /* Shortcuts to inside current frame */

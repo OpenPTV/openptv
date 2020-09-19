@@ -30,10 +30,16 @@ cdef extern from "optv/tracking_frame_buf.h":
         int num_cams, max_targets, num_parts
         int *num_targets
     
+    ctypedef struct framebuf_base:
+        pass
+        
     ctypedef struct framebuf:
         pass
     
     void fb_free(framebuf *self)
+    void fb_init(framebuf *new_buf, int buf_len, int num_cams, int max_targets,
+        char *corres_file_base, char* linkage_file_base, char *prio_file_base,
+        char **target_file_base)
     
 cdef class Target:
     cdef target* _targ

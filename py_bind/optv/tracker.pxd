@@ -1,6 +1,6 @@
 
 from optv.parameters cimport sequence_par, track_par, volume_par, control_par
-from optv.tracking_framebuf cimport framebuf
+from optv.tracking_framebuf cimport framebuf, framebuf_base
 from optv.calibration cimport calibration
 
 cdef extern from "optv/tracking_run.h":
@@ -9,10 +9,9 @@ cdef extern from "optv/tracking_run.h":
         calibration **cal
         framebuf *fb
     
-    tracking_run* tr_new(sequence_par *seq_par, track_par *tpar,
-        volume_par *vpar, control_par *cpar, int buf_len, int max_targets,
-        char *corres_file_base, char *linkage_file_base, char *prio_file_base, 
-        calibration **cal, double flatten_tol)
+    tracking_run *tr_new(
+        sequence_par *seq_par, track_par *tpar, volume_par *vpar, control_par *cpar, 
+        calibration **cal, framebuf_base *fb, double flatten_tol);
 
 cdef extern from "optv/track.h":
     cdef enum:
@@ -24,6 +23,7 @@ cdef extern from "optv/track.h":
 
 cdef class Tracker:
     cdef tracking_run *run_info
+    cdef framebuf *fb
     cdef int step
     cdef object _keepalive
 
