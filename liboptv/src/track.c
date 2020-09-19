@@ -576,7 +576,7 @@ int assess_new_position(vec3d pos, vec2d targ_pos[],
         targ_pos[cam][0] = targ_pos[cam][1] = COORD_UNUSED;
         
         /* here we shall use only the 1st neigbhour */
-        num_cands = candsearch_in_pix (frm->targets[cam], frm->num_targets[cam],
+        num_cands = candsearch_in_pix_rest (frm->targets[cam], frm->num_targets[cam],
             pixel[0], pixel[1], left, right, up, down, 
             cand_inds[cam], run->cpar);
 
