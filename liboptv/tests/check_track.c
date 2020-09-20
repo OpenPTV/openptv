@@ -561,9 +561,10 @@ END_TEST
 
 START_TEST(test_cavity)
 {
-    tracking_run *ret;
+    tracking_run *run;
     Calibration *calib[4];
     control_par *cpar;
+    int step;
     struct stat st = {0};
     
     
@@ -579,26 +580,52 @@ START_TEST(test_cavity)
     if (stat("img", &st) == -1) {
         mkdir("img", 0700);
     }
-   copy_res_dir("img_orig/", "img/");
-    
-    cpar = read_control_par("parameters/ptv.par");
+    copy_res_dir("img_orig/", "img/");
+
+    fail_if((cpar = read_control_par("parameters/ptv.par"))== 0);
     read_all_calibration(calib, cpar->num_cams);
-    printf("In test_cavity num cams = %d\n",cpar->num_cams);
-    ret = tr_new_legacy("parameters/sequence.par", 
+
+    run = tr_new_legacy("parameters/sequence.par", 
         "parameters/track.par", "parameters/criteria.par", 
         "parameters/ptv.par", calib);
-    track_forward_start(ret);
+
+    printf("num cams in run is %d\n",run->cpar->num_cams);
+    printf("add particle is %d\n",run->tpar->add);
+
+    track_forward_start(run);    
+    for (step = run->seq_par->first; step < run->seq_par->last; step++) {
+        trackcorr_c_loop(run, step);
+    }
+    trackcorr_c_finish(run, run->seq_par->last);
+    printf("total num parts is %d, num links is %d \n", run->npart, run->nlinks);
+
+    ck_assert_msg(run->npart == 672+699+711,
+                  "Was expecting npart == 2082 but found %d \n", run->npart);
+    ck_assert_msg(run->nlinks == 132+176+144,
+                  "Was expecting nlinks == 17 found %ld \n", run->nlinks);
+
+
+
+    run = tr_new_legacy("parameters/sequence.par", 
+        "parameters/track.par", "parameters/criteria.par", 
+        "parameters/ptv.par", calib);
+
+    run->tpar->add = 1;
+    printf("changed add particle to %d\n",run->tpar->add);
+
+    track_forward_start(run);    
+    for (step = run->seq_par->first; step < run->seq_par->last; step++) {
+        trackcorr_c_loop(run, step);
+    }
+    trackcorr_c_finish(run, run->seq_par->last);
+    printf("total num parts is %d, num links is %d \n", run->npart, run->nlinks);
+
+    ck_assert_msg(run->npart == 672+699+715,
+                  "Was expecting npart == 2086 but found %d \n", run->npart);
+    ck_assert_msg(run->nlinks == 132+180+149,
+                  "Was expecting nlinks == 461 found %ld \n", run->nlinks);
     
-    trackcorr_c_loop (ret, 10002);
     empty_res_dir();
-    
-    ck_assert_msg(ret->npart == 672,
-                  "Was expecting npart == 672 but found %d \n", ret->npart);
-    ck_assert_msg(ret->nlinks == 3,
-                  "Was expecting nlinks == 127 but found %d \n", ret->nlinks);
-    printf("We need to fix track_cavity\n");
-    
-    trackcorr_c_finish(ret, 10002);
 }
 END_TEST
 
@@ -625,7 +652,7 @@ START_TEST(test_burgers)
     if (stat("img", &st) == -1) {
         mkdir("img", 0700);
     }
-   copy_res_dir("img_orig/", "img/");
+    copy_res_dir("img_orig/", "img/");
 
     fail_if((cpar = read_control_par("parameters/ptv.par"))== 0);
     read_all_calibration(calib, cpar->num_cams);
@@ -827,9 +854,9 @@ Suite* fb_suite(void) {
     tcase_add_test(tc, test_sort_candidates_by_freq);
     suite_add_tcase (s, tc);
     
-    // tc = tcase_create ("Test cavity case");
-    // tcase_add_test(tc, test_cavity);
-    // suite_add_tcase (s, tc);
+    tc = tcase_create ("Test cavity case");
+    tcase_add_test(tc, test_cavity);
+    suite_add_tcase (s, tc);
 
     tc = tcase_create ("Test Burgers case");
     tcase_add_test(tc, test_burgers);
