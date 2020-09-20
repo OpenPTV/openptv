@@ -94,6 +94,8 @@ START_TEST(test_orient)
     int nfix, i, k=0, pnr, ix, iy, iz, pt_id;
     int eps, correct_eps = 25;
     double xp, yp;
+    int num_iter = 100;
+    double convergence = 0.000001;
     FILE *fpp;
     
     pt_id = 0;
@@ -131,7 +133,7 @@ START_TEST(test_orient)
     cal->ext_par.phi += 0.5;
     cal->ext_par.kappa += 0.5;
     
-    fail_if((resi = orient (cal, cpar, 64, fix, pix, opar, sigmabeta)) == NULL);
+    fail_if((resi = orient (cal, cpar, 64, fix, pix, opar, sigmabeta, num_iter, convergence)) == NULL);
     free(resi);
     fail_if((org_cal = read_calibration(ori_file, add_file, NULL)) == NULL);
     fail_unless (fabs(cal->ext_par.x0 - org_cal->ext_par.x0) +
@@ -155,7 +157,7 @@ START_TEST(test_orient)
     opar->ccflag = 1;
     opar->xhflag = 1;
         
-    fail_if((resi = orient (cal, cpar, 64, fix, pix, opar, sigmabeta)) == NULL);
+    fail_if((resi = orient (cal, cpar, 64, fix, pix, opar, sigmabeta, num_iter, convergence)) == NULL);
     free(resi);
     fail_unless (fabs(fabs(cal->ext_par.x0 - org_cal->ext_par.x0) +
             fabs(cal->ext_par.y0 - org_cal->ext_par.y0) +

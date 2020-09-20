@@ -37,8 +37,8 @@ def match_detection_to_ref(Calibration cal,
     TargetArray holding the sorted targets.
     """
 
-    if len(img_pts) < len(ref_pts):
-        raise ValueError('Must have at least as many targets as ref. points.')
+#     if len(img_pts) < len(ref_pts):
+#         raise ValueError('Must have at least as many targets as ref. points.')
 
     cdef:
         vec3d *ref_coord
@@ -222,7 +222,8 @@ def external_calibration(Calibration cal,
 
 def full_calibration(Calibration cal,
     np.ndarray[ndim=2, dtype=pos_t] ref_pts, TargetArray img_pts,
-    ControlParams cparam, list flags=[]):
+    ControlParams cparam, list flags=[], int num_iter = 80, 
+    double convergence = 0.00001):
     """
     Performs a full calibration, affecting all calibration structs.
     
@@ -287,14 +288,37 @@ def full_calibration(Calibration cal,
     
     err_est = np.empty((NPAR + 1) * sizeof(double))
     residuals = orient(cal._calibration, cparam._control_par, len(ref_pts), 
-        ref_coord, img_pts._tarr, orip, <double *>err_est.data)
+        ref_coord, img_pts._tarr, orip, <double *>err_est.data, num_iter, 
+        convergence)
     
-    free(orip)
     
+    '''
     if residuals == NULL:
         free(residuals)
         raise ValueError("Orientation iteration failed, need better setup.")
+    '''
+    while residuals == NULL and num_iter < 500:
+        num_iter += 100
+        print("number of iterations increased to %f\n" % num_iter)
+        residuals = orient(cal._calibration, cparam._control_par, len(ref_pts), 
+        ref_coord, img_pts._tarr, orip, <double *>err_est.data, num_iter, 
+        convergence)
+        # free(residuals)
+
+    while residuals == NULL and convergence < .5:
+        convergence *= 10
+        print("convergence threshold increased tenfold to %f\n" % convergence)
+        residuals = orient(cal._calibration, cparam._control_par, len(ref_pts), 
+        ref_coord, img_pts._tarr, orip, <double *>err_est.data, num_iter, 
+        convergence)
+        # free(residuals)
     
+    if residuals == NULL:
+        free(residuals)
+
+    free(orip)
+
+
     ret = np.empty((len(img_pts), 2))
     used = np.empty(len(img_pts), dtype=np.int_)
     
