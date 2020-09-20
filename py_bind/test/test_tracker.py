@@ -1,7 +1,7 @@
 #!/usr/bin/env python2
 # -*- coding: utf-8 -*-
 """
-Tests for the Tracker class
+Tests for the Tracker class 
 
 Created on Mon Apr 24 10:57:01 2017
 
@@ -22,7 +22,7 @@ framebuf_naming = {
 class TestTracker(unittest.TestCase):
     def setUp(self):
         with open(b"testing_fodder/track/conf.yaml") as f:
-            yaml_conf = yaml.load(f)
+            yaml_conf = yaml.load(f,Loader=yaml.FullLoader)
         seq_cfg = yaml_conf['sequence']
         
         cals = []
@@ -50,15 +50,18 @@ class TestTracker(unittest.TestCase):
             "testing_fodder/track/res_orig/", "testing_fodder/track/res/")
         
         self.tracker.restart()
-        last_step = 1
+        last_step = 10001
         while self.tracker.step_forward():
+            # print(f"step is {self.tracker.current_step()}\n")
+            # print(self.tracker.current_step() > last_step)
             self.assertTrue(self.tracker.current_step() > last_step)
             with open("testing_fodder/track/res/linkage.%d" % last_step) as f:
                 lines = f.readlines()
-                if last_step < 3:
-                    self.assertTrue(lines[0] == "1\n")
+                # print(last_step,lines[0])
+                if last_step == 10003:
+                    self.assertTrue(lines[0] == "-1\n")
                 else:
-                    self.assertTrue(lines[0] == "2\n")
+                    self.assertTrue(lines[0] == "1\n")
             last_step += 1
         self.tracker.finalize()
     
