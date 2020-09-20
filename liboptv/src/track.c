@@ -1100,8 +1100,8 @@ double trackback_c (tracking_run *run_info)
 
     /* sequence loop */
     for (step = seq_par->last - 1; step > seq_par->first; step--) {
-        printf ("Time step: %d, seqnr: %d:\n",
-                step - seq_par->first, step);
+        // printf ("Time step: %d, seqnr: %d:\n",
+        //         step - seq_par->first, step);
 
         for (h = 0; h < fb->buf[1]->num_parts; h++) {
             curr_path_inf = &(fb->buf[1]->path_info[h]);
