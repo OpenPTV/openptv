@@ -645,14 +645,20 @@ int assess_new_position(vec3d pos, vec2d targ_pos[],
     double right, left, down, up; /* search rectangle limits */
     
     left = right = up = down = ADD_PART;
-    for (cam = 0; cam < frm->num_cams; cam++) {
-        point_to_pixel(pixel, pos, run->cal[cam], run->cpar);
+
+    for (cam = 0; cam < TR_MAX_CAMS; cam++) {
         targ_pos[cam][0] = targ_pos[cam][1] = COORD_UNUSED;
+    }
+
+    for (cam = 0; cam < run->cpar->num_cams; cam++) {
+        point_to_pixel(pixel, pos, run->cal[cam], run->cpar);
         
         /* here we shall use only the 1st neigbhour */
         num_cands = candsearch_in_pix_rest (frm->targets[cam], frm->num_targets[cam],
             pixel[0], pixel[1], left, right, up, down, 
             cand_inds[cam], run->cpar);
+        
+        // printf("num_cands after pix_rest is %d\n",num_cands);
 
         if (num_cands > 0) {
             _ix = cand_inds[cam][0];  // first nearest neighbour
