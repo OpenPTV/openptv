@@ -11,6 +11,7 @@ Created on Mon Apr 24 10:57:01 2017
 import unittest
 import yaml
 import os
+import shutil
 from optv.tracker import Tracker
 from optv.calibration import Calibration
 from optv.parameters import ControlParams, VolumeParams, TrackingParams, \
@@ -26,7 +27,7 @@ framebuf_naming = {
 class TestTracker(unittest.TestCase):
     def setUp(self):
         with open(b"testing_fodder/burgers/conf.yaml") as f:
-            yaml_conf = yaml.load(f)
+            yaml_conf = yaml.load(f, Loader=yaml.FullLoader)
         seq_cfg = yaml_conf['sequence']
 
         cals = []
@@ -51,8 +52,18 @@ class TestTracker(unittest.TestCase):
 
     def test_forward(self):
         """Manually running a full forward tracking run."""
-        # shutil.copytree(
-        #    "testing_fodder/burgers/res_orig/", "testing_fodder/burgers/res/")
+        # path = 'testing_fodder/burgers/res'
+        # try:
+        #     os.mkdir(path)
+        # except OSError:
+        #     print("Creation of the directory %s failed" % path)
+        # else:
+        #     print("Successfully created the directory %s " % path)
+
+        shutil.copytree(
+           "testing_fodder/burgers/res_orig/", "testing_fodder/burgers/res/")
+        shutil.copytree(
+           "testing_fodder/burgers/img_orig/", "testing_fodder/burgers/img/")
 
         self.tracker.restart()
         last_step = 10001
@@ -60,26 +71,32 @@ class TestTracker(unittest.TestCase):
             self.failUnless(self.tracker.current_step() > last_step)
             with open("testing_fodder/burgers/res/rt_is.%d" % last_step) as f:
                 lines = f.readlines()
-                print(lines)
-                # if last_step < 3:
-                #     self.failUnless(lines[0] == "1\n")
-                # else:
-                #     self.failUnless(lines[0] == "2\n")
+                # print(last_step,lines[0])
+                # print(lines)
+                if last_step == 10003:
+                    self.failUnless(lines[0] == "4\n")
+                else:
+                    self.failUnless(lines[0] == "5\n")
             last_step += 1
         self.tracker.finalize()
 
     def test_full_forward(self):
         """Automatic full forward tracking run."""
-        # shutil.copytree(
-        #    "testing_fodder/burgers/res_orig/", "testing_fodder/burgers/res/")
+        # os.mkdir('testing_fodder/burgers/res')
+        shutil.copytree(
+           "testing_fodder/burgers/res_orig/", "testing_fodder/burgers/res/")
+        shutil.copytree(
+           "testing_fodder/burgers/img_orig/", "testing_fodder/burgers/img/")
         self.tracker.full_forward()
         # if it passes without error, we assume it's ok. The actual test is in
         # the C code.
 
     def test_full_backward(self):
         """Automatic full backward correction phase."""
-#       shutil.copytree(
-        #    "testing_fodder/burgers/res_orig/", "testing_fodder/burgers/res/")
+        shutil.copytree(
+            "testing_fodder/burgers/res_orig/", "testing_fodder/burgers/res/")
+        shutil.copytree(
+           "testing_fodder/burgers/img_orig/", "testing_fodder/burgers/img/")
         self.tracker.full_forward()
         self.tracker.full_backward()
         # if it passes without error, we assume it's ok. The actual test is in
@@ -87,8 +104,10 @@ class TestTracker(unittest.TestCase):
 
     def tearDown(self):
         if os.path.exists("testing_fodder/burgers/res/"):
-            # shutil.rmtree("testing_fodder/burgers/res/")
-            print("there is a /res folder\n")
+            shutil.rmtree("testing_fodder/burgers/res/")
+        if os.path.exists("testing_fodder/burgers/img/"):
+            shutil.rmtree("testing_fodder/burgers/img/")
+            # print("there is a /res folder\n")
             # pass
 
 
