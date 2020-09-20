@@ -585,8 +585,6 @@ START_TEST(test_cavity)
 }
 END_TEST
 
-<<<<<<< HEAD
-=======
 START_TEST(test_burgers)
 {
     tracking_run *run;
@@ -634,7 +632,6 @@ START_TEST(test_burgers)
 }
 END_TEST
 
->>>>>>> 83ca652... changed back to candsearch_in_pix as the tracking failed completely
 START_TEST(test_trackback)
 {
     tracking_run *run;
