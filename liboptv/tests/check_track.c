@@ -602,7 +602,7 @@ START_TEST(test_cavity)
     ck_assert_msg(run->npart == 672+699+711,
                   "Was expecting npart == 2082 but found %d \n", run->npart);
     ck_assert_msg(run->nlinks == 132+176+144,
-                  "Was expecting nlinks == 17 found %ld \n", run->nlinks);
+                  "Was expecting nlinks == 452 found %ld \n", run->nlinks);
 
 
 
