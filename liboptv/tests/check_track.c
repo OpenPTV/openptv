@@ -585,6 +585,56 @@ START_TEST(test_cavity)
 }
 END_TEST
 
+<<<<<<< HEAD
+=======
+START_TEST(test_burgers)
+{
+    tracking_run *run;
+    Calibration *calib[4];
+    control_par *cpar;
+    int status, step;
+    
+    
+    printf("----------------------------\n");
+    printf("Test Burgers vortex case \n");
+    
+
+    fail_unless((status = chdir("testing_fodder/burgers")) == 0); 
+    fail_if((cpar = read_control_par("parameters/ptv.par"))== 0);
+    printf("In test_burgers num cams = %d\n",cpar->num_cams);
+    read_all_calibration(calib, cpar->num_cams);
+
+    // copy_res_dir("res_orig/", "res/");
+    // copy_res_dir("img_orig/", "img/");
+
+    run = tr_new_legacy("parameters/sequence.par", 
+        "parameters/track.par", "parameters/criteria.par", 
+        "parameters/ptv.par", calib);
+
+
+    track_forward_start(run);
+    trackcorr_c_loop(run, run->seq_par->first);
+    
+    for (step = run->seq_par->first + 1; step < run->seq_par->last; step++) {
+        trackcorr_c_loop(run, step);
+    }
+    trackcorr_c_finish(run, run->seq_par->last);
+
+    // track_forward_start(ret);
+    
+    // trackcorr_c_loop (ret, 10002);
+    // empty_res_dir();
+    
+    ck_assert_msg(run->npart == 5,
+                  "Was expecting npart == 5 but found %d \n", run->npart);
+    ck_assert_msg(run->nlinks == 5,
+                  "Was expecting nlinks == 5 but found %d \n", run->nlinks);
+    
+    // trackcorr_c_finish(ret, 10002);
+}
+END_TEST
+
+>>>>>>> 83ca652... changed back to candsearch_in_pix as the tracking failed completely
 START_TEST(test_trackback)
 {
     tracking_run *run;

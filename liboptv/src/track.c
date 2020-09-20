@@ -1247,7 +1247,11 @@ double trackback_c (tracking_run *run_info)
             if (curr_path_inf->prev != PREV_NONE ) count1++;
         }         /* end of creation of links with decision check */
 
+<<<<<<< HEAD
         printf ("step: %d, curr: %d, next: %d, links: %d, lost: %d, add: %d\n",
+=======
+        printf ("step: %d, curr: %d, next: %d, links: %d, lost: %d, add: %d \n",
+>>>>>>> 83ca652... changed back to candsearch_in_pix as the tracking failed completely
                 step, fb->buf[1]->num_parts, fb->buf[2]->num_parts, count1,
                 fb->buf[1]->num_parts - count1, num_added);
 
