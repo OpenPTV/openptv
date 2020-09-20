@@ -319,10 +319,10 @@ int candsearch_in_pix (target next[], int num_targets, double cent_x, double cen
  */	
 
 int candsearch_in_pix_rest (target next[], int num_targets, double cent_x, double cent_y,	
-                       double dl, double dr, double du, double dd, int p[4], control_par *cpar) {	
+                       double dl, double dr, double du, double dd, int p[], control_par *cpar) {	
 
     int j, j0, dj;	
-    int counter = 0, p1, p2, p3, p4;	
+    int counter = 0;	
     double d, dmin = 1e20, xmin, xmax, ymin, ymax;	
     // double d1, d2, d3, d4;	
 
@@ -335,8 +335,7 @@ int candsearch_in_pix_rest (target next[], int num_targets, double cent_x, doubl
     if(ymax > cpar->imy)	
         ymax = cpar->imy;	
 
-    for (j = 0; j<4; j++) ( p[j] = PT_UNUSED );	
-    p1 = p2 = p3 = p4 = PT_UNUSED;	
+    p[0] = PT_UNUSED;	
 
     if (cent_x >= 0.0 && cent_x <= cpar->imx ) {	
         if (cent_y >= 0.0 && cent_y <= cpar->imy ) {	
@@ -359,16 +358,11 @@ int candsearch_in_pix_rest (target next[], int num_targets, double cent_x, doubl
 
                         if (d < dmin) {	
                             dmin = d;	
-                            p1 = j;	
+                            p[0] = j;	
                         }   	
                     }	
                 }	
-            }	
-
-            p[0] = p1;	
-            p[1] = p2;	
-            p[2] = p3;	
-            p[3] = p4;	
+            }			
 
             if ( p[0] != PT_UNUSED ) counter++;	
         }  /* if y is within the image boundaries */	
