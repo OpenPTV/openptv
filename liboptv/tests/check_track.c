@@ -776,6 +776,10 @@ Suite* fb_suite(void) {
     tcase_add_test(tc, test_cavity);
     suite_add_tcase (s, tc);
 
+    tc = tcase_create ("Test Burgers case");
+    tcase_add_test(tc, test_burgers);
+    suite_add_tcase (s, tc);
+
     tc = tcase_create ("Tracking forward without additions");
     tcase_add_test(tc, test_trackcorr_no_add);
     suite_add_tcase (s, tc);
