@@ -636,9 +636,12 @@ START_TEST(test_burgers)
         trackcorr_c_loop(run, step);
     }
     trackcorr_c_finish(run, run->seq_par->last);
-    printf("step is %d num parts is %d, num links is %d \n",step, \
-        run->npart/(run->seq_par->last - run->seq_par->first),\
-        run->nlinks/(run->seq_par->last - run->seq_par->first));
+    printf("total num parts is %d, num links is %d \n", run->npart, run->nlinks);
+
+    ck_assert_msg(run->npart == 19,
+                  "Was expecting npart == 19 but found %d \n", run->npart);
+    ck_assert_msg(run->nlinks == 17,
+                  "Was expecting nlinks == 17 found %ld \n", run->nlinks);
 
 
 
@@ -654,23 +657,15 @@ START_TEST(test_burgers)
         trackcorr_c_loop(run, step);
     }
     trackcorr_c_finish(run, run->seq_par->last);
-    printf("step is %d num parts is %d, num links is %d \n",step, \
-        run->npart/(run->seq_par->last - run->seq_par->first),\
-        run->nlinks/(run->seq_par->last - run->seq_par->first));
+    printf("total num parts is %d, num links is %d \n", run->npart, run->nlinks);
 
-    // track_forward_start(ret);
+    ck_assert_msg(run->npart == 20,
+                  "Was expecting npart == 20 but found %d \n", run->npart);
+    ck_assert_msg(run->nlinks ==20,
+                  "Was expecting nlinks == 20 but found %d \n", run->nlinks);
     
-    // trackcorr_c_loop (ret, 10002);
+    empty_res_dir();
 
-    
-    ck_assert_msg(run->npart/(run->seq_par->last - run->seq_par->first) == 5,
-                  "Was expecting npart == 5 but found %d \n", run->npart);
-    ck_assert_msg(run->nlinks/(run->seq_par->last - run->seq_par->first) == 5,
-                  "Was expecting nlinks == 5 but found %d \n", run->nlinks);
-    
-    // empty_res_dir();
-    
-    // trackcorr_c_finish(ret, 10002);
 }
 END_TEST
 
