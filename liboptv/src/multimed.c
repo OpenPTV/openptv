@@ -104,7 +104,7 @@ double multimed_r_nlay (Calibration *cal, mm_np *mm, vec3d pos) {
 
  
     if (it >= n_iter) {
-        printf ("multimed_r_nlay stopped after %d iterations\n", n_iter);  
+        //printf ("multimed_r_nlay stopped after %d iterations\n", n_iter);  
         return (1.0);
     }
 

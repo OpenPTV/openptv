@@ -22,3 +22,5 @@ liboptv/build
 py_bind/optv/*.c
 py_bind/build
 *.pyc
+liboptv/src/main
+liboptv/src/main
