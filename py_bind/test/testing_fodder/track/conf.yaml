@@ -37,11 +37,11 @@ correspondences:
     
 sequence:
     targets_template: testing_fodder/track/newpart/cam{cam:1d}.
-    first: 1
-    last: 5
+    first: 10001
+    last: 10005
 
 tracking:
-    velocity_lims: [[-15, 15], [-15, 15], [-15, 15]]
-    angle_lim: 100
-    accel_lim: 2
+    velocity_lims: [[-1.5, 1.5], [-1.5, 1.5], [-1.5, 1.5]]
+    angle_lim: 110
+    accel_lim: 0.5
     add_particle: 1
