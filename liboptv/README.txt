@@ -1,4 +1,12 @@
 
+This file is outdated - please refer to the documentation on the front page
+
+http://github.com/openptv/openptv
+
+
+
+
+
 liboptv - a library of openptv support code, for use in user-facing code.
 -------------------------------------------------------------------------
 
