@@ -5,6 +5,10 @@ from optv.parameters import MultimediaParams, ControlParams, VolumeParams, \
 import numpy, os, shutil
 from numpy import r_
 
+from pyface.api import GUI
+from traits.etsconfig.api import ETSConfig
+ETSConfig.toolkit = 'qt4'
+
 class Test_MultimediaParams(unittest.TestCase):
     def test_mm_np_instantiation(self):
         
