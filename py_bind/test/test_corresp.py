@@ -29,7 +29,7 @@ class TestMatchedCoords(unittest.TestCase):
         pos, pnr = mc.as_arrays()
         
         # x sorted?
-        self.failUnless(np.all(pos[1:,0] > pos[:-1,0]))
+        self.assertTrue(np.all(pos[1:,0] > pos[:-1,0]))
         
         # Manually verified order for the loaded data:
         np.testing.assert_array_equal(
@@ -82,7 +82,7 @@ class TestCorresp(unittest.TestCase):
         
         _, _, num_targs = correspondences(
             img_pts, corrected, cals, vpar, cpar)
-        self.failUnlessEqual(num_targs, 16)
+        self.assertEqual(num_targs, 16)
 
     def test_single_cam_corresp(self):
         """Single camera correspondence"""
@@ -127,11 +127,11 @@ class TestCorresp(unittest.TestCase):
         _, _, num_targs = correspondences(
             img_pts, corrected, cals, vpar, cpar)
 
-        self.failUnlessEqual(num_targs, 9)
+        self.assertEqual(num_targs, 9)
 
 
 
 if __name__ == "__main__":
     import sys, os
-    print(os.path.abspath(os.curdir))
+    print((os.path.abspath(os.curdir)))
     unittest.main()

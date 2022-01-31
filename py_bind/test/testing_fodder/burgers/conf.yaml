@@ -1,0 +1,50 @@
+# Values taken from the parameters used in the C test for adding a particle.
+
+cameras:
+  - ori_file: testing_fodder/burgers/cal/cam1.tif.ori
+    addpar_file: testing_fodder/burgers/cal/cam1.tif.addpar
+
+  - ori_file: testing_fodder/burgers/cal/cam2.tif.ori
+    addpar_file: testing_fodder/burgers/cal/cam2.tif.addpar
+
+  - ori_file: testing_fodder/burgers/cal/cam3.tif.ori
+    addpar_file: testing_fodder/burgers/cal/cam3.tif.addpar
+
+  - ori_file: testing_fodder/burgers/cal/cam4.tif.ori
+    addpar_file: testing_fodder/burgers/cal/cam4.tif.addpar
+
+scene:
+    flags: hp, headers
+    image_size: [ 1024, 1024 ]
+    pixel_size: [ 0.0065, 0.0065 ]
+    
+    # Multimedia parameters:
+    cam_side_n: 1 
+    object_side_n: 1
+    wall_ns: [ 1 ] 
+    wall_thicks: [ 1.0 ]
+
+correspondences:
+    x_span: [-40., 40.]
+    z_spans:
+        - [-10., 10.]
+        - [-10., 10.]
+    
+    pixels_x: 0.02
+    pixels_y: 0.02
+    pixels_tot: 0.02
+    
+    ref_gray: 0.02
+    min_correlation: 33
+    epipolar_band: 0.01   # mm on sensor plane.
+    
+sequence:
+    targets_template: testing_fodder/burgers/img/cam{cam:1d}.
+    first: 10001
+    last:  10005
+
+tracking:
+    velocity_lims: [[-0.5, 0.5], [-0.5, 0.5], [-0.5, 0.5]]
+    angle_lim: 100
+    accel_lim: 0.1
+    add_particle: 0

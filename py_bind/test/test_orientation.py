@@ -49,7 +49,7 @@ class Test_Orientation(unittest.TestCase):
                 (xy_img_pts_pixel[i][0], xy_img_pts_pixel[i][1]))
 
         # create randomized target array
-        indices = range(coords_count)
+        indices = list(range(coords_count))
         shuffled_indices = list(range(coords_count))
 
         while indices == shuffled_indices:
