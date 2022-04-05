@@ -12,8 +12,6 @@ jobs:
 
     steps:
       - uses: actions/checkout@v2
-        with: 
-          package_dir: py_bind
 
       # Used to host cibuildwheel
       - uses: actions/setup-python@v2
