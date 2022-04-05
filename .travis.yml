@@ -18,7 +18,7 @@ matrix:
     - CIBW_SKIP="cp34-* cp35-* cp2*"
 
 script:
-- "$PIP install cibuildwheel==0.10.2"
+- "$PIP install cibuildwheel"
 - cp -R liboptv py_bind/liboptv-src
 - cibuildwheel py_bind --output-dir wheelhouse
 
