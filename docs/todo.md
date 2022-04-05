@@ -25,9 +25,6 @@ done gradually, ask on the mailing list and we'll come up with a good plan.
 3. Show that liboptv can be done in C++ and used in C.
 
 
-## C-Tcl/Tk
-1. Break C from Tcl/Tk
-
 ## Python
 1. Try Cmake on top of autoconf/automake to have a unified build system
 
