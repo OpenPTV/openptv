@@ -40,7 +40,7 @@ class TestTargRec(unittest.TestCase):
             [0,   0,   0,   0, 0],
             [0,   0,   0, 251, 0],
             [0,   0,   0,   0, 0]
-        ],dtype=np.uint8) 
+        ], dtype=np.uint8) 
         
         cpar = ControlParams(4, image_size=(5, 5))
         tpar = TargetParams(gvthresh=[250, 100, 20, 20], discont=5,
