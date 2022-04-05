@@ -52,7 +52,7 @@ int read_targets(target buffer[], char* file_base, int frame_num) {
         strncpy(filein, file_base, STR_MAX_LEN);
         strncat(filein, "_targets", STR_MAX_LEN);
     }
-    
+
     FILEIN = fopen (filein, "r");
     if (! FILEIN) {
         printf("Can't open ascii file: %s\n", filein);
@@ -423,7 +423,7 @@ finalize:
     return success;
 }
 
-/* init_frame() initializes a frame object, allocates its arrays and sets up 
+/* frame_init() initializes a frame object, allocates its arrays and sets up 
  * the frame data.
  *  
  * Arguments:
