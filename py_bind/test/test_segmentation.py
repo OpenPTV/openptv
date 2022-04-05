@@ -34,13 +34,13 @@ class TestTargRec(unittest.TestCase):
         self.assertEqual(targs[0].count_pixels(), (9, 3, 3))
     
     def test_two_targets(self):
-       img = np.array([
+        img = np.array([
             [0,   0,   0,   0, 0],
-            [0, 255,   250,   250, 0],
-            [0,   251,   253,   0, 0],
+            [0, 255,   0,   0, 0],
+            [0,   0,   0,   0, 0],
             [0,   0,   0, 251, 0],
             [0,   0,   0,   0, 0]
-        ], dtype=np.uint8)
+        ],dtype=np.uint8) 
         
         cpar = ControlParams(4, image_size=(5, 5))
         tpar = TargetParams(gvthresh=[250, 100, 20, 20], discont=5,
