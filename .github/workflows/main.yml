@@ -12,6 +12,8 @@ jobs:
 
     steps:
       - uses: actions/checkout@v2
+        with: 
+          package_dir: py_bind
 
       # Used to host cibuildwheel
       - uses: actions/setup-python@v2
@@ -26,4 +28,4 @@ jobs:
 
       - uses: actions/upload-artifact@v2
         with:
-          path: ./py_bind/wheelhouse/*.whl
+          path: py_bind/wheelhouse/*.whl
