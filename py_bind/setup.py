@@ -8,7 +8,7 @@ import sys
 import glob
 from setuptools import Extension
 from setuptools.command.build_ext import build_ext
-import importlib
+import imp
 
 
 class PrepareCommand(setuptools.Command):
@@ -154,7 +154,7 @@ setup(
     package_data={
         'optv': ['*.pxd', '*.c', '*.h'],
     },
-    version='0.2.6',
+    version='0.2.6a',
     install_requires=[
         'numpy>=1.16.1',
         'pyyaml>=5.4',
