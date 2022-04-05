@@ -11,4 +11,4 @@ requires = [
 [tool.cibuildwheel]
 before-build = "pip install numpy cython && cd py_bind && python setup.py prepare"
 test-requires = ["nose","six"]
-test-command = "cd {project}/test && nosetests"
+test-command = "cd test && nosetests"
