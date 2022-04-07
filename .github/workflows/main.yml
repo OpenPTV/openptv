@@ -34,11 +34,11 @@ jobs:
         - uses: actions/checkout@v2
 
         - name: Build sdist
-          run: pipx run build --sdist
+          run: cd py_bind && pipx run build --sdist
 
         - uses: actions/upload-artifact@v2
           with:
-            path: dist/*.tar.gz
+            path: py_bind/dist/*.tar.gz
 
   upload_pypi:
     needs: [build_wheels, build_sdist]
