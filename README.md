@@ -7,7 +7,7 @@
 OpenPTV - framework for particle tracking velocimetry
 =====================================================
 
-![Build status](https://github.com/alexlib/openptv/actions/workflows/main.yml/badge.svg)
+![Build status](https://github.com/openptv/openptv/actions/workflows/main.yml/badge.svg)
  [![DOI](https://zenodo.org/badge/6985516.svg)](https://zenodo.org/badge/latestdoi/6985516)
 
 
