@@ -20,7 +20,7 @@ liboptv/build
 *~
 
 py_bind/optv/*.c
-py_bind/build
-*.pyc
+py_bind/build/*
 py_bind/wheelhouse/*
 *.pyd
+*.pyc
