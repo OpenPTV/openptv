@@ -24,3 +24,4 @@ py_bind/build/*
 py_bind/wheelhouse/*
 *.pyd
 *.pyc
+*.so
