@@ -38,6 +38,7 @@ START_TEST(test_raw_orient)
     double xp, yp;
     
     
+    /* this should fail, i.e pass the nfix == 0 */
     nfix = read_man_ori_fix(fix4, "testing_fodder/cal/calblock.txt",
                                     "testing_fodder/parameters/wrong_man_ori.par", 0);
     fail_unless(nfix == 0);                                
@@ -122,6 +123,8 @@ START_TEST(test_orient)
 
     /* read orientation parameters */
     fail_if((opar = read_orient_par("testing_fodder/parameters/orient.par"))== 0);
+
+
     
     /* perturb the orientation, orient, compare */
     cal->ext_par.x0 -= 15.0;
@@ -154,6 +157,14 @@ START_TEST(test_orient)
     
     opar->ccflag = 1;
     opar->xhflag = 1;
+    opar->k1flag = 1;
+
+    printf(" ------- Flags ---------- \n");
+    printf("%d %d %d\n", opar->ccflag, opar->xhflag, opar->yhflag);
+    printf("%d %d %d\n", opar->k1flag, opar->k2flag, opar->k3flag);
+    printf("%d %d %d %d\n", opar->p1flag, opar->p2flag, opar->scxflag,opar->sheflag);
+
+
         
     fail_if((resi = orient (cal, cpar, 64, fix, pix, opar, sigmabeta)) == NULL);
     free(resi);
