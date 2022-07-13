@@ -18,7 +18,7 @@
 #include <string.h>
 #include <math.h>
 
-#define NUM_ITER  80
+#define NUM_ITER  800
 #define POS_INF 1E20
 #define CONVERGENCE 0.00001
 
@@ -333,6 +333,11 @@ double* orient (Calibration* cal_in, control_par *cpar, int nfix, vec3d fix[],
     ident[7] = cal->added_par.p2;
     ident[8] = cal->added_par.scx;
     ident[9] = cal->added_par.she;
+
+    printf("Idents in orient \n");
+    for (i = 0; i<10; i++){
+        printf("%d %f \n",i, ident[i]);
+    }
 
     safety_x = cal->glass_par.vec_x;
     safety_y = cal->glass_par.vec_y;
