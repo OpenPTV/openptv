@@ -24,10 +24,10 @@ cdef class Calibration:
         affine that defaults to [1, 0].
         
         Arguments:
-        pos - camera external position (world position of promary point).
+        pos - camera external position (world position of primary point).
         angs - in radians CCW around the x,y,z axes respectively.
-        prim_point - position of primary point rel. image plan. Object is 
-            assumed to be in negative Z, and image plan in 0, so use positive
+        prim_point - position of primary point rel. image plane. Object is 
+            assumed to be in negative Z, and image plane in 0, so use positive
             Z coordinate.
         rad_dist - 3 radial distortion parameters, see [1].
         decent - 2 decentering parameters, see [1].
@@ -181,7 +181,7 @@ cdef class Calibration:
     def set_radial_distortion(self, cnp.ndarray dist_coeffs):
         """
         Sets the parameters for the image radial distortion, where the x/y
-        coordinates are corrected by a polynomial in r = sqrt(x**2 + y**):
+        coordinates are corrected by a polynomial in r = sqrt(x**2 + y**2):
         p = k1*r**2 + k2*r**4 + k3*r**6
         
         Arguments:
