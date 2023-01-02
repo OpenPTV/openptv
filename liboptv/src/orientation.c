@@ -21,6 +21,7 @@
 #define NUM_ITER  80
 #define POS_INF 1E20
 #define CONVERGENCE 0.00001
+#define RO 200./M_PI
 
 /*  skew_midpoint() finds the middle of the minimal distance segment between
     skew rays. Undefined for parallel rays.
@@ -573,6 +574,52 @@ double* orient (Calibration* cal_in, control_par *cpar, int nfix, vec3d fix[],
     for (i = 0; i < numbers; i++) { 
         sigmabeta[i] = sigmabeta[NPAR] * sqrt(XPX[i][i]);
     }
+
+    /* correlations between parameters */
+    /*if (examine)*/
+    printf('\n Examine correlations: \n');
+    for (i=0; i<numbers; i++)
+    {
+      for (j=0; j<numbers; j++)
+    printf ("%6.2f",
+        XPX[i][j] / (sqrt(XPX[i][i]) * sqrt(XPX[j][j])));
+      printf ("\n");
+    }
+    /**/
+
+
+    /* print results */
+    printf ("\n|||||||||||||||||||||||||||||||||||||||||||||||||||||||||||");
+    printf ("\n\nResults after %d iterations:\n\n", itnum);
+    printf ("sigma0         = %6.2f micron\n", sigmabeta[NPAR]*1000);
+    printf ("X0             = %+8.3f mm     +/- %8.3f\n", cal->ext_par.x0, sigmabeta[0]);
+    printf ("Y0             = %+8.3f mm     +/- %8.3f\n", cal->ext_par.y0, sigmabeta[1]);
+    printf ("Z0             = %+8.3f mm     +/- %8.3f\n", cal->ext_par.z0, sigmabeta[2]);
+    printf ("omega          = %+8.4f deg    +/- %8.4f\n", cal->ext_par.omega*RO, sigmabeta[3]*RO);
+    printf ("phi            = %+8.4f deg    +/- %8.4f\n", cal->ext_par.phi*RO, sigmabeta[4]*RO);
+    printf ("kappa          = %+8.4f deg    +/- %8.4f\n", cal->ext_par.kappa*RO, sigmabeta[5]*RO);
+    
+    
+    printf ("camera const   = %+8.3f mm     +/- %8.3f\n", cal->int_par.cc, sigmabeta[6]);
+    printf ("xh             = %+8.3f mm     +/- %8.3f\n", cal->int_par.xh, sigmabeta[7]);
+    printf ("yh             = %+8.3f mm     +/- %8.3f\n", cal->int_par.yh, sigmabeta[8]);
+    printf ("k1             = %+8.3f        +/- %8.3f\n", cal->added_par.k1, sigmabeta[9]);
+    printf ("k2             = %+8.3f        +/- %8.3f\n", cal->added_par.k2, sigmabeta[10]);
+    printf ("k3             = %+8.3f        +/- %8.3f\n", cal->added_par.k3, sigmabeta[11]);
+    printf ("p1             = %+8.3f        +/- %8.3f\n", cal->added_par.p1, sigmabeta[12]);
+    printf ("p2             = %+8.3f        +/- %8.3f\n", cal->added_par.p2, sigmabeta[13]);
+    printf ("scale for x'   = %+8.3f        +/- %8.3f\n", cal->added_par.scx, sigmabeta[14]);
+    printf ("shearing       = %+8.3f        +/- %8.3f\n", cal->added_par.she*RO, \
+                                                                    sigmabeta[15]*RO);
+                                                                    
+    if(flags->interfflag){
+    printf ("glass_x        = %8.3f mm      +/- %8.3f\n", cal->glass_par.vec_x/nGl, \
+                                                        (sigmabeta[16]+sigmabeta[17]));
+    printf ("glass_y        = %8.3f mm      +/- %8.3f\n", cal->glass_par.vec_y/nGl, \
+                                                        (sigmabeta[16]+sigmabeta[17]));
+    printf ("glass_z        = %8.3f mm      +/- %8.3f\n", cal->glass_par.vec_z/nGl, \
+                                                        (sigmabeta[16]+sigmabeta[17]));
+    }    
 
     free(X);
     free(P);
