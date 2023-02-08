@@ -156,7 +156,7 @@ setup(
     },
     version='0.2.7b',
     install_requires=[
-        'numpy',
+        'numpy<1.24',
         'pyyaml',
     ],
     setup_requires=['numpy'],

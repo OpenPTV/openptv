@@ -73,9 +73,6 @@ def target_recognition(np.ndarray[np.uint8_t, ndim=2] img, TargetParams tpar, in
 
     assert img.dtype == DTYPE
 
-    printf("subrange %d %d %d %d \n", xmin, xmax, ymin, ymax);
-
-
     # The core liboptv call:
     num_targs = targ_rec(<unsigned char *>img.data, tpar._targ_par, 
         xmin, xmax, ymin, ymax, cparam._control_par, cam, targs)

@@ -65,9 +65,13 @@ int targ_rec (unsigned char *img, target_par *targ_par, int xmin,
     thres = targ_par->gvthres[num_cam];
     disco = targ_par->discont;
     
+    // printf("thres %d disco %d \n", thres, disco);
+
     /* copy image to a temporary mask */
     img0 = (unsigned char *) calloc (imx*imy, 1);
     memcpy(img0, img, imx*imy);
+
+    // printf("in segmentation.c memcpy succeded\n");
 
     /* Make sure the min/max coordinates don't cause us to access memory
        outside the image memory.
@@ -191,10 +195,24 @@ int targ_rec (unsigned char *img, target_par *targ_par, int xmin,
                     
                     xn = x;  
                     yn = y;
+                    // printf("%d %d %d \n",n_targets, xn, yn);
               }
           } /*  end of if-loop  */
     }
     free(img0);
+    /* protect pix from zero memory */
+    if (n_targets < 1){
+        pix[0].n = 1;
+        pix[0].nx = 1;
+        pix[0].ny = 1;
+        pix[0].sumg = 1;
+        pix[0].x = 1;
+        pix[0].y = 1;
+        pix[0].tnr = CORRES_NONE;
+        pix[0].pnr = 1;
+        n_targets++;
+    }
+    // printf("final n_targets %d\n",n_targets);
     return(n_targets);
 }
 
