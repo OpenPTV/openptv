@@ -8,7 +8,7 @@ import sys
 import glob
 from setuptools import Extension
 from setuptools.command.build_ext import build_ext
-import imp
+import importlib
 
 
 class PrepareCommand(setuptools.Command):
@@ -80,9 +80,9 @@ class BuildExt(build_ext, object):
             import builtins
             if hasattr(builtins, '__NUMPY_SETUP__'):
                 del builtins.__NUMPY_SETUP__
-            import imp
+            import importlib
             import numpy
-            imp.reload(numpy)
+            importlib.reload(numpy)
         else:
             import builtins
             if hasattr(__builtin__, '__NUMPY_SETUP__'):
@@ -154,7 +154,7 @@ setup(
     package_data={
         'optv': ['*.pxd', '*.c', '*.h'],
     },
-    version='0.2.7',
+    version='0.2.7b',
     install_requires=[
         'numpy',
         'pyyaml',

@@ -7,12 +7,26 @@ Created on Thu Aug 18 16:22:48 2016
 @author: yosef
 """
 from libc.stdlib cimport calloc, realloc, free
+from libc.stdio cimport printf
+import numpy as np
 cimport numpy as np
+np.import_array()
+
+
+# We now need to fix a datatype for our arrays. I've used the variable
+# DTYPE for this, which is assigned to the usual NumPy runtime
+# type info object.
+DTYPE = np.uint8
+
+# "ctypedef" assigns a corresponding compile-time type to DTYPE_t. For
+# every type in the numpy module there's a corresponding compile-time
+# type with a _t-suffix.
+ctypedef np.int_t DTYPE_t
 
 from optv.parameters cimport TargetParams, ControlParams
 from optv.tracking_framebuf cimport TargetArray
 
-def target_recognition(np.ndarray img, TargetParams tpar, int cam, 
+def target_recognition(np.ndarray[np.uint8_t, ndim=2] img, TargetParams tpar, int cam, 
     ControlParams cparam, subrange_x=None, subrange_y=None):
     """
     Detects targets (contiguous bright blobs) in an image.
@@ -41,6 +55,8 @@ def target_recognition(np.ndarray img, TargetParams tpar, int cam,
         int num_targs
         int xmin, xmax, ymin, ymax
     
+
+
     # Set the subrange (to default if not given):
     if subrange_x is None:
         xmin, xmax = 0, cparam._control_par[0].imx
@@ -52,6 +68,14 @@ def target_recognition(np.ndarray img, TargetParams tpar, int cam,
     else:
         ymin, ymax = subrange_y
     
+    if img.shape[0] != ymax or img.shape[1] != xmax:
+        raise ValueError("dimensions are not correct")
+
+    assert img.dtype == DTYPE
+
+    printf("subrange %d %d %d %d \n", xmin, xmax, ymin, ymax);
+
+
     # The core liboptv call:
     num_targs = targ_rec(<unsigned char *>img.data, tpar._targ_par, 
         xmin, xmax, ymin, ymax, cparam._control_par, cam, targs)
