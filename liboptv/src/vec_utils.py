@@ -7,6 +7,30 @@
 
 import math
 
+import math
+import numpy as np
+
+# Define the nan value
+if np.isnan(np.nan):
+    EMPTY_CELL = np.nan
+else:
+    try:
+        EMPTY_CELL = 0.0/0.0
+    except:
+        def return_nan():
+            return np.nan
+        EMPTY_CELL = return_nan()
+
+# Define the helper functions
+def is_empty(x):
+    return math.isnan(x)
+
+def norm(x,y,z):
+    return math.sqrt((x)*(x) + (y)*(y) + (z)*(z))
+
+# Define the vec3d type
+vec3d = np.zeros(3)
+
 def return_nan():
     # Returns a NAN, which is surprisingly  non-trivial on Visual C for Python 2.7
     _explicit_dNAN = [0x00000000, 0x7ff80000]
