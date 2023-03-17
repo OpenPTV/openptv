@@ -1,3 +1,16 @@
+class candidate:
+    def __init__(self, pnr, tol, corr):
+        self.pnr = pnr
+        self.tol = tol
+        self.corr = corr
+
+# Define struct 'coord_2d' with members 'pnr', 'x', and 'y'
+class coord_2d:
+    def __init__(self, pnr, x, y):
+        self.pnr = pnr
+        self.x = x
+        self.y = y
+        
 def epi_mm(xl, yl, cal1, cal2, mmp, vpar):
     Zmin, Zmax = 0, 0
     pos, v, X = [0, 0, 0], [0, 0, 0], [0, 0, 0]

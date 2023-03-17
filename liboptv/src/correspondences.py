@@ -1,6 +1,25 @@
 
 from typing import List, Tuple
 
+nmax = 202400
+MAXCAND = 10 # assuming a maximum capacity of MAXCAND candidates
+    
+# Define the data structure n_tupel with attributes p (list of 4 integers) and corr (a double)
+class n_tupel:
+    def __init__(self):
+        self.p = [0]*4
+        self.corr = 0.0
+
+# Define the data structure correspond with attributes p1 (an integer for the master point), n (an integer for the number of candidates), p2 (a list of integers for point numbers of candidates), corr (a list of doubles for feature based correlation coefficient) and dist (a list of doubles for the distance perpendicular to epipolar line)
+class correspond:
+
+    def __init__(self):
+        self.p1 = 0
+        self.n = 0
+        self.p2 = [0]*MAXCAND
+        self.corr = [0.0]*MAXCAND
+        self.dist = [0.0]*MAXCAND
+
 PT_UNUSED = -999
 
 class Correspond:
