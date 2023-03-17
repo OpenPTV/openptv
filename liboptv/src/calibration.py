@@ -1,3 +1,53 @@
+
+class Calibration:
+    class Exterior:
+        def __init__(self):
+            self.dm = [[0 for j in range(3)] for i in range(3)]
+            self.omega = 0.0
+            self.phi = 0.0
+            self.kappa = 0.0
+            self.x0 = 0.0
+            self.y0 = 0.0
+            self.z0 = 0.0
+
+    class Interior:
+        def __init__(self):
+            self.xh = 0.0
+            self.yh = 0.0
+            self.cc = 0.0
+
+    class Glass:
+        def __init__(self):
+            self.vec_x = 0.0
+            self.vec_y = 0.0
+            self.vec_z = 0.0
+
+    class ap_52:
+        def __init__(self):
+            self.k1 = 0.0
+            self.k2 = 0.0
+            self.k3 = 0.0
+            self.p1 = 0.0
+            self.p2 = 0.0
+            self.scx = 0.0
+            self.she = 0.0
+
+    class mmlut:
+        def __init__(self):
+            self.origin = vec3d()
+            self.nr = 0
+            self.nz = 0
+            self.rw = 0
+            self.data = []
+
+    def __init__(self):
+        self.ext_par = Calibration.Exterior()
+        self.int_par = Calibration.Interior()
+        self.glass_par = Calibration.Glass()
+        self.added_par = Calibration.ap_52()
+        self.mmlut = Calibration.mmlut()
+
+
 def write_ori(Ex, I, G, ap, filename, add_file):
     """Write exterior and interior orientation, and - if available, parameters for
     distortion corrections.
@@ -93,3 +143,99 @@ def read_ori (Ex, I, G, ori_file, addp, add_file, add_fallback):
     
     return 1
 
+def compare_exterior(e1, e2):
+    for row in range(3):
+        for col in range(3):
+            if e1.dm[row][col] != e2.dm[row][col]:
+                return 0
+    return ((e1.x0 == e2.x0) and (e1.y0 == e2.y0) and (e1.z0 == e2.z0)\
+        and (e1.omega == e2.omega) and (e1.phi == e2.phi) \
+        and (e1.kappa == e2.kappa))
+    
+    
+def compare_interior(i1, i2):
+    return i1.xh == i2.xh and i1.yh == i2.yh and i1.cc == i2.cc
+
+
+def compare_glass(g1, g2):
+    """
+    This function takes two arguments `g1` and `g2`, which are `Glass` objects that need to be compared. The function then returns `1` if all `vec_x`, `vec_y` and `vec_z` values of `g1` are equal to the corresponding values in `g2`. Else, the function returns `0`.
+
+    Args:
+        g1 (_type_): _description_
+        g2 (_type_): _description_
+
+    Returns:
+        _type_: _description_
+    """
+    return g1.vec_x == g2.vec_x and g1.vec_y == g2.vec_y and g1.vec_z == g2.vec_z
+
+
+
+import unittest
+
+class ap_52:
+    def __init__(self, k1, k2, k3, p1, p2, scx, she):
+        self.k1 = k1
+        self.k2 = k2
+        self.k3 = k3
+        self.p1 = p1
+        self.p2 = p2
+        self.scx = scx
+        self.she = she
+
+def compare_addpar(a1, a2):
+    return (a1.k1 == a2.k1) and (a1.k2 == a2.k2) and (a1.k3 == a2.k3) and \
+        (a1.p1 == a2.p1) and (a1.p2 == a2.p2) and (a1.scx == a2.scx) and \
+        (a1.she == a2.she)
+
+class TestCompareAddpar(unittest.TestCase):
+    def test_compare_addpar(self):
+        a1 = ap_52(1, 2, 3, 4, 5, 6, 7)
+        a2 = ap_52(1, 2, 3, 4, 5, 6, 7)
+        self.assertTrue(compare_addpar(a1, a2))
+        
+        a3 = ap_52(1, 2, 3, 4, 6, 6, 7)
+        self.assertFalse(compare_addpar(a1, a3))
+
+def read_calibration(ori_file, add_file, fallback_file):
+    ret = Calibration()
+    
+    # indicate that data is not set yet
+    ret.mmlut.data = None
+    
+    if read_ori(ret.ext_par, ret.int_par, ret.glass_par, ori_file, ret.added_par,
+                add_file, fallback_file):
+        rotation_matrix(ret.ext_par)
+        return ret
+    else:
+        free(ret)
+        return None
+    
+
+def write_calibration(cal, ori_file, add_file):
+    return write_ori(cal.ext_par, cal.int_par, cal.glass_par, cal.added_par, ori_file, add_file)
+
+
+def rotation_matrix(Ex):
+    
+    import math
+    
+    # Calculate the necessary trigonometric functions to rotate the Dmatrix of Exterior Ex
+    cp = math.cos(Ex.phi)
+    sp = math.sin(Ex.phi)
+    co = math.cos(Ex.omega)
+    so = math.sin(Ex.omega)
+    ck = math.cos(Ex.kappa)
+    sk = math.sin(Ex.kappa)
+    
+    # Modify the Exterior Ex with the new Dmatrix
+    Ex.dm[0][0] = cp * ck
+    Ex.dm[0][1] = -cp * sk
+    Ex.dm[0][2] = sp
+    Ex.dm[1][0] = co * sk + so * sp * ck
+    Ex.dm[1][1] = co * ck - so * sp * sk
+    Ex.dm[1][2] = -so * cp
+    Ex.dm[2][0] = so * sk - co * sp * ck
+    Ex.dm[2][1] = so * ck + co * sp * sk
+    Ex.dm[2][2] = co * cp
