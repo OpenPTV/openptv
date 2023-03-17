@@ -1,3 +1,4 @@
+filter_t = np.zeros((3, 3), dtype=float)
 
 
 # Python translation:

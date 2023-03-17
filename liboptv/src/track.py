@@ -46,89 +46,21 @@ from calibration import *
 
 
 TR_UNUSED = -1
+TR_BUFSPACE = 4
+TR_MAX_CAMS = 4
+MAX_TARGETS = 20000
+MAX_CANDS = 4
+ADD_PART = 3
+
+class Foundpix:
+    def __init__(self):
+        self.ftnr = 0
+        self.freq = 0
+        self.whichcam = [0] * TR_MAX_CAMS
+        
 
 
 from typing import List
-
-class Exterior:
-    def __init__(self):
-        self.x0 = 0.0
-        self.y0 = 0.0
-        self.z0 = 0.0
-        self.omega = 0.0
-        self.phi = 0.0
-        self.kappa = 0.0
-        self.dm = [[0.0 for _ in range(3)] for _ in range(3)]
-
-class Interior:
-    def __init__(self):
-        self.xh = 0.0
-        self.yh = 0.0
-        self.cc = 0.0
-
-class Glass:
-    def __init__(self):
-        self.vec_x = 0.0
-        self.vec_y = 0.0
-        self.vec_z = 0.0
-
-class ap_52:
-    def __init__(self):
-        self.k1 = 0.0
-        self.k2 = 0.0
-        self.k3 = 0.0
-        self.p1 = 0.0
-        self.p2 = 0.0
-        self.scx = 0.0
-        self.she = 0.0
-
-class mmlut:
-    def __init__(self):
-        self.origin = vec3d()
-        self.nr = 0
-        self.nz = 0
-        self.rw = 0
-        self.data = []
-
-class Calibration:
-    def __init__(self):
-        self.ext_par = Exterior()
-        self.int_par = Interior()
-        self.glass_par = Glass()
-        self.added_par = ap_52()
-        self.mmlut = mmlut()
-
-def write_ori(Ex: Exterior, I: Interior, G: Glass, ap: ap_52, filename: str, 
-              add_file: str) -> int:
-    return 0
-
-def read_ori(Ex: List[Exterior], I: List[Interior], G: List[Glass], ori_file: str, 
-             addp: List[ap_52], add_file: str, add_fallback: str) -> int:
-    return 0
-
-def compare_exterior(e1: Exterior, e2: Exterior) -> int:
-    return 0
-
-def compare_interior(i1: Interior, i2: Interior) -> int:
-    return 0
-
-def compare_glass(g1: Glass, g2: Glass) -> int:
-    return 0
-
-def compare_addpar(a1: ap_52, a2: ap_52) -> int:
-    return 0
-
-def compare_calib(c1: Calibration, c2: Calibration) -> int:
-    return 0
-
-def read_calibration(ori_file: str, add_file: str, fallback_file: str) -> Calibration:
-    return Calibration()
-
-def write_calibration(cal: Calibration, ori_file: str, add_file: str) -> int:
-    return 0
-
-def rotation_matrix(Ex: Exterior) -> None:
-    return
 
 
 from typing import List

@@ -1,3 +1,10 @@
+COORD_UNUSED = -1e10
+
+# These define the structure of the sigma array returned from orient()
+IDT = 10
+NPAR = 19
+
+
 def skew_midpoint(vert1, direct1, vert2, direct2, res):
     perp_both = np.cross(direct1, direct2)
     scale = np.dot(perp_both, perp_both)

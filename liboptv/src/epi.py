@@ -1,11 +1,11 @@
-class candidate:
+class Candidate:
     def __init__(self, pnr, tol, corr):
         self.pnr = pnr
         self.tol = tol
         self.corr = corr
-
-# Define struct 'coord_2d' with members 'pnr', 'x', and 'y'
-class coord_2d:
+        
+# Define coord_2d struct
+class Coord_2d:
     def __init__(self, pnr, x, y):
         self.pnr = pnr
         self.x = x

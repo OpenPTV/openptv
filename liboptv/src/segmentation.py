@@ -1,5 +1,21 @@
 import numpy as np
 
+class Peak:
+    def __init__(self):
+        self.pos = 0
+        self.status = 0
+        self.xmin = 0
+        self.xmax = 0
+        self.ymin = 0
+        self.ymax = 0
+        self.n = 0
+        self.sumg = 0
+        self.x = 0.0
+        self.y = 0.0
+        self.unr = 0
+        self.touch = [0, 0, 0, 0]
+        self.n_touch = 0
+        
 def targ_rec(img, targ_par, xmin, xmax, ymin, ymax, cpar, num_cam, pix):
     imx, imy = cpar["imx"], cpar["imy"]
     thres = targ_par["gvthres"][num_cam]
