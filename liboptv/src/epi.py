@@ -3,25 +3,31 @@ class Candidate:
         self.pnr = pnr
         self.tol = tol
         self.corr = corr
-        
+
+
 # Define coord_2d struct
 class Coord_2d:
     def __init__(self, pnr, x, y):
         self.pnr = pnr
         self.x = x
         self.y = y
-        
+
+
 def epi_mm(xl, yl, cal1, cal2, mmp, vpar):
     Zmin, Zmax = 0, 0
     pos, v, X = [0, 0, 0], [0, 0, 0], [0, 0, 0]
-    
+
     ray_tracing(xl, yl, cal1, mmp, pos, v)
-    
+
     # calculate min and max depth for position (valid only for one setup)
-    Zmin = vpar.Zmin_lay[0] + (pos[0] - vpar.X_lay[0]) * (vpar.Zmin_lay[1] - vpar.Zmin_lay[0]) / (vpar.X_lay[1] - vpar.X_lay[0])
-    
-    Zmax = vpar.Zmax_lay[0] + (pos[0] - vpar.X_lay[0]) * (vpar.Zmax_lay[1] - vpar.Zmax_lay[0]) / (vpar.X_lay[1] - vpar.X_lay[0])
-    
+    Zmin = vpar.Zmin_lay[0] + (pos[0] - vpar.X_lay[0]) * (
+        vpar.Zmin_lay[1] - vpar.Zmin_lay[0]
+    ) / (vpar.X_lay[1] - vpar.X_lay[0])
+
+    Zmax = vpar.Zmax_lay[0] + (pos[0] - vpar.X_lay[0]) * (
+        vpar.Zmax_lay[1] - vpar.Zmax_lay[0]
+    ) / (vpar.X_lay[1] - vpar.X_lay[0])
+
     move_along_ray(Zmin, pos, v, X)
     flat_image_coord(X, cal2, mmp, xmin, ymin)
 
@@ -29,6 +35,7 @@ def epi_mm(xl, yl, cal1, cal2, mmp, vpar):
     flat_image_coord(X, cal2, mmp, xmax, ymax)
 
     return xmin, ymin, xmax, ymax
+
 
 def epi_mm_2D(xl, yl, cal1, mmp, vpar, out):
     pos = [0, 0, 0]
@@ -38,16 +45,23 @@ def epi_mm_2D(xl, yl, cal1, mmp, vpar, out):
 
     ray_tracing(xl, yl, cal1, mmp, pos, v)
 
-    Zmin = vpar.Zmin_lay[0] + (pos[0] - vpar.X_lay[0]) * (vpar.Zmin_lay[1] - vpar.Zmin_lay[0]) / (vpar.X_lay[1] - vpar.X_lay[0])
-    Zmax = vpar.Zmax_lay[0] + (pos[0] - vpar.X_lay[0]) * (vpar.Zmax_lay[1] - vpar.Zmax_lay[0]) / (vpar.X_lay[1] - vpar.X_lay[0])
+    Zmin = vpar.Zmin_lay[0] + (pos[0] - vpar.X_lay[0]) * (
+        vpar.Zmin_lay[1] - vpar.Zmin_lay[0]
+    ) / (vpar.X_lay[1] - vpar.X_lay[0])
+    Zmax = vpar.Zmax_lay[0] + (pos[0] - vpar.X_lay[0]) * (
+        vpar.Zmax_lay[1] - vpar.Zmax_lay[0]
+    ) / (vpar.X_lay[1] - vpar.X_lay[0])
 
-    move_along_ray(0.5*(Zmin+Zmax), pos, v, out)
+    move_along_ray(0.5 * (Zmin + Zmax), pos, v, out)
+
 
 def quality_ratio(a, b):
     return a / b if a < b else b / a
 
 
-def find_candidate(crd, pix, num, xa, ya, xb, yb, n, nx, ny, sumg, cand, vpar, cpar, cal):
+def find_candidate(
+    crd, pix, num, xa, ya, xb, yb, n, nx, ny, sumg, cand, vpar, cpar, cal
+):
     j = 0
     j0 = 0
     dj = 0
@@ -137,18 +151,22 @@ def find_candidate(crd, pix, num, xa, ya, xb, yb, n, nx, ny, sumg, cand, vpar, c
                 continue
 
             # Enforce minimum quality values and maximum candidates
-            if (pix[k].n < vpar.cn or pix[k].nx < vpar.cnx or pix[k].ny < vpar.cny or
-                pix[k].sumg <= vpar.csumg):
+            if (
+                pix[k].n < vpar.cn
+                or pix[k].nx < vpar.cnx
+                or pix[k].ny < vpar.cny
+                or pix[k].sumg <= vpar.csumg
+            ):
                 continue
             if count >= MAXCAND:
                 print("More candidates than (maxcand):", count)
                 return count
 
             # Empirical correlation coefficient from shape and brightness parameters
-            corr = (4*qsumg + 2*qn + qnx + qny)
+            corr = 4 * qsumg + 2 * qn + qnx + qny
 
             # Prefer matches with brighter targets
-            corr *= (sumg + pix[k].sumg)
+            corr *= sumg + pix[k].sumg
 
             cand[count].pnr = j
             cand[count].tol = d

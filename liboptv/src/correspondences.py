@@ -1,41 +1,45 @@
-
 from typing import List, Tuple
 
 nmax = 202400
-MAXCAND = 10 # assuming a maximum capacity of MAXCAND candidates
-    
+MAXCAND = 10  # assuming a maximum capacity of MAXCAND candidates
+
+
 # Define the data structure n_tupel with attributes p (list of 4 integers) and corr (a double)
 class n_tupel:
     def __init__(self):
-        self.p = [0]*4
+        self.p = [0] * 4
         self.corr = 0.0
+
 
 # Define the data structure correspond with attributes p1 (an integer for the master point), n (an integer for the number of candidates), p2 (a list of integers for point numbers of candidates), corr (a list of doubles for feature based correlation coefficient) and dist (a list of doubles for the distance perpendicular to epipolar line)
 class correspond:
-
     def __init__(self):
         self.p1 = 0
         self.n = 0
-        self.p2 = [0]*MAXCAND
-        self.corr = [0.0]*MAXCAND
-        self.dist = [0.0]*MAXCAND
+        self.p2 = [0] * MAXCAND
+        self.corr = [0.0] * MAXCAND
+        self.dist = [0.0] * MAXCAND
+
 
 PT_UNUSED = -999
+
 
 class Correspond:
     def __init__(self, n: int, p1: int):
         self.n = n
         self.p1 = p1
 
+
 def quicksort_con(con, num):
     if num > 0:
-        qs_con(con, 0, num-1)
+        qs_con(con, 0, num - 1)
+
 
 def qs_con(con, left, right):
     if left >= right:
         return
 
-    pivot = con[(left+right)//2].corr
+    pivot = con[(left + right) // 2].corr
     i, j = left, right
     while i <= j:
         while con[i].corr < pivot:
@@ -52,13 +56,14 @@ def qs_con(con, left, right):
 
 
 def quicksort_target_y(pix, num):
-    qs_target_y(pix, 0, num-1)
+    qs_target_y(pix, 0, num - 1)
+
 
 def qs_target_y(pix, left, right):
     if left >= right:
         return
 
-    pivot = pix[(left+right)//2].y
+    pivot = pix[(left + right) // 2].y
     i, j = left, right
     while i <= j:
         while pix[i].y < pivot:
@@ -73,14 +78,16 @@ def qs_target_y(pix, left, right):
     qs_target_y(pix, left, j)
     qs_target_y(pix, i, right)
 
+
 def quicksort_coord2d_x(crd, num):
-    qs_coord2d_x(crd, 0, num-1)
+    qs_coord2d_x(crd, 0, num - 1)
+
 
 def qs_coord2d_x(crd, left, right):
     if left >= right:
         return
 
-    pivot = crd[(left+right)//2].x
+    pivot = crd[(left + right) // 2].x
     i, j = left, right
     while i <= j:
         while crd[i].x < pivot and i < right:
@@ -105,14 +112,14 @@ def deallocate_target_usage_marks(tusage, num_cams):
 def safely_allocate_target_usage_marks(num_cams, nmax):
     tusage = []
     error = False
-    
+
     try:
         for cam in range(num_cams):
             tusage_cam = [0] * nmax
             tusage.append(tusage_cam)
     except MemoryError:
         error = True
-    
+
     if error:
         deallocate_target_usage_marks(tusage, num_cams)
         return None
@@ -120,24 +127,19 @@ def safely_allocate_target_usage_marks(num_cams, nmax):
         return tusage
 
 
-def deallocate_adjacency_lists(lists: List[List[List[correspond]]], num_cams: int) -> None:
-    for c1 in range(num_cams - 1):
-        for c2 in range(c1 + 1, num_cams):
-            lists[c1][c2] = None
-            lists[c2][c1] = None
-            del lists[c1][c2]
-            del lists[c2][c1]
-
-
-
-def deallocate_adjacency_lists(lists: List[List[List[Correspond]]], num_cams: int) -> None:
+def deallocate_adjacency_lists(
+    lists: List[List[List[Correspond]]], num_cams: int
+) -> None:
     for c1 in range(num_cams - 1):
         for c2 in range(c1 + 1, num_cams):
             for i in range(len(lists[c1][c2])):
                 lists[c1][c2][i] = None
             lists[c1][c2] = None
 
-def safely_allocate_adjacency_lists(lists: List[List[List[Correspond]]], num_cams: int, target_counts: List[int]) -> int:
+
+def safely_allocate_adjacency_lists(
+    lists: List[List[List[Correspond]]], num_cams: int, target_counts: List[int]
+) -> int:
     error = False
 
     for c1 in range(num_cams - 1):
@@ -148,7 +150,7 @@ def safely_allocate_adjacency_lists(lists: List[List[List[Correspond]]], num_cam
                 except MemoryError:
                     error = True
                     continue
-                
+
                 for edge in range(target_counts[c1]):
                     lists[c1][c2][edge].n = 0
                     lists[c1][c2][edge].p1 = 0
@@ -160,8 +162,6 @@ def safely_allocate_adjacency_lists(lists: List[List[List[Correspond]]], num_cam
         return 0
     else:
         return 1
-
-
 
 
 def four_camera_matching(list, base_target_count, accept_corr, scratch, scratch_size):
@@ -191,18 +191,21 @@ def four_camera_matching(list, base_target_count, accept_corr, scratch, scratch_
                                 if p4 != p42:
                                     continue
 
-                                corr = (list[0][1][i].corr[j]
-                                        + list[0][2][i].corr[k]
-                                        + list[0][3][i].corr[l]
-                                        + list[1][2][p2].corr[m]
-                                        + list[1][3][p2].corr[n]
-                                        + list[2][3][p3].corr[o]) \
-                                        / (list[0][1][i].dist[j]
-                                        + list[0][2][i].dist[k]
-                                        + list[0][3][i].dist[l]
-                                        + list[1][2][p2].dist[m]
-                                        + list[1][3][p2].dist[n]
-                                        + list[2][3][p3].dist[o])
+                                corr = (
+                                    list[0][1][i].corr[j]
+                                    + list[0][2][i].corr[k]
+                                    + list[0][3][i].corr[l]
+                                    + list[1][2][p2].corr[m]
+                                    + list[1][3][p2].corr[n]
+                                    + list[2][3][p3].corr[o]
+                                ) / (
+                                    list[0][1][i].dist[j]
+                                    + list[0][2][i].dist[k]
+                                    + list[0][3][i].dist[l]
+                                    + list[1][2][p2].dist[m]
+                                    + list[1][3][p2].dist[n]
+                                    + list[2][3][p3].dist[o]
+                                )
 
                                 if corr <= accept_corr:
                                     continue
@@ -222,19 +225,19 @@ def four_camera_matching(list, base_target_count, accept_corr, scratch, scratch_
     return matched
 
 
-import numpy as np
-
-def three_camera_matching(list, num_cams, target_counts, accept_corr, scratch, scratch_size, tusage):
+def three_camera_matching(
+    list, num_cams, target_counts, accept_corr, scratch, scratch_size, tusage
+):
     matched = 0
     nmax = np.inf
-    
+
     for i1 in range(num_cams - 2):
         for i in range(target_counts[i1]):
             for i2 in range(i1 + 1, num_cams - 1):
                 p1 = list[i1][i2][i].p1
                 if p1 > nmax or tusage[i1][p1] > 0:
                     continue
-                
+
                 for j in range(list[i1][i2][i].n):
                     p2 = list[i1][i2][i].p2[j]
                     if p2 > nmax or tusage[i2][p2] > 0:
@@ -245,32 +248,43 @@ def three_camera_matching(list, num_cams, target_counts, accept_corr, scratch, s
                             p3 = list[i1][i3][i].p2[k]
                             if p3 > nmax or tusage[i3][p3] > 0:
                                 continue
-							
+
                             indices = np.where(list[i2][i3][p2].p2 == p3)[0]
                             if indices.size == 0:
                                 continue
-							
+
                             m = indices[0]
-                            corr = (list[i1][i2][i].corr[j] + list[i1][i3][i].corr[k] + list[i2][i3][p2].corr[m]) / (list[i1][i2][i].dist[j] + list[i1][i3][i].dist[k] + list[i2][i3][p2].dist[m])
-							
+                            corr = (
+                                list[i1][i2][i].corr[j]
+                                + list[i1][i3][i].corr[k]
+                                + list[i2][i3][p2].corr[m]
+                            ) / (
+                                list[i1][i2][i].dist[j]
+                                + list[i1][i3][i].dist[k]
+                                + list[i2][i3][p2].dist[m]
+                            )
+
                             if corr <= accept_corr:
                                 continue
-							
+
                             p = np.full(num_cams, -2)
                             p[i1], p[i2], p[i3] = p1, p2, p3
                             scratch[matched].p = p
                             scratch[matched].corr = corr
-							
+
                             matched += 1
                             if matched == scratch_size:
-                                print ("Overflow in correspondences.\n")
+                                print("Overflow in correspondences.\n")
                                 return matched
     return matched
 
 
 import numpy as np
 
-def consistent_pair_matching(list, num_cams, target_counts, accept_corr, scratch, scratch_size, tusage):
+
+def consistent_pair_matching(
+    list, num_cams, target_counts, accept_corr, scratch, scratch_size, tusage
+):
     matched = 0
     nmax = np.inf
     for i1 in range(num_cams - 1):
@@ -313,32 +327,49 @@ def match_pairs(list, corrected, frm, vpar, cpar, calib):
             for i in range(frm.num_targets[i1]):
                 if corrected[i1][i].x == PT_UNUSED:
                     continue
-                
-                xa12, ya12, xb12, yb12 = epi_mm(corrected[i1][i].x, corrected[i1][i].y, 
-                                                calib[i1], calib[i2], cpar.mm, 
-                                                vpar)
-                
+
+                xa12, ya12, xb12, yb12 = epi_mm(
+                    corrected[i1][i].x,
+                    corrected[i1][i].y,
+                    calib[i1],
+                    calib[i2],
+                    cpar.mm,
+                    vpar,
+                )
+
                 # origin point in the list
                 list[i1][i2][i].p1 = i
                 pt1 = corrected[i1][i].pnr
-                
+
                 # search for a conjugate point in corrected[i2]
                 cand = [Candidate() for _ in range(MAXCAND)]
-                count = find_candidate(corrected[i2], frm.targets[i2],
-                                       frm.num_targets[i2], xa12, ya12, xb12, yb12, 
-                                       frm.targets[i1][pt1].n, frm.targets[i1][pt1].nx,
-                                       frm.targets[i1][pt1].ny, frm.targets[i1][pt1].sumg, cand, 
-                                       vpar, cpar, calib[i2])
-                
+                count = find_candidate(
+                    corrected[i2],
+                    frm.targets[i2],
+                    frm.num_targets[i2],
+                    xa12,
+                    ya12,
+                    xb12,
+                    yb12,
+                    frm.targets[i1][pt1].n,
+                    frm.targets[i1][pt1].nx,
+                    frm.targets[i1][pt1].ny,
+                    frm.targets[i1][pt1].sumg,
+                    cand,
+                    vpar,
+                    cpar,
+                    calib[i2],
+                )
+
                 # write all corresponding candidates to the preliminary list of correspondences
                 if count > MAXCAND:
                     count = MAXCAND
-                
+
                 for j in range(count):
                     list[i1][i2][i].p2[j] = cand[j].pnr
                     list[i1][i2][i].corr[j] = cand[j].corr
                     list[i1][i2][i].dist[j] = cand[j].tol
-                
+
                 list[i1][i2][i].n = count
 
 
@@ -375,17 +406,19 @@ def take_best_candidates(src, dst, num_cams, num_cands, tusage):
     return taken
 
 
-
-def correspondences(frm: frame, corrected: List[List[coord_2d]], 
-                    vpar: volume_par, cpar: control_par, 
-                    calib: List[List[Calibration]], 
-                    match_counts: List[int]) -> List[n_tupel]:
-
+def correspondences(
+    frm: frame,
+    corrected: List[List[coord_2d]],
+    vpar: volume_par,
+    cpar: control_par,
+    calib: List[List[Calibration]],
+    match_counts: List[int],
+) -> List[n_tupel]:
     nmax = 1000
 
     # Allocation of scratch buffers for internal tasks and return-value space
-    con0 = (nmax * cpar.num_cams) * [n_tupel(p=[-1]*cpar.num_cams, corr=0.0)]
-    con = (nmax * cpar.num_cams) * [n_tupel(p=[-1]*cpar.num_cams, corr=0.0)]
+    con0 = (nmax * cpar.num_cams) * [n_tupel(p=[-1] * cpar.num_cams, corr=0.0)]
+    con = (nmax * cpar.num_cams) * [n_tupel(p=[-1] * cpar.num_cams, corr=0.0)]
 
     tim = safely_allocate_target_usage_marks(cpar.num_cams)
     if tim is None:
@@ -393,7 +426,7 @@ def correspondences(frm: frame, corrected: List[List[coord_2d]],
         return None
 
     # allocate memory for lists of correspondences
-    list = [[None]*4 for _ in range(4)]
+    list = [[None] * 4 for _ in range(4)]
     if safely_allocate_adjacency_lists(list, cpar.num_cams, frm.num_targets) == 0:
         print("list is not allocated")
         deallocate_target_usage_marks(tim, cpar.num_cams)
@@ -417,43 +450,48 @@ def correspondences(frm: frame, corrected: List[List[coord_2d]],
 
     # search consistent quadruplets in the list
     if cpar.num_cams == 4:
-        match0 = four_camera_matching(list, frm.num_targets[0], 
-                                      vpar.corrmin, con0, 4*nmax)
+        match0 = four_camera_matching(
+            list, frm.num_targets[0], vpar.corrmin, con0, 4 * nmax
+        )
 
         match_counts[0] = take_best_candidates(con0, con, cpar.num_cams, match0, tim)
         match_counts[3] += match_counts[0]
 
     # search consistent triplets: 123, 124, 134, 234
     if (cpar.num_cams == 4 and cpar.allCam_flag == 0) or cpar.num_cams == 3:
-        match0 = three_camera_matching(list, cpar.num_cams, frm.num_targets, 
-                                        vpar.corrmin, con0, 4*nmax, tim)
+        match0 = three_camera_matching(
+            list, cpar.num_cams, frm.num_targets, vpar.corrmin, con0, 4 * nmax, tim
+        )
 
-        match_counts[1] = take_best_candidates(con0, con[match_counts[3]:], 
-                                                cpar.num_cams, match0, tim)
+        match_counts[1] = take_best_candidates(
+            con0, con[match_counts[3] :], cpar.num_cams, match0, tim
+        )
         match_counts[3] += match_counts[1]
 
     # Search consistent pairs: 12, 13, 14, 23, 24, 34
     if cpar.num_cams > 1 and cpar.allCam_flag == 0:
-        match0 = consistent_pair_matching(list, cpar.num_cams, frm.num_targets, 
-                                           vpar.corrmin, con0, 4*nmax, tim)
-        match_counts[2] = take_best_candidates(con0, con[match_counts[3]:], 
-                                                cpar.num_cams, match0, tim)
+        match0 = consistent_pair_matching(
+            list, cpar.num_cams, frm.num_targets, vpar.corrmin, con0, 4 * nmax, tim
+        )
+        match_counts[2] = take_best_candidates(
+            con0, con[match_counts[3] :], cpar.num_cams, match0, tim
+        )
         match_counts[3] += match_counts[2]
-    
+
     # Give each used pix the correspondence number
     for i in range(match_counts[3]):
         for j in range(cpar.num_cams):
             # Skip cameras without a correspondence obviously.
             if con[i].p[j] < 0:
                 continue
-            
+
             p1 = corrected[j][con[i].p[j]].pnr
             if p1 > -1 and p1 < 1202590843:
                 frm.targets[j][p1].tnr = i
-    
+
     # Free all other allocations
     deallocate_adjacency_lists(list, cpar.num_cams)
     deallocate_target_usage_marks(tim, cpar.num_cams)
     free(con0)
-    
+
     return con
