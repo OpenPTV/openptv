@@ -364,7 +364,8 @@ def read_target_par(filename):
         ret.nymin = 0
         ret.nymax = 0
         
-        if (fscanf(file, "%d", &ret.gvthres[0]) == 1 and
+        if (
+            fscanf(file, "%d", &ret.gvthres[0]) == 1 and
             fscanf(file, "%d", &ret.gvthres[1]) == 1 and
             fscanf(file, "%d", &ret.gvthres[2]) == 1 and
             fscanf(file, "%d", &ret.gvthres[3]) == 1 and
@@ -373,7 +374,8 @@ def read_target_par(filename):
             fscanf(file, "%d  %d", &ret.nxmin, &ret.nxmax) == 2 and
             fscanf(file, "%d  %d", &ret.nymin, &ret.nymax) == 2 and
             fscanf(file, "%d", &ret.sumg_min) == 1 and
-            fscanf(file, "%d", &ret.cr_sz) == 1)):
+            fscanf(file, "%d", &ret.cr_sz) == 1
+            ):
             
             fclose(file)
             return ret
