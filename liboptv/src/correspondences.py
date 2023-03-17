@@ -1,3 +1,13 @@
+
+from typing import List, Tuple
+
+PT_UNUSED = -999
+
+class Correspond:
+    def __init__(self, n: int, p1: int):
+        self.n = n
+        self.p1 = p1
+
 def quicksort_con(con, num):
     if num > 0:
         qs_con(con, 0, num-1)
@@ -100,13 +110,6 @@ def deallocate_adjacency_lists(lists: List[List[List[correspond]]], num_cams: in
             del lists[c2][c1]
 
 
-
-from typing import List
-
-class Correspond:
-    def __init__(self, n: int, p1: int):
-        self.n = n
-        self.p1 = p1
 
 def deallocate_adjacency_lists(lists: List[List[List[Correspond]]], num_cams: int) -> None:
     for c1 in range(num_cams - 1):
@@ -353,7 +356,6 @@ def take_best_candidates(src, dst, num_cams, num_cands, tusage):
     return taken
 
 
-from typing import List, Tuple
 
 def correspondences(frm: frame, corrected: List[List[coord_2d]], 
                     vpar: volume_par, cpar: control_par, 

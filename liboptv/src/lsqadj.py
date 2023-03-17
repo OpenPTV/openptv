@@ -1,3 +1,5 @@
+import numpy as np
+
 def ata(a, ata, m, n, n_large):
     """
     Multiply transpose of a matrix A by matrix A itself, creating symmetric matrix
@@ -17,7 +19,6 @@ def ata(a, ata, m, n, n_large):
                 sum_ += a[k * n_large + i] * a[k * n_large + j]
             ata[i * n_large + j] = sum_
 
-import numpy as np
 
 def atl(u, a, l, m, n, n_large):
     """
@@ -36,8 +37,6 @@ def atl(u, a, l, m, n, n_large):
         u[i] = np.dot(a[:, i], l)
     return u
 
-
-import numpy as np
 
 def matinv(a, n, n_large):
     # Convert input to numpy array
@@ -69,8 +68,6 @@ def matinv(a, n, n_large):
         
     return a
 
-
-import numpy as np
 
 def matmul(a, b, c, m, n, k, m_large, n_large):
     for i in range(k):
