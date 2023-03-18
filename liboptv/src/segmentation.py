@@ -16,90 +16,156 @@ class Peak:
         self.touch = [0, 0, 0, 0]
         self.n_touch = 0
         
-def targ_rec(img, targ_par, xmin, xmax, ymin, ymax, cpar, num_cam, pix):
-    imx, imy = cpar["imx"], cpar["imy"]
-    thres = targ_par["gvthres"][num_cam]
-    disco = targ_par["discont"]
+def targ_rec (img, targ_par, xmin, xmax, ymin, ymax, cpar, num_cam, pix):
+    n = 0
+    n_wait = 0
+    n_targets = 0
+    sumg = 0
+    numpix = 0
+    thres = targ_par.gvthres[num_cam]
+    disco = targ_par.discont
     
-    # Copy image to a temporary mask
-    img0 = img.copy()
+    imx = cpar.imx
+    imy = cpar.imy
     
-    # Make sure the min/max coordinates don't cause us to access memory
-    # outside the image memory.
-    if xmin <= 0: xmin = 1
-    if ymin <= 0: ymin = 1
-    if xmax >= imx: xmax = imx - 1
-    if ymax >= imy: ymax = imy - 1
+    img0 = [0] * (imx*imy)    # create temporary mask
+    img0[:] = img           # copy the original image
     
-    #  thresholding and connectivity analysis in image  
-    targets = []
-    for i in range(ymin, ymax):
+    if xmin <= 0:
+        xmin = 1
+    if ymin <= 0:
+        ymin = 1
+    if xmax >= imx:
+        xmax = imx - 1
+    if ymax >= imy:
+        ymax = imy - 1
+    
+    waitlist = [[0] * 2 for _ in range(2048)]
+    
+    xa = 0 
+    ya = 0 
+    xb = 0 
+    yb = 0 
+    x4 = [0] * 4 
+    y4 = [0] * 4
+    
+    for i in range(ymin, ymax):  
         for j in range(xmin, xmax):
-            gv = img0[i, j]
-            if gv > thres and \
-                gv >= img0[i, j-1] and \
-                gv >= img0[i, j+1] and \
-                gv >= img0[i-1, j] and \
-                gv >= img0[i+1, j] and \
-                gv >= img0[i-1, j-1] and \
-                gv >= img0[i+1, j-1] and \
-                gv >= img0[i-1, j+1] and \
-                gv >= img0[i+1, j+1]:
-                
-                # => local maximum, 'peak'
-                xn, yn = j, i
-                sumg = gv
-                img0[i, j] = 0
-                xa, xb, ya, yb = xn, xn, yn, yn
-                gv -= thres
-                x, y = xn * gv, yn * gv
-                numpix = 1
-                waitlist = np.array([[j, i]])
-                
-                while len(waitlist) > 0:
-                    x, y = np.dot(waitlist[0], [xn, yn])
-                    gvref = img[waitlist[0][1], waitlist[0][0]]
-                    x4 = np.array([
-                        [waitlist[0][0] - 1, waitlist[0][1]], 
-                        [waitlist[0][0] + 1, waitlist[0][1]],
-                        [waitlist[0][0], waitlist[0][1] - 1],
-                        [waitlist[0][0], waitlist[0][1] + 1],
-                    ])
+            gv = img0[i*imx + j]
+            if gv > thres:
+                if ((gv >= img0[i*imx + j-1])
+                    and (gv >= img0[i*imx + j+1])
+                    and (gv >= img0[(i-1)*imx + j])
+                    and (gv >= img0[(i+1)*imx + j])
+                    and (gv >= img0[(i-1)*imx + j-1])
+                    and (gv >= img0[(i+1)*imx + j-1])
+                    and (gv >= img0[(i-1)*imx + j+1])
+                    and (gv >= img0[(i+1)*imx + j+1])):
+                    yn = i  
+                    xn = j
+                    
+                    sumg = gv  
+                    img0[i*imx + j] = 0
+                    
+                    xa = xn  
+                    xb = xn  
+                    ya = yn  
+                    yb = yn
+                    
+                    gv -= thres
+                    x = (xn) * gv
+                    y = yn * gv
+                    numpix = 1
+                    waitlist[0][0] = j  
+                    waitlist[0][1] = i  
+                    n_wait = 1
+    
 
-                    for n in range(4):
-                        xn, yn = x4[n]
-                        if not (xn < xmax and yn < ymax):
-                            continue
-                        gv = img0[yn, xn]
+                    while n_wait > 0:
+                        gvref = img[imx*(waitlist[0][1]) + (waitlist[0][0])]
 
-                        # Conditions for threshold, discontinuity, image borders
-                        # and peak fitting
-                        if gv > thres and \
-                            xn > xmin - 1 and xn < xmax + 1 and \
-                            yn > ymin - 1 and yn < ymax + 1 and \
-                            gv <= gvref+disco and \
-                            gvref + disco >= img[yn-1, xn] and \
-                            gvref + disco >= img[yn+1, xn] and \
-                            gvref + disco >= img[yn, xn-1] and \
-                            gvref + disco >= img[yn, xn+1]:
-                            
-                            # Add to waitlist and mark as "visited"
-                            waitlist = np.vstack([waitlist
+                        x4[0] = waitlist[0][0] - 1
+                        y4[0] = waitlist[0][1]
+                        x4[1] = waitlist[0][0] + 1
+                        y4[1] = waitlist[0][1]
+                        x4[2] = waitlist[0][0]
+                        y4[2] = waitlist[0][1] - 1
+                        x4[3] = waitlist[0][0]
+                        y4[3] = waitlist[0][1] + 1
 
-                            /* compute dot parameters */
-                            pix[n_targets].x = x/sumg;
-                            pix[n_targets].y = y/sumg;
-                            pix[n_targets].grey = sumg;
-                            pix[n_targets].ident = n_targets;
+                        for n in range(4):
+                            xn = x4[n]
+                            yn = y4[n]
+                            if (xn >= xmax or yn >= ymax or xn < 0 or yn < 0):
+                                continue
+  
+                            gv = img0[imx*yn + xn]
 
-                            n_targets++;  /* mark the new dot, reinitialize the counter */
-                            n_wait = 0;
-                            }
-                        }
-                    }
-                    free(img0);
-                    return(n_targets);
-                
+                            if ((gv > thres)
+                                and (xn > xmin - 1) and (xn < xmax + 1) 
+                                and (yn > ymin - 1) and (yn < ymax + 1)
+                                and (gv <= gvref+disco)
+                                and (gvref + disco >= img[imx*(yn-1) + xn])
+                                and (gvref + disco >= img[imx*(yn+1) + xn])
+                                and (gvref + disco >= img[imx*yn + (xn-1)])
+                                and (gvref + disco >= img[imx*yn + (xn+1)])):
+                                sumg += gv  
+                                img0[imx*yn + xn] = 0
+                                if (xn < xa):
+                                    xa = xn
+                                if (xn > xb):
+                                    xb = xn
+                                if (yn < ya):
+                                    ya = yn
+                                if (yn > yb):
+                                    yb = yn
+                                waitlist[n_wait][0] = xn   
+                                waitlist[n_wait][1] = yn
+
+                                # Coordinates are weighted by grey value, normed later.
+                                x += (xn) * (gv - thres)
+                                y += yn * (gv - thres)
+
+                                numpix += 1
+                                n_wait += 1
+
+                        n_wait -= 1
+                        for m in range(n_wait):
+                            waitlist[m][0] = waitlist[m+1][0]
+                            waitlist[m][1] = waitlist[m+1][1]
+                        waitlist[n_wait][0] = 0  
+                        waitlist[n_wait][1] = 0
+
+                    if (xa == (xmin - 1) or ya == (ymin - 1) or 
+                        xb == (xmax + 1) or yb == (ymax + 1)): 
+                        continue
+
+                    nx = xb - xa + 1  
+                    ny = yb - ya + 1
+
+                    if (numpix >= targ_par.nnmin and numpix <= targ_par.nnmax
+                        and nx >= targ_par.nxmin and nx <= targ_par.nxmax
+                        and ny >= targ_par.nymin and ny <= targ_par.nymax
+                        and sumg > targ_par.sumg_min):
+                        pix[n_targets].n = numpix
+                        pix[n_targets].nx = nx
+                        pix[n_targets].ny = ny
+                        pix[n_targets].sumg = sumg
+                        sumg -= (numpix*thres)
+                        # finish the grey-value weighting:
+                        x /= sumg  
+                        x += 0.5 
+                        y /= sumg  
+                        y += 0.5
+                        pix[n_targets].x = x
+                        pix[n_targets].y = y
+                        pix[n_targets].tnr = CORRES_NONE
+                        pix[n_targets].pnr = n_targets
+                        n_targets += 1
+                        xn = x  
+                        yn = y
+            
+    return n_targets
                 
 def check_touch(tpeak, p1, p2):
     done = False
