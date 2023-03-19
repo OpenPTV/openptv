@@ -72,7 +72,7 @@ typedef struct {
     int num_cams, max_targets;
     int num_parts; /* Number of 3D particles in the correspondence buffer */
     int *num_targets; /* Pointer to array of 2D particle counts per image. */
-} frame;
+} frame;    
 
 void frame_init(frame *new_frame, int num_cams, int max_targets);
 void free_frame(frame *self);
@@ -84,7 +84,7 @@ int write_frame(frame *self, char *corres_file_base, char *linkage_file_base,
 
 /*
  * Following is the frame buffer class, that holds a given number of frame structs,
- * and treats them as a deque (doube-ended queue, a queue that can advance forward 
+ * and treats them as a deque (double-ended queue, a queue that can advance forward 
  * or backward).
  * 
  * The memory locations are advanced with fb_next()/fb_prev(). Filling out the new
