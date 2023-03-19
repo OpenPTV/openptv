@@ -5,7 +5,7 @@ requires = [
     "setuptools==59.2.0",
     "wheel==0.37.0",
     "Cython>=0.29.28,<3.0",  # Note: keep in sync with tools/cythonize.py
-    "numpy>=1.17.3",
+    "numpy>=1.17.3, <1.24",
 ]
 
 [tool.cibuildwheel]
