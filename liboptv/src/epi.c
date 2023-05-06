@@ -201,6 +201,11 @@ int find_candidate (coord_2d *crd, target *pix, int num,
           continue;
         
       p2 = crd[j].pnr;
+      
+      if (p2 >= num) {
+          printf("pnr out of range: %d\n", p2);
+          return -1;
+      }
 					  
       /* quality of each parameter is a ratio of the values of the 
          size n, nx, ny and sum of grey values sumg */

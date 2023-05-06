@@ -203,7 +203,7 @@ START_TEST(test_find_candidate)
         {3, 0.2, 0.8, 10, 3, 3, 30, -999},
         {4, 0.4, -1.1, 10, 3, 3, 40, -999},
         {1, 0.7, -0.1, 10, 3, 3, 50, -999},
-        {7, 1.2, 0.3, 10, 3, 3, 60, -999},
+        {2, 1.2, 0.3, 10, 3, 3, 60, -999},
         {5, 10.4, 0.1, 10, 3, 3, 70, -999}
     };
     			   
@@ -211,12 +211,12 @@ START_TEST(test_find_candidate)
 
     /* coord_2d is int pnr, double x,y */
     coord_2d test_crd[] = {
-        {0, 0.0, 0.0},
         {6, 0.1, 0.1}, /* best candidate, right on the diagonal */
         {3, 0.2, 0.8},
         {4, 0.4, -1.1},
         {1, 0.7, -0.1},
-        {7, 1.2, 0.3},
+        {2, 1.2, 0.3},
+        {0, 0.0, 0.0},
         {5, 10.4, 0.1}
     };
 
@@ -290,9 +290,13 @@ START_TEST(test_find_candidate)
         n, nx, ny, sumg, test_cand, &test_vpar, test_cpar, &test_cal);
     
     free_control_par(test_cpar);
+
+    for (i=0; i<count; i++) {
+        printf("candidate %d: pnr %d, corr %f, tol %f\n", i, test_cand[i].pnr, test_cand[i].corr, test_cand[i].tol);
+    }
     
     /* expected results: */
-    fail_unless(test_cand[0].pnr = 1);
+    fail_unless(test_cand[0].pnr == 0);
     fail_unless(test_cand[0].tol < EPS);
 
     /* regression guard */
@@ -301,9 +305,9 @@ START_TEST(test_find_candidate)
     	sum_corr += test_cand[i].corr;
     }	
    
-    ck_assert_msg( fabs(sum_corr - 2625.) < EPS && 
-                   (count == 4)  && 
-                    fabs(test_cand[3].tol  - 0.565685) < EPS,
+    ck_assert_msg( fabs(sum_corr -3301.0) < EPS && 
+                   (count == 5)  && 
+                    fabs(test_cand[3].tol  - 0.636396) < EPS,
          "\n Expected ...  \n  \
          but found %f %d %9.6f \n", sum_corr, count, test_cand[3].tol);	
 }

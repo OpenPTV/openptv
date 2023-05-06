@@ -120,9 +120,9 @@ class TestCorresp(unittest.TestCase):
             targ.set_pixel_counts(25, 5, 5)
             targ.set_sum_grey_value(10)
             
-            img_pts.append(targs)
-            mc = MatchedCoords(targs, cpar, cal)
-            corrected.append(mc)
+        img_pts.append(targs)
+        mc = MatchedCoords(targs, cpar, cal)
+        corrected.append(mc)
         
         _, _, num_targs = correspondences(
             img_pts, corrected, cals, vpar, cpar)
