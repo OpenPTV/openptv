@@ -160,9 +160,17 @@ frame *generate_test_set(Calibration *calib[4], control_par *cpar,
                 targ->pnr = cpt_ix;
                 
                 vec_set(tmp, cpt_vert * 10, cpt_horz * 10, 0);
+                if (cpt_ix == 0){
+                    printf("cam %d, cpt %d: %f %f %f\n", cam, cpt_ix, tmp[0], tmp[1], tmp[2]);
+                }
                 img_coord(tmp, calib[cam], cpar->mm, &(targ->x), &(targ->y));
+                if (cpt_ix == 0){
+                    printf("cam %d, cpt %d: %f %f\n", cam, cpt_ix, targ->x, targ->y);
+                }
                 metric_to_pixel(&(targ->x), &(targ->y), targ->x, targ->y, cpar);
-                
+                if (cpt_ix == 0){
+                    printf("cam %d, cpt %d: %f %f\n", cam, cpt_ix, targ->x, targ->y);
+                }
                 /* These values work in check_epi, so used here too */
                 targ->n = 25;
                 targ->nx = targ->ny = 5;
@@ -237,6 +245,10 @@ START_TEST(test_pairwise_matching)
     
     read_all_calibration(calib, cpar);
     frm = generate_test_set(calib, cpar, vpar);
+
+    printf("frame generated\n");
+    printf("%f %f %d\n", frm->targets[0][0].x, frm->targets[0][0].y, frm->targets[0][0].pnr);
+    printf("%f %f %d\n", frm->targets[1][0].x, frm->targets[1][0].y, frm->targets[1][0].pnr);
     
     corrected = correct_frame(frm, calib, cpar, 0.0001);
     safely_allocate_adjacency_lists(list, cpar->num_cams, frm->num_targets);
