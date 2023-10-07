@@ -36,7 +36,8 @@ void  multimed_nlay (Calibration *cal, mm_np *mm, vec3d pos,
 {
     double  radial_shift;
       
-    radial_shift = multimed_r_nlay (cal, mm, pos); 
+    radial_shift = multimed_r_nlay (cal, mm, pos);
+    //  printf("radial shift is %f\n", radial_shift); 
 
     /* if radial_shift == 1.0, this degenerates to Xq = X, Yq = Y  */
     *Xq = cal->ext_par.x0 + (pos[0] - cal->ext_par.x0) * radial_shift;
@@ -60,7 +61,7 @@ double multimed_r_nlay (Calibration *cal, mm_np *mm, vec3d pos) {
     int n_iter = 40;
     double beta1, beta2[32], beta3, r, rbeta, rdiff, rq, mmf=1.0;
     double X,Y,Z;
-    double zout;
+    double zout, zdiff;
     
     /* 1-medium case */
     if (mm->n1 == 1 && mm->nlay == 1 && mm->n2[0]== 1 && mm->n3 == 1)
@@ -68,6 +69,7 @@ double multimed_r_nlay (Calibration *cal, mm_np *mm, vec3d pos) {
     
     /* interpolation using the existing mmlut */
 	if (cal->mmlut.data != NULL) {
+        printf("going into get_mmf_from_mmlut\n");
         mmf = get_mmf_from_mmlut(cal, pos);
         if (mmf > 0) return (mmf);
     }
@@ -83,11 +85,16 @@ double multimed_r_nlay (Calibration *cal, mm_np *mm, vec3d pos) {
         zout += mm->d[i];
     
     r = norm((X - cal->ext_par.x0), (Y - cal->ext_par.y0), 0);
+    // printf("r is %f\n", r);
     rq = r;
   
     do
     {
-        beta1 = atan (rq/(cal->ext_par.z0 - Z));
+        zdiff = cal->ext_par.z0 - Z;
+        if (zdiff == 0) {
+            zdiff = 1.0;
+        }
+        beta1 = atan (rq / zdiff);
         for (i = 0; i < mm->nlay; i++)
             beta2[i] = asin (sin(beta1) * mm->n1/mm->n2[i]);
         beta3 = asin (sin(beta1) * mm->n1/mm->n3);
@@ -102,6 +109,7 @@ double multimed_r_nlay (Calibration *cal, mm_np *mm, vec3d pos) {
     }
     while (((rdiff > 0.001) || (rdiff < -0.001))  &&  it < n_iter);
 
+    // printf("rq is %f\n", rq);
  
     if (it >= n_iter) {
         printf ("multimed_r_nlay stopped after %d iterations\n", n_iter);  
@@ -261,44 +269,78 @@ void init_mmlut (volume_par *vpar, control_par *cpar, Calibration *cal) {
 
   for (i = 0; i < 2; i ++) {
       for (j = 0; j < 2; j++) {
+        // printf("i=%d, j=%d\n", i, j);
+        // printf("xc[i]=%f, yc[j]=%f\n", xc[i], yc[j]);
           pixel_to_metric (&x, &y, xc[i], yc[j], cpar);
+        // printf("x=%f, y=%f\n", x, y);
 
-          x = x - cal->int_par.xh;
-          y = y - cal->int_par.yh;
+          x -= cal->int_par.xh;
+          y -= cal->int_par.yh;
   
-          correct_brown_affin (x, y, cal->added_par, &x,&y);  
+          correct_brown_affin (x, y, cal->added_par, &x,&y);
+        //   printf("x=%f, y=%f\n", x, y);
+        //   printf("cal->ext_par.x0=%f, cal->ext_par.y0=%f\n", cal->ext_par.x0, cal->ext_par.y0);
+        //   printf("cal->int_par.cc %f\n", cal->int_par.cc);
+        //   printf("cpar->mm->nlay=%d\n", cpar->mm->nlay);
+
+
           ray_tracing(x, y, cal, *(cpar->mm), pos, a);
+        //   printf("pos[0]=%f, pos[1]=%f, pos[2]=%f\n", pos[0], pos[1], pos[2]);
+        //   printf("a[0]=%f, a[1]=%f, a[2]=%f\n", a[0], a[1], a[2]);
           
           move_along_ray(Zmin, pos, a, xyz);
+        //   printf("xyz[0]=%f, xyz[1]=%f, xyz[2]=%f\n", xyz[0], xyz[1], xyz[2]);
+
           trans_Cam_Point(cal->ext_par, *(cpar->mm), cal->glass_par, xyz, \
             &(cal_t.ext_par), xyz_t, (double *)cross_p, (double *)cross_c);
+        
+        //   printf("xyz_t[0]=%f, xyz_t[1]=%f, xyz_t[2]=%f\n", xyz_t[0], xyz_t[1], xyz_t[2]);
 
           if( xyz_t[2] < Zmin_t ) Zmin_t = xyz_t[2];
           if( xyz_t[2] > Zmax_t ) Zmax_t = xyz_t[2];
 
           R = norm((xyz_t[0] - cal_t.ext_par.x0), (xyz_t[1] - cal_t.ext_par.y0), 0);
+
+        //   printf("before R: %f, %f\n", xyz_t[0] - cal_t.ext_par.x0, xyz_t[1] - cal_t.ext_par.y0);
+        //   printf("R=%f\n", R);
+
           if (R > Rmax)
               Rmax = R;
+
+        //   printf("Rmax=%f, Zmin_t=%f, Zmax_t=%f\n", Rmax, Zmin_t, Zmax_t);
            
           move_along_ray(Zmax, pos, a, xyz);
+        
+        //   printf("xyz[0]=%f, xyz[1]=%f, xyz[2]=%f\n", xyz[0], xyz[1], xyz[2]);
+                   
           trans_Cam_Point(cal->ext_par, *(cpar->mm), cal->glass_par, xyz,\
               &(cal_t.ext_par), xyz_t, (double *)cross_p, (double *)cross_c);
-  
+
+        //   printf("xyz_t[0]=%f, xyz_t[1]=%f, xyz_t[2]=%f\n", xyz_t[0], xyz_t[1], xyz_t[2]);
+
           if( xyz_t[2] < Zmin_t ) Zmin_t = xyz_t[2];
           if( xyz_t[2] > Zmax_t ) Zmax_t = xyz_t[2];
 
           R = norm((xyz_t[0] - cal_t.ext_par.x0), (xyz_t[1] - cal_t.ext_par.y0), 0);
+        //   printf("R=%f\n", R); 
+
           if (R > Rmax)
               Rmax = R;
+
+        //   printf("Rmax=%f, Zmin_t=%f, Zmax_t=%f\n", Rmax, Zmin_t, Zmax_t);
       }
   }
 
   /* round values (-> enlarge) */
   Rmax += (rw - fmod (Rmax, rw));
+//   printf("inside init_mmlut: Rmax=%f, Zmin_t=%f, Zmax_t=%f\n", Rmax, Zmin_t, Zmax_t);
 
   /* get # of rasterlines in r,z */
   nr = (int)(Rmax/rw + 1);
   nz = (int)((Zmax_t-Zmin_t)/rw + 1);
+
+
+//   printf("nr=%d, nz=%d\n", nr, nz);
 
   /* create two dimensional mmlut structure */
   vec_set(cal->mmlut.origin, cal_t.ext_par.x0, cal_t.ext_par.y0, Zmin_t);

@@ -144,6 +144,8 @@ class Test_Orientation(unittest.TestCase):
 
     def test_single_camera_point_positions(self):
         """Point positions for a single camera case"""
+        
+        print("test_single_camera_point_positions \n")
 
         num_cams = 1
         # prepare MultimediaParams
@@ -152,7 +154,7 @@ class Test_Orientation(unittest.TestCase):
         cpar = ControlParams(num_cams)
         cpar.read_control_par(cpar_file)
         mult_params = cpar.get_multimedia_params()
-
+        
         vpar = VolumeParams()
         vpar.read_volume_par(vpar_file)
 
@@ -165,6 +167,8 @@ class Test_Orientation(unittest.TestCase):
         new_cal = Calibration()
         new_cal.from_file(ori_file=ori_name, add_file=add_name)
         calibs.append(new_cal)
+        
+        # print(f"new_cal = {(new_cal.get_rotation_matrix())}")
 
 
         # 3d point
@@ -179,19 +183,31 @@ class Test_Orientation(unittest.TestCase):
 
 
         new_plain_targ = image_coordinates(
-            points, calibs[0], mult_params)
+            points, new_cal, mult_params)
         targs_plain.append(new_plain_targ)
+        
+        # print(f" new_plan_targ = {new_plain_targ}")
+        # print(f"mult_params = {mult_params}")
 
         jigged_points = points - np.r_[0, jigg_amp, 0]
 
         new_jigged_targs = image_coordinates(
-            jigged_points, calibs[0], mult_params)
+            jigged_points, new_cal, mult_params)
         targs_jigged.append(new_jigged_targs)
+        
+        # print(f" new_jigged_targs = {new_jigged_targs}")
 
         targs_plain = np.array(targs_plain).transpose(1,0,2)
         targs_jigged = np.array(targs_jigged).transpose(1,0,2)
+        
+        print(f"targs_plain: {targs_plain}")
+        print(f"targs_jigged: {targs_jigged}")
+                
         skew_dist_plain = point_positions(targs_plain, cpar, calibs, vpar)
         skew_dist_jigged = point_positions(targs_jigged, cpar, calibs, vpar)
+        
+        print(f"skev_dist_plain = {skew_dist_plain}")
+        print(f"skev_dist_jigged = {skew_dist_jigged}")
 
         if np.any(np.linalg.norm(points - skew_dist_plain[0], axis=1) > 1e-6):
             self.fail('Rays converge on wrong position.')

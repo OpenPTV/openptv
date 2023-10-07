@@ -160,15 +160,15 @@ frame *generate_test_set(Calibration *calib[4], control_par *cpar,
                 targ->pnr = cpt_ix;
                 
                 vec_set(tmp, cpt_vert * 10, cpt_horz * 10, 0);
-                if (cpt_ix == 0){
+                if ((cpt_ix % 4) == 0){
                     printf("cam %d, cpt %d: %f %f %f\n", cam, cpt_ix, tmp[0], tmp[1], tmp[2]);
                 }
                 img_coord(tmp, calib[cam], cpar->mm, &(targ->x), &(targ->y));
-                if (cpt_ix == 0){
+                if ((cpt_ix % 4) == 0){
                     printf("cam %d, cpt %d: %f %f\n", cam, cpt_ix, targ->x, targ->y);
                 }
                 metric_to_pixel(&(targ->x), &(targ->y), targ->x, targ->y, cpar);
-                if (cpt_ix == 0){
+                if ((cpt_ix % 4) == 0){
                     printf("cam %d, cpt %d: %f %f\n", cam, cpt_ix, targ->x, targ->y);
                 }
                 /* These values work in check_epi, so used here too */
@@ -221,6 +221,10 @@ coord_2d **correct_frame(frame *frm, Calibration *calib[], control_par *cpar,
         
         /* This is expected by find_candidate() */
         quicksort_coord2d_x(corrected[cam], frm->num_targets[cam]);
+
+        for(part = 0; part < frm->num_targets[cam]; part++) {
+            printf("cam %d, cpt %d: %f %f\n", cam, part, corrected[cam][part].x, corrected[cam][part].y);
+        }
     }
     return corrected;
 }
@@ -422,6 +426,7 @@ START_TEST(test_two_camera_matching)
     corrected = correct_frame(frm, calib, cpar, 0.0001);
     safely_allocate_adjacency_lists(list, cpar->num_cams, frm->num_targets);
     match_pairs(list, corrected, frm, vpar, cpar, calib);
+
     
     con = (n_tupel *) malloc(4*16*sizeof(n_tupel));
     tusage = safely_allocate_target_usage_marks(cpar->num_cams);

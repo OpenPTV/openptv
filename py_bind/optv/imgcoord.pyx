@@ -36,6 +36,7 @@ def flat_image_coordinates(np.ndarray[ndim=2, dtype=np.float_t] input,
                          mult_params._mm_np,
                          < double *> np.PyArray_GETPTR2(output, i, 0),
                          < double *> np.PyArray_GETPTR2(output, i, 1))
+    
     return output
 
 def image_coordinates(np.ndarray[ndim=2, dtype=np.float_t] input,
