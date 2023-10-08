@@ -492,11 +492,16 @@ void match_pairs(correspond *list[4][4], coord_2d **corrected,
     for (i1 = 0; i1 < cpar->num_cams - 1; i1++) {
         for (i2 = i1 + 1; i2 < cpar->num_cams; i2++) {
             for (i=0; i<frm->num_targets[i1]; i++) {
-                if (corrected[i1][i].x == PT_UNUSED) continue;
+                if (corrected[i1][i].x == PT_UNUSED){
+                    printf("unused due to .x \n");
+                    continue;
+                } 
                 
                 epi_mm (corrected[i1][i].x, corrected[i1][i].y, 
                     calib[i1], calib[i2], cpar->mm, 
                     vpar, &xa12, &ya12, &xb12, &yb12);
+                
+                // printf("xa12 %f ya12 %f xb12 %f yb12 %f \n", xa12, ya12, xb12, yb12);
                 
                 /* origin point in the list */
                 list[i1][i2][i].p1 = i;
