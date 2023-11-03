@@ -18,7 +18,7 @@
 #include <string.h>
 #include <math.h>
 
-#define NUM_ITER  80
+#define NUM_ITER  2000
 #define POS_INF 1E20
 #define CONVERGENCE 0.00001
 
@@ -254,6 +254,7 @@ double* orient (Calibration* cal_in, control_par *cpar, int nfix, vec3d fix[],
     int  	i,j,n, itnum, stopflag, n_obs=0, maxsize;
 
     double  ident[IDT], XPX[NPAR][NPAR], XPy[NPAR], beta[NPAR], omega=0;
+    double old_beta[NPAR],diff;
     double xp, yp, xpd, ypd, xc, yc, r, qq, p, sumP;
 
     int numbers;
@@ -519,7 +520,12 @@ double* orient (Calibration* cal_in, control_par *cpar, int nfix, vec3d fix[],
 
       stopflag = 1;
       for (i = 0; i < numbers; i++) {
-          if (fabs (beta[i]) > CONVERGENCE)  stopflag = 0;
+          diff = fabs(old_beta[i]-beta[i]);
+          if ( (fabs (beta[i]) > CONVERGENCE) & (diff/beta[i] > 0.01) & (fabs(diff/beta[i] - 2.0) > 0.01) ) {
+              printf("failing beta[%d] = %f, diff/beta: %f\n",i,beta[i],diff/beta[i]);
+              stopflag = 0;
+              }
+        old_beta[i] = beta[i];
       }
 
       if ( ! flags->ccflag) beta[6] = 0.0;
@@ -581,11 +587,13 @@ double* orient (Calibration* cal_in, control_par *cpar, int nfix, vec3d fix[],
     free(Xh);
 
     if (stopflag){
+        printf("updated calibration\n");
         rotation_matrix(&(cal->ext_par));
         memcpy(cal_in, cal, sizeof (Calibration));
         return resi;
     }
     else {
+        printf("failed calibration\n");
         free(resi);
         return NULL;
     }
@@ -677,8 +685,11 @@ int raw_orient (Calibration* cal, control_par *cpar, int nfix, vec3d fix[], targ
     
         stopflag = 1;
         for (i = 0; i < 6; i++) {
-          if (fabs (beta[i]) > 0.1 )
-            stopflag = 0;
+          if (fabs (beta[i]) > 0.1 ){
+              // printf("raw beta[%d]=%f failed\n",i,beta[i]);
+              stopflag = 0;
+          }
+            
         }
     
         cal->ext_par.x0 += beta[0];
