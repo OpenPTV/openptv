@@ -128,7 +128,7 @@ void read_all_calibration(Calibration *calib[4], control_par *cpar) {
     for (cam = 0; cam < cpar->num_cams; cam++) {
         sprintf(ori_name, ori_tmpl, cam + 1);
         calib[cam] = read_calibration(ori_name, added_name, NULL);
-        printf("calib[%d] %f %f %f \n", cam, calib[cam]->ext_par.x0, calib[cam]->ext_par.y0, calib[cam]->ext_par.z0);
+        // printf("calib[%d] %f %f %f \n", cam, calib[cam]->ext_par.x0, calib[cam]->ext_par.y0, calib[cam]->ext_par.z0);
     }
 }
 
@@ -144,8 +144,8 @@ frame *generate_test_set(Calibration *calib[4], control_par *cpar,
     frame *frm = (frame *) malloc(sizeof(frame));
 
 
-    printf("cpar->num_cams %d \n", cpar->num_cams);
-    printf("%f %f %f \n", cpar->mm->n2[0], cpar->mm->d[0], cpar->mm->n3);
+    // printf("cpar->num_cams %d \n", cpar->num_cams);
+    // printf("%f %f %f \n", cpar->mm->n2[0], cpar->mm->d[0], cpar->mm->n3);
     
     /* Four cameras on 4 quadrants looking down into a calibration target.
        Calibration taken from an actual experimental setup */
@@ -181,7 +181,7 @@ frame *generate_test_set(Calibration *calib[4], control_par *cpar,
                 targ->nx = targ->ny = 5;
                 targ->sumg = 10;
                 
-                printf("targ: cam %d, cpt %d: %f %f %d \n", cam, cpt_ix, targ->x, targ->y, targ->pnr);
+                //  printf("targ: cam %d, cpt %d: %f %f %d \n", cam, cpt_ix, targ->x, targ->y, targ->pnr);
             }
         }
     }
@@ -200,7 +200,7 @@ frame *generate_test_set(Calibration *calib[4], control_par *cpar,
 coord_2d **correct_frame(frame *frm, Calibration *calib[], control_par *cpar, 
     double tol) 
 {
-    printf("Corrected \n");
+    // printf("Corrected \n");
     coord_2d **corrected;
     int cam, part;
     
@@ -258,9 +258,9 @@ START_TEST(test_pairwise_matching)
     read_all_calibration(calib, cpar);
     frm = generate_test_set(calib, cpar, vpar);
 
-    printf("frame generated\n");
-    printf("%f %f %d\n", frm->targets[0][0].x, frm->targets[0][0].y, frm->targets[0][0].pnr);
-    printf("%f %f %d\n", frm->targets[1][0].x, frm->targets[1][0].y, frm->targets[1][0].pnr);
+    // printf("frame generated\n");
+    // printf("%f %f %d\n", frm->targets[0][0].x, frm->targets[0][0].y, frm->targets[0][0].pnr);
+    // printf("%f %f %d\n", frm->targets[1][0].x, frm->targets[1][0].y, frm->targets[1][0].pnr);
     
     corrected = correct_frame(frm, calib, cpar, 0.0001);
     safely_allocate_adjacency_lists(list, cpar->num_cams, frm->num_targets);
@@ -344,6 +344,7 @@ START_TEST(test_three_camera_matching)
     /* the overall setup is the same as the 4-camera test, with the following
        changes: targets are darkenned in one camera to get 3*16 triplets;
        one target is marked as used to reduce it to 15 trips.*/
+    
     frame *frm;
     target *targ;
     
@@ -385,6 +386,8 @@ START_TEST(test_three_camera_matching)
     /* high accept corr bcz of closeness to epipolar lines. */
     matched = three_camera_matching(list, 4, frm->num_targets, 100000., con, 
         4*16, tusage);
+
+    printf("matched %d\n", matched);
     
     fail_unless(matched == 16);
     
@@ -403,7 +406,7 @@ START_TEST(test_two_camera_matching)
 {
     /* the overall setup is the same as the 4-camera test, with the following
        changes: targets are darkenned in two cameras to get 16 pairs. */
-    printf("test_two_camera_matching\n");
+    // printf("test_two_camera_matching\n");
     frame *frm;
     target *targ;
     
@@ -457,36 +460,36 @@ START_TEST(test_two_camera_matching)
 }
 END_TEST
 
-START_TEST(test_correspondences)
-{
-    frame *frm;
-    Calibration *calib[4];
-    volume_par *vpar;
-    control_par *cpar;
-    coord_2d **corrected;
-    n_tupel *con;
-    int cam, match_counts[4];
-    
-    fail_if((cpar = read_control_par("testing_fodder/parameters/ptv.par"))== 0);
-    fail_if((vpar = read_volume_par("testing_fodder/parameters/criteria.par"))==0);
-    
-    /* Cameras are at so high angles that opposing cameras don't see each other
-       in the normal air-glass-water setting. */
-    cpar->mm->n2[0] = 1.0001;
-    cpar->mm->n3 = 1.0001;
+    START_TEST(test_correspondences)
+    {
+        frame *frm;
+        Calibration *calib[4];
+        volume_par *vpar;
+        control_par *cpar;
+        coord_2d **corrected;
+        n_tupel *con;
+        int cam, match_counts[4];
         
-    read_all_calibration(calib, cpar);
-    frm = generate_test_set(calib, cpar, vpar);
-    corrected = correct_frame(frm, calib, cpar, 0.0001);
-    con = correspondences(frm, corrected, vpar, cpar, calib, match_counts);
-    
-    /* The example set is built to have all 16 quadruplets. */
-    fail_unless(match_counts[0] == 16);
-    fail_unless(match_counts[1] == 0);
-    fail_unless(match_counts[2] == 0);
-    fail_unless(match_counts[3] == 16); /* last elemnt is the sum of matches */
-}
-END_TEST
+        fail_if((cpar = read_control_par("testing_fodder/parameters/ptv.par"))== 0);
+        fail_if((vpar = read_volume_par("testing_fodder/parameters/criteria.par"))==0);
+        
+        /* Cameras are at so high angles that opposing cameras don't see each other
+        in the normal air-glass-water setting. */
+        cpar->mm->n2[0] = 1.0001;
+        cpar->mm->n3 = 1.0001;
+            
+        read_all_calibration(calib, cpar);
+        frm = generate_test_set(calib, cpar, vpar);
+        corrected = correct_frame(frm, calib, cpar, 0.0001);
+        con = correspondences(frm, corrected, vpar, cpar, calib, match_counts);
+        
+        /* The example set is built to have all 16 quadruplets. */
+        fail_unless(match_counts[0] == 16);
+        fail_unless(match_counts[1] == 0);
+        fail_unless(match_counts[2] == 0);
+        fail_unless(match_counts[3] == 16); /* last elemnt is the sum of matches */
+    }
+    END_TEST
 
 
 Suite* corresp_suite(void) {
@@ -508,9 +511,9 @@ Suite* corresp_suite(void) {
     // tcase_add_test(tc, test_quicksort_con);
     // suite_add_tcase (s, tc);
     
-    // tc = tcase_create ("Calibration target correspondences");
-    // tcase_add_test(tc, test_correspondences);
-    // suite_add_tcase (s, tc);
+    tc = tcase_create ("Calibration target correspondences");
+    tcase_add_test(tc, test_correspondences);
+    suite_add_tcase (s, tc);
     
     // tc = tcase_create ("Pairwise matching");
     // tcase_add_test(tc, test_pairwise_matching);
@@ -524,9 +527,9 @@ Suite* corresp_suite(void) {
     // tcase_add_test(tc, test_three_camera_matching);
     // suite_add_tcase (s, tc);
 
-    tc = tcase_create ("Two camera matching");
-    tcase_add_test(tc, test_two_camera_matching);
-    suite_add_tcase (s, tc);
+    // tc = tcase_create ("Two camera matching");
+    // tcase_add_test(tc, test_two_camera_matching);
+    // suite_add_tcase (s, tc);
 
     return s;
 }

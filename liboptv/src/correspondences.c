@@ -266,7 +266,7 @@ int safely_allocate_adjacency_lists(correspond* lists[4][4], int num_cams,
     
     Arguments:
     correspond *list[4][4] - the pairwise adjacency lists.
-    int base_target_count - number of turgets in the base camera (first camera)
+    int base_target_count - number of targets in the base camera (first camera)
     double accept_corr - minimal correspondence grade for acceptance.
     n_tupel *scratch - scratch buffer to fill with candidate clique data.
     int scratch_size - size of the scratch space. Upon reaching it, the search
@@ -300,6 +300,7 @@ int four_camera_matching(correspond *list[4][4], int base_target_count,
               if (p4 != p41) continue;
               for (o = 0; o < list[2][3][p3].n; o++) {
                   p42 = list[2][3][p3].p2[o];
+                  // printf(" p42 %d p4 %d\n", p42, p4);
                   if (p4 != p42) continue;
                   
                   corr = (list[0][1][i].corr[j]
@@ -315,6 +316,7 @@ int four_camera_matching(correspond *list[4][4], int base_target_count,
                     + list[1][3][p2].dist[n]
                     + list[2][3][p3].dist[o]);
                   
+                  // printf("corr %f\n", corr);
                   if (corr <= accept_corr)
                       continue;
 
@@ -326,6 +328,9 @@ int four_camera_matching(correspond *list[4][4], int base_target_count,
                   scratch[matched].corr = corr;
                   
                   matched++;
+
+                  // printf("matched %d [%d %d %d %d]\n", matched, p1, p2, p3, p4);
+
                   if (matched == scratch_size) {
                       printf ("Overflow in correspondences.\n");
                       return matched;
@@ -371,18 +376,23 @@ int three_camera_matching(correspond *list[4][4], int num_cams,
             for (i2 = i1 + 1; i2 < num_cams - 1; i2++) {
                 p1 = list[i1][i2][i].p1;
                 if (p1 > nmax || tusage[i1][p1] > 0) continue;
+                // printf("p1 %d candidates = %d\n", p1, list[i1][i2][i].n);
                 
                 for (j = 0; j < list[i1][i2][i].n; j++) {
                     p2 = list[i1][i2][i].p2[j];
                     if (p2 > nmax || tusage[i2][p2] > 0) continue;
+                    // printf("p2 %d\n", p2);
 
                     for (i3 = i2 + 1; i3 < num_cams; i3++)
                         for (k = 0; k < list[i1][i3][i].n; k++) {
                             p3 = list[i1][i3][i].p2[k];
                             if (p3 > nmax || tusage[i3][p3] > 0) continue;
+                            // printf("p3 %d\n", p3);
 						  						  
                             for (m = 0; m < list[i2][i3][p2].n; m++) {
                                 if (p3 != list[i2][i3][p2].p2[m]) continue;
+
+                                // printf("p3 equal to lists %d = %d\n", p3,list[i2][i3][p2].p2[m]);
                                 
                                 /* accept as preliminary match */
                                 corr = (list[i1][i2][i].corr[j]
@@ -391,6 +401,8 @@ int three_camera_matching(correspond *list[4][4], int num_cams,
                                     / (list[i1][i2][i].dist[j]
                                     + list[i1][i3][i].dist[k]
                                     + list[i2][i3][p2].dist[m]);
+
+                                // printf("corr %f\n", corr);
                                 
                                 if (corr <= accept_corr)
                                     continue;
@@ -405,6 +417,8 @@ int three_camera_matching(correspond *list[4][4], int num_cams,
                                 scratch[matched].corr = corr;
                                 
                                 matched++;
+                                printf("matched %d [%d %d %d]\n", matched, p1, p2, p3);
+                            
                                 if (matched == scratch_size) {
                                     printf ("Overflow in correspondences.\n");
                                     return matched;

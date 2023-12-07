@@ -268,7 +268,7 @@ double* orient (Calibration* cal_in, control_par *cpar, int nfix, vec3d fix[],
     Calibration *cal;
 
     /* small perturbation for translation/rotation in meters and in radians */
-    double  dm = 0.00001,  drad = 0.0000001;
+    double  dm = 0.000000000001,  drad = 0.000000000001;
 
     cal = malloc (sizeof (Calibration));
     memcpy(cal, cal_in, sizeof (Calibration));
@@ -301,6 +301,7 @@ double* orient (Calibration* cal_in, control_par *cpar, int nfix, vec3d fix[],
     } else{
         numbers = 16;
     }
+
 
     vec_set(glass_dir, 
         cal->glass_par.vec_x, cal->glass_par.vec_y, cal->glass_par.vec_z);
@@ -344,6 +345,7 @@ double* orient (Calibration* cal_in, control_par *cpar, int nfix, vec3d fix[],
 
     itnum = 0;  
     stopflag = 0;
+
     while ((stopflag == 0) && (itnum < NUM_ITER)) {
       itnum++;
 
@@ -361,22 +363,32 @@ double* orient (Calibration* cal_in, control_par *cpar, int nfix, vec3d fix[],
         }
 
         /* get metric flat-image coordinates of the detected point */
+        // printf("itnum = %d, pnr = %d i = %d, pix[i].x = %f, pix[i].y = %f\n", itnum, pix[i].pnr, i, pix[i].x, pix[i].y);
         pixel_to_metric (&xc, &yc, pix[i].x, pix[i].y, cpar);
+        // printf("xc = %f, yc = %f\n", xc, yc);
         correct_brown_affin (xc, yc, cal->added_par, &xc, &yc);
+        // printf("after brown affin xc = %f, yc = %f\n", xc, yc);
 
         /* Projected 2D position on sensor of corresponding known point */
         rotation_matrix(&(cal->ext_par));
+        // printf("fix[i].x = %f, fix[i].y = %f, fix[i].z = %f\n", fix[i][0], fix[i][1], fix[i][2]);
+
         img_coord (fix[i], cal, cpar->mm, &xp, &yp);
+        
+        printf("xp = %f, yp = %f\n", xp, yp);
 
         /* derivatives of distortion parameters */
 
         r = sqrt (xp*xp + yp*yp);
+        printf("r = %f\n", r);
+        printf("cal->added_par.scx = %f\n", cal->added_par.scx);
+        printf("cal->added_par.she = %f\n", cal->added_par.she);
 
         X[n][7] = cal->added_par.scx;
         X[n+1][7] = sin(cal->added_par.she);
 
-        X[n][8] = 0;
-        X[n+1][8] = 1;
+        X[n][8] = 0.0;
+        X[n+1][8] = 1.0;
 
         X[n][9] = cal->added_par.scx * xp * r*r;
         X[n+1][9] = yp * r*r;
@@ -501,24 +513,50 @@ double* orient (Calibration* cal_in, control_par *cpar, int nfix, vec3d fix[],
       sumP = 0;
       for (i = 0; i < n_obs; i++) {       	/* homogenize */
           p = sqrt (P[i]);
+          // printf("p = %f\n", p);
           for (j = 0; j < NPAR; j++)
               Xh[i][j] = p * X[i][j];
+              // printf("Xh[%d][%d] = %f\n", i, j, Xh[i][j]);
             
           yh[i] = p * y[i];
+          // printf("yh[%d] = %f\n", i, yh[i]);
           sumP += P[i];
       }
         
       /* Gauss Markoff Model it is the least square adjustment 
          of the redundant information contained both in the spatial 
-         intersection and the resection, see [1], eq. 23 */
+         intersection and the resection, see [1], eq. 23 */ 
+
+        for (i = 0; i < n_obs; i++) {       	/* homogenize */
+                for (j = 0; j < NPAR; j++){
+                    printf("Xh[%d][%d] = %f\n", i, j, Xh[i][j]);
+                }
+        }         
+      
       ata ((double *) Xh, (double *) XPX, n_obs, numbers, NPAR );
+
+        for (i = 0; i < n_obs; i++) {       	/* homogenize */
+                for (j = 0; j < NPAR; j++){
+                    printf("XPX[%d][%d] = %f\n", i, j, XPX[i][j]);
+                }
+        }
+                    
+
       matinv ((double *) XPX, numbers, NPAR);
+        // for (i = 0; i < n_obs; i++) {       	/* homogenize */
+        //         for (j = 0; j < NPAR; j++){
+        //             printf("XPX[%d][%d] = %f\n", i, j, XPX[i][j]);
+        //         }
+        // }
+
+
       atl ((double *) XPy, (double *) Xh, yh, n_obs, numbers, NPAR);
       matmul ((double *) beta, (double *) XPX, (double *) XPy, 
-          numbers, numbers,1, NPAR, NPAR);
+          numbers, numbers, 1, NPAR, NPAR);
 
       stopflag = 1;
       for (i = 0; i < numbers; i++) {
+          printf("beta[%d] = %f\n", i, beta[i]);
           if (fabs (beta[i]) > CONVERGENCE)  stopflag = 0;
       }
 
@@ -572,6 +610,7 @@ double* orient (Calibration* cal_in, control_par *cpar, int nfix, vec3d fix[],
 
     for (i = 0; i < numbers; i++) { 
         sigmabeta[i] = sigmabeta[NPAR] * sqrt(XPX[i][i]);
+        printf("sigmabeta[%d] = %f\n", i, sigmabeta[i]);
     }
 
     free(X);
@@ -614,7 +653,7 @@ double* orient (Calibration* cal_in, control_par *cpar, int nfix, vec3d fix[],
 int raw_orient (Calibration* cal, control_par *cpar, int nfix, vec3d fix[], target pix[])
 {
     double  X[10][6], y[10], XPX[6][6], XPy[6], beta[6];
-    int     i, j, n, itnum, stopflag;
+    int     i, j, n=0, itnum, stopflag;
     double  dm = 0.0001,  drad = 0.0001;
     double 	xp, yp, xc, yc;
     vec3d   pos;
@@ -644,7 +683,7 @@ int raw_orient (Calibration* cal, control_par *cpar, int nfix, vec3d fix[], targ
     while ((stopflag == 0) && (itnum < 20)) {
         ++itnum;
 
-        for (i = 0, n = 0; i < nfix; i++) {
+        for (i = 0; i < nfix; i++) {
             /* we do not check the order - trust the user to click the points
                in the correct order of appearance in man_ori and in the calibration
                parameters GUI
@@ -661,12 +700,15 @@ int raw_orient (Calibration* cal, control_par *cpar, int nfix, vec3d fix[], targ
     
             /* numeric derivatives of internal camera coefficients */
             num_deriv_exterior(cal, cpar, dm, drad, pos, X[n], X[n + 1]);
+            printf("num_deriv_exterior: i=%d n= %d %f %f \n", i, n, *X[n], *X[n+1]);
     
             y[n]   = xc - xp;
             y[n+1] = yc - yp;
     
             n += 2;
         }
+        
+
 
         /* Gauss Markoff Model */
     

@@ -8,6 +8,7 @@
 #include <check.h>
 #include <stdlib.h>
 #include <stdio.h>
+// #include <tiffio.h>
 
 #include "parameters.h"
 #include "image_processing.h"
@@ -354,7 +355,6 @@ START_TEST(test_highpass)
     free(img_hp);
 }
 END_TEST
-
 
 Suite* fb_suite(void) {
     Suite *s = suite_create ("Image processing");

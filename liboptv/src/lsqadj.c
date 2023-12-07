@@ -13,13 +13,13 @@
 *
 *   Arguments:
 *   a - matrix of doubles of the size (m x n_large).
-*   ata  - matrix of the result multiply(a.T,a) of size (n x n)
+*   at  - matrix of the result multiply(a.T,a) of size (n x n)
 *   m - number of rows in matrix a
 *   n - number of rows and columns in the output ata - the size of the sub-matrix
 *   n_large - number of columns in matrix a
 */
 
-void ata (double *a, double *ata, int m, int n, int n_large ) {
+void ata (double *a, double *at, int m, int n, int n_large ) {
 /* matrix a and result matrix ata = at a 
                a is m * n, ata is n * n  */
 
@@ -29,9 +29,11 @@ void ata (double *a, double *ata, int m, int n, int n_large ) {
     {
       for (j = 0; j < n; j++)
     {
-      *(ata+i*n_large+j) = 0.0;
-      for (k = 0; k < m; k++)
-        *(ata+i*n_large+j) +=  *(a+k*n_large+i)  * *(a+k*n_large+j);
+      // *(at+i*n_large+j) = 0.0; //I think it's a serious bug, AL 
+      *(at+i*n+j) = 0.0;
+      for (k = 0; k < m; k++){
+        *(at+i*n+j) +=  *(a+k*n_large+i)  * *(a+k*n_large+j);
+        }
     }
     }
 }

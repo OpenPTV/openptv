@@ -79,6 +79,28 @@ START_TEST(test_ata)
 }
 END_TEST
 
+START_TEST(test_ata_2)
+{
+
+    double a[4][3] = {{1, 0, 1}, {2, 2, 4},{1, 2, 3}, {2, 4, 3}};
+    double b[2][2] = {{0,0},{0,0}};
+    double expected[2][2] = {{10, 14}, {14, 24}};
+    
+    int i, j;
+    
+    ata((double*) a, (double *) b, 4, 2, 3);
+
+    printf("--------------------------- \n");
+    for (i=0; i<2; i++){
+            for (j=0; j<2; j++){
+                ck_assert_msg(fabs(b[i][j] - expected[i][j]) < EPS, "wrong item \
+                  [%d][%d] %f instead of %f", i,j,b[i][j],expected[i][j]);
+                }
+            }
+    
+}
+END_TEST
+
 START_TEST(test_atl)
 {
 
@@ -133,6 +155,7 @@ Suite* fb_suite(void) {
     TCase *tc = tcase_create ("lsadj test");
     tcase_add_test(tc, test_matmul);
     tcase_add_test(tc, test_ata);
+    tcase_add_test(tc, test_ata_2);
     tcase_add_test(tc, test_atl);
     tcase_add_test(tc, test_matinv);
     suite_add_tcase (s, tc);   

@@ -37,7 +37,11 @@ void  multimed_nlay (Calibration *cal, mm_np *mm, vec3d pos,
     double  radial_shift;
       
     radial_shift = multimed_r_nlay (cal, mm, pos);
-    //  printf("radial shift is %f\n", radial_shift); 
+    // printf("pos is %f, %f, %f\n", pos[0], pos[1], pos[2]);
+    // printf("radial shift is %f\n", radial_shift);
+    // if (radial_shift == NAN || radial_shift == 0 || radial_shift == 1.0){
+    //     printf(" Error in multimed_r_nlay\n");
+    // }
 
     /* if radial_shift == 1.0, this degenerates to Xq = X, Yq = Y  */
     *Xq = cal->ext_par.x0 + (pos[0] - cal->ext_par.x0) * radial_shift;
@@ -85,6 +89,7 @@ double multimed_r_nlay (Calibration *cal, mm_np *mm, vec3d pos) {
         zout += mm->d[i];
     
     r = norm((X - cal->ext_par.x0), (Y - cal->ext_par.y0), 0);
+    // printf("X=%f, Y=%f, Z=%f\n", X, Y, Z);
     // printf("r is %f\n", r);
     rq = r;
   
@@ -333,7 +338,7 @@ void init_mmlut (volume_par *vpar, control_par *cpar, Calibration *cal) {
 
   /* round values (-> enlarge) */
   Rmax += (rw - fmod (Rmax, rw));
-//   printf("inside init_mmlut: Rmax=%f, Zmin_t=%f, Zmax_t=%f\n", Rmax, Zmin_t, Zmax_t);
+  printf("inside init_mmlut: Rmax=%f, Zmin_t=%f, Zmax_t=%f\n", Rmax, Zmin_t, Zmax_t);
 
   /* get # of rasterlines in r,z */
   nr = (int)(Rmax/rw + 1);

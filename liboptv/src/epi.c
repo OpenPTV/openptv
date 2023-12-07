@@ -177,12 +177,12 @@ int find_candidate (coord_2d *crd, target *pix, int num,
           j0 -= dj;
   }
 
-  printf("j0 before : %d\n", j0);    
+  // printf("j0 before : %d\n", j0);    
   /* due to truncation error we might shift to smaller x */
   j0 -= 12;  
   if (j0 < 0)  j0 = 0; 
 
-  printf("j0: %d\n", j0);
+  // printf("j0: %d\n", j0);
 
   for (j = j0; j < num; j++) {  /* candidate search */
       	
@@ -205,10 +205,10 @@ int find_candidate (coord_2d *crd, target *pix, int num,
         
       p2 = crd[j].pnr;
 
-      printf("j: %d p2: %d %8.6f %8.6f\n", j, p2, d, tol_band_width);
+      // printf("j: %d p2: %d %8.6f %8.6f\n", j, p2, d, tol_band_width);
       
       if (p2 >= num) {
-          printf("pnr out of range: %d\n", p2);
+          // printf("pnr out of range: %d\n", p2);
           return -1;
       }
 					  
@@ -241,7 +241,7 @@ int find_candidate (coord_2d *crd, target *pix, int num,
       cand[count].corr = corr;
       count++;
 
-      printf("cand[%d].pnr:%d %f %f \n", count-1, cand[count-1].pnr, cand[count-1].tol, cand[count-1].corr);
+      // printf("cand[%d].pnr:%d %f %f \n", count-1, cand[count-1].pnr, cand[count-1].tol, cand[count-1].corr);
   }
   return count;
 }

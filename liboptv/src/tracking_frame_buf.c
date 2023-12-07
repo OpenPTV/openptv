@@ -239,6 +239,7 @@ int read_path_frame(corres *cor_buf, P *path_buf, \
     because we read to EOF anyway. */
     
     sprintf(fname, "%s.%d", corres_file_base, frame_num);
+    printf("Reading frame %d from %s\n", frame_num, fname);
     filein = fopen (fname, "r");
     if (!filein) {
         /* Keeping the printf until we have proper logging. */
@@ -323,6 +324,10 @@ int read_path_frame(corres *cor_buf, P *path_buf, \
             &read_res, &(path_buf->x[0]), &(path_buf->x[1]), &(path_buf->x[2]),
             &(cor_buf->p[0]), &(cor_buf->p[1]), &(cor_buf->p[2]),
             &(cor_buf->p[3]) );
+        printf("Read %d %lf %lf %lf %d %d %d %d\n",\
+            read_res, path_buf->x[0], path_buf->x[1], path_buf->x[2],
+            cor_buf->p[0], cor_buf->p[1], cor_buf->p[2],
+            cor_buf->p[3]);
         
         if (read_res != 8) {
             targets = -1;
@@ -512,6 +517,8 @@ int read_frame(frame *self, char *corres_file_base, char *linkage_file_base,
         self->num_targets[cam] = read_targets(
             self->targets[cam], target_file_base[cam], frame_num);
         if (self->num_targets[cam] == -1) return 0;
+        printf("Read %d targets from %s\n", self->num_targets[cam],
+            target_file_base[cam]);
     }
     
     return 1;

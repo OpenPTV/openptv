@@ -39,13 +39,25 @@ void flat_image_coord (vec3d orig_pos, Calibration *cal, mm_np *mm,
     */
     trans_Cam_Point(cal->ext_par, *mm, cal->glass_par, orig_pos, \
          &(cal_t.ext_par), pos_t, cross_p, cross_c);
-    multimed_nlay (&cal_t, mm, pos_t, &X_t,&Y_t);
+    
+    // printf("pos_t: %f, %f, %f\n", pos_t[0], pos_t[1], pos_t[2]);
+    // printf("cross_p: %f, %f, %f\n", cross_p[0], cross_p[1], cross_p[2]);
+    // printf("cross_c: %f, %f, %f\n", cross_c[0], cross_c[1], cross_c[2]);
+
+    multimed_nlay (&cal_t, mm, pos_t, &X_t, &Y_t);
+    // printf("X_t: %f, Y_t: %f\n", X_t, Y_t);
+
     vec_set(pos_t,X_t,Y_t,pos_t[2]);
+
     back_trans_Point(pos_t, *mm, cal->glass_par, cross_p, cross_c, pos);
+
+    // printf("pos: %f, %f, %f\n", pos[0], pos[1], pos[2]);
 
     deno = cal->ext_par.dm[0][2] * (pos[0]-cal->ext_par.x0)
     + cal->ext_par.dm[1][2] * (pos[1]-cal->ext_par.y0)
     + cal->ext_par.dm[2][2] * (pos[2]-cal->ext_par.z0);
+
+    // printf("deno: %f\n", deno);
 
     *x = - cal->int_par.cc *  (cal->ext_par.dm[0][0] * (pos[0]-cal->ext_par.x0)
           + cal->ext_par.dm[1][0] * (pos[1]-cal->ext_par.y0)
@@ -54,6 +66,8 @@ void flat_image_coord (vec3d orig_pos, Calibration *cal, mm_np *mm,
     *y = - cal->int_par.cc *  (cal->ext_par.dm[0][1] * (pos[0]-cal->ext_par.x0)
           + cal->ext_par.dm[1][1] * (pos[1]-cal->ext_par.y0)
           + cal->ext_par.dm[2][1] * (pos[2]-cal->ext_par.z0)) / deno;
+
+    // printf("x: %f, y: %f\n", *x, *y);
 }
 
 /*  img_coord() uses flat_image_coord() to estimate metric coordinates in image space
@@ -70,6 +84,7 @@ void flat_image_coord (vec3d orig_pos, Calibration *cal, mm_np *mm,
 */
 void img_coord (vec3d pos, Calibration *cal, mm_np *mm, double *x, double *y) {
     flat_image_coord (pos, cal, mm, x, y);
+    // printf("x: %f, y: %f\n", *x, *y);
     flat_to_dist(*x, *y, cal, x, y);
 }
 

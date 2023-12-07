@@ -14,6 +14,7 @@ References:
 ****************************************************************************/
 
 #include "trafo.h"
+#include <stdio.h> /* for printf() */
 
 /* for the correction routine: */
 #include <math.h>
@@ -169,7 +170,7 @@ void metric_to_pixel(double * x_pixel
 void distort_brown_affin (double x, double y, ap_52 ap, double *x1, double *y1){
   double		r;
   
-  
+//   printf("x: %f, y: %f\n", x, y);
   r = sqrt (x*x + y*y);
   if (r != 0)
     {
@@ -178,9 +179,17 @@ void distort_brown_affin (double x, double y, ap_52 ap, double *x1, double *y1){
       
       y += y * (ap.k1*r*r + ap.k2*r*r*r*r + ap.k3*r*r*r*r*r*r)
 	+ ap.p2 * (r*r + 2*y*y) + 2*ap.p1*x*y;
+
+    //   printf("x: %f, y: %f\n", x, y);
+    //   printf("ap.scx: %f, ap.she: %f\n", ap.scx, ap.she);
       
       *x1 = ap.scx * x - sin(ap.she) * y;  *y1 = cos(ap.she) * y;
     }
+    else
+        {
+        *x1 = 0;  *y1 = 0;
+        }
+    // printf("x1: %f, y1: %f\n", *x1, *y1);
 }
 
 /*  correct distorted to flat-image coordinates, see correct_brown_affine_exact(),
@@ -269,10 +278,15 @@ void flat_to_dist(double flat_x, double flat_y, Calibration *cal,
 {
     /* Make coordinates relative to sessor center rather than primary point
        image coordinates, because distortion formula assumes it, [1] p.180 */
+
+    // printf("flat_x: %f, flat_y: %f\n", flat_x, flat_y);
+    // printf("cal->int_par.xh: %f, cal->int_par.yh: %f\n", cal->int_par.xh, cal->int_par.yh);
     flat_x += cal->int_par.xh;
     flat_y += cal->int_par.yh;
+    // printf("flat_x: %f, flat_y: %f\n", flat_x, flat_y);
     
     distort_brown_affin(flat_x, flat_y, cal->added_par, dist_x, dist_y);
+    // printf("dist_x: %f, dist_y: %f\n", *dist_x, *dist_y);
 }
 
 /*  dist_to_flat() attempts to restore metric flat-image positions from metric 

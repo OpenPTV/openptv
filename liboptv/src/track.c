@@ -348,17 +348,22 @@ int candsearch_in_pix_rest (target next[], int num_targets, double cent_x, doubl
             }	
 
             j0 -= 12;  if (j0 < 0) j0 = 0;             /* due to trunc */	
-            for (j = j0; j<num_targets; j++) {           /* candidate search */	
+            for (j = j0; j<num_targets; j++) {           /* candidate search */
+                printf("next[j].tnr %d\n", next[j].tnr);
+                printf("next[j].y %f\n", next[j].y);
+                printf("next[j].x %f\n", next[j].x);	
                 if (next[j].tnr == TR_UNUSED ) {	
                     if (next[j].y > ymax ) break;                     /* finish search */	
                     if (next[j].x > xmin && next[j].x < xmax \
                         && next[j].y > ymin && next[j].y < ymax) {	
                         d = sqrt ((cent_x-next[j].x)*(cent_x-next[j].x) + \
                                   (cent_y-next[j].y)*(cent_y-next[j].y));	
+                        printf("d %f\n", d);
 
                         if (d < dmin) {	
                             dmin = d;	
-                            p[0] = j;	
+                            p[0] = j;
+                            printf("p[0] %d\n", p[0]);	
                         }   	
                     }	
                 }	
@@ -426,10 +431,12 @@ void searchquader(vec3d point, double xr[4], double xl[4], double yd[4], \
 
         /* pixel position of a search center */
         point_to_pixel (center, point, cal[i], cpar);
+        //  printf(" center %f %f\n", center[0], center[1]);
 
         /* mark 4 corners of the search region in pixels */
         for (pt = 0; pt < 8; pt++) {
             point_to_pixel (corner, quader[pt], cal[i], cpar);
+            //  printf(" corner %f %f\n", corner[0], corner[1]);
 
             if (corner[0] < xl[i] ) xl[i] = corner[0];
             if (corner[1] < yu[i] ) yu[i] = corner[1];
@@ -444,11 +451,15 @@ void searchquader(vec3d point, double xr[4], double xl[4], double yd[4], \
         if (yd[i] > cpar->imy)
             yd[i] = cpar->imy;
 
+        //  printf(" xl %f xr %f yu %f yd %f\n", xl[i], xr[i], yu[i], yd[i]);
+
         /* eventually xr,xl,yd,yu are pixel distances relative to the point */
         xr[i] = xr[i]     - center[0];
         xl[i] = center[0] - xl[i];
         yd[i] = yd[i]     - center[1];
         yu[i] = center[1] - yu[i];
+
+        // printf(" xl %f xr %f yu %f yd %f\n", xl[i], xr[i], yu[i], yd[i]);
     }
 }
 
@@ -557,7 +568,9 @@ void sort(int n, float a[], int b[]){
  */
 void point_to_pixel (vec2d v1, vec3d point, Calibration *cal, control_par *cpar){
     img_coord(point, cal, cpar->mm, &v1[0], &v1[1]);
+    // printf(" point_to_pixel %8.6f %8.6f\n", v1[0], v1[1]);
     metric_to_pixel(&v1[0], &v1[1], v1[0], v1[1], cpar);
+    // printf(" point_to_pixel %8.6f %8.6f\n", v1[0], v1[1]);
 }
 
 /* sorted_candidates_in_volume() receives a volume center and produces a list
@@ -646,18 +659,23 @@ int assess_new_position(vec3d pos, vec2d targ_pos[],
 
     for (cam = 0; cam < run->cpar->num_cams; cam++) {
         point_to_pixel(pixel, pos, run->cal[cam], run->cpar);
+        printf("pos %f %f %f pixel %f %f\n", pos[0], pos[1], pos[2], pixel[0], pixel[1]);
         
         /* here we shall use only the 1st neigbhour */
         num_cands = candsearch_in_pix_rest (frm->targets[cam], frm->num_targets[cam],
             pixel[0], pixel[1], left, right, up, down, 
             cand_inds[cam], run->cpar);
         
-        // printf("num_cands after pix_rest is %d\n",num_cands);
+        printf("num_cands after pix_rest is %d\n",num_cands);
+        for (int i=0; i<num_cands; i++) {
+            printf("cand_inds %d %d\n",cam, cand_inds[cam][i]);
+        }
 
         if (num_cands > 0) {
             _ix = cand_inds[cam][0];  // first nearest neighbour
             targ_pos[cam][0] = frm->targets[cam][_ix].x;
             targ_pos[cam][1] = frm->targets[cam][_ix].y;
+            printf("nearest neighbour: %f %f\n", targ_pos[cam][0], targ_pos[cam][1]);
         }
     }
 
@@ -782,16 +800,20 @@ void trackcorr_c_loop (tracking_run *run_info, int step) {
 
         /* 3D-position */
         vec_copy(X[1], curr_path_inf->x);
+        printf("X[1] %f %f %f\n", X[1][0], X[1][1], X[1][2]);
 
         /* use information from previous to locate new search position
            and to calculate values for search area */
         if (curr_path_inf->prev >= 0) {
             ref_path_inf = &(fb->buf[0]->path_info[curr_path_inf->prev]);
             vec_copy(X[0], ref_path_inf->x);
+            printf("X0 %f %f %f\n", X[0][0], X[0][1], X[0][2]);
             search_volume_center_moving(ref_path_inf->x, curr_path_inf->x, X[2]);
+            printf("X2 %f %f %f\n", X[2][0], X[2][1], X[2][2]);
 
             for (j = 0; j < fb->num_cams; j++) {
                 point_to_pixel (v1[j], X[2], cal[j], cpar);
+                printf("if prev v1 %f %f\n", v1[j][0], v1[j][1]);
             }
         } else {
             vec_copy(X[2], X[1]);
@@ -802,10 +824,12 @@ void trackcorr_c_loop (tracking_run *run_info, int step) {
                     _ix = curr_corres->p[j];
                     v1[j][0] = curr_targets[j][_ix].x;
                     v1[j][1] = curr_targets[j][_ix].y;
+                    printf("no prev v1 %f %f\n", v1[j][0], v1[j][1]);
                 }
             }
 
         }
+        
 
         /* calculate search cuboid and reproject it to the image space */
         w = sorted_candidates_in_volume(X[2], v1, fb->buf[2], run_info);
@@ -821,6 +845,7 @@ void trackcorr_c_loop (tracking_run *run_info, int step) {
             /* found 3D-position */
             ref_path_inf = &(fb->buf[2]->path_info[w[mm].ftnr]);
             vec_copy(X[3], ref_path_inf->x);
+            printf("X3 %f %f %f\n", X[3][0], X[3][1], X[3][2]);
 
             if (curr_path_inf->prev >= 0) {
                 for (j = 0; j < 3; j++)
@@ -828,9 +853,11 @@ void trackcorr_c_loop (tracking_run *run_info, int step) {
             } else {
                 search_volume_center_moving(X[1], X[3], X[5]);
             }
+            printf("X5 %f %f %f\n", X[5][0], X[5][1], X[5][2]);
 
             for (j = 0; j < fb->num_cams; j++) {
                 point_to_pixel (v1[j], X[5], cal[j], cpar);
+                printf("v1 %f %f\n", v1[j][0], v1[j][1]);
             }
 
             /* end of search in pix */
@@ -841,8 +868,12 @@ void trackcorr_c_loop (tracking_run *run_info, int step) {
                 while (wn[kk].ftnr != TR_UNUSED) {
                     ref_path_inf = &(fb->buf[3]->path_info[wn[kk].ftnr]);
                     vec_copy(X[4], ref_path_inf->x);
+                    printf("X4 %f %f %f\n", X[4][0], X[4][1], X[4][2]);
 
                     vec_subt(X[4], X[3], diff_pos);
+                    printf("inside kk loop %d \n", kk);
+                    printf("diff_pos %f %f %f\n", diff_pos[0], diff_pos[1], diff_pos[2]);
+
                     if ( pos3d_in_bounds(diff_pos, tpar)) {
                         angle_acc(X[3], X[4], X[5], &angle1, &acc1);
                         if (curr_path_inf->prev >= 0) {
@@ -861,6 +892,11 @@ void trackcorr_c_loop (tracking_run *run_info, int step) {
                                 vec_diff_norm(X[4], X[3]) )/2;
                             rr = (dl/run_info->lmax + acc/tpar->dacc + \
                                 angle/tpar->dangle)/(quali);
+
+                            printf("kk %d\n", kk);
+                            printf("rr %f\n", rr);
+                            printf("w[mm].ftnr %d\n", w[mm].ftnr);
+
                             register_link_candidate(
                                 curr_path_inf, rr, w[mm].ftnr);
                         }
@@ -875,6 +911,8 @@ void trackcorr_c_loop (tracking_run *run_info, int step) {
              *  and search for unused candidates in next time step
              */
             quali = assess_new_position(X[5], v2, philf, fb->buf[3], run_info); 
+            printf("quali %d\n", quali);
+            printf("v2[0] %f %f\n", v2[0][0], v2[0][1]);
                         
             /* quali >=2 means at least in two cameras
              * we found a candidate
@@ -893,8 +931,11 @@ void trackcorr_c_loop (tracking_run *run_info, int step) {
                 }
 
                 vec_subt(X[3], X[4], diff_pos);
+                printf("second diff_pos %f %f %f\n", diff_pos[0], diff_pos[1], diff_pos[2]);
+
                 if ( in_volume == 1 && pos3d_in_bounds(diff_pos, tpar) ) {
                     angle_acc(X[3], X[4], X[5], &angle, &acc);
+                    printf("acc %f angle %f \n", acc, angle);
 
                     if ((acc < tpar->dacc && angle < tpar->dangle) || \
                         (acc < tpar->dacc/10))
@@ -904,6 +945,9 @@ void trackcorr_c_loop (tracking_run *run_info, int step) {
                         rr = (dl/run_info->lmax + acc/tpar->dacc + angle/tpar->dangle) /
                              (quali+w[mm].freq);
                         register_link_candidate(curr_path_inf, rr, w[mm].ftnr);
+                        printf("acc %f angle %f \n", acc, angle);
+                        printf("rr %f\n", rr);
+                        printf("w[mm].ftnr %d\n", w[mm].ftnr);
 
                         if (tpar->add) {
                             add_particle(fb->buf[3], X[4], philf);
@@ -933,6 +977,9 @@ void trackcorr_c_loop (tracking_run *run_info, int step) {
                               vec_diff_norm(X[0], X[1]) )/2;
                         rr = (dl/run_info->lmax + acc/tpar->dacc + angle/tpar->dangle)/(quali);
                         register_link_candidate(curr_path_inf, rr, w[mm].ftnr);
+                        printf("if prev exists %d \n", mm);
+                        printf("rr %f\n", rr);
+                        printf("wn[mm].ftnr %d\n", w[mm].ftnr);
                     }
                 }
             }
@@ -996,6 +1043,8 @@ void trackcorr_c_loop (tracking_run *run_info, int step) {
                  curr_path_inf->linkdecis);
             curr_path_inf->finaldecis = curr_path_inf->decis[0];
             curr_path_inf->next = curr_path_inf->linkdecis[0];
+            printf("curr_path_inf->next %d\n", curr_path_inf->next);
+            printf("curr_path_inf->finaldecis %f\n", curr_path_inf->finaldecis);
         }
     }
 
@@ -1009,6 +1058,7 @@ void trackcorr_c_loop (tracking_run *run_info, int step) {
             if (ref_path_inf->prev == PREV_NONE) {
                 /* best choice wasn't used yet, so link is created */
                 ref_path_inf->prev = h;
+                printf("link %d %d\n", h, curr_path_inf->next);
             } else {
                 /* best choice was already used by mega[2][mega[1][h].next].prev */
                 /* check which is the better choice */
