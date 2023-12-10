@@ -24,9 +24,9 @@ def check_inputs(inp_arr, out_arr):
                             + str(inp_arr.shape) + " != " + str(out_arr.shape))
     return out_arr
     
-def convert_arr_pixel_to_metric(np.ndarray[ndim=2, dtype=np.float_t] input,
+def convert_arr_pixel_to_metric(np.ndarray[np.float_t, ndim=2] input,
                                 ControlParams control,
-                                np.ndarray[ndim=2, dtype=np.float_t] out=None):
+                                np.ndarray[np.float_t, ndim=2] out=None):
     '''
     Convert NumPy 2d, Nx2 array from pixel coordinates to metric coordinates.
     Arguments:
@@ -39,9 +39,9 @@ def convert_arr_pixel_to_metric(np.ndarray[ndim=2, dtype=np.float_t] input,
     '''
     return convert_generic(input, control._control_par, out, pixel_to_metric)
   
-def convert_arr_metric_to_pixel(np.ndarray[ndim=2, dtype=np.float_t] input,
+def convert_arr_metric_to_pixel(np.ndarray[np.float_t, ndim=2] input,
                                 ControlParams control,
-                                np.ndarray[ndim=2, dtype=np.float_t] out=None):
+                                np.ndarray[np.float_t, ndim=2] out=None):
     '''
     Convert NumPy 2d, Nx2 array from metric coordinates to pixel coordinates.
     input - input Numpy ndarray of Nx2 shape.
@@ -53,10 +53,10 @@ def convert_arr_metric_to_pixel(np.ndarray[ndim=2, dtype=np.float_t] input,
     '''
     return convert_generic(input, control._control_par, out, metric_to_pixel)
 
-cdef convert_generic(np.ndarray[ndim=2, dtype=np.float_t] input,
+cdef convert_generic(np.ndarray[np.float_t, ndim=2] input,
                         control_par * c_control,
-                        np.ndarray[ndim=2, dtype=np.float_t] out,
-                        void convert_function(double * , double * , double, double , control_par *)):
+                        np.ndarray[np.float_t, ndim=2] out,
+                        void convert_function(double * , double * , double, double , control_par *)) noexcept nogil:
     out = check_inputs(input, out)
 
     for i in range(input.shape[0]):
@@ -69,9 +69,9 @@ cdef convert_generic(np.ndarray[ndim=2, dtype=np.float_t] input,
 
 # Affine #
 
-def correct_arr_brown_affine(np.ndarray[ndim=2, dtype=np.float_t] input,
+def correct_arr_brown_affine(np.ndarray[np.float_t, ndim=2] input,
                                 Calibration calibration,
-                                np.ndarray[ndim=2, dtype=np.float_t] out=None):
+                                np.ndarray[np.float_t, ndim=2] out=None):
     '''
     Correct crd to geo with Brown + affine.
     input - input Numpy ndarray of Nx2 shape.
@@ -85,9 +85,9 @@ def correct_arr_brown_affine(np.ndarray[ndim=2, dtype=np.float_t] input,
     return brown_affine_generic(input, calibration._calibration.added_par, out,
         correct_brown_affin)
   
-def distort_arr_brown_affine(np.ndarray[ndim=2, dtype=np.float_t] input,
+def distort_arr_brown_affine(np.ndarray[np.float_t, ndim=2] input,
                                 Calibration calibration,
-                                np.ndarray[ndim=2, dtype=np.float_t] out=None):
+                                np.ndarray[np.float_t, ndim=2] out=None):
     '''
     Transformation with Brown + affine. 
     input - input Numpy ndarray of Nx2 shape.
@@ -100,9 +100,9 @@ def distort_arr_brown_affine(np.ndarray[ndim=2, dtype=np.float_t] input,
     return brown_affine_generic(input, calibration._calibration.added_par, out,
         distort_brown_affin)
 
-cdef brown_affine_generic(np.ndarray[ndim=2, dtype=np.float_t] input,
+cdef brown_affine_generic(np.ndarray[np.float_t, ndim=2] input,
                         ap_52 c_ap_52,
-                        np.ndarray[ndim=2, dtype=np.float_t] out,
+                        np.ndarray[np.float_t, ndim=2] out,
                         void affine_function(double, double, ap_52 , double * , double *)):
     out = check_inputs(input, out)
     
@@ -114,8 +114,8 @@ cdef brown_affine_generic(np.ndarray[ndim=2, dtype=np.float_t] input,
                         , < double *> np.PyArray_GETPTR2(out, i, 1))
     return out
 
-def distorted_to_flat(np.ndarray[ndim=2, dtype=np.float_t] inp,
-    Calibration calibration, np.ndarray[ndim=2, dtype=np.float_t] out=None,
+def distorted_to_flat(np.ndarray[np.float_t, ndim=2] inp,
+    Calibration calibration, np.ndarray[np.float_t, ndim=2] out=None,
     double tol=0.00001):
     """
     Full, exact conversion of distorted metric coordinates to flat unshifted 

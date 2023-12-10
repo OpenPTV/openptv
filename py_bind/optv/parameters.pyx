@@ -6,7 +6,7 @@ import numpy
 numpy.import_array()
 
 cimport numpy as numpy
-from cpython cimport PyObject, Py_INCREF
+from cpython cimport Py_INCREF, PyObject, PyTypeObject
 
 cdef extern from "optv/parameters.h":
     int c_compare_mm_np "compare_mm_np"(mm_np * mm_np1, mm_np * mm_np2)
@@ -19,15 +19,22 @@ cdef extern from "optv/parameters.h":
     void c_free_sequence_par "free_sequence_par"(sequence_par * sp)
     int c_compare_sequence_par "compare_sequence_par"(sequence_par * sp1, sequence_par * sp2)
     
-    volume_par * c_read_volume_par "read_volume_par"(char * filename);
-    int c_compare_volume_par "compare_volume_par"(volume_par * v1, volume_par * v2);
+    volume_par * c_read_volume_par "read_volume_par"(char * filename)
+    int c_compare_volume_par "compare_volume_par"(volume_par * v1, volume_par * v2)
     
-    control_par * c_read_control_par "read_control_par"(char * filename);
-    control_par * c_new_control_par "new_control_par"(int cams);
-    void c_free_control_par "free_control_par"(control_par * cp);
-    int c_compare_control_par "compare_control_par"(control_par * c1, control_par * c2);
+    control_par * c_read_control_par "read_control_par"(char * filename)
+    control_par * c_new_control_par "new_control_par"(int cams)
+    void c_free_control_par "free_control_par"(control_par * cp)
+    int c_compare_control_par "compare_control_par"(control_par * c1, control_par * c2)
     
     target_par* read_target_par(char *filename)
+
+cdef extern from "numpy/arrayobject.h":
+    object PyArray_NewFromDescr(PyTypeObject* subtype, numpy.dtype descr,
+                                int nd, numpy.npy_intp* dims,
+                                numpy.npy_intp* strides,
+                                void* data, int flags, object obj)
+    int PyArray_SetBaseObject(numpy.ndarray arr, PyObject* obj)    
 
 cdef numpy.ndarray wrap_1d_c_arr_as_ndarray(object base_obj, 
     int arr_size, int num_type, void * data, int copy):
@@ -51,7 +58,8 @@ cdef numpy.ndarray wrap_1d_c_arr_as_ndarray(object base_obj,
     shape[0] = <numpy.npy_intp> arr_size
     
     ndarr = numpy.PyArray_SimpleNewFromData(1, shape, num_type, data)
-    ndarr.base = <PyObject *> base_obj
+    # ndarr.base = <PyObject *> base_obj
+    PyArray_SetBaseObject(ndarr, <PyObject *> base_obj)
     Py_INCREF(base_obj)
     
     if copy:
@@ -392,8 +400,12 @@ cdef class SequenceParams:
     # Get image base name of camera #cam
     def get_img_base_name(self, cam):
         cdef char * c_str = self._sequence_par[0].img_base_name[cam]
-        cdef py_str = c_str
+        # FILEPATH: /home/user/Documents/repos/openptv/py_bind/optv/parameters.pyx
+        # BEGIN: ed8c6549bwf9
+        cdef char* c_str = ...
+        py_str = c_str
         return py_str
+        # END: ed8c6549bwf9
     
     # Set image base name for camera #cam
     def set_img_base_name(self, cam, str new_img_name):
