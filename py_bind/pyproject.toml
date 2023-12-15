@@ -9,7 +9,7 @@ requires = [
 ]
 
 [tool.cibuildwheel]
-before-build = "pip install numpy cython && cd py_bind && python setup.py prepare"
+before-build = "pip install numpy cython==0.29.36 && cd py_bind && python setup.py prepare"
 test-requires = ["nose","six"]
 test-command = "cd {project}/py_bind/test && nosetests"
 skip = ["cp311-*","pp*"]
