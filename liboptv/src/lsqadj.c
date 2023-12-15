@@ -29,9 +29,9 @@ void ata (double *a, double *ata, int m, int n, int n_large ) {
     {
       for (j = 0; j < n; j++)
     {
-      *(ata+i*n+j) = 0.0;
+      *(ata+i*n_large+j) = 0.0;
       for (k = 0; k < m; k++)
-        *(ata+i*n+j) +=  *(a+k*n_large+i)  * *(a+k*n_large+j);
+        *(ata+i*n_large+j) +=  *(a+k*n_large+i)  * *(a+k*n_large+j);
     }
     }
 }
