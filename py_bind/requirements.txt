@@ -1,5 +1,5 @@
-cython
+cython >=0.29.28,<3.0a0
 nose
-numpy
+numpy >=1.23, <1.24
 pyyaml
 six
