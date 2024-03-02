@@ -18,9 +18,9 @@
 #include <string.h>
 #include <math.h>
 
-#define NUM_ITER  80
+#define NUM_ITER  200
 #define POS_INF 1E20
-#define CONVERGENCE 0.00001
+#define CONVERGENCE 0.0000001
 
 /*  skew_midpoint() finds the middle of the minimal distance segment between
     skew rays. Undefined for parallel rays.
@@ -362,6 +362,9 @@ double* orient (Calibration* cal_in, control_par *cpar, int nfix, vec3d fix[],
 
         /* get metric flat-image coordinates of the detected point */
         pixel_to_metric (&xc, &yc, pix[i].x, pix[i].y, cpar);
+        // In the Tcl/Tk they do not correct distortion parameters, Alex
+        // see https://github.com/OpenPTV/C-TclTk/blob/2ebab7cbb68bff7b81ceffe9ad054dacb6c8ce7a/src_c/jw_ptv.c#L1664
+
         correct_brown_affin (xc, yc, cal->added_par, &xc, &yc);
 
         /* Projected 2D position on sensor of corresponding known point */
@@ -461,6 +464,8 @@ double* orient (Calibration* cal_in, control_par *cpar, int nfix, vec3d fix[],
 
         y[n]   = xc - xp;
         y[n+1] = yc - yp;
+
+        // printf("y[%d] = %f, y[%d] = %f\n", n, y[n], n+1, y[n+1]);
 
         n += 2;
       }
@@ -581,6 +586,10 @@ double* orient (Calibration* cal_in, control_par *cpar, int nfix, vec3d fix[],
     free(Xh);
 
     if (stopflag){
+        printf("Successful calibration\n");
+        for (i = 0; i < numbers; i++) { 
+            printf("sigmabeta[%d]= %e\n", i, sigmabeta[i]);
+        }        
         rotation_matrix(&(cal->ext_par));
         memcpy(cal_in, cal, sizeof (Calibration));
         return resi;
