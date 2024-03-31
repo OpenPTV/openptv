@@ -1,0 +1,21 @@
+License Agreement PTV
+
+License Agreement
+By ordering this software, I accept this license Agreement
+Copyright (C) 1990-2005 Armin Gruen, IGP, ETH Zurich
+ Copyright (C) 1996-2005 Wolfgang Kinzelbach, IFU, ETH Zurich
+ Copyright (C) 1990-1993 Hans-Gerd Maas, IGP, ETH Zurich
+ Copyright (C) 1994-1996 Marko Virant, IFU, ETH Zurich
+ Copyright (C) 1997-1999 Heinrich Stuer, IFU, ETH Zurich
+ Copyright (C) 1999-2002 Jochen Willneff, IGP, ETH Zurich
+ All rights reserved.
+LICENSE AGREEMENT FOR ACADEMIC USE OF THE PARTICLE TRACKING VELOCIMETRY SOFTWARE
+This agreement between the:
+ Swiss Federal Institute ofTechnology (ETH Zurich) represented by the Institute of Geodesy andPhotogrammetry and the Institute of Environmental Engineering, referredto as IGP/IFU and the LICENSEE, regulates the use of the ParticleTracking Velocimetry software, referred to as SOFTWARE:
+1. The SOFTWARE, including the source code and associateddocumentation files, is delivered at no cost for academic use only. TheLicensee guarantees that the SOFTWARE is not used for any commercialpurpose. Special and written agreements between IGP/IFU and theLicensee are necessary to regulate commercial use of the SOFTWARE orderivative work by the Licensee based on the SOFTWARE.
+ 2. TheLicensee agrees to make available any derivative work to IGP/IFU foracademic use, under conditions covered by this agreement. The IGP/IFUagrees to a reciprocal acknowledgement and redistribution policy of thelicensee’s contribution in a similar manner as stated in Paragraph 3.
+ 3.In case of publications of results obtained with the SOFTWARE, theLicensee agrees to refer to the contributors of the SOFTWAREadequately, e.g. by referring to key publications.
+ 4. The Licenseeis not allowed to distribute the SOFTWARE to others without writtenpermission of IGP/IFU, except the academic institution the Licensee isaccredited with. Redistributions of the SOFTWARE must retain the abovecopyright notice, this list of conditions and the following disclaimersin the documentation and/or other materials provided with thedistribution.
+ 5. This license agreement is not restricted in time and governed by Swiss law. The place of jurisdiction is Zurich, Switzerland.
+ 6.The Licensee accepts this license agreement without any reservations.Violation of this agreement results in loss of the SOFTWARE license.Further juridical steps are reserved to IGP/IFU.
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANYKIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIESOF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE ANDNONINFRINGEMENT. IN NO EVENT SHALL THE CONTRIBUTORS OR COPYRIGHTHOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER INAN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR INCONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS WITH THESOFTWARE
