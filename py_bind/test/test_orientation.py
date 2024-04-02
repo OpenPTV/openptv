@@ -284,10 +284,10 @@ class TestGradientDescent(unittest.TestCase):
             self.cal, ref_pts, targets, self.control))
         np.testing.assert_array_almost_equal(
             self.cal.get_angles(), self.orig_cal.get_angles(),
-            decimal=4)
+            decimal=6)
         np.testing.assert_array_almost_equal(
             self.cal.get_pos(), self.orig_cal.get_pos(),
-            decimal=3)
+            decimal=6)
     
     def test_full_calibration(self):
         ref_pts = np.array([a.flatten() for a in np.meshgrid(
