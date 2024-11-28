@@ -6,6 +6,8 @@ channel_sources:
 - conda-forge
 channel_targets:
 - conda-forge main
+numpy:
+- '1.22'
 pin_run_as_build:
   python:
     min_pin: x.x
@@ -14,3 +16,6 @@ python:
 - 3.9.* *_cpython
 target_platform:
 - win-64
+zip_keys:
+- - python
+  - numpy
