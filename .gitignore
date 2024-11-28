@@ -25,3 +25,7 @@ py_bind/wheelhouse/*
 *.pyd
 *.pyc
 *.so
+# conda smithy ci-skeleton start
+*.pyc
+build_artifacts
+# conda smithy ci-skeleton end
