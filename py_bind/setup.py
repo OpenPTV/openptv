@@ -158,6 +158,7 @@ setup(
     install_requires=[
         'numpy<1.24',
         'pyyaml',
+        'matplotlib'
     ],
     setup_requires=['numpy'],
 )
