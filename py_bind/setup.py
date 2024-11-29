@@ -158,8 +158,9 @@ setup(
     version='0.2.9',
     install_requires=[
         'numpy<1.24',
+        'cython<3',
         'pyyaml',
         'matplotlib'
     ],
-    setup_requires=['numpy'],
+    setup_requires=['numpy','cython'],
 )
