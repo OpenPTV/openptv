@@ -41,9 +41,10 @@ requirements:
     - python
     - setuptools
     - pip
-    - numpy
-    - cython
+    - numpy<1.24
+    - cython<3.0
     - pyyaml
+    - six
   run:
     - python
     - {{ pin_compatible('numpy') }}
@@ -64,10 +65,10 @@ test:
 
 # Uncomment and fill in openptv metadata
 about:
- home: https://github.com/conda-forge/conda-smithy
- license: BSD-3-Clause
- license_family: BSD
- license_file: LICENSE
+ home: https://github.com/openptv
+ license: LGPL-3.0
+ license_family: GPL
+ license_file: COPYING.LESSER
 
 # Uncomment the following if this will be on a forge
 # Remove these lines if this is only be used for CI
