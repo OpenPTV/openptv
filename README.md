@@ -41,6 +41,28 @@ Instalation
 -----------
 See the documentation on <http://openptv-python.readthedocs.io/en/latest/> or respective subdirectories' README files for instructions on installing subpackages.
 
+Basic steps for C library users
+-------------------------------
+
+    cd liboptv
+    mkdir build & cd build
+    cmake ../
+    sudo make install
+    make verify
+
+Basic steps for Python users
+----------------------------
+
+    cd py_bind
+    python setup.py prepare
+    pip install . 
+    cd test
+    pytest
+
+
+
+
+
 Donations
 ---------
 Please consider donation to support our website and domain expenses and our developers during their job transitions.
