@@ -146,6 +146,7 @@ setup(
         'prepare': PrepareCommand,
     },
     packages=['optv'],
+    extra_compile_args=['-Wno-cpp'],
     ext_modules=ext_mods,
     include_package_data=True,
     data_files=[
@@ -154,7 +155,7 @@ setup(
     package_data={
         'optv': ['*.pxd', '*.c', '*.h'],
     },
-    version='0.2.8',
+    version='0.2.9',
     install_requires=[
         'numpy<1.24',
         'pyyaml',
