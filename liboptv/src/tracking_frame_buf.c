@@ -10,6 +10,7 @@ reading targets, correspondences, etc.
 #include <stdio.h>
 #include <stdlib.h>
 #include "tracking_frame_buf.h"
+#include "calibration.h"
 
 /* Check that target t1 is equal to target t2, i.e. all their fields are equal.
  * 

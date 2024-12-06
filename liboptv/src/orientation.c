@@ -723,10 +723,19 @@ int read_man_ori_fix(vec3d fix4[4], char* calblock_filename,
         goto handle_error;
     }
 
-    for (i=0; i<cam; i++)
-        fscanf (fpp, "%d %d %d %d \n", &dummy, &dummy, &dummy, &dummy);
-    fscanf (fpp, "%d %d %d %d \n", &nr[0], &nr[1], &nr[2], &nr[3]);
-    fclose (fpp);
+    for (i=0; i<cam; i++) {
+        if (fscanf(fpp, "%d %d %d %d \n", &dummy, &dummy, &dummy, &dummy) != 4) {
+            printf("Error reading manual orientation file %s\n", man_ori_filename);
+            fclose(fpp);
+            return 0;
+        }
+    }
+    if (fscanf(fpp, "%d %d %d %d \n", &nr[0], &nr[1], &nr[2], &nr[3]) != 4) {
+        printf("Error reading manual orientation file %s\n", man_ori_filename);
+        fclose(fpp);
+        return 0;
+    }
+    fclose(fpp);
 
     /* read the id and positions of the fixed points, assign the pre-defined to fix4 */
     fix = read_calblock(&num_fix, calblock_filename);

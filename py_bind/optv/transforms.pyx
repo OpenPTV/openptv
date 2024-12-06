@@ -53,18 +53,24 @@ def convert_arr_metric_to_pixel(np.ndarray[np.float_t, ndim=2] input,
     '''
     return convert_generic(input, control._control_par, out, metric_to_pixel)
 
-cdef convert_generic(np.ndarray[np.float_t, ndim=2] input,
-                        control_par * c_control,
-                        np.ndarray[np.float_t, ndim=2] out,
-                        void convert_function(double * , double * , double, double , control_par *)) noexcept nogil:
+cdef convert_generic(
+                     np.ndarray[np.float_t, ndim=2] input,
+                     control_par * c_control,
+                     np.ndarray[np.float_t, ndim=2] out,
+                     void (*convert_function)(double *, double *, double, double, control_par *)
+                    noexcept ):
+    # Acquire GIL before calling any GIL-requiring functions
     out = check_inputs(input, out)
 
     for i in range(input.shape[0]):
-        convert_function(< double *> np.PyArray_GETPTR2(out, i, 0)
-                        , < double *> np.PyArray_GETPTR2(out, i, 1)
-                        , (< double *> np.PyArray_GETPTR2(input, i, 0))[0]
-                        , (< double *> np.PyArray_GETPTR2(input, i, 1))[0]
-                        , c_control)
+        convert_function(<double *> np.PyArray_GETPTR2(out, i, 0),
+                        <double *> np.PyArray_GETPTR2(out, i, 1),
+                        (<double *> np.PyArray_GETPTR2(input, i, 0))[0],
+                        (<double *> np.PyArray_GETPTR2(input, i, 1))[0],
+                        c_control)
+
+    # Acquire GIL before returning the Python object
+
     return out
 
 # Affine #
@@ -103,7 +109,7 @@ def distort_arr_brown_affine(np.ndarray[np.float_t, ndim=2] input,
 cdef brown_affine_generic(np.ndarray[np.float_t, ndim=2] input,
                         ap_52 c_ap_52,
                         np.ndarray[np.float_t, ndim=2] out,
-                        void affine_function(double, double, ap_52 , double * , double *)):
+                        void (*affine_function)(double, double, ap_52, double *, double *) noexcept):
     out = check_inputs(input, out)
     
     for i in range(input.shape[0]):

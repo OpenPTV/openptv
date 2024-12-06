@@ -402,7 +402,7 @@ cdef class SequenceParams:
         cdef char * c_str = self._sequence_par[0].img_base_name[cam]
         # FILEPATH: /home/user/Documents/repos/openptv/py_bind/optv/parameters.pyx
         # BEGIN: ed8c6549bwf9
-        cdef char* c_str = ...
+        # cdef char* c_str = ...
         py_str = c_str
         return py_str
         # END: ed8c6549bwf9

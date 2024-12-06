@@ -84,11 +84,11 @@ cdef class MatchedCoords:
         """
         cdef:
             np.ndarray[ndim=2, dtype=np.float64_t] pos
-            np.ndarray[ndim=1, dtype=np.int_t] pnr
+            np.ndarray[ndim=1, dtype=np.int32_t] pnr
             int pt
         
         pos = np.empty((self._num_pts, 2))
-        pnr = np.empty(self._num_pts, dtype=np.int_)
+        pnr = np.empty(self._num_pts, dtype=np.int32)
         
         for pt in range(self._num_pts):
             pos[pt,0] = self.buf[pt].x
@@ -97,7 +97,7 @@ cdef class MatchedCoords:
         
         return pos, pnr
     
-    def get_by_pnrs(self, np.ndarray[ndim=1, dtype=np.int_t] pnrs):
+    def get_by_pnrs(self, np.ndarray[ndim=1, dtype=np.int32_t] pnrs):
         """
         Return the flat positions of points whose pnr property is given, as an
         (n,2) flat position array. Assumes all pnrs are to be found, otherwise
@@ -160,7 +160,7 @@ def correspondences(list img_pts, list flat_coords, list cals,
             num_cams * sizeof(coord_2d *))
         frame frm
         
-        np.ndarray[ndim=2, dtype=np.int_t] clique_ids
+        np.ndarray[ndim=2, dtype=np.int32_t] clique_ids
         np.ndarray[ndim=3, dtype=np.float64_t] clique_targs
         
         # Return buffers:

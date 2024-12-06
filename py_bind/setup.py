@@ -82,7 +82,7 @@ class BuildExt(build_ext, object):
                 del builtins.__NUMPY_SETUP__
             import importlib
             import numpy
-            importlib.reload(numpy)
+            # importlib.reload(numpy)
         else:
             import builtins
             if hasattr(__builtin__, '__NUMPY_SETUP__'):
@@ -122,7 +122,7 @@ def get_liboptv_sources():
 
 def mk_ext(name, files):
     # Do not specify include dirs, as they require numpy to be installed. Add them in BuildExt
-    return Extension(name, files + get_liboptv_sources())
+    return Extension(name, files + get_liboptv_sources(), define_macros=[('NPY_NO_DEPRECATED_API', 'NPY_1_7_API_VERSION')])
 
 
 ext_mods = [
@@ -154,9 +154,9 @@ setup(
     package_data={
         'optv': ['*.pxd', '*.c', '*.h'],
     },
-    version='0.2.8',
+    version='0.3.0',
     install_requires=[
-        'numpy<1.24',
+        'numpy',
         'pyyaml',
     ],
     setup_requires=['numpy'],
