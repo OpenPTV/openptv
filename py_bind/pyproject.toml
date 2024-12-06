@@ -1,15 +1,18 @@
 [build-system]
-# Minimum requirements for the build system to execute.
-requires = [
-    "packaging==20.5; platform_machine=='arm64'",  # macos M1
-    "setuptools==59.2.0",
-    "wheel==0.37.0",
-    "Cython",  # Note: keep in sync with tools/cythonize.py
+requires = ["flit_core >=2,<4"]
+build-backend = "flit_core.buildapi"
+
+[project]
+name = "optv"
+version = "0.3.0"
+description = "OpenPTV "
+authors = [
+    { name="Alex Liberzon", email="alex.liberzon@gmail.command"}
+]
+dependencies = [
     "numpy",
+    "cython"
 ]
 
 [tool.cibuildwheel]
 before-build = "pip install numpy cython && cd py_bind && python setup.py prepare"
-test-requires = ["nose","six"]
-test-command = "cd {project}/py_bind/test && nosetests"
-skip = ["cp310-*","pp*"]

@@ -1,7 +1,6 @@
 from optv.parameters cimport ControlParams, control_par
 import numpy as np
 cimport numpy as np
-from six import string_types
 
 def preprocess_image(np.ndarray[ndim=2, dtype=np.uint8_t] input_img,
                    int filter_hp,
@@ -42,10 +41,10 @@ def preprocess_image(np.ndarray[ndim=2, dtype=np.uint8_t] input_img,
         output_img = np.empty_like(input_img)
     
     if filter_hp == 2:
-        if filter_file == None or not isinstance(filter_file, string_types):
+        if filter_file is None or not isinstance(filter_file, str):
             raise ValueError("Expecting a filter file name, received None or non-string.")
     else:
-        filter_file=b""
+        filter_file = b""
         
     for arr in (input_img, output_img):
         if not arr.flags['C_CONTIGUOUS']:

@@ -83,19 +83,19 @@ cdef class MatchedCoords:
         pnr - n-length array, the corresponding target number for each point.
         """
         cdef:
-            np.ndarray[ndim=2, dtype=np.float64_t] pos
-            np.ndarray[ndim=1, dtype=np.int32_t] pnr
+            np.ndarray[ndim=2, dtype=np.float64_t] positions
+            np.ndarray[ndim=1, dtype=np.int32_t] point_numbers
             int pt
         
-        pos = np.empty((self._num_pts, 2))
-        pnr = np.empty(self._num_pts, dtype=np.int32)
+        positions = np.empty((self._num_pts, 2))
+        point_numbers = np.empty(self._num_pts, dtype=np.int32)
         
         for pt in range(self._num_pts):
-            pos[pt,0] = self.buf[pt].x
-            pos[pt,1] = self.buf[pt].y
-            pnr[pt] = self.buf[pt].pnr
+            positions[pt,0] = self.buf[pt].x
+            positions[pt,1] = self.buf[pt].y
+            point_numbers[pt] = self.buf[pt].pnr
         
-        return pos, pnr
+        return positions, point_numbers
     
     def get_by_pnrs(self, np.ndarray[ndim=1, dtype=np.int32_t] pnrs):
         """

@@ -68,15 +68,15 @@ class TestTracker(unittest.TestCase):
         self.tracker.restart()
         last_step = 10001
         while self.tracker.step_forward():
-            self.failUnless(self.tracker.current_step() > last_step)
+            self.assertTrue(self.tracker.current_step() > last_step)
             with open("testing_fodder/burgers/res/rt_is.%d" % last_step) as f:
                 lines = f.readlines()
                 # print(last_step,lines[0])
                 # print(lines)
                 if last_step == 10003:
-                    self.failUnless(lines[0] == "4\n")
+                    self.assertTrue(lines[0] == "4\n")
                 else:
-                    self.failUnless(lines[0] == "5\n")
+                    self.assertTrue(lines[0] == "5\n")
             last_step += 1
         self.tracker.finalize()
 
