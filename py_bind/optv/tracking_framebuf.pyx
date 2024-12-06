@@ -71,7 +71,7 @@ cdef class Target:
         return self._targ[0].pnr
     
     def set_pnr(self, pnr):
-        self._targ[0].pnr = pnr
+        self._targ[0].pnr = np.int32(pnr)
     
     def pos(self):
         """
