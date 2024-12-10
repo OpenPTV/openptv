@@ -591,6 +591,186 @@ double* orient (Calibration* cal_in, control_par *cpar, int nfix, vec3d fix[],
     }
 }
 
+
+// /* Improved camera calibration using Levenberg-Marquardt in plain C */
+// #include <stdio.h>
+// #include <stdlib.h>
+// #include <math.h>
+// #include <string.h>
+
+// #define MAX_ITER 50
+// #define LAMBDA_INIT 0.001
+// #define LAMBDA_UP_FACTOR 10
+// #define LAMBDA_DOWN_FACTOR 0.1
+// #define CONVERGENCE 1e-10
+// #define MAX_POINTS 5000
+
+// /* Simplified parameter vector layout:
+//  * 0-2: position (x,y,z)
+//  * 3-5: rotation (omega,phi,kappa)
+//  * 6: focal length
+//  * 7-8: principal point
+//  * 9-11: radial distortion
+//  * 12-13: tangential distortion
+//  * 14-15: scale and shear
+//  */
+
+// /* Function to compute residuals and Jacobian */
+// void compute_residuals_and_jacobian(double *params, const double *fix, 
+//     const double *pix, int nfix, double *residuals, double *jacobian, 
+//     double *work_matrix, int *n_obs) 
+// {
+//     int i, j, n = 0;
+//     double xp, yp, r2, r4, r6;
+    
+//     /* For each point */
+//     for (i = 0; i < nfix; i++) {
+//         /* Project 3D point to get predicted image coordinates */
+//         project_point(fix[i*3], fix[i*3+1], fix[i*3+2], params, &xp, &yp);
+        
+//         /* Compute radial terms */
+//         r2 = xp*xp + yp*yp;
+//         r4 = r2*r2;
+//         r6 = r4*r2;
+        
+//         /* Apply distortion model */
+//         double xd = xp * (1 + params[9]*r2 + params[10]*r4 + params[11]*r6);
+//         double yd = yp * (1 + params[9]*r2 + params[10]*r4 + params[11]*r6);
+        
+//         /* Compute residuals */
+//         residuals[n] = pix[i*2] - xd;
+//         residuals[n+1] = pix[i*2+1] - yd;
+        
+//         /* Compute Jacobian numerically using central differences */
+//         for (j = 0; j < NPAR; j++) {
+//             double delta = fabs(params[j]) * 1e-8 + 1e-8;
+//             double tmp = params[j];
+            
+//             /* Forward difference */
+//             params[j] = tmp + delta;
+//             project_point(fix[i*3], fix[i*3+1], fix[i*3+2], params, &xp, &yp);
+//             double xd1 = xp * (1 + params[9]*r2 + params[10]*r4 + params[11]*r6);
+//             double yd1 = yp * (1 + params[9]*r2 + params[10]*r4 + params[11]*r6);
+            
+//             /* Backward difference */
+//             params[j] = tmp - delta;
+//             project_point(fix[i*3], fix[i*3+1], fix[i*3+2], params, &xp, &yp);
+//             double xd2 = xp * (1 + params[9]*r2 + params[10]*r4 + params[11]*r6);
+//             double yd2 = yp * (1 + params[9]*r2 + params[10]*r4 + params[11]*r6);
+            
+//             /* Central difference */
+//             jacobian[n*NPAR + j] = (xd1 - xd2) / (2*delta);
+//             jacobian[(n+1)*NPAR + j] = (yd1 - yd2) / (2*delta);
+            
+//             params[j] = tmp;  /* Restore parameter */
+//         }
+//         n += 2;
+//     }
+//     *n_obs = n;
+// }
+
+// /* LM optimization core */
+// double* orient_lm(Calibration* cal_in, control_par *cpar, int nfix, vec3d fix[],
+//                  target pix[], orient_par *flags, double sigmabeta[20])
+// {
+//     double *residuals, *jacobian, *jt_j, *jt_r;
+//     double *params, *delta, *new_params;
+//     double lambda, old_error, new_error;
+//     int i, j, n_obs, iter;
+//     int converged = 0;
+    
+//     /* Allocate working memory */
+//     residuals = (double*)calloc(2*nfix, sizeof(double));
+//     jacobian = (double*)calloc(2*nfix*NPAR, sizeof(double));
+//     jt_j = (double*)calloc(NPAR*NPAR, sizeof(double));
+//     jt_r = (double*)calloc(NPAR, sizeof(double));
+//     params = (double*)calloc(NPAR, sizeof(double));
+//     delta = (double*)calloc(NPAR, sizeof(double));
+//     new_params = (double*)calloc(NPAR, sizeof(double));
+    
+//     /* Initialize parameters from input calibration */
+//     init_params(params, cal_in);
+    
+//     /* Initialize Levenberg-Marquardt parameters */
+//     lambda = LAMBDA_INIT;
+//     old_error = HUGE_VAL;
+    
+//     /* Main iteration loop */
+//     for (iter = 0; iter < MAX_ITER && !converged; iter++) {
+//         /* Compute residuals and Jacobian */
+//         compute_residuals_and_jacobian(params, fix, pix, nfix, residuals, 
+//                                      jacobian, jt_j, &n_obs);
+        
+//         /* Compute error */
+//         new_error = 0;
+//         for (i = 0; i < n_obs; i++) {
+//             new_error += residuals[i] * residuals[i];
+//         }
+        
+//         /* Check for divergence */
+//         if (new_error > old_error) {
+//             lambda *= LAMBDA_UP_FACTOR;
+//             if (lambda > 1e10) break;  /* Optimization failed */
+//             continue;
+//         }
+        
+//         /* Compute J^T * J and J^T * r */
+//         matrix_multiply(jacobian, jacobian, jt_j, n_obs, NPAR, NPAR, 1);
+//         matrix_multiply(jacobian, residuals, jt_r, n_obs, NPAR, 1, 0);
+        
+//         /* Add lambda to diagonal for LM damping */
+//         for (i = 0; i < NPAR; i++) {
+//             jt_j[i*NPAR + i] *= (1.0 + lambda);
+//         }
+        
+//         /* Solve normal equations */
+//         if (!solve_system(jt_j, jt_r, delta, NPAR)) {
+//             lambda *= LAMBDA_UP_FACTOR;
+//             continue;
+//         }
+        
+//         /* Update parameters */
+//         for (i = 0; i < NPAR; i++) {
+//             if (!flags->param_mask[i]) continue;  /* Skip fixed parameters */
+//             new_params[i] = params[i] + delta[i];
+//         }
+        
+//         /* Check convergence */
+//         double max_delta = 0;
+//         for (i = 0; i < NPAR; i++) {
+//             if (fabs(delta[i]) > max_delta) max_delta = fabs(delta[i]);
+//         }
+        
+//         if (max_delta < CONVERGENCE) {
+//             converged = 1;
+//         }
+        
+//         /* Accept update */
+//         memcpy(params, new_params, NPAR * sizeof(double));
+//         old_error = new_error;
+//         lambda *= LAMBDA_DOWN_FACTOR;
+//     }
+    
+//     /* Update calibration structure */
+//     update_calibration(cal_in, params);
+    
+//     /* Compute final residuals */
+//     compute_residuals_and_jacobian(params, fix, pix, nfix, residuals, jacobian, 
+//                                  jt_j, &n_obs);
+    
+//     /* Clean up */
+//     free(jacobian);
+//     free(jt_j);
+//     free(jt_r);
+//     free(params);
+//     free(delta);
+//     free(new_params);
+    
+//     return residuals;
+// }
+// 
+
+
 /*  raw_orient() uses manually clicked points to setup the first raw orientation of the
                 camera, setting its external parameters: position and angles.
     Calibration* cal  -      camera calibration object
