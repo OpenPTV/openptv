@@ -3,9 +3,9 @@ from libc.stdlib cimport malloc, free
 from libc.string cimport strncpy
 
 import numpy
-numpy.import_array()
-
 cimport numpy as numpy
+
+numpy.import_array()
 from cpython cimport PyObject, Py_INCREF
 
 cdef extern from "optv/parameters.h":
@@ -51,8 +51,12 @@ cdef numpy.ndarray wrap_1d_c_arr_as_ndarray(object base_obj,
     shape[0] = <numpy.npy_intp> arr_size
     
     ndarr = numpy.PyArray_SimpleNewFromData(1, shape, num_type, data)
-    ndarr.base = <PyObject *> base_obj
-    Py_INCREF(base_obj)
+
+    # Set the base object to ensure proper memory management
+    if base_obj is not None:
+        Py_INCREF(base_obj)
+        if numpy.PyArray_SetBaseObject(ndarr, base_obj) < 0:
+            raise MemoryError("Could not set base object")   
     
     if copy:
         return numpy.copy(ndarr)
@@ -782,7 +786,7 @@ cdef class TargetParams:
         copy - if True, return a copy of the underlying array. This way the 
             original is safe.
         """
-        return wrap_1d_c_arr_as_ndarray(self, num_cams, numpy.NPY_INT, 
+        return wrap_1d_c_arr_as_ndarray(self, num_cams, numpy.NPY_INT64, 
             self._targ_par.gvthres, (1 if copy else 0))
         
     def set_grey_thresholds(self, gvthresh):
