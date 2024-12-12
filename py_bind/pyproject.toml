@@ -9,8 +9,8 @@ build-backend = "setuptools.build_meta"
 skip = ["cp36-*", "cp37-*"]
 
 before-build = [
-    "pip install numpy'<1.24'",
-    "pip install cython'<3'",
+    "pip install numpy",
+    "pip install cython",
     "python setup.py prepare",
     "python setup.py build_ext --inplace",
     "cd ../"

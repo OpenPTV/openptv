@@ -21,7 +21,7 @@ DTYPE = np.uint8
 # "ctypedef" assigns a corresponding compile-time type to DTYPE_t. For
 # every type in the numpy module there's a corresponding compile-time
 # type with a _t-suffix.
-ctypedef np.int_t DTYPE_t
+ctypedef np.int64_t DTYPE_t
 
 from optv.parameters cimport TargetParams, ControlParams
 from optv.tracking_framebuf cimport TargetArray

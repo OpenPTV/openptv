@@ -263,7 +263,7 @@ def full_calibration(Calibration cal,
     cdef:
         vec3d *ref_coord
         np.ndarray[ndim=2, dtype=pos_t] ret
-        np.ndarray[ndim=1, dtype=np.int_t] used
+        np.ndarray[ndim=1, dtype=np.int64_t] used
         np.ndarray[ndim=1, dtype=pos_t] err_est
         orient_par *orip
         double *residuals
