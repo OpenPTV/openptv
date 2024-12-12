@@ -12,9 +12,9 @@
 *   distortion corrections.
 *
 *   Arguments:
-*   Exterior Ex - exterior orientation.
-*   Interior I - interior orientation.
-*   Glass G - glass parameters.
+*   Exterior ext_par - exterior orientation.
+*   Interior int_par - interior orientation.
+*   Glass glass_par - glass parameters.
 *   ap_52 addp - optional additional (distortion) parameters. NULL is fine if
 *      add_file is NULL.
 *   char *filename - path of file to contain interior, exterior and glass
@@ -22,7 +22,7 @@
 *   char *add_file - path of file to contain added (distortions) parameters.
 */
 
-int write_ori (Exterior Ex, Interior I, Glass G, ap_52 ap, \
+int write_ori (Exterior ext_par, Interior int_par, Glass glass_par, ap_52 ap, \
         char *filename, char *add_file){
   FILE	*fp;
   int  	i, success = 0;
@@ -34,11 +34,11 @@ int write_ori (Exterior Ex, Interior I, Glass G, ap_52 ap, \
   }
     
   fprintf (fp, "%11.8f %11.8f %11.8f\n    %10.8f  %10.8f  %10.8f\n\n",
-	   Ex.x0, Ex.y0, Ex.z0, Ex.omega, Ex.phi, Ex.kappa);
+	   ext_par.x0, ext_par.y0, ext_par.z0, ext_par.omega, ext_par.phi, ext_par.kappa);
   for (i=0; i<3; i++)  fprintf (fp, "    %10.7f %10.7f %10.7f\n",
-				Ex.dm[i][0], Ex.dm[i][1], Ex.dm[i][2]);
-  fprintf (fp,"\n    %8.4f %8.4f\n    %8.4f\n", I.xh, I.yh, I.cc);
-  fprintf (fp,"\n    %20.15f %20.15f  %20.15f\n", G.vec_x, G.vec_y, G.vec_z);
+				ext_par.dm[i][0], ext_par.dm[i][1], ext_par.dm[i][2]);
+  fprintf (fp,"\n    %8.4f %8.4f\n    %8.4f\n", int_par.xh, int_par.yh, int_par.cc);
+  fprintf (fp,"\n    %20.15f %20.15f  %20.15f\n", glass_par.vec_x, glass_par.vec_y, glass_par.vec_z);
   
   fclose (fp);
   fp = NULL;
@@ -78,7 +78,7 @@ finalize:
 *   values.
 */
 
-int read_ori (Exterior Ex[], Interior I[], Glass G[], char *ori_file, \
+int read_ori (Exterior ext_par[], Interior int_par[], Glass glass_par[], char *ori_file, \
     ap_52 addp[], char *add_file, char *add_fallback){
     
   FILE	*fp;
@@ -98,23 +98,23 @@ int read_ori (Exterior Ex[], Interior I[], Glass G[], char *ori_file, \
   
   /* Exterior */
   scan_res = fscanf (fp, "%lf %lf %lf %lf %lf %lf",
-	  &(Ex->x0), &(Ex->y0), &(Ex->z0),
-	  &(Ex->omega), &(Ex->phi), &(Ex->kappa));
+	  &(ext_par->x0), &(ext_par->y0), &(ext_par->z0),
+	  &(ext_par->omega), &(ext_par->phi), &(ext_par->kappa));
   if (scan_res != 6) return 0;
   
   /* Exterior rotation matrix */
   for (i=0; i<3; i++) {
     scan_res = fscanf (fp, " %lf %lf %lf",
-        &(Ex->dm[i][0]), &(Ex->dm[i][1]), &(Ex->dm[i][2]));
+        &(ext_par->dm[i][0]), &(ext_par->dm[i][1]), &(ext_par->dm[i][2]));
     if (scan_res != 3) return 0;
   }
 
   /* Interior */
-  scan_res = fscanf (fp, "%lf %lf %lf", &(I->xh), &(I->yh), &(I->cc));
+  scan_res = fscanf (fp, "%lf %lf %lf", &(int_par->xh), &(int_par->yh), &(int_par->cc));
   if (scan_res != 3) return 0;
   
   /* Glass */
-  scan_res = fscanf (fp, "%lf %lf %lf", &(G->vec_x), &(G->vec_y), &(G->vec_z));
+  scan_res = fscanf (fp, "%lf %lf %lf", &(glass_par->vec_x), &(glass_par->vec_y), &(glass_par->vec_z));
   if (scan_res != 3) return 0;
   
   fclose(fp);
@@ -278,37 +278,37 @@ int write_calibration(Calibration *cal, char *ori_file, char *add_file) {
         cal->added_par, ori_file, add_file);
 }
 
-/* rotation_matrix() rotates the Dmatrix of Exterior Ex using
+/* rotation_matrix() rotates the Dmatrix of Exterior ext_par using
 *  three angles of the camera
 *
 *  Arguments:
-*   Exterior Ex
+*   Exterior ext_par
 *
 *  Returns:
-*   modified Exterior Ex
+*   modified Exterior ext_par
 *
 */
- void rotation_matrix (Exterior *Ex) {
+ void rotation_matrix (Exterior *ext_par) {
  
  double cp,sp,co,so,ck,sk;
  
  
-    cp = cos(Ex->phi);
-    sp = sin(Ex->phi);
-    co = cos(Ex->omega);
-    so = sin(Ex->omega);
-    ck = cos(Ex->kappa);
-    sk = sin(Ex->kappa);
+    cp = cos(ext_par->phi);
+    sp = sin(ext_par->phi);
+    co = cos(ext_par->omega);
+    so = sin(ext_par->omega);
+    ck = cos(ext_par->kappa);
+    sk = sin(ext_par->kappa);
 
-    Ex->dm[0][0] = cp * ck;
-    Ex->dm[0][1] = -cp * sk;
-    Ex->dm[0][2] = sp;
-    Ex->dm[1][0] = co * sk + so * sp * ck;
-    Ex->dm[1][1] = co * ck - so * sp * sk;
-    Ex->dm[1][2] = -so * cp;
-    Ex->dm[2][0] = so * sk - co * sp * ck;
-    Ex->dm[2][1] = so * ck + co* sp * sk;
-    Ex->dm[2][2] = co * cp;
+    ext_par->dm[0][0] = cp * ck;
+    ext_par->dm[0][1] = -cp * sk;
+    ext_par->dm[0][2] = sp;
+    ext_par->dm[1][0] = co * sk + so * sp * ck;
+    ext_par->dm[1][1] = co * ck - so * sp * sk;
+    ext_par->dm[1][2] = -so * cp;
+    ext_par->dm[2][0] = so * sk - co * sp * ck;
+    ext_par->dm[2][1] = so * ck + co* sp * sk;
+    ext_par->dm[2][2] = co * cp;
 }
 
 

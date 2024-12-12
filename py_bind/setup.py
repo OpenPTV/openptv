@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 
-from distutils.core import setup
+import numpy
+from setuptools import setup
 import setuptools
 import os
 import shutil
@@ -9,6 +10,7 @@ import glob
 from setuptools import Extension
 from setuptools.command.build_ext import build_ext
 import importlib
+
 
 
 class PrepareCommand(setuptools.Command):

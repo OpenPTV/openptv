@@ -58,9 +58,9 @@ typedef struct {
 
 
 
-int write_ori(Exterior Ex, Interior I, Glass G, ap_52 ap, char *filename, 
+int write_ori(Exterior ext_par, Interior int_par, Glass glass_par, ap_52 ap, char *filename, 
     char *add_file);
-int read_ori (Exterior Ex[], Interior I[], Glass G[], char *ori_file, 
+int read_ori (Exterior ext_par[], Interior int_par[], Glass glass_par[], char *ori_file, 
     ap_52 addp[], char *add_file, char *add_fallback);
 int compare_exterior(Exterior *e1, Exterior *e2);
 int compare_interior(Interior *i1, Interior *i2);

@@ -94,29 +94,29 @@ END_TEST
 
 START_TEST(test_rotation_angles)
 {
-    Exterior ex;
+    Exterior ext_par;
     /* Correct results may be verified using [1] */
     Dmatrix rotx = {{1., 0., 0.}, {0., 0., -1.}, {0., 1., 0.}};
     Dmatrix roty = {{0., 0., 1.}, {0., 1., 0.}, {-1., 0., 0.}};
     Dmatrix rotz = {{0., -1., 0.}, {1., 0., 0.}, {0., 0., 1.}};
     
     /* omega */
-    zero_exterior(&ex);
-    ex.omega = M_PI/2.;
-    rotation_matrix(&ex);
-    fail_unless(compare_matrix(ex.dm, rotx));
+    zero_exterior(&ext_par);
+    ext_par.omega = M_PI/2.;
+    rotation_matrix(&ext_par);
+    fail_unless(compare_matrix(ext_par.dm, rotx));
     
     /* phi */
-    zero_exterior(&ex);
-    ex.phi = M_PI/2.;
-    rotation_matrix(&ex);
-    fail_unless(compare_matrix(ex.dm, roty));
+    zero_exterior(&ext_par);
+    ext_par.phi = M_PI/2.;
+    rotation_matrix(&ext_par);
+    fail_unless(compare_matrix(ext_par.dm, roty));
     
     /* kappa */
-    zero_exterior(&ex);
-    ex.kappa = M_PI/2.;
-    rotation_matrix(&ex);
-    fail_unless(compare_matrix(ex.dm, rotz));
+    zero_exterior(&ext_par);
+    ext_par.kappa = M_PI/2.;
+    rotation_matrix(&ext_par);
+    fail_unless(compare_matrix(ext_par.dm, rotz));
 }
 END_TEST
 

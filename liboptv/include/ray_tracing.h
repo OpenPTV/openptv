@@ -23,7 +23,7 @@ void ray_tracing (double x
 				, double X[3]
 				, double a[3]);
 				
-void old_ray_tracing (double x, double y, Exterior Ex, Interior I, Glass G,\
+void old_ray_tracing (double x, double y, Exterior ext_par, Interior int_par, Glass glass_par,\
                   mm_np mm, double *Xb2, double *Yb2, double *Zb2, \
                   double *a3, double *b3,double *c3);
 

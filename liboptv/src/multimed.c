@@ -25,7 +25,7 @@ Routines contained:     -
     
     Arguments:
     Calibration *cal - calibration parameters.
-    mm_np *mm - multimedia info struct (e.g. number of layers, thickness of 
+    mm_np *mm - multimedia info struct (e.glass_par. number of layers, thickness of 
         layers)
     vec3d pos - three doubles of the particle position in the 3D space.
     double *Xq, *Yq - returned values; two dimensional position on the glass 
@@ -48,7 +48,7 @@ void  multimed_nlay (Calibration *cal, mm_np *mm, vec3d pos,
     
     Arguments:
     Calibration *cal - calibration parameters.
-    mm_np *mm - multimedia info struct (e.g. number of layers, thickness of 
+    mm_np *mm - multimedia info struct (e.glass_par. number of layers, thickness of 
         layers)
     vec3d pos - three doubles of the particle position in the 3D space.
     
@@ -120,7 +120,7 @@ double multimed_r_nlay (Calibration *cal, mm_np *mm, vec3d pos) {
     image points on the glass surface separating those points.
     
     Input arguments:
-    Exterior ex - holding global-coordinates camera position.
+    Exterior ext_par - holding global-coordinates camera position.
     mm_np mm - holding glass thickness.
     Glass gl - holding the glass position in global-coordinates as a 
         glass-normal vector.
@@ -135,14 +135,14 @@ double multimed_r_nlay (Calibration *cal, mm_np *mm, vec3d pos) {
         is projected on the other side of the glass, it'll have a small 
         difference in Z value from ``cross_p``.
 */
-void trans_Cam_Point(Exterior ex, mm_np mm, Glass gl, vec3d pos, 
+void trans_Cam_Point(Exterior ext_par, mm_np mm, Glass gl, vec3d pos, 
     Exterior *ex_t, vec3d pos_t, double cross_p[3], double cross_c[3])
 {
     double dist_cam_glas,dist_point_glas,dist_o_glas; //glas inside at water 
     vec3d glass_dir, primary_pt, renorm_glass, temp;
     
     vec_set(glass_dir, gl.vec_x, gl.vec_y, gl.vec_z);
-    vec_set(primary_pt, ex.x0, ex.y0, ex.z0);
+    vec_set(primary_pt, ext_par.x0, ext_par.y0, ext_par.z0);
 
     dist_o_glas = vec_norm(glass_dir);
     dist_cam_glas = vec_dot(primary_pt, glass_dir) / dist_o_glas \
@@ -168,13 +168,13 @@ void trans_Cam_Point(Exterior ex, mm_np mm, Glass gl, vec3d pos,
 
 /* the opposite direction transfer from X_t,Y_t,Z_t to the X,Y,Z in 3D space */
 
-void back_trans_Point(vec3d pos_t, mm_np mm, Glass G, double cross_p[3], 
+void back_trans_Point(vec3d pos_t, mm_np mm, Glass glass_par, double cross_p[3], 
     double cross_c[3], vec3d pos)
 {  
     double nVe, nGl;
     vec3d glass_dir, renorm_glass, after_glass, temp;
     
-    vec_set(glass_dir, G.vec_x, G.vec_y, G.vec_z);
+    vec_set(glass_dir, glass_par.vec_x, glass_par.vec_y, glass_par.vec_z);
     nGl = vec_norm(glass_dir);
     
     vec_scalar_mul(glass_dir, mm.d[0]/nGl, renorm_glass);
