@@ -7,22 +7,22 @@ cdef extern from "optv/trafo.h":
                          , double * y_metric
                          , double x_pixel
                          , double y_pixel
-                         , control_par * parameters) except *;
+                         , control_par * parameters);
     void metric_to_pixel(double * x_pixel
                          , double * y_pixel
                          , double x_metric
                          , double y_metric
-                         , control_par * parameters) except *;
+                         , control_par * parameters);
     void correct_brown_affin (double x
                          , double y
                          , ap_52 ap
                          , double * x1
-                         , double * y1) except *;                        
+                         , double * y1);                        
     void distort_brown_affin (double x
                          , double y
                          , ap_52 ap
                          , double * x1
-                         , double * y1) except *;
+                         , double * y1);
     
     void correct_brown_affine_exact(double x, double y, ap_52 ap, 
     double *x1, double *y1, double tol)
