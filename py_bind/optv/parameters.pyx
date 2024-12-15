@@ -786,7 +786,7 @@ cdef class TargetParams:
         copy - if True, return a copy of the underlying array. This way the 
             original is safe.
         """
-        return wrap_1d_c_arr_as_ndarray(self, num_cams, numpy.NPY_INT64, 
+        return wrap_1d_c_arr_as_ndarray(self, num_cams, numpy.NPY_INT, 
             self._targ_par.gvthres, (1 if copy else 0))
         
     def set_grey_thresholds(self, gvthresh):
