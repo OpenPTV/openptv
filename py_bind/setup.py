@@ -1,14 +1,21 @@
 # -*- coding: utf-8 -*-
 
-from distutils.core import setup
+# from distutils.core import setup
 import setuptools
 import os
 import shutil
 import sys
 import glob
-from setuptools import Extension
+from setuptools import Extension, setup
 from setuptools.command.build_ext import build_ext
+from Cython.Compiler import Options
 import importlib
+import numpy as np
+
+
+# These are optional
+Options.docstrings = True
+Options.annotate = True
 
 
 class PrepareCommand(setuptools.Command):

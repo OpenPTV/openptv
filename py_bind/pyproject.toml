@@ -1,6 +1,6 @@
 [build-system]
-requires = ["flit_core >=2,<4"]
-build-backend = "flit_core.buildapi"
+requires = ["setuptools","numpy","cython","pyyaml"]
+build-backend = "setuptools.build_meta"
 
 [project]
 name = "optv"
@@ -13,6 +13,3 @@ dependencies = [
     "numpy",
     "cython"
 ]
-
-[tool.cibuildwheel]
-before-build = "pip install numpy cython && cd py_bind && python setup.py prepare"
