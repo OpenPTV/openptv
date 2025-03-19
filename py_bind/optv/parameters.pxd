@@ -44,7 +44,24 @@ cdef extern from "optv/parameters.h":
         int nymin, nymax  # same in y dimension.
         int sumg_min      # minimal sum of grey values in target.
         int cr_sz         # correspondence parameter.
-        
+    
+    # Control parameters
+    control_par* new_control_par(int num_cams)
+    control_par* read_control_par(char* file_name)
+    void free_control_par(control_par* control_par_ptr)
+    int compare_control_par(control_par *control_par1, control_par *control_par2)
+    
+    # Volume parameters
+    volume_par* new_volume_par()
+    volume_par* read_volume_par(char* file_name)
+    void free_volume_par(volume_par* volume_par_ptr)
+    int compare_volume_par(volume_par *volume_par1, volume_par *volume_par2)
+    
+    # Track parameters
+    track_par* read_track_par(char* file_name)
+    void free_track_par(track_par* track_par_ptr)
+    int compare_track_par(track_par *track_par1, track_par *track_par2)
+
 cdef class MultimediaParams:
     cdef mm_np* _mm_np
     cdef void set_mm_np(MultimediaParams self, mm_np * other_mm_np_c_struct)

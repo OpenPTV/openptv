@@ -43,11 +43,19 @@ jobs:
   upload_pypi:
     needs: [build_wheels, build_sdist]
     runs-on: ubuntu-latest
-    # upload to PyPI on every tag starting with 'v'
     if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v')
-    # alternatively, to publish when a GitHub Release is created, use the following rule:
-    # if: github.event_name == 'release' && github.event.action == 'published'
     steps:
+      - uses: actions/checkout@v2
+      
+      - name: Verify tag version matches package version
+        run: |
+          TAG_VERSION="${GITHUB_REF#refs/tags/v}"
+          PACKAGE_VERSION=$(cat version.txt)
+          if [ "$TAG_VERSION" != "$PACKAGE_VERSION" ]; then
+            echo "Tag version ($TAG_VERSION) does not match package version ($PACKAGE_VERSION)"
+            exit 1
+          fi
+
       - uses: actions/download-artifact@v2
         with:
           name: artifact
@@ -57,4 +65,3 @@ jobs:
         with:
           user: __token__
           password: ${{ secrets.pypi_password }}
-          # To test: repository_url: https://test.pypi.org/legacy/

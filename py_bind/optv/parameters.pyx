@@ -1,72 +1,131 @@
-# Implementation of Python binding to parameters.h
+# cython: language_level=3
+#define NPY_NO_DEPRECATED_API NPY_1_7_API_VERSION
+
+import numpy as np
+cimport numpy as cnp
 from libc.stdlib cimport malloc, free
-from libc.string cimport strncpy
+from libc.string cimport memcpy, strncpy
 
-import numpy
-numpy.import_array()
+# Initialize numpy
+cnp.import_array()
 
-cimport numpy as numpy
-from cpython cimport Py_INCREF, PyObject, PyTypeObject
-
+# Import C declarations
 cdef extern from "optv/parameters.h":
-    int c_compare_mm_np "compare_mm_np"(mm_np * mm_np1, mm_np * mm_np2)
+    ctypedef struct mm_np:
+        double n1
+        double n2[3]
+        double n3
+        double d[3]
     
-    track_par * c_read_track_par "read_track_par"(char * file_name)
-    int c_compare_track_par "compare_track_par"(track_par * t1, track_par * t2)
-    
-    sequence_par * c_read_sequence_par "read_sequence_par"(char * filename, int num_cams)
-    sequence_par * c_new_sequence_par "new_sequence_par"(int num_cams)
-    void c_free_sequence_par "free_sequence_par"(sequence_par * sp)
-    int c_compare_sequence_par "compare_sequence_par"(sequence_par * sp1, sequence_par * sp2)
-    
-    volume_par * c_read_volume_par "read_volume_par"(char * filename)
-    int c_compare_volume_par "compare_volume_par"(volume_par * v1, volume_par * v2)
-    
-    control_par * c_read_control_par "read_control_par"(char * filename)
-    control_par * c_new_control_par "new_control_par"(int cams)
-    void c_free_control_par "free_control_par"(control_par * cp)
-    int c_compare_control_par "compare_control_par"(control_par * c1, control_par * c2)
-    
-    target_par* read_target_par(char *filename)
+    ctypedef struct track_par:
+        int dvxmin
+        int dvxmax
+        int dvymin
+        int dvymax
+        int dvzmin
+        int dvzmax
+        double dacc
+        double dmax
+        int dsumg
+        int dn
+        int dnx
+        int dny
+        double eps0
+        int qual
+        int thresh
+        int lb
+        int npart
 
-cdef extern from "numpy/arrayobject.h":
-    object PyArray_NewFromDescr(PyTypeObject* subtype, numpy.dtype descr,
-                                int nd, numpy.npy_intp* dims,
-                                numpy.npy_intp* strides,
-                                void* data, int flags, object obj)
-    int PyArray_SetBaseObject(numpy.ndarray arr, PyObject* obj)    
+    ctypedef struct sequence_par:
+        char** img_base_name
+        int first
+        int last
 
-cdef numpy.ndarray wrap_1d_c_arr_as_ndarray(object base_obj, 
-    int arr_size, int num_type, void * data, int copy):
+    ctypedef struct volume_par:
+        double X_lay[2]
+        double Zmin_lay[2]
+        double Zmax_lay[2]
+        int Nlay
+
+    ctypedef struct control_par:
+        int num_cams
+        int hp_flag
+        int allCam_flag
+        int tiff_flag
+        int imx
+        int imy
+        double pix_x
+        double pix_y
+        char *img_base_name
+        char *cal_img_base_name
+        mm_np *mm
+
+    # Function declarations
+    mm_np* c_new_mm_np()
+    void c_free_mm_np(mm_np* mm_np_ptr)
+    int c_compare_mm_np(mm_np *mm_np1, mm_np *mm_np2)
+    
+    track_par* c_new_track_par()
+    track_par* read_track_par(char* file_name)
+    void free_track_par(track_par* track_par_ptr)
+    int compare_track_par(track_par *track_par1, track_par *track_par2)
+    
+    sequence_par* c_new_sequence_par(int num_cams)
+    sequence_par* c_read_sequence_par(char* file_name, int num_cams)
+    void c_free_sequence_par(sequence_par* sequence_par_ptr)
+    int c_compare_sequence_par(sequence_par *sequence_par1, sequence_par *sequence_par2)
+    
+    volume_par* c_new_volume_par()
+    volume_par* c_read_volume_par(char* file_name)
+    void c_free_volume_par(volume_par* volume_par_ptr)
+    int c_compare_volume_par(volume_par *volume_par1, volume_par *volume_par2)
+    
+    control_par* c_new_control_par(int num_cams)
+    control_par* c_read_control_par(char* file_name)
+    void c_free_control_par(control_par* control_par_ptr)
+    int c_compare_control_par(control_par *control_par1, control_par *control_par2)
+
+cdef extern from "optv/tracking_frame_buf.h":
+    ctypedef struct target_par:
+        int nmax
+        int nx
+        int ny
+        int sumg_min
+        int cr_sz
+        double tol_band
+        int pixel_count_min
+        int xmin
+        int xmax
+        int ymin
+        int ymax
+        double int_min
+        double int_max
+        double min_ratio
+        double max_ratio
+        double max_dist
+
+    target_par* read_target_par(char* file_name)
+
+# Helper function for converting C arrays to numpy arrays
+cdef object wrap_1d_c_arr_as_ndarray(object owner, double arr_size_d, int num_type, void *data, bint copy):
     """
-    Returns as NumPy array a value internally represented as a C array.
-    
-    Arguments:
-    object base_obj - the object supplying the memory. Needed for refcounting.
-    int arr_size - length of the C array.
-    int num_type - type number as required by PyArray_SimpleNewFromData
-    void* data - the underlying C array.
-    int copy - 0 to return an ndarray whose data is the original data,
-        1 to return a copy of the data.
-    
-    Returns:
-    ndarray of length arr_size
+    Wraps a C array as a numpy array.
     """
-    cdef:
-        numpy.npy_intp shape[1]  # for 1 dimensional array
-        numpy.ndarray ndarr
-    shape[0] = <numpy.npy_intp> arr_size
+    cdef cnp.npy_intp shape[1]
+    cdef object ndarr
+    cdef Py_ssize_t arr_size = <Py_ssize_t>arr_size_d
     
-    ndarr = numpy.PyArray_SimpleNewFromData(1, shape, num_type, data)
-    # ndarr.base = <PyObject *> base_obj
-    PyArray_SetBaseObject(ndarr, <PyObject *> base_obj)
-    Py_INCREF(base_obj)
+    shape[0] = arr_size
     
     if copy:
-        return numpy.copy(ndarr)
+        ndarr = cnp.PyArray_SimpleNew(1, shape, num_type)
+        memcpy(cnp.PyArray_DATA(ndarr), data, arr_size * cnp.PyArray_ITEMSIZE(ndarr))
+    else:
+        ndarr = cnp.PyArray_SimpleNewFromData(1, shape, num_type, data)
+        cnp.PyArray_SetBaseObject(ndarr, owner)
     
     return ndarr
-    
+
 cdef class MultimediaParams:
     """
     Relates to photographing through several transparent media (air, tank 
@@ -121,19 +180,15 @@ cdef class MultimediaParams:
     def get_n2(self, copy=True):
         """
         get the mid-layer refractive indices (n2) as a numpy array
-        
-        Arguments: 
-        copy - False for returned numpy object to take ownership of 
-            the memory of the n2 field of the underlying mm_np struct. True
-            (default) to return a COPY instead.
         """
-        arr_size = sizeof(self._mm_np[0].n2) / sizeof(self._mm_np[0].n2[0])
-        return wrap_1d_c_arr_as_ndarray(self, arr_size, numpy.NPY_DOUBLE, 
-            self._mm_np[0].n2, copy)
+        cdef double arr_size = sizeof(self._mm_np[0].n2) / sizeof(self._mm_np[0].n2[0])
+        return wrap_1d_c_arr_as_ndarray(self, arr_size, cnp.NPY_DOUBLE, 
+            <void*>self._mm_np[0].n2, copy)
     
     def get_d(self, copy=True):
-        arr_size = sizeof(self._mm_np[0].d) / sizeof(self._mm_np[0].d[0])
-        return wrap_1d_c_arr_as_ndarray(self, arr_size , numpy.NPY_DOUBLE, self._mm_np[0].d, copy)
+        cdef double arr_size = sizeof(self._mm_np[0].d) / sizeof(self._mm_np[0].d[0])
+        return wrap_1d_c_arr_as_ndarray(self, arr_size, cnp.NPY_DOUBLE, 
+            <void*>self._mm_np[0].d, copy)
            
     def get_n3(self):
         return self._mm_np[0].n3
@@ -150,15 +205,15 @@ cdef class MultimediaParams:
         else: raise TypeError("Unhandled comparison operator " + operator)
         
     def __str__(self):
+        cdef int i
         n2_str = "{"
-        for i in range(sizeof(self._mm_np[0].n2) / sizeof(self._mm_np[0].n2[0]) - 1):
+        for i in range(<int>(sizeof(self._mm_np[0].n2) / sizeof(self._mm_np[0].n2[0])) - 1):
             n2_str = n2_str + str(self._mm_np[0].n2[i]) + ", "
         n2_str += str(self._mm_np[0].n2[i + 1]) + "}"
         
         d_str = "{"
-        for i in range(sizeof(self._mm_np[0].d) / sizeof(self._mm_np[0].d[0]) - 1) :
+        for i in range(<int>(sizeof(self._mm_np[0].d) / sizeof(self._mm_np[0].d[0])) - 1):
             d_str += str(self._mm_np[0].d[i]) + ", "
-            
         d_str += str(self._mm_np[0].d[i + 1]) + "}"
         
         return "nlay=\t{} \nn1=\t{} \nn2=\t{} \nd=\t{} \nn3=\t{} ".format(
@@ -231,17 +286,18 @@ cdef class TrackingParams:
         objects' arguments ordered one per line.
         """
         free(self._track_par)
-        self._track_par = c_read_track_par(file_name)
+        self._track_par = read_track_par(file_name.encode('utf-8'))
     
     # Checks for equality between this and other trackParams objects
     # Gives the ability to use "==" and "!=" operators on two trackParams objects
     def __richcmp__(TrackingParams self, TrackingParams other, operator):
-        c_compare_result = c_compare_track_par(self._track_par, other._track_par)
+        c_compare_result = compare_track_par(self._track_par, other._track_par)
         if (operator == 2):  # "==" action was performed
             return (c_compare_result != 0)
         elif(operator == 3):  # "!=" action was performed
-                return (c_compare_result == 0)
-        else: raise TypeError("Unhandled comparison operator " + operator)
+            return (c_compare_result == 0)
+        else:
+            raise TypeError("Unhandled comparison operator " + str(operator))
              
     # Getters and setters    
     def get_dacc(self):
@@ -472,24 +528,27 @@ cdef class VolumeParams:
     
     # Getters and setters
     def get_X_lay(self, copy=True):
-        arr_size = sizeof(self._volume_par[0].X_lay) / sizeof(self._volume_par[0].X_lay[0])
-        return wrap_1d_c_arr_as_ndarray(self, arr_size , numpy.NPY_DOUBLE, self._volume_par[0].X_lay, copy)
+        cdef double arr_size = sizeof(self._volume_par[0].X_lay) / sizeof(self._volume_par[0].X_lay[0])
+        return wrap_1d_c_arr_as_ndarray(self, arr_size, cnp.NPY_DOUBLE, 
+            <void*>self._volume_par[0].X_lay, copy)
     
     def set_X_lay(self, X_lay):
         for i in range(len(X_lay)):
             self._volume_par[0].X_lay[i] = X_lay[i]
             
     def get_Zmin_lay(self, copy=True):
-        arr_size = sizeof(self._volume_par[0].Zmin_lay) / sizeof(self._volume_par[0].Zmin_lay[0])
-        return wrap_1d_c_arr_as_ndarray(self, arr_size , numpy.NPY_DOUBLE, self._volume_par[0].Zmin_lay, copy)
+        cdef double arr_size = sizeof(self._volume_par[0].Zmin_lay) / sizeof(self._volume_par[0].Zmin_lay[0])
+        return wrap_1d_c_arr_as_ndarray(self, arr_size, cnp.NPY_DOUBLE, 
+            <void*>self._volume_par[0].Zmin_lay, copy)
 
     def set_Zmin_lay(self, Zmin_lay):
         for i in range(len(Zmin_lay)):
             self._volume_par[0].Zmin_lay[i] = Zmin_lay[i]
             
     def get_Zmax_lay(self, copy=True):
-        arr_size = sizeof(self._volume_par[0].Zmax_lay) / sizeof(self._volume_par[0].Zmax_lay[0])
-        return wrap_1d_c_arr_as_ndarray(self, arr_size , numpy.NPY_DOUBLE, self._volume_par[0].Zmax_lay, copy)
+        cdef double arr_size = sizeof(self._volume_par[0].Zmax_lay) / sizeof(self._volume_par[0].Zmax_lay[0])
+        return wrap_1d_c_arr_as_ndarray(self, arr_size, cnp.NPY_DOUBLE, 
+            <void*>self._volume_par[0].Zmax_lay, copy)
     
     def set_Zmax_lay(self, Zmax_lay):
         for i in range(len(Zmax_lay)):
@@ -737,12 +796,8 @@ cdef class ControlParams:
         else: raise TypeError("Unhandled comparison operator " + operator)
         
     def __dealloc__(self):
-        # set the mm pointer to NULL in order to prevent c_free_control_par 
-        # function from freeing it. MultimediaParams object will free this
-        # memory in its python destructor when there will be no references to it.
-        
-        self._control_par[0].mm = NULL
-        c_free_control_par(self._control_par)
+        if self._control_par != NULL:
+            free_control_par(self._control_par)
 
 cdef class TargetParams:
     """
@@ -791,11 +846,10 @@ cdef class TargetParams:
         Arguments:
         num_cams - the number of cameras to get. Currently cannot exceed 4
             (raises ValueError). Default is 4.
-        copy - if True, return a copy of the underlying array. This way the 
-            original is safe.
+        copy - if True, return a copy of the underlying array.
         """
-        return wrap_1d_c_arr_as_ndarray(self, num_cams, numpy.NPY_INT, 
-            self._targ_par.gvthres, (1 if copy else 0))
+        return wrap_1d_c_arr_as_ndarray(self, num_cams, cnp.NPY_INT, 
+            <void*>self._targ_par.gvthres, copy)
         
     def set_grey_thresholds(self, gvthresh):
         """

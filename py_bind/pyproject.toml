@@ -1,15 +1,52 @@
 [build-system]
-requires = ["setuptools","numpy","cython","pyyaml"]
+requires = ["setuptools>=61.0", "numpy>=1.24", "cython>=3.0", "pyyaml"]
 build-backend = "setuptools.build_meta"
 
 [project]
 name = "optv"
-version = "0.3.0"
-description = "OpenPTV "
+dynamic = ["version"]
+description = "OpenPTV"
 authors = [
     { name="Alex Liberzon", email="alex.liberzon@gmail.command"}
 ]
 dependencies = [
-    "numpy",
-    "cython"
+    "numpy>=1.24",
+    "cython>=3.0",
+    "pyyaml",
+    "matplotlib"
 ]
+
+[tool.setuptools]
+packages = ["optv"]
+include-package-data = true
+
+[tool.setuptools.package-data]
+optv = ["*.pxd", "*.c", "*.h"]
+
+[tool.cibuildwheel]
+skip = ["cp36-*", "cp37-*"]
+
+before-build = [
+    "pip install numpy'<1.24'",
+    "pip install cython'<3'",
+    "python setup.py prepare",
+    "python setup.py build_ext --inplace",
+    "cd ../"
+]
+
+# Specify the Python versions and platforms you want to build for
+windows = ["cp38", "cp39", "cp310"]
+manylinux-x86_64-image = "manylinux2014"
+manylinux-i686-image = "manylinux2014"
+macos = ["cp38", "cp39", "cp310"]
+
+
+# Run tests after building the wheel
+test-command = "pytest {project}/tests"
+
+[[tool.cibuildwheel.overrides]]
+select = "cp3{8,9}-*"
+manylinux-x86_64-image = "manylinux2010"
+
+[tool.setuptools.dynamic]
+version = {file = "version.txt"}

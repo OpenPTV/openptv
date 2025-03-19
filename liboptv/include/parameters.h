@@ -104,4 +104,29 @@ int compare_mm_np(mm_np *mm_np1, mm_np *mm_np2);
  * Returns 1 for equality, 0 otherwise. */
 int compare_control_par(control_par *c1, control_par *c2);
 
-#endif
+/* Function declarations */
+mm_np* c_new_mm_np(void);
+void c_free_mm_np(mm_np* mm_np_ptr);
+int c_compare_mm_np(mm_np *mm_np1, mm_np *mm_np2);
+
+track_par* c_new_track_par(void);
+track_par* c_read_track_par(char* file_name);
+void c_free_track_par(track_par* track_par_ptr);
+int c_compare_track_par(track_par *track_par1, track_par *track_par2);
+
+sequence_par* c_new_sequence_par(int num_cams);
+sequence_par* c_read_sequence_par(char* file_name, int num_cams);
+void c_free_sequence_par(sequence_par* sequence_par_ptr);
+int c_compare_sequence_par(sequence_par *sequence_par1, sequence_par *sequence_par2);
+
+volume_par* c_new_volume_par(void);
+volume_par* c_read_volume_par(char* file_name);
+void c_free_volume_par(volume_par* volume_par_ptr);
+int c_compare_volume_par(volume_par *volume_par1, volume_par *volume_par2);
+
+control_par* c_new_control_par(int num_cams);
+control_par* c_read_control_par(char* file_name);
+void c_free_control_par(control_par* control_par_ptr);
+int c_compare_control_par(control_par *control_par1, control_par *control_par2);
+
+#endif  /* PARAMETERS_H */

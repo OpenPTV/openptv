@@ -9,24 +9,23 @@ Created on Thu Aug 18 16:22:48 2016
 from libc.stdlib cimport calloc, realloc, free
 from libc.stdio cimport printf
 import numpy as np
-cimport numpy as np
-np.import_array()
+cimport numpy as cnp  # Use cnp instead of np for cimports
 
+# Initialize numpy
+cnp.import_array()
 
 # We now need to fix a datatype for our arrays. I've used the variable
 # DTYPE for this, which is assigned to the usual NumPy runtime
 # type info object.
 DTYPE = np.uint8
 
-# "ctypedef" assigns a corresponding compile-time type to DTYPE_t. For
-# every type in the numpy module there's a corresponding compile-time
-# type with a _t-suffix.
-ctypedef np.uint8_t DTYPE_t
+# "ctypedef" assigns a corresponding compile-time type to DTYPE_t
+ctypedef cnp.uint8_t DTYPE_t
 
 from optv.parameters cimport TargetParams, ControlParams
 from optv.tracking_framebuf cimport TargetArray
 
-def target_recognition(np.ndarray[np.uint8_t, ndim=2] img, TargetParams tpar, int cam, 
+def target_recognition(cnp.ndarray[cnp.uint8_t, ndim=2] img, TargetParams tpar, int cam, 
     ControlParams cparam, subrange_x=None, subrange_y=None):
     """
     Detects targets (contiguous bright blobs) in an image.
@@ -35,7 +34,7 @@ def target_recognition(np.ndarray[np.uint8_t, ndim=2] img, TargetParams tpar, in
     the structure of underlying C code.
     
     Arguments:
-    np.ndarray img - a numpy array holding the 8-bit gray image.
+    cnp.ndarray img - a numpy array holding the 8-bit gray image.
     TargetParams tpar - target recognition parameters s.a. size bounds etc.
     int cam - number of camera that took the picture, needed for getting
         correct parameters for this image.

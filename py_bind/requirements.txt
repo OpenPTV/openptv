@@ -1,5 +1,5 @@
-cython
+cython>=3.0
 nose
-numpy
+numpy>=1.24
 pyyaml
 six
