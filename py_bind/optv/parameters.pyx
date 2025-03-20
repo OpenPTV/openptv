@@ -546,10 +546,18 @@ cdef class VolumeParams:
         Argument:
         filename - path to the text file containing the parameters.
         """
+        # Store the bytes object as an instance attribute to prevent garbage collection
         self._filename_bytes = filename.encode('utf-8')
         cdef const char* c_filename = <const char*>self._filename_bytes
-        free(self._volume_par)
+        
+        # Free existing volume_par if it exists
+        if self._volume_par != NULL:
+            free(self._volume_par)
+            
+        # Read new parameters
         self._volume_par = read_volume_par(c_filename)
+        if self._volume_par == NULL:
+            raise IOError("Failed to read volume parameters from " + filename)
     
     # Checks for equality between self and other VolumeParams objects
     # Gives the ability to use "==" and "!=" operators on two VolumeParams objects

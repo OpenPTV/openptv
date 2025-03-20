@@ -22,11 +22,21 @@ class PrepareCommand(setuptools.Command):
     def finalize_options(self): pass
     
     def run(self):
+        # Create necessary directories
+        if not os.path.exists('liboptv'):
+            os.mkdir('liboptv')
+        if not os.path.exists('liboptv/include'):
+            os.makedirs('liboptv/include', exist_ok=True)
+        if not os.path.exists('liboptv/src'):
+            os.makedirs('liboptv/src', exist_ok=True)        
+        
         # Copy liboptv sources
-        if not os.path.exists('c_src'):
-            os.mkdir('c_src')
         for c_file in glob.glob('../liboptv/src/*.c'):
-            shutil.copy(c_file, 'c_src/')
+            shutil.copy(c_file, 'liboptv/src/')
+        
+        # Copy liboptv headers
+        for h_file in glob.glob('../liboptv/include/*.h'):
+            shutil.copy(h_file, 'liboptv/include/')
         
         # Convert pyx to C
         from Cython.Build import cythonize

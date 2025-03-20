@@ -49,10 +49,12 @@ cdef extern from "optv/parameters.h":
         int cr_sz         # correspondence parameter.
     
     target_par* read_target_par(const char* filename)
+    control_par* read_control_par(const char* filename)
+
+    # Add these function declarations
     track_par* read_track_par(const char* filename)
     sequence_par* read_sequence_par(const char* filename, int num_cams)
     volume_par* read_volume_par(const char* filename)
-    control_par* read_control_par(const char* filename)
 
     # Add these free function declarations
     void free_control_par(control_par *cp)
@@ -84,7 +86,7 @@ cdef class SequenceParams:
     cdef bytes _filename_bytes
 
 cdef class VolumeParams:
-    cdef volume_par* _volume_par
+    cdef volume_par *_volume_par
     cdef bytes _filename_bytes
 
 cdef class ControlParams:
