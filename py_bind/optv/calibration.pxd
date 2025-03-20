@@ -1,4 +1,7 @@
-from vec_utils cimport vec3d
+# cython: language_level=3
+# distutils: language = c
+
+from optv.vec_utils cimport vec3d
 
 cdef extern from "optv/calibration.h":
     ctypedef double Dmatrix [3][3]
@@ -19,7 +22,7 @@ cdef extern from "optv/calibration.h":
         double k1, k2, k3, p1, p2, scx, she
         
     ctypedef struct mmlut:
-        vec3d origin;
+        vec3d origin
         int nr, nz, rw
         double *data
     

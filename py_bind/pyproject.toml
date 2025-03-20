@@ -1,27 +1,21 @@
 [build-system]
-requires = ["setuptools", "wheel", "cibuildwheel", "cython"]
+requires = ["setuptools", "wheel", "cibuildwheel", "cython", "numpy"]
 build-backend = "setuptools.build_meta"
-# py_modules = ["optv"]
-# where = ["."]
-# include = ["liboptv","py_bind"]
 
 [tool.cibuildwheel]
-skip = ["cp36-*", "cp37-*"]
+skip = ["cp36-*", "cp37-*", "cp38-*", "cp39-*"]
 
 before-build = [
-    "pip install numpy'<1.24'",
-    "pip install cython'<3'",
+    "pip install numpy",
+    "pip install cython",
     "python setup.py prepare",
     "python setup.py build_ext --inplace",
     "cd ../"
 ]
 
-# Specify the Python versions and platforms you want to build for
-# For example, to build for manylinux, macOS, and Windows:
-windows = ["cp38", "cp39", "cp310"]
+windows = ["cp310-*", "cp311-*", "cp312-*", "cp313-*"]
 manylinux-x86_64-image = "manylinux2014"
-manylinux-i686-image = "manylinux2014"
-macos = ["cp38", "cp39", "cp310"]
+macos = ["cp310-*", "cp311-*", "cp312-*", "cp313-*"]
 
 
 # Run tests after building the wheel

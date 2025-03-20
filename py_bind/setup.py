@@ -13,51 +13,24 @@ import numpy
 
 
 class PrepareCommand(setuptools.Command):
-    # We must make some preparations before we can build the extension.
-    # First, we should copy the liboptv sources to a subdirectory, so they can be included with the sdist package.
-    # Second, we convert the pyx files to c files, so the package can be installed from source without requiring Cython
-    description = "Copy the liboptv sources and convert pyx files to C before building"
-
-    # We allow specifying the liboptv dir, for cibuildwheel, which must have everything under py_bind
-    user_options = [('liboptv-dir=', None, 'Path for liboptv, default is "../liboptv"')]
-
-    def initialize_options(self):
-        self.liboptv_dir = False
-
-    def finalize_options(self):
-        if not self.liboptv_dir:
-            self.liboptv_dir = '../liboptv'
-
+    """Prepare the C sources by copying them from liboptv and converting pyx to C"""
+    
+    description = "Prepare C sources and Cython files"
+    user_options = []
+    
+    def initialize_options(self): pass
+    def finalize_options(self): pass
+    
     def run(self):
-        self.copy_source_files()
-        self.convert_to_c()
-
-    def copy_source_files(self):
-        if not os.path.exists(self.liboptv_dir):
-            raise Exception(f'liboptv does not exist at {self.liboptv_dir}')
+        # Copy liboptv sources
+        if not os.path.exists('c_src'):
+            os.mkdir('c_src')
+        for c_file in glob.glob('../liboptv/src/*.c'):
+            shutil.copy(c_file, 'c_src/')
         
-        print('Copying the liboptv source files from %s to \n %s' % (os.path.abspath(self.liboptv_dir), os.path.abspath('./liboptv')))
-        if os.path.exists('./liboptv'):
-            shutil.rmtree('./liboptv')
-        os.makedirs('./liboptv')
-        shutil.copytree(os.path.join(self.liboptv_dir, 'include'), 'liboptv/include/optv')
-        shutil.copytree(os.path.join(self.liboptv_dir, 'src'), 'liboptv/src')
-
-    def convert_to_c(self):
-        print('Converting pyx files to C sources...')
-        pyx_files = glob.glob('./optv/*.pyx')
-        for pyx in pyx_files:
-            self.cython(pyx)
-
-    def cython(self, pyx):
-        from Cython.Compiler.CmdLine import parse_command_line
-        from Cython.Compiler.Main import compile
-        options, sources = parse_command_line(['-2', pyx])
-        result = compile(sources, options)
-        if result.num_errors > 0:
-            print('Errors converting %s to C' % pyx, file=sys.stderr)
-            raise Exception('Errors converting %s to C' % pyx)
-        self.announce('Converted %s to C' % pyx)
+        # Convert pyx to C
+        from Cython.Build import cythonize
+        cythonize(['optv/*.pyx'])
 
 
 class BuildExt(build_ext):  # Remove unnecessary (object) inheritance
@@ -144,12 +117,13 @@ setup(
     package_data={
         'optv': ['*.pxd', '*.c', '*.h'],
     },
-    version='0.2.9',
+    version='0.3.0',
     install_requires=[
-        'numpy<1.24',
-        'cython<3',
+        'numpy',
+        'cython',
         'pyyaml',
         'matplotlib'
     ],
-    setup_requires=['numpy','cython'],
+    setup_requires=['numpy', 'cython'],
+    python_requires='>=3.10',
 )

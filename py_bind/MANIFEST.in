@@ -1,0 +1,5 @@
+include optv/*.pxd
+include optv/*.pyx
+include optv/*.h
+include c_src/*.c
+include c_src/*.h

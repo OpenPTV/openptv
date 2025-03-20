@@ -105,12 +105,12 @@ cdef class MultimediaParams:
             the memory of the n2 field of the underlying mm_np struct. True
             (default) to return a COPY instead.
         """
-        arr_size = sizeof(self._mm_np[0].n2) / sizeof(self._mm_np[0].n2[0])
+        cdef int arr_size = <int>(sizeof(self._mm_np[0].n2) / sizeof(self._mm_np[0].n2[0]))
         return wrap_1d_c_arr_as_ndarray(self, arr_size, NPY_DOUBLE, 
             self._mm_np[0].n2, copy)
     
     def get_d(self, copy=True):
-        arr_size = sizeof(self._mm_np[0].d) / sizeof(self._mm_np[0].d[0])
+        cdef int arr_size = <int>(sizeof(self._mm_np[0].d) / sizeof(self._mm_np[0].d[0]))
         return wrap_1d_c_arr_as_ndarray(self, arr_size, NPY_DOUBLE, 
             self._mm_np[0].d, copy)
            
@@ -121,7 +121,7 @@ cdef class MultimediaParams:
         self._mm_np[0].n3 = n3
 
     def __richcmp__(MultimediaParams self, MultimediaParams other, int operator):
-        cdef int c_compare_result = c_compare_mm_np(self._mm_np, other._mm_np)
+        cdef int c_compare_result = compare_mm_np(self._mm_np, other._mm_np)
         if operator == 2:  # "==" action was performed
             return c_compare_result != 0
         elif operator == 3:  # "!=" action was performed
@@ -130,16 +130,19 @@ cdef class MultimediaParams:
             raise TypeError("Unhandled comparison operator")
 
     def __str__(self):
+        cdef int n2_size = <int>(sizeof(self._mm_np[0].n2) / sizeof(self._mm_np[0].n2[0]))
+        cdef int d_size = <int>(sizeof(self._mm_np[0].d) / sizeof(self._mm_np[0].d[0]))
+        cdef int i
+
         n2_str = "{"
-        for i in range(sizeof(self._mm_np[0].n2) / sizeof(self._mm_np[0].n2[0]) - 1):
+        for i in range(n2_size - 1):
             n2_str = n2_str + str(self._mm_np[0].n2[i]) + ", "
-        n2_str += str(self._mm_np[0].n2[i + 1]) + "}"
+        n2_str += str(self._mm_np[0].n2[n2_size - 1]) + "}"
         
         d_str = "{"
-        for i in range(sizeof(self._mm_np[0].d) / sizeof(self._mm_np[0].d[0]) - 1) :
+        for i in range(d_size - 1):
             d_str += str(self._mm_np[0].d[i]) + ", "
-            
-        d_str += str(self._mm_np[0].d[i + 1]) + "}"
+        d_str += str(self._mm_np[0].d[d_size - 1]) + "}"
         
         return "nlay=\t{} \nn1=\t{} \nn2=\t{} \nd=\t{} \nn3=\t{} ".format(
                 str(self._mm_np[0].nlay),
@@ -213,12 +216,12 @@ cdef class TrackingParams:
         self._filename_bytes = filename.encode('utf-8')
         cdef const char* c_filename = <const char*>self._filename_bytes
         free(self._track_par)
-        self._track_par = c_read_track_par(c_filename)
+        self._track_par = read_track_par(c_filename)
     
     # Checks for equality between this and other trackParams objects
     # Gives the ability to use "==" and "!=" operators on two trackParams objects
     def __richcmp__(TrackingParams self, TrackingParams other, int operator):
-        cdef int c_compare_result = c_compare_track_par(self._track_par, other._track_par)
+        cdef int c_compare_result = compare_track_par(self._track_par, other._track_par)
         if operator == 2:  # "==" action was performed
             return c_compare_result != 0
         elif operator == 3:  # "!=" action was performed
@@ -383,7 +386,7 @@ cdef class SequenceParams:
         if self._sequence_par != NULL:
             free_sequence_par(self._sequence_par)
         
-        self._sequence_par = c_read_sequence_par(c_filename, num_cams)
+        self._sequence_par = read_sequence_par(c_filename, num_cams)
         
     # Get image base name of camera #cam
     def get_img_base_name(self, cam):
@@ -400,7 +403,7 @@ cdef class SequenceParams:
     # Checks for equality between this and other SequenceParams objects
     # Gives the ability to use "==" and "!=" operators on two SequenceParams objects
     def __richcmp__(SequenceParams self, SequenceParams other, int operator):
-        cdef int c_compare_result = c_compare_sequence_par(self._sequence_par, other._sequence_par)
+        cdef int c_compare_result = compare_sequence_par(self._sequence_par, other._sequence_par)
         if operator == 2:  # "==" action was performed
             return c_compare_result != 0
         elif operator == 3:  # "!=" action was performed
@@ -460,17 +463,17 @@ cdef class VolumeParams:
     
     # Getters and setters
     def get_X_lay(self, copy=True):
-        arr_size = sizeof(self._volume_par[0].X_lay) / sizeof(self._volume_par[0].X_lay[0])
+        cdef int arr_size = <int>(sizeof(self._volume_par[0].X_lay) / sizeof(self._volume_par[0].X_lay[0]))
         return wrap_1d_c_arr_as_ndarray(self, arr_size, NPY_DOUBLE, 
             self._volume_par[0].X_lay, copy)
     
     def get_Zmin_lay(self, copy=True):
-        arr_size = sizeof(self._volume_par[0].Zmin_lay) / sizeof(self._volume_par[0].Zmin_lay[0])
+        cdef int arr_size = <int>(sizeof(self._volume_par[0].Zmin_lay) / sizeof(self._volume_par[0].Zmin_lay[0]))
         return wrap_1d_c_arr_as_ndarray(self, arr_size, NPY_DOUBLE, 
             self._volume_par[0].Zmin_lay, copy)
     
     def get_Zmax_lay(self, copy=True):
-        arr_size = sizeof(self._volume_par[0].Zmax_lay) / sizeof(self._volume_par[0].Zmax_lay[0])
+        cdef int arr_size = <int>(sizeof(self._volume_par[0].Zmax_lay) / sizeof(self._volume_par[0].Zmax_lay[0]))
         return wrap_1d_c_arr_as_ndarray(self, arr_size, NPY_DOUBLE, 
             self._volume_par[0].Zmax_lay, copy)
     
@@ -546,12 +549,12 @@ cdef class VolumeParams:
         self._filename_bytes = filename.encode('utf-8')
         cdef const char* c_filename = <const char*>self._filename_bytes
         free(self._volume_par)
-        self._volume_par = c_read_volume_par(c_filename)
+        self._volume_par = read_volume_par(c_filename)
     
     # Checks for equality between self and other VolumeParams objects
     # Gives the ability to use "==" and "!=" operators on two VolumeParams objects
     def __richcmp__(VolumeParams self, VolumeParams other, int operator):
-        cdef int c_compare_result = c_compare_volume_par(self._volume_par, other._volume_par)
+        cdef int c_compare_result = compare_volume_par(self._volume_par, other._volume_par)
         if operator == 2:  # "==" action was performed
             return c_compare_result != 0
         elif operator == 3:  # "!=" action was performed
@@ -702,7 +705,7 @@ cdef class ControlParams:
             free_control_par(self._control_par)
         
         self._multimedia_params._mm_np = NULL
-        self._control_par = c_read_control_par(c_filename)
+        self._control_par = read_control_par(c_filename)
         self._multimedia_params.set_mm_np(self._control_par[0].mm)
         
     # Get image base name of camera #cam
@@ -735,7 +738,7 @@ cdef class ControlParams:
     # Checks for equality between this and other ControlParams objects
     # Gives the ability to use "==" and "!=" operators on two ControlParams objects
     def __richcmp__(ControlParams self, ControlParams other, int operator):
-        cdef int c_compare_result = c_compare_control_par(self._control_par, other._control_par)
+        cdef int c_compare_result = compare_control_par(self._control_par, other._control_par)
         if operator == 2:  # "==" action was performed
             return c_compare_result != 0
         elif operator == 3:  # "!=" action was performed

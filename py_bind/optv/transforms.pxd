@@ -1,3 +1,5 @@
+# cython: language_level=3
+# distutils: language = c
 
 from optv.parameters cimport control_par
 from optv.calibration cimport ap_52, calibration
