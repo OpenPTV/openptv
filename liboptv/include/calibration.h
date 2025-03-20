@@ -9,7 +9,6 @@
 #ifndef CALIBRATION_H
 #define CALIBRATION_H
 
-#include "parameters.h"
 #include "vec_utils.h"
 
 #ifdef __cplusplus

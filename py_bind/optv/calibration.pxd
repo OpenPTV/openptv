@@ -33,5 +33,8 @@ cdef extern from "optv/calibration.h":
         ap_52 added_par
         mmlut mmlut
         
+    int write_calibration(calibration *cal, char *filename, char *add_file)
+    calibration *read_calibration(char *ori_file, char *add_file, char *fallback_file)
+
 cdef class Calibration:
     cdef calibration * _calibration

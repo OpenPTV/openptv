@@ -20,13 +20,13 @@ sequence_par* new_sequence_par(int num_cams);
 void free_sequence_par(sequence_par * sp);
 int compare_sequence_par(sequence_par *sp1, sequence_par *sp2);
 
-typedef struct
-{
+typedef struct {
     double  dacc, dangle, dvxmax, dvxmin;
     double dvymax, dvymin, dvzmax, dvzmin;
     int dsumg, dn, dnx, dny, add;
 } track_par;
 
+/* Function declarations */
 track_par* read_track_par(char *filename);
 int compare_track_par(track_par *t1, track_par *t2);
 
