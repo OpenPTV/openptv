@@ -1,31 +1,24 @@
-# Cython definitions for parameters.h
+# Cython declarations for parameters.h
+from libc.stdlib cimport malloc, free
+
 cdef extern from "optv/parameters.h":
+    ctypedef struct target_par:
+        int discont
+        int gvthres[4]
+        int nnmin, nnmax
+        int nxmin, nxmax
+        int nymin, nymax
+        int sumg_min
+        int cr_sz
+
     ctypedef struct mm_np:
-        int nlay
         double n1
         double n2[3]
-        double d[3]
         double n3
+        double d[3]
     
-    ctypedef struct track_par:
-        double dacc, dangle, dvxmax, dvxmin
-        double dvymax, dvymin, dvzmax, dvzmin
-        int dsumg, dn, dnx, dny, add
-    
-    ctypedef struct sequence_par:
-        char ** img_base_name
-        int first, last
-        
-    ctypedef struct volume_par:
-        double X_lay[2]
-        double Zmin_lay[2]
-        double Zmax_lay[2]
-        double cn, cnx, cny, csumg, eps0, corrmin
-        
     ctypedef struct control_par:
         int num_cams
-        char **img_base_name
-        char **cal_img_base_name
         int hp_flag
         int allCam_flag
         int tiff_flag
@@ -36,48 +29,23 @@ cdef extern from "optv/parameters.h":
         int chfield
         mm_np *mm
     
-    ctypedef struct target_par:
-        int discont
-        int gvthres[4]    # grey value threshold per camera.
-        int nnmin, nnmax  # bounds for number of pixels in target.
-        int nxmin, nxmax  # same in x dimension.
-        int nymin, nymax  # same in y dimension.
-        int sumg_min      # minimal sum of grey values in target.
-        int cr_sz         # correspondence parameter.
-    
-    # Control parameters
+    # C function declarations
     control_par* new_control_par(int num_cams)
-    control_par* read_control_par(char* file_name)
-    void free_control_par(control_par* control_par_ptr)
-    int compare_control_par(control_par *control_par1, control_par *control_par2)
-    
-    # Volume parameters
-    volume_par* new_volume_par()
-    volume_par* read_volume_par(char* file_name)
-    void free_volume_par(volume_par* volume_par_ptr)
-    int compare_volume_par(volume_par *volume_par1, volume_par *volume_par2)
-    
-    # Track parameters
-    track_par* read_track_par(char* file_name)
-    void free_track_par(track_par* track_par_ptr)
-    int compare_track_par(track_par *track_par1, track_par *track_par2)
+    void free_control_par(control_par* cp)
+    int compare_control_par(control_par *cp1, control_par *cp2)
+    target_par* read_target_par(char *filename)
+    int compare_target_par(target_par *targ1, target_par *targ2)
 
+# Cython class declarations
 cdef class MultimediaParams:
     cdef mm_np* _mm_np
-    cdef void set_mm_np(MultimediaParams self, mm_np * other_mm_np_c_struct)
-    
-cdef class TrackingParams:
-    cdef track_par * _track_par
-
-cdef class SequenceParams:
-    cdef sequence_par * _sequence_par
-
-cdef class VolumeParams:
-    cdef volume_par * _volume_par
+    cdef mm_np* get_mm_np(self) nogil
+    cdef void set_mm_np(self, mm_np* other) nogil
 
 cdef class ControlParams:
-    cdef control_par * _control_par
-    cdef MultimediaParams _multimedia_params
+    cdef:
+        control_par* _control_par
+        MultimediaParams _multimedia_params
 
 cdef class TargetParams:
     cdef target_par* _targ_par

@@ -1,10 +1,10 @@
 # cython: language_level=3
 #define NPY_NO_DEPRECATED_API NPY_1_7_API_VERSION
 
-import numpy as np
-cimport numpy as cnp
 from libc.stdlib cimport malloc, free
-from libc.string cimport memcpy, strncpy
+from libc.string cimport memcpy
+cimport numpy as cnp
+import numpy as np
 
 # Initialize numpy
 cnp.import_array()
@@ -133,29 +133,31 @@ cdef class MultimediaParams:
     refractive index.
     """
 
-    def __init__(self, **kwargs):
-        """
-        Arguments (all optional):
-        nlay - number of layers (default 1).
-        n1 - index of refraction of first medium (usually air, 1).
-        n2 - array, refr. indices of all but first and last layer.
-        n3 - index of refraction of final medium (e.g. water, 1.33).
-        d - thickness of all but first and last layers, [mm].
-        """
-        self._mm_np = < mm_np *> malloc(sizeof(mm_np))
+    def __cinit__(self, double n1=1.0, n2=None, d=None, double n3=1.0):
+        self._mm_np = <mm_np*>malloc(sizeof(mm_np))
+        if self._mm_np is NULL:
+            raise MemoryError()
+            
+        self._mm_np.n1 = n1
+        self._mm_np.n3 = n3
         
-        if kwargs.has_key('n1') and kwargs['n1'] is not None:
-            self.set_n1(kwargs['n1'])
-        if kwargs.has_key('n2') and kwargs.has_key('d') \
-            and kwargs['n2'] is not None and kwargs['d'] is not None:
-            self.set_layers(kwargs['n2'], kwargs['d'])
-        if kwargs.has_key('n3') and kwargs['n3'] is not None:
-            self.set_n3(kwargs['n3'])
-             
-    cdef void set_mm_np(self, mm_np * other_mm_np_c_struct):
-        free(self._mm_np)
-        self._mm_np = other_mm_np_c_struct
-        
+        if n2 is not None:
+            for i in range(3):
+                self._mm_np.n2[i] = n2[i]
+        if d is not None:
+            for i in range(3):
+                self._mm_np.d[i] = d[i]
+    
+    def __dealloc__(self):
+        if self._mm_np is not NULL:
+            free(self._mm_np)
+    
+    cdef mm_np* get_mm_np(self) nogil:
+        return self._mm_np
+    
+    cdef void set_mm_np(self, mm_np* other) nogil:
+        memcpy(self._mm_np, other, sizeof(mm_np))
+
     def get_nlay(self):
         return self._mm_np[0].nlay
         
@@ -635,33 +637,37 @@ cdef class ControlParams:
     pythonic access. Objects of this type can be checked for equality using 
     "==" and "!=" operators.
     """
-    def __init__(self, cams, flags=[], image_size=None, pixel_size=None,
-        cam_side_n=None, wall_ns=None, wall_thicks=None, object_side_n=None):
-        """
-        Arguments (all optional except num_cams):
-        num_cams - number of camras used in the scene.
-        flags - a list containings name of set flags, select from 'hp', 
-            'allcam', 'headers'.
-        image_size - sequence, w,h image size in pixels.
-        pixel_size - sequence, w,h pixel size in mm.
-        cam_side_n, wall_ns, wall_thicks, object_side_n - see MultimediaParams
-        """
-        self._control_par = c_new_control_par(cams)
+    def __cinit__(self, int num_cams):
+        self._control_par = new_control_par(num_cams)
+        if self._control_par is NULL:
+            raise MemoryError()
+        self._multimedia_params = MultimediaParams()
+        self._control_par.mm = self._multimedia_params.get_mm_np()
+    
+    def __dealloc__(self):
+        if self._control_par is not NULL:
+            free_control_par(self._control_par)
+
+    def __init__(self, num_cams, flags=None, image_size=None, pixel_size=None,
+                 cam_side_n=None, wall_ns=None, wall_thicks=None, object_side_n=None):
+        if flags is None:
+            flags = []
+        
         self.set_hp_flag('hp' in flags)
         self.set_allCam_flag('allcam' in flags)
         self.set_tiff_flag('headers' in flags)
-        self.set_chfield(0) # legacy stuff.
+        self.set_chfield(0)
         
         if image_size is not None:
             self.set_image_size(image_size)
         if pixel_size is not None:
             self.set_pixel_size(pixel_size)
         
-        self._multimedia_params = MultimediaParams(
-            n1=cam_side_n, n2=wall_ns, d=wall_thicks, n3=object_side_n)
-        free(self._control_par[0].mm)
-        self._control_par[0].mm = self._multimedia_params._mm_np
-        
+        if any(x is not None for x in (cam_side_n, wall_ns, wall_thicks, object_side_n)):
+            self._multimedia_params = MultimediaParams(
+                n1=cam_side_n, n2=wall_ns, d=wall_thicks, n3=object_side_n)
+            self._control_par.mm = self._multimedia_params.get_mm_np()
+    
     # Getters and setters
     def get_num_cams(self):
         return self._control_par[0].num_cams
@@ -801,14 +807,17 @@ cdef class ControlParams:
 
 cdef class TargetParams:
     """
-    Wrapping the target_par C struct (declared in liboptv/paramethers.h) for 
-    pythonic access. Objects of this type can be checked for equality using 
-    "==" and "!=" operators.
+    Wrapping the target_par C struct for pythonic access.
     """
+    def __cinit__(self):
+        self._targ_par = <target_par *>malloc(sizeof(target_par))
+        if self._targ_par is NULL:
+            raise MemoryError()
+
     def __init__(self, int discont=0, gvthresh=None, 
         pixel_count_bounds=(0, 1000),
-        xsize_bounds=(0, 100), ysize_bounds=(0, 100), int min_sum_grey=0, 
-        int cross_size=2):
+        xsize_bounds=(0, 100), ysize_bounds=(0, 100), 
+        int min_sum_grey=0, int cross_size=2):
         """
         Arguments (all optional):
         int discont - maximum discontinuity parameter.
@@ -823,8 +832,6 @@ cdef class TargetParams:
         if gvthresh is None:
             gvthresh = [0] * 4
         
-        self._targ_par = <target_par *> malloc(sizeof(target_par))
-        
         self.set_max_discontinuity(discont)
         self.set_grey_thresholds(gvthresh)
         self.set_pixel_count_bounds(pixel_count_bounds)
@@ -833,6 +840,36 @@ cdef class TargetParams:
         self.set_min_sum_grey(min_sum_grey)
         self.set_cross_size(cross_size)
     
+    def __dealloc__(self):
+        if self._targ_par is not NULL:
+            free(self._targ_par)
+            self._targ_par = NULL
+
+    def read(self, char* inp_filename):
+        """
+        Reads target recognition parameters from a legacy .par file
+        """
+        if self._targ_par is not NULL:
+            free(self._targ_par)
+        
+        self._targ_par = read_target_par(inp_filename)
+        
+        if self._targ_par is NULL:
+            raise IOError("Problem reading target recognition parameters.")
+
+    def __richcmp__(TargetParams self, TargetParams other, int op):
+        if op != 2 and op != 3:  # Only handle == and !=
+            raise TypeError("Unhandled comparison operator")
+            
+        if other is None:
+            return op == 3  # Return True for != None, False for == None
+            
+        cdef int result = compare_target_par(self._targ_par, other._targ_par)
+        if op == 2:  # ==
+            return result != 0
+        else:  # !=
+            return result == 0
+
     def get_max_discontinuity(self):
         return self._targ_par.discont
     
@@ -915,33 +952,3 @@ cdef class TargetParams:
     
     def set_cross_size(self, int cr_sz):
         self._targ_par.cr_sz = cr_sz
-    
-    def read(self, inp_filename):
-        """
-        Reads target recognition parameters from a legacy .par file, which 
-        holds one parameter per line. The arguments are read in this order:
-        
-        1. gvthres[0]
-        2. gvthres[1]
-        3. gvthres[2]
-        4. gvthres[3]
-        5. discont
-        6. nnmin
-        7. nnmax
-        8. nxmin
-        9. nxmax
-        10. nymin
-        11. nymax
-        12. sumg_min
-        13. cr_sz
-        
-        Fills up the fields of the object from the file and returns.
-        """
-        free(self._targ_par)
-        self._targ_par = read_target_par(inp_filename)
-        
-        if self._targ_par == NULL:
-            raise IOError("Problem reading target recognition parameters.")
-    
-    def __dealloc__(self):
-        free(self._targ_par)

@@ -21,7 +21,8 @@ def main():
             '.',
             'optv',
             './liboptv/include',
-            './liboptv/include/optv'
+            './liboptv/include/optv',
+            './liboptv/src'
         ],
         force=True  # Force recompilation
     )
