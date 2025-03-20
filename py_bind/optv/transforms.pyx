@@ -125,6 +125,16 @@ def distorted_to_flat(np.ndarray[ndim=2, dtype=np.float64_t] inp,
     the out array with metric flat unshifted coordinates, or a new array of the
     correct size with the same results.
     """
+    
+    if inp is None:
+        raise ValueError("Input array cannot be None")
+        
+    if inp.shape[1] != 2:
+        raise ValueError("Input array must have shape (n,2)")
+        
+    if out is not None and (out.shape != inp.shape):
+        raise ValueError("Output array must have same shape as input array")
+    
     out = check_inputs(inp, out)
     
     for pt_num, pt in enumerate(inp):

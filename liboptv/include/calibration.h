@@ -6,7 +6,6 @@
         and Image Analysis Techniques. Kluwer Academic Publishers. 1996. 
         pp.165-168
 */
-
 #ifndef CALIBRATION_H
 #define CALIBRATION_H
 
@@ -19,6 +18,14 @@ extern "C" {
 
 typedef double Dmatrix[3][3];
 
+/* Define Glass structure first */
+typedef struct Glass_t {
+    double vec_x, vec_y, vec_z;
+    double n1, n2, n3;
+    double d;
+} Glass;
+
+/* Then the rest of the structs */
 typedef struct Exterior_t {
     double x0, y0, z0;
     double omega, phi, kappa;
@@ -30,11 +37,6 @@ typedef struct Interior_t {
     double cc;
 } Interior;
 
-typedef struct Glass_t {
-    double vec_x, vec_y, vec_z;
-    double n1, n2, n3;
-    double d;
-} Glass;
 
 typedef struct {
     double k1, k2, k3;
@@ -57,10 +59,10 @@ typedef struct {
     mmlut mmlut;
 } Calibration;
 
-/* Function declarations */
-int write_ori(Exterior Ex, Interior I, Glass G, ap_52 ap, char *filename,
-    char *add_file);
-int read_ori(Exterior Ex[], Interior I[], Glass G[], char *ori_file,
+/* Function declarations - now all structs are defined */
+int write_ori(Exterior Ex, Interior interior, Glass glass, ap_52 ap, 
+    char *filename, char *add_file);
+int read_ori(Exterior Ex[], Interior interior[], Glass glass[], char *ori_file,
     ap_52 addp[], char *add_file, char *add_fallback);
 void rotation_matrix(Exterior *ex);
 
@@ -72,4 +74,3 @@ int write_calibration(Calibration *cal, char *filename, char *add_file);
 #endif
 
 #endif
-

@@ -1,8 +1,35 @@
 [build-system]
-requires = ["setuptools", "wheel", "cibuildwheel", "cython"]
+requires = ["setuptools>=45", "wheel", "cmake>=3.15", "ninja", "cython<3"]
 build-backend = "setuptools.build_meta"
 
+[project]
+name = "openptv"
+version = "0.3.0"
+description = "OpenPTV - framework for particle tracking velocimetry"
+readme = "README.md"
+requires-python = ">=3.8"
+license = {file = "LICENSE"}
+authors = [
+    {name = "OpenPTV Community", email = "openptv@googlegroups.com"}
+]
+dependencies = [
+    "numpy",
+    "cython",
+    "pyyaml",
+    "matplotlib"
+]
+
+[tool.setuptools]
+packages = ["optv"]
+package-dir = {"" = "python"}
+
+[tool.pytest.ini_options]
+testpaths = ["python/tests"]
+python_files = "test_*.py"
+
 [tool.cibuildwheel]
+skip = ["cp36-*", "cp37-*"]
+build-frontend = "build"
 # Specify the Python versions and platforms you want to build for
 # For example, to build for manylinux, macOS, and Windows:
 windows = ["cp38", "cp39", "cp310"]

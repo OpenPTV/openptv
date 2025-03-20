@@ -102,10 +102,16 @@ def get_liboptv_sources():
 
 
 def mk_ext(name, files):
+    extra_compile_args = []
+    if not sys.platform.startswith('win'):
+        extra_compile_args.append('-Wno-cpp')
+    else:
+        extra_compile_args.append('/W4')  # Add Windows warning level
+        
     return Extension(
         name,
         files + get_liboptv_sources(),
-        extra_compile_args=['-Wno-cpp'] if not sys.platform.startswith('win') else None
+        extra_compile_args=extra_compile_args
     )
 
 

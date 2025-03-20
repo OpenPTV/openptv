@@ -22,7 +22,7 @@
 *   char *add_file - path of file to contain added (distortions) parameters.
 */
 
-int write_ori (Exterior Ex, Interior I, Glass G, ap_52 ap, \
+int write_ori (Exterior Ex, Interior interior, Glass glass, ap_52 ap,
         char *filename, char *add_file){
   FILE	*fp;
   int  	i, success = 0;
@@ -37,8 +37,8 @@ int write_ori (Exterior Ex, Interior I, Glass G, ap_52 ap, \
 	   Ex.x0, Ex.y0, Ex.z0, Ex.omega, Ex.phi, Ex.kappa);
   for (i=0; i<3; i++)  fprintf (fp, "    %10.7f %10.7f %10.7f\n",
 				Ex.dm[i][0], Ex.dm[i][1], Ex.dm[i][2]);
-  fprintf (fp,"\n    %8.4f %8.4f\n    %8.4f\n", I.xh, I.yh, I.cc);
-  fprintf (fp,"\n    %20.15f %20.15f  %20.15f\n", G.vec_x, G.vec_y, G.vec_z);
+  fprintf (fp,"\n    %8.4f %8.4f\n    %8.4f\n", interior.xh, interior.yh, interior.cc);
+  fprintf (fp,"\n    %20.15f %20.15f  %20.15f\n", glass.vec_x, glass.vec_y, glass.vec_z);
   
   fclose (fp);
   fp = NULL;

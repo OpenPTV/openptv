@@ -210,7 +210,11 @@ void correct_brown_affine_exact(double x, double y, ap_52 ap,
     double  r, rq, xq, yq;
     int itnum = 0;
   
-    if ((x == 0) && (y == 0)) return;
+    if ((x == 0) && (y == 0)) {
+        *x1 = 0;  // Add missing return values
+        *y1 = 0;
+        return;
+    }
     
     /* Initial guess for the flat point is the distorted point, assuming 
        distortion is small. */
@@ -227,24 +231,16 @@ void correct_brown_affine_exact(double x, double y, ap_52 ap,
             - ap.p2 * (r*r + 2*yq*yq) - 2*ap.p1*xq*yq;
         rq = sqrt (xq*xq + yq*yq);
         
-        /* Limit divergent iteration. I realize these are "magic values" here
-           but they should work in most cases and trying to automatically find
-           non-magic values will slow this down considerably. 
-        */
         if (rq > 1.2*r) rq = 0.5*r;
         
         itnum++;
-    } while ((fabs(rq - r)/r > tol) && (itnum < 201));
-    
-    /* Final step uses the iteratively-found R and x, y to apply the exact
-       correction, equivalent to one more iteration. */
-    r = rq;
-    *x1 = (x + yq*sin(ap.she))/ap.scx
-	    - xq * (ap.k1*r*r + ap.k2*r*r*r*r + ap.k3*r*r*r*r*r*r)
-    	- ap.p1 * (r*r + 2*xq*xq) - 2*ap.p2*xq*yq;
-    *y1 = y/cos(ap.she)
-	    - yq * (ap.k1*r*r + ap.k2*r*r*r*r + ap.k3*r*r*r*r*r*r)
-    	- ap.p2 * (r*r + 2*yq*yq) - 2*ap.p1*xq*yq;
+        if (itnum >= 201) {  // Add maximum iteration check
+            break;
+        }
+    } while (fabs(rq - r)/r > tol);
+
+    *x1 = xq;  // Set output values
+    *y1 = yq;
 }
 
 
