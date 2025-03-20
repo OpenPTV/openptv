@@ -4,6 +4,13 @@
 # [1] Dracos, Th., ed.; Three Dimensional Velocity and Vorticity Measuring
 #     and Image Analysis Techniques; 1996. Chapter 3.
 
+import numpy as np
+cimport numpy as np
+np.import_array()
+
+DTYPE = np.float64
+ctypedef np.float64_t DTYPE_t
+
 from libc.stdlib cimport malloc, free
 import numpy
 cimport numpy as cnp

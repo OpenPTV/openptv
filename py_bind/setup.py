@@ -9,6 +9,7 @@ import glob
 from setuptools import Extension
 from setuptools.command.build_ext import build_ext
 import importlib
+import numpy
 
 
 class PrepareCommand(setuptools.Command):
@@ -33,11 +34,9 @@ class PrepareCommand(setuptools.Command):
 
     def copy_source_files(self):
         if not os.path.exists(self.liboptv_dir):
-            print('liboptv does not exist at %s. You must run setup.py prepare from with the full liboptv repository' % self.liboptv_dir,
-                  file=sys.stderr)
-            raise Exception('liboptv does not exist at %s' % self.liboptv_dir)
+            raise Exception(f'liboptv does not exist at {self.liboptv_dir}')
         
-        print('Copying the liboptv source files from %s...' % self.liboptv_dir)
+        print('Copying the liboptv source files from %s to \n %s' % (os.path.abspath(self.liboptv_dir), os.path.abspath('./liboptv')))
         if os.path.exists('./liboptv'):
             shutil.rmtree('./liboptv')
         os.makedirs('./liboptv')
@@ -61,48 +60,30 @@ class PrepareCommand(setuptools.Command):
         self.announce('Converted %s to C' % pyx)
 
 
-class BuildExt(build_ext, object):
+class BuildExt(build_ext):  # Remove unnecessary (object) inheritance
     def run(self):
         if not os.path.exists('./liboptv') or not glob.glob('./optv/*.c'):
             print('You must run setup.py prepare before building the extension', file=sys.stderr)
             raise Exception('You must run setup.py prepare before building the extension')
         self.add_include_dirs()
-        super(BuildExt, self).run()
-
-        # We inherite from object to make super() work, see here: https://stackoverflow.com/a/18392639/871910
+        super().run()  # Simplified super() call for Python 3
 
     @staticmethod
     def get_numpy_include_dir():
-        # Get the numpy include directory, adapted from the following  RLs:
-        # https://www.programcreek.com/python/example/60953/__builtin__.__NUMPY_SETUP__
-        # https://github.com/astropy/astropy-helpers/blob/master/astropy_helpers/utils.py
-        if sys.version_info[0] >= 3:
-            import builtins
-            if hasattr(builtins, '__NUMPY_SETUP__'):
-                del builtins.__NUMPY_SETUP__
-            import importlib
-            import numpy
-            importlib.reload(numpy)
-        else:
-            import builtins
-            if hasattr(__builtin__, '__NUMPY_SETUP__'):
-                del builtins.__NUMPY_SETUP__
-            import numpy
-            importlib.reload(numpy)
+        # Simplified numpy include directory detection for Python 3
+        import builtins
+        if hasattr(builtins, '__NUMPY_SETUP__'):
+            del builtins.__NUMPY_SETUP__
+        import numpy
+        importlib.reload(numpy)
 
-        try:
-            return numpy.get_include()
-        except AttributeError:
-            return numpy.get_include_dir()
+        return numpy.get_include()
 
     def add_include_dirs(self):
-        # All the Extension objects do not have their include_dir specified, we add it here as it requires
-        # importing numpy, which we do not want to do unless build_ext is really running.
-        # This allows pip to install numpy as it processes dependencies before building extensions
-        np_include_dir = BuildExt.get_numpy_include_dir()
+        np_include_dir = self.get_numpy_include_dir()
         include_dirs = [np_include_dir, '.', './liboptv/include', './liboptv/include/optv']
 
-        for extension in self.extensions:  # We dug into setuptools and distutils to find the properties to change
+        for extension in self.extensions:
             extension.include_dirs = include_dirs
 
 # The python bindings have been redone, so they do not require the liboptv.so to be installed.
@@ -121,8 +102,11 @@ def get_liboptv_sources():
 
 
 def mk_ext(name, files):
-    # Do not specify include dirs, as they require numpy to be installed. Add them in BuildExt
-    return Extension(name, files + get_liboptv_sources())
+    return Extension(
+        name,
+        files + get_liboptv_sources(),
+        extra_compile_args=['-Wno-cpp'] if not sys.platform.startswith('win') else None
+    )
 
 
 ext_mods = [
@@ -146,7 +130,6 @@ setup(
         'prepare': PrepareCommand,
     },
     packages=['optv'],
-    extra_compile_args=['-Wno-cpp'],
     ext_modules=ext_mods,
     include_package_data=True,
     data_files=[

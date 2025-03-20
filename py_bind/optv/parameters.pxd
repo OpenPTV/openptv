@@ -44,23 +44,53 @@ cdef extern from "optv/parameters.h":
         int nymin, nymax  # same in y dimension.
         int sumg_min      # minimal sum of grey values in target.
         int cr_sz         # correspondence parameter.
-        
+    
+    target_par* read_target_par(const char* filename)
+    track_par* c_read_track_par(const char* filename)
+    sequence_par* c_read_sequence_par(const char* filename, int num_cams)
+    volume_par* c_read_volume_par(const char* filename)
+    control_par* c_read_control_par(const char* filename)
+
+    # Add these free function declarations
+    void free_control_par(control_par *cp)
+    void free_sequence_par(sequence_par *sp)
+    void c_free_control_par(control_par *cp)  # If this exists in C
+    void c_free_sequence_par(sequence_par *sp)  # If this exists in C
+
+    # Add comparison function declarations
+    int c_compare_control_par(control_par *c1, control_par *c2)
+    int c_compare_sequence_par(sequence_par *sp1, sequence_par *sp2)
+    int c_compare_track_par(track_par *t1, track_par *t2)
+    int c_compare_volume_par(volume_par *v1, volume_par *v2)
+    int c_compare_mm_np(mm_np *mm1, mm_np *mm2)
+
+    # Add new_control_par declaration
+    control_par* new_control_par(int num_cams)
+
+    sequence_par* new_sequence_par(int num_cams)
+    void free_sequence_par(sequence_par* sp)
+
 cdef class MultimediaParams:
     cdef mm_np* _mm_np
     cdef void set_mm_np(MultimediaParams self, mm_np * other_mm_np_c_struct)
     
 cdef class TrackingParams:
-    cdef track_par * _track_par
+    cdef track_par* _track_par
+    cdef bytes _filename_bytes
 
 cdef class SequenceParams:
-    cdef sequence_par * _sequence_par
+    cdef sequence_par* _sequence_par
+    cdef bytes _filename_bytes
 
 cdef class VolumeParams:
-    cdef volume_par * _volume_par
+    cdef volume_par* _volume_par
+    cdef bytes _filename_bytes
 
 cdef class ControlParams:
-    cdef control_par * _control_par
+    cdef control_par* _control_par
     cdef MultimediaParams _multimedia_params
+    cdef bytes _filename_bytes
 
 cdef class TargetParams:
     cdef target_par* _targ_par
+    cdef bytes _filename_bytes  # Add storage for bytes objects

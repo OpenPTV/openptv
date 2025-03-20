@@ -10,42 +10,43 @@
 #ifndef CALIBRATION_H
 #define CALIBRATION_H
 
+#include "parameters.h"
 #include "vec_utils.h"
 
-typedef	double	Dmatrix[3][3];	/* 3 x 3 rotation matrix */
+#ifdef __cplusplus
+extern "C" {
+#endif
 
-typedef struct
-{
-  double  x0, y0, z0;
-  double  omega, phi, kappa;
-  Dmatrix dm;
-}
-Exterior;
+typedef double Dmatrix[3][3];
 
-typedef struct
-{
-  double xh, yh;
-  double cc;
-}
-Interior;
+typedef struct Exterior_t {
+    double x0, y0, z0;
+    double omega, phi, kappa;
+    Dmatrix dm;
+} Exterior;
 
-typedef struct
-{
-  double vec_x,vec_y,vec_z;
-}
-Glass;
+typedef struct Interior_t {
+    double xh, yh;
+    double cc;
+} Interior;
 
-typedef struct
-{
-  double k1,k2,k3,p1,p2,scx,she;
-}
-ap_52;
+typedef struct Glass_t {
+    double vec_x, vec_y, vec_z;
+    double n1, n2, n3;
+    double d;
+} Glass;
 
-/* mmLUT structure */
+typedef struct {
+    double k1, k2, k3;
+    double p1, p2;
+    double scx, she;
+    int field;
+} ap_52;
+
 typedef struct {
     vec3d origin;
-    int    nr, nz, rw;
-    double *data; 
+    int nr, nz, rw;
+    double *data;
 } mmlut;
 
 typedef struct {
@@ -56,23 +57,19 @@ typedef struct {
     mmlut mmlut;
 } Calibration;
 
-
-
-int write_ori(Exterior Ex, Interior I, Glass G, ap_52 ap, char *filename, 
+/* Function declarations */
+int write_ori(Exterior Ex, Interior I, Glass G, ap_52 ap, char *filename,
     char *add_file);
-int read_ori (Exterior Ex[], Interior I[], Glass G[], char *ori_file, 
+int read_ori(Exterior Ex[], Interior I[], Glass G[], char *ori_file,
     ap_52 addp[], char *add_file, char *add_fallback);
-int compare_exterior(Exterior *e1, Exterior *e2);
-int compare_interior(Interior *i1, Interior *i2);
-int compare_glass(Glass *g1, Glass *g2);
-int compare_addpar(ap_52 *a1, ap_52 *a2);
-int compare_calib(Calibration *c1, Calibration *c2);
+void rotation_matrix(Exterior *ex);
 
-Calibration *read_calibration(char *ori_file, char *add_file,
-    char *fallback_file);
-int write_calibration(Calibration *cal, char *ori_file, char *add_file);
+Calibration* read_calibration(char *ori_file, char *add_file, char *fallback_file);
+int write_calibration(Calibration *cal, char *filename, char *add_file);
 
-void rotation_matrix(Exterior *Ex);
+#ifdef __cplusplus
+}
+#endif
 
 #endif
 

@@ -78,24 +78,18 @@ finalize:
 *   values.
 */
 
-int read_ori (Exterior Ex[], Interior I[], Glass G[], char *ori_file, \
-    ap_52 addp[], char *add_file, char *add_fallback){
-    
-  FILE	*fp;
-  int  	i, scan_res;
+int read_ori(Exterior Ex[], Interior I[], Glass G[], char *ori_file,
+    ap_52 addp[], char *add_file, char *add_fallback)
+{
+    FILE	*fp;
+    int  	i, scan_res;
 
-   /* removed call to fopen_r, replaced by the same fopen as in 
-   tracking_frame_buf.c
-   
-   if (!(fp = fopen_r(ori_file))) return 0;
-   */
-   
-    fp = fopen (ori_file, "r");
-    if (! fp) {
+    fp = fopen(ori_file, "r");
+    if (!fp) {
         printf("Can't open ORI file: %s\n", ori_file);
         goto handle_error;
     }
-  
+
   /* Exterior */
   scan_res = fscanf (fp, "%lf %lf %lf %lf %lf %lf",
 	  &(Ex->x0), &(Ex->y0), &(Ex->z0),
