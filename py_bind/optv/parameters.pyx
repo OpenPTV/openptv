@@ -55,21 +55,30 @@ cdef class MultimediaParams:
         d - sequence of thickness values for intermediate layers
         """
         self._mm_np = <mm_np *> malloc(sizeof(mm_np))
-        self._mm_np[0].n1 = n1
-        self._mm_np[0].n3 = n3
+        if self._mm_np is NULL:
+            raise MemoryError("Failed to allocate multimedia parameters")
         
-        if n2 is None:
-            n2 = []
-        if d is None:
-            d = []
+        # Set default values
+        self._mm_np[0].n1 = 1.0 if n1 is None else n1
+        self._mm_np[0].n3 = 1.0 if n3 is None else n3
+        self._mm_np[0].nlay = 0
+        
+        # Initialize arrays with zeros
+        for i in range(3):
+            self._mm_np[0].n2[i] = 0.0
+            self._mm_np[0].d[i] = 0.0
+        
+        # Only process n2 and d if both are provided
+        if n2 is not None and d is not None:
+            if len(n2) != len(d):
+                raise ValueError("Length of n2 and d must be equal")
+            if len(n2) > 3:
+                raise ValueError("Maximum number of layers (3) exceeded")
             
-        if len(n2) != len(d):
-            raise ValueError("Length of n2 and d must be equal")
-        
-        self._mm_np[0].nlay = len(n2)
-        for i in range(len(n2)):
-            self._mm_np[0].n2[i] = n2[i]
-            self._mm_np[0].d[i] = d[i]
+            self._mm_np[0].nlay = len(n2)
+            for i in range(len(n2)):
+                self._mm_np[0].n2[i] = n2[i]
+                self._mm_np[0].d[i] = d[i]
              
     cdef void set_mm_np(self, mm_np * other_mm_np_c_struct):
         free(self._mm_np)
