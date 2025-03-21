@@ -13,9 +13,9 @@ import numpy as np
 np.import_array()
 
 DTYPE = np.float64
-ITYPE = np.int32  # Add explicit integer type
+ITYPE = np.intp  # Add explicit integer type
 ctypedef np.float64_t DTYPE_t
-ctypedef np.int32_t ITYPE_t  # Add integer type definition
+ctypedef np.intp_t ITYPE_t  # Add integer type definition
 
 from optv.transforms cimport pixel_to_metric, dist_to_flat
 from optv.parameters cimport ControlParams, VolumeParams
@@ -90,11 +90,11 @@ cdef class MatchedCoords:
         """
         cdef:
             np.ndarray[ndim=2, dtype=DTYPE_t] pos
-            np.ndarray[ndim=1, dtype=ITYPE_t] pnr  # Changed from dtype=ITYPE_t
+            np.ndarray[ndim=1, dtype=ITYPE_t] pnr
             int pt
         
         pos = np.empty((self._num_pts, 2))
-        pnr = np.empty(self._num_pts, dtype=np.int32)  # Changed dtype
+        pnr = np.empty(self._num_pts, dtype=ITYPE)  # Changed to use ITYPE
         
         for pt in range(self._num_pts):
             pos[pt,0] = self.buf[pt].x
