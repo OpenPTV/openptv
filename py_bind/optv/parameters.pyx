@@ -209,6 +209,10 @@ cdef class TrackingParams:
         cdef char* c_filename = <char*><char*>self._filename_bytes
         free(self._track_par)
         self._track_par = read_track_par(c_filename)
+        
+        # Ensure the file is properly closed after reading
+        if hasattr(self, '_file') and self._file is not None:
+            self._file.close()
     
     # Checks for equality between this and other trackParams objects
     # Gives the ability to use "==" and "!=" operators on two trackParams objects
@@ -380,7 +384,9 @@ cdef class SequenceParams:
     def get_img_base_name(self, cam):
         """Get image base name of camera #cam"""
         cdef char * c_str = self._sequence_par[0].img_base_name[cam]
-        return c_str if c_str is not NULL else None
+        if c_str is NULL:
+            return None
+        return c_str.decode('utf-8')
     
     # Set image base name for camera #cam
     def set_img_base_name(self, cam, str new_img_name):
