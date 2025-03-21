@@ -5,12 +5,11 @@ import shutil
 import sys
 import glob
 import numpy as np
-import setuptools
-from setuptools import setup, Extension
+from setuptools import setup, Extension, Command
 from setuptools.command.build_ext import build_ext
 
 
-class PrepareCommand(setuptools.Command):
+class PrepareCommand(Command):
     """Prepare the C sources by copying them from liboptv and converting pyx to C"""
     
     description = "Prepare C sources and Cython files"
@@ -35,8 +34,7 @@ class PrepareCommand(setuptools.Command):
             dest = os.path.join('liboptv/include', os.path.basename(h_file))
             shutil.copy(h_file, dest)
             
-        # Also copy headers to the root liboptv directory for compatibility
-        for h_file in glob.glob('../liboptv/include/*.h'):
+            # Also copy headers to the root liboptv directory for compatibility
             dest = os.path.join('liboptv', os.path.basename(h_file))
             shutil.copy(h_file, dest)
         
@@ -86,15 +84,14 @@ def mk_ext(name, files):
     )
 
 
-# Define extensions
-ext_mods = [
-    mk_ext('optv.tracking_framebuf', ['optv/tracking_framebuf.c']),
-    mk_ext('optv.parameters', ['optv/parameters.c']),
-    mk_ext('optv.calibration', ['optv/calibration.c']),
-    mk_ext('optv.correspondences', ['optv/correspondences.c']),
-    mk_ext('optv.tracker', ['optv/tracker.c']),
-    mk_ext('optv.orientation', ['optv/orientation.c'])
-]
+def get_extensions():
+    extensions = []
+    for pyx_file in glob.glob('optv/*.pyx'):
+        module = os.path.splitext(pyx_file)[0].replace(os.path.sep, '.')
+        c_file = os.path.splitext(pyx_file)[0] + '.c'
+        extensions.append(mk_ext(module, [c_file]))
+    return extensions
+
 
 if __name__ == "__main__":
     setup(
@@ -102,7 +99,7 @@ if __name__ == "__main__":
             'build_ext': BuildExt,
             'prepare': PrepareCommand,
         },
-        ext_modules=ext_mods,
+        ext_modules=get_extensions(),
         include_package_data=True,
         package_data={
             'optv': ['*.pxd', '*.c', '*.h'],
