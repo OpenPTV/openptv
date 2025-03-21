@@ -65,6 +65,15 @@ int read_ori(Exterior Ex[], Interior interior[], Glass glass[], char *ori_file,
     ap_52 addp[], char *add_file, char *add_fallback);
 void rotation_matrix(Exterior *ex);
 
+/* Compare two calibration objects for equality */
+int compare_calib(Calibration *c1, Calibration *c2);
+
+/* Compare individual calibration components */
+int compare_exterior(Exterior *e1, Exterior *e2);
+int compare_interior(Interior *i1, Interior *i2);
+int compare_glass(Glass *g1, Glass *g2);
+int compare_addpar(ap_52 *a1, ap_52 *a2);
+
 Calibration* read_calibration(char *ori_file, char *add_file, char *fallback_file);
 int write_calibration(Calibration *cal, char *filename, char *add_file);
 
