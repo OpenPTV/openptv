@@ -36,6 +36,33 @@ pip install -e .
 pytest test/
 ```
 
+### Developer Guide
+
+#### Running Tests
+
+The C library tests use the Check framework and can be run in several ways:
+
+1. Run all tests with debug output:
+```bash
+CK_FORK=no CK_VERBOSITY=verbose ctest -V
+```
+
+2. Run a specific test (e.g., check_track) with debug output:
+```bash
+CK_FORK=no CK_VERBOSITY=verbose ctest -V -R check_track
+```
+
+3. Run a single test case with maximum debug information:
+```bash
+CTEST_OUTPUT_ON_FAILURE=1 CK_FORK=no CK_VERBOSITY=verbose CK_RUN_CASE="test_single_particle_track" ctest --output-on-failure -VV -R check_track
+```
+
+Environment variables explained:
+- `CK_FORK=no`: Prevents Check from forking processes, ensuring all output is visible
+- `CK_VERBOSITY=verbose`: Enables verbose output from Check framework
+- `CK_RUN_CASE`: Specifies a single test case to run
+- `CTEST_OUTPUT_ON_FAILURE=1`: Shows output for failed tests
+
 ### Troubleshooting
 
 If you encounter build issues, clean the build artifacts and try again:

@@ -723,6 +723,7 @@ int read_man_ori_fix(vec3d fix4[4], char* calblock_filename,
         printf("Can't open manual orientation file %s\n", man_ori_filename);
         goto handle_error;
     }
+    printf("Opened %s\n", man_ori_filename);
 
     /* Skip cameras before the one we're interested in */
     for (i = 0; i < cam; i++) {
@@ -732,6 +733,7 @@ int read_man_ori_fix(vec3d fix4[4], char* calblock_filename,
             goto handle_error;
         }
     }
+    printf("Skipped %d cameras\n", cam);
     
     /* Read the point numbers for our camera */
     ret = fscanf(fpp, "%d %d %d %d \n", &nr[0], &nr[1], &nr[2], &nr[3]);
@@ -739,34 +741,40 @@ int read_man_ori_fix(vec3d fix4[4], char* calblock_filename,
         printf("Error reading point numbers\n");
         goto handle_error;
     }
+    printf("Looking for points: %d %d %d %d\n", nr[0], nr[1], nr[2], nr[3]);
     
     fclose(fpp);
 
     /* read the id and positions of the fixed points, assign the pre-defined to fix4 */
     fix = read_calblock(&num_fix, calblock_filename);
     if (num_fix < 4) {
-        printf("Too few points or incompatible file: %s\n", calblock_filename);
+        printf("Too few points or incompatible file: %s (got %d points)\n", 
+            calblock_filename, num_fix);
         goto handle_error;
     }
+    printf("Read %d points from calblock\n", num_fix);
     
     num_match = 0; /* count matches to needed numbers */
     for (pnr = 0; pnr < num_fix; pnr++) {
+        printf("Checking point %d\n", pnr);
         for (i = 0; i < 4; i++) {
             if (pnr == nr[i] - 1) {
                 vec_copy(fix4[i], fix[pnr]);
                 num_match++;
+                printf("Found match %d: point %d matches needed point %d\n", 
+                    num_match, pnr, nr[i]);
                 break;
             }
         }
-        if (num_match >= num_fix) break;
+        if (num_match >= 4) break;
     }
     
     free(fix);   
+    printf("Found %d matches total\n", num_match);
     return num_match;
 
 handle_error:
-    if (fpp != NULL) fclose(fpp);
-    free(fix);
+    if (fix) free(fix);
     return 0;
 }
 
