@@ -43,3 +43,8 @@ command = [
 [tool.cibuildwheel.test]
 command = "pytest {project}/tests"
 extras = ["test"]
+
+[tool.pytest.ini_options]
+testpaths = ["test"]
+python_files = "test_*.py"
+pythonpath = ["."]
