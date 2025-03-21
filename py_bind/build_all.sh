@@ -14,6 +14,8 @@ cleanup_build_artifacts() {
     rm -rf dist/
     rm -rf wheelhouse/
     rm -rf optv/*.c
+    rm -rf venv/
+    rm -rf liboptv/  # Clean up copied liboptv files
     find . -type d -name "__pycache__" -exec rm -rf {} + 2>/dev/null || true
     find . -name "*.so" -delete
 }
@@ -30,41 +32,28 @@ fi
 # Activate virtual environment
 source venv/bin/activate
 
-# Upgrade pip
+# Upgrade pip and install build dependencies
 python -m pip install --upgrade pip
-
-# Install build dependencies
 python -m pip install \
     numpy>=1.21.0 \
     cython>=3.0.0 \
     setuptools>=61.0 \
     wheel \
     pyyaml \
-    pytest \
-    build \
-    cmake>=3.15 \
-    ninja
+    pytest
 
-# Build the C library first
-echo "Building C library..."
-cd ../liboptv
-mkdir -p build
-cd build
-cmake ..
-make
-cd ../../py_bind
+# Prepare source files (copies C sources and headers)
+echo "Preparing source files..."
+python setup.py prepare
 
 # Build and install the Python package
 echo "Building and installing Python package..."
 python setup.py build_ext --inplace
 pip install -e .
 
-# Run tests with correct PYTHONPATH
+# Run tests
 echo "Running tests..."
-export PYTHONPATH="${PYTHONPATH}:$(pwd)"
-cd test
-pytest
-cd ..
+PYTHONPATH="${PYTHONPATH}:$(pwd)" pytest test/
 
 echo "Build completed successfully!"
 
