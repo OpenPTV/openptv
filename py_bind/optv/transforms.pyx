@@ -135,11 +135,12 @@ def distorted_to_flat(np.ndarray[ndim=2, dtype=np.float64_t] inp,
     if out is not None and (out.shape != inp.shape):
         raise ValueError("Output array must have same shape as input array")
     
-    out = check_inputs(inp, out)
+    if out is None:
+        out = np.empty_like(inp)
     
     for pt_num, pt in enumerate(inp):
         dist_to_flat(pt[0], pt[1], calibration._calibration, 
             <double *> np.PyArray_GETPTR2(out, pt_num, 0),
             <double *> np.PyArray_GETPTR2(out, pt_num, 1), tol)
     
-    return out
+    return np.asarray(out)  # Ensure we return a numpy array, not a memoryview

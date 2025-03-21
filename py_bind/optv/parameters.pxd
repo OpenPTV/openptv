@@ -48,13 +48,13 @@ cdef extern from "optv/parameters.h":
         int sumg_min      # minimal sum of grey values in target.
         int cr_sz         # correspondence parameter.
     
-    target_par* read_target_par(const char* filename)
-    control_par* read_control_par(const char* filename)
+    target_par* read_target_par(char* filename)
+    control_par* read_control_par(char* filename)
 
     # Add these function declarations
-    track_par* read_track_par(const char* filename)
-    sequence_par* read_sequence_par(const char* filename, int num_cams)
-    volume_par* read_volume_par(const char* filename)
+    track_par* read_track_par(char* filename)
+    sequence_par* read_sequence_par(char* filename, int num_cams)
+    volume_par* read_volume_par(char* filename)
 
     # Add these free function declarations
     void free_control_par(control_par *cp)

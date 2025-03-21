@@ -205,7 +205,8 @@ cdef class TrackingParams:
         objects' arguments ordered one per line.
         """
         self._filename_bytes = filename.encode('utf-8')
-        cdef const char* c_filename = <const char*>self._filename_bytes
+        # Cast away const
+        cdef char* c_filename = <char*><char*>self._filename_bytes
         free(self._track_par)
         self._track_par = read_track_par(c_filename)
     
@@ -361,18 +362,14 @@ cdef class SequenceParams:
         self._sequence_par[0].last = last
         
     def read_sequence_par(self, str filename, int num_cams):
-        """
-        Reads sequence parameters from a config file with the following format:
-        each line is a value, first num_cams values are image names, 
-        (num_cams+1)th is the first number in the sequence, (num_cams+2)th line
-        is the last value in the sequence.
+        """Read sequence parameters from a text file.
         
         Arguments:
-        filename - path to the text file containing the parameters.
-        num_cams - expected number of cameras
+            filename: path to the parameter file
+            num_cams: number of cameras
         """
         self._filename_bytes = filename.encode('utf-8')
-        cdef const char* c_filename = <const char*>self._filename_bytes
+        cdef char* c_filename = <char*><char*>self._filename_bytes
         
         if self._sequence_par != NULL:
             free_sequence_par(self._sequence_par)
@@ -381,9 +378,9 @@ cdef class SequenceParams:
         
     # Get image base name of camera #cam
     def get_img_base_name(self, cam):
+        """Get image base name of camera #cam"""
         cdef char * c_str = self._sequence_par[0].img_base_name[cam]
-        cdef py_str = c_str
-        return py_str
+        return c_str if c_str is not NULL else None
     
     # Set image base name for camera #cam
     def set_img_base_name(self, cam, str new_img_name):
@@ -517,29 +514,14 @@ cdef class VolumeParams:
         self._volume_par[0].corrmin = corrmin
         
     def read_volume_par(self, str filename):
-        """
-        read_volume_par() reads parameters of illuminated volume from a config 
-        file with the following format: each line is a value, in this order:
+        """Read volume parameters from a text file.
         
-        1. X_lay[0]
-        2. Zmin_lay[0]
-        3. Zmax_lay[0]
-        4. X_lay[1]
-        5. Zmin_lay[1]
-        6. Zmax_lay[1]
-        7. cnx
-        8. cny
-        9. cn
-        10.csumg
-        11.corrmin
-        12.eps0
-        
-        Argument:
-        filename - path to the text file containing the parameters.
+        Arguments:
+            filename: path to the parameter file
         """
         # Store the bytes object as an instance attribute to prevent garbage collection
         self._filename_bytes = filename.encode('utf-8')
-        cdef const char* c_filename = <const char*>self._filename_bytes
+        cdef char* c_filename = <char*><char*>self._filename_bytes
         
         # Free existing volume_par if it exists
         if self._volume_par != NULL:
@@ -696,8 +678,13 @@ cdef class ControlParams:
     # Arguments:
     # filename - path to text file containing the parameters.
     def read_control_par(self, str filename):
+        """Read control parameters from a text file.
+        
+        Arguments:
+            filename: path to the parameter file
+        """
         self._filename_bytes = filename.encode('utf-8')
-        cdef const char* c_filename = <const char*>self._filename_bytes
+        cdef char* c_filename = <char*><char*>self._filename_bytes
         
         if self._control_par != NULL:
             self._control_par[0].mm = NULL  # Prevent double free
@@ -709,9 +696,9 @@ cdef class ControlParams:
         
     # Get image base name of camera #cam
     def get_img_base_name(self, cam):
+        """Get image base name of camera #cam"""
         cdef char * c_str = self._control_par[0].img_base_name[cam]
-        cdef py_str = c_str
-        return py_str
+        return c_str if c_str is not NULL else None
     
     # Set image base name for camera #cam
     def set_img_base_name(self, cam, str new_img_name):
@@ -721,9 +708,9 @@ cdef class ControlParams:
     
     # Get calibration image base name of camera #cam
     def get_cal_img_base_name(self, cam):
+        """Get calibration image base name of camera #cam"""
         cdef char * c_str = self._control_par[0].cal_img_base_name[cam]
-        cdef py_str = c_str
-        return py_str
+        return c_str if c_str is not NULL else None
     
     # Set calibration image base name for camera #cam
     def set_cal_img_base_name(self, cam, str new_img_name):
@@ -898,7 +885,7 @@ cdef class TargetParams:
         self._filename_bytes = inp_filename.encode('utf-8')
         
         # Get a pointer to the underlying buffer
-        cdef const char* c_filename = <const char*>self._filename_bytes
+        cdef char* c_filename = <char*><char*>self._filename_bytes
         
         free(self._targ_par)
         self._targ_par = read_target_par(c_filename)
