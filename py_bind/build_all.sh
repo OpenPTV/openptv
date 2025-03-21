@@ -6,11 +6,6 @@ set -e
 # Print commands before executing
 set -x
 
-# Function to check if command exists
-command_exists() {
-    command -v "$1" >/dev/null 2>&1
-}
-
 # Function to clean up build artifacts
 cleanup_build_artifacts() {
     echo "Cleaning up build artifacts..."
@@ -19,15 +14,9 @@ cleanup_build_artifacts() {
     rm -rf dist/
     rm -rf wheelhouse/
     rm -rf optv/*.c
-    rm -rf liboptv/
     find . -type d -name "__pycache__" -exec rm -rf {} + 2>/dev/null || true
+    find . -name "*.so" -delete
 }
-
-# Check for python3
-if ! command_exists python3; then
-    echo "Python 3 is required but not installed. Aborting."
-    exit 1
-fi
 
 # Clean up any previous build artifacts
 cleanup_build_artifacts
@@ -56,21 +45,26 @@ python -m pip install \
     cmake>=3.15 \
     ninja
 
-# Run the build script
-echo "Running build script..."
-python build.py
+# Build the C library first
+echo "Building C library..."
+cd ../liboptv
+mkdir -p build
+cd build
+cmake ..
+make
+cd ../../py_bind
 
-# Install the package in editable mode
-echo "Installing package in editable mode..."
+# Build and install the Python package
+echo "Building and installing Python package..."
+python setup.py build_ext --inplace
 pip install -e .
 
-# Run tests if pytest is available
-if python -c "import pytest" >/dev/null 2>&1; then
-    echo "Running tests..."
-    pytest test
-else
-    echo "pytest not found, skipping tests. Install with: pip install pytest"
-fi
+# Run tests with correct PYTHONPATH
+echo "Running tests..."
+export PYTHONPATH="${PYTHONPATH}:$(pwd)"
+cd test
+pytest
+cd ..
 
 echo "Build completed successfully!"
 
