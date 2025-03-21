@@ -561,7 +561,7 @@ cdef class ControlParams:
     pythonic access. Objects of this type can be checked for equality using 
     "==" and "!=" operators.
     """
-    def __init__(self, int cams, flags=None, image_size=None, pixel_size=None,
+    def __init__(self, int num_cams, flags=None, image_size=None, pixel_size=None,
         cam_side_n=None, wall_ns=None, wall_thicks=None, object_side_n=None):
         """
         Arguments (all optional except num_cams):
@@ -576,7 +576,7 @@ cdef class ControlParams:
             flags = []
             
         # Initialize the control parameter structure
-        self._control_par = new_control_par(cams)
+        self._control_par = new_control_par(num_cams)
         if self._control_par is NULL:
             raise MemoryError("Failed to allocate control parameters")
             
