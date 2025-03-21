@@ -1,5 +1,4 @@
-cython
+cython>=3.0.0
 nose
-numpy
+numpy>=1.21.0
 pyyaml
-six

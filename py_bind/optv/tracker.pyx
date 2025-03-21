@@ -1,17 +1,21 @@
-# -*- coding: utf-8 -*-
-"""
-Implementation of bindings for the tracking code.
+# cython: language_level=3
+# distutils: language = c
 
-Created on Sun Apr 23 15:41:32 2017
-
-@author: yosef
-"""
+import numpy as np
+cimport numpy as np
+np.import_array()  # Initialize NumPy C-API
 
 from libc.stdlib cimport free
 from optv.parameters cimport ControlParams, TrackingParams, SequenceParams, \
     VolumeParams
 from optv.orientation cimport cal_list2arr
 from optv.tracking_framebuf cimport fb_free
+
+# External C functions from tracking_run.h should be declared in tracker.pxd
+from optv.tracker cimport (
+    tr_new, track_forward_start, trackcorr_c_loop,
+    trackcorr_c_finish, trackback_c, TR_BUFSPACE, MAX_TARGETS
+)
 
 default_naming = {
     'corres': b'res/rt_is',
@@ -34,7 +38,7 @@ cdef class Tracker:
         ControlParams cpar, VolumeParams vpar, TrackingParams tpar, 
         SequenceParams spar - the usual parameter objects, as read from 
             anywhere.
-        cals - a list of Calibratiopn objects.
+        cals - a list of Calibration objects.
         dict naming - a dictionary with naming rules for the frame buffer 
             files. See the ``default_naming`` member (which is the default).
         """
@@ -93,10 +97,9 @@ cdef class Tracker:
         return self.step
     
     def __dealloc__(self):
-        # Don't call tr_free, just free the memory that belongs to us.
-        fb_free(self.run_info.fb)
-        free(self.run_info.cal) # allocated by cal_list2arr, leafs belong to
-                                # owner of the Tracker.
-        free(self.run_info) # not using tr_free() which assumes ownership of 
+        if self.run_info is not NULL:
+            fb_free(self.run_info.fb)
+            free(self.run_info.cal)
+            free(self.run_info)  # not using tr_free() which assumes ownership of 
                             # parameter structs.
         

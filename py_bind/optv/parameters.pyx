@@ -1,20 +1,20 @@
-# Implementation of Python binding to parameters.h
-from libc.stdlib cimport malloc, free
-from libc.string cimport strncpy
+# distutils: language = c
+# cython: language_level=3
 
 import numpy as np
 cimport numpy as np
-from numpy cimport NPY_DOUBLE, NPY_INT, import_array
-from numpy cimport PyArray_SimpleNewFromData, PyArray_SetBaseObject
-import_array()
+from numpy cimport PyArray_SimpleNewFromData, npy_intp, NPY_DOUBLE, NPY_INT
+np.import_array()  # Important! Initialize NumPy C-API
 
-from cpython cimport PyObject, Py_INCREF
-from cpython.ref cimport PyObject
+from cpython.ref cimport PyObject, Py_INCREF
+from libc.stdlib cimport malloc, free
+from libc.string cimport strncpy
 
+# Declare the NumPy C-API function we need
 cdef extern from "numpy/arrayobject.h":
-    int PyArray_SetBaseObject_(np.ndarray arr, object obj) except -1
+    int PyArray_SetBaseObject(np.ndarray arr, PyObject* obj) except -1
 
-cdef np.ndarray wrap_1d_c_arr_as_ndarray(object base_obj, int arr_size, int num_type, const void* data, int copy):
+cdef wrap_1d_c_arr_as_ndarray(object base_obj, int arr_size, int num_type, const void* data, int copy):
     """
     Returns as NumPy array a value internally represented as a C array.
     
@@ -38,38 +38,38 @@ cdef np.ndarray wrap_1d_c_arr_as_ndarray(object base_obj, int arr_size, int num_
     
     if not copy:
         Py_INCREF(base_obj)
-        PyArray_SetBaseObject_(ndarr, base_obj)
+        PyArray_SetBaseObject(ndarr, <PyObject*>base_obj)
     
     if copy:
         ndarr = ndarr.copy()
     
     return ndarr
 
-cdef class MultimediaParams:
-    """
-    Relates to photographing through several transparent media (air, tank 
-    wall, water, etc.). Holds parameters related to media thickness and 
-    refractive index.
-    """
-
-    def __init__(self, **kwargs):
+cdef class MultimediaParams:   
+    def __init__(self, n1=1.0, n2=None, n3=1.0, d=None):
         """
         Arguments (all optional):
-        nlay - number of layers (default 1).
-        n1 - index of refraction of first medium (usually air, 1).
-        n2 - array, refr. indices of all but first and last layer.
-        n3 - index of refraction of final medium (e.g. water, 1.33).
-        d - thickness of all but first and last layers, [mm].
+        n1 - index of refraction of the first medium (air = 1.0)
+        n2 - sequence of indices of refraction of intermediate layers
+        n3 - index of refraction of the last medium
+        d - sequence of thickness values for intermediate layers
         """
-        self._mm_np = < mm_np *> malloc(sizeof(mm_np))
+        self._mm_np = <mm_np *> malloc(sizeof(mm_np))
+        self._mm_np[0].n1 = n1
+        self._mm_np[0].n3 = n3
         
-        if kwargs.has_key('n1') and kwargs['n1'] is not None:
-            self.set_n1(kwargs['n1'])
-        if kwargs.has_key('n2') and kwargs.has_key('d') \
-            and kwargs['n2'] is not None and kwargs['d'] is not None:
-            self.set_layers(kwargs['n2'], kwargs['d'])
-        if kwargs.has_key('n3') and kwargs['n3'] is not None:
-            self.set_n3(kwargs['n3'])
+        if n2 is None:
+            n2 = []
+        if d is None:
+            d = []
+            
+        if len(n2) != len(d):
+            raise ValueError("Length of n2 and d must be equal")
+        
+        self._mm_np[0].nlay = len(n2)
+        for i in range(len(n2)):
+            self._mm_np[0].n2[i] = n2[i]
+            self._mm_np[0].d[i] = d[i]
              
     cdef void set_mm_np(self, mm_np * other_mm_np_c_struct):
         free(self._mm_np)
@@ -95,28 +95,32 @@ cdef class MultimediaParams:
                 self._mm_np[0].d[i] = thickness[i]
             
             self._mm_np[0].nlay = len(refr_index)
-            
+
     def get_n2(self, copy=True):
         """
-        get the mid-layer refractive indices (n2) as a numpy array
-        
-        Arguments: 
+        Arguments:
         copy - False for returned numpy object to take ownership of 
             the memory of the n2 field of the underlying mm_np struct. True
             (default) to return a COPY instead.
         """
         cdef int arr_size = <int>(sizeof(self._mm_np[0].n2) / sizeof(self._mm_np[0].n2[0]))
         return wrap_1d_c_arr_as_ndarray(self, arr_size, NPY_DOUBLE, 
-            self._mm_np[0].n2, copy)
-    
+            self._mm_np[0].n2, (1 if copy else 0))
+            
     def get_d(self, copy=True):
+        """
+        Arguments:
+        copy - False for returned numpy object to take ownership of 
+            the memory of the d field of the underlying mm_np struct. True
+            (default) to return a COPY instead.
+        """
         cdef int arr_size = <int>(sizeof(self._mm_np[0].d) / sizeof(self._mm_np[0].d[0]))
         return wrap_1d_c_arr_as_ndarray(self, arr_size, NPY_DOUBLE, 
-            self._mm_np[0].d, copy)
-           
+            self._mm_np[0].d, (1 if copy else 0))
+            
     def get_n3(self):
         return self._mm_np[0].n3
-    
+        
     def set_n3(self, n3):
         self._mm_np[0].n3 = n3
 
@@ -129,28 +133,6 @@ cdef class MultimediaParams:
         else:
             raise TypeError("Unhandled comparison operator")
 
-    def __str__(self):
-        cdef int n2_size = <int>(sizeof(self._mm_np[0].n2) / sizeof(self._mm_np[0].n2[0]))
-        cdef int d_size = <int>(sizeof(self._mm_np[0].d) / sizeof(self._mm_np[0].d[0]))
-        cdef int i
-
-        n2_str = "{"
-        for i in range(n2_size - 1):
-            n2_str = n2_str + str(self._mm_np[0].n2[i]) + ", "
-        n2_str += str(self._mm_np[0].n2[n2_size - 1]) + "}"
-        
-        d_str = "{"
-        for i in range(d_size - 1):
-            d_str += str(self._mm_np[0].d[i]) + ", "
-        d_str += str(self._mm_np[0].d[d_size - 1]) + "}"
-        
-        return "nlay=\t{} \nn1=\t{} \nn2=\t{} \nd=\t{} \nn3=\t{} ".format(
-                str(self._mm_np[0].nlay),
-                str(self._mm_np[0].n1),
-                n2_str,
-                d_str,
-                str(self._mm_np[0].n3))
-        
     def __dealloc__(self):
         free(self._mm_np)
 
