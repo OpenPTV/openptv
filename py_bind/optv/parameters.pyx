@@ -698,7 +698,9 @@ cdef class ControlParams:
     def get_img_base_name(self, cam):
         """Get image base name of camera #cam"""
         cdef char * c_str = self._control_par[0].img_base_name[cam]
-        return c_str if c_str is not NULL else None
+        if c_str is NULL:
+            return None
+        return c_str.decode('utf-8')
     
     # Set image base name for camera #cam
     def set_img_base_name(self, cam, str new_img_name):
@@ -710,7 +712,9 @@ cdef class ControlParams:
     def get_cal_img_base_name(self, cam):
         """Get calibration image base name of camera #cam"""
         cdef char * c_str = self._control_par[0].cal_img_base_name[cam]
-        return c_str if c_str is not NULL else None
+        if c_str is NULL:
+            return None
+        return c_str.decode('utf-8')
     
     # Set calibration image base name for camera #cam
     def set_cal_img_base_name(self, cam, str new_img_name):
