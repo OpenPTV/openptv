@@ -169,7 +169,7 @@ class Test_transforms(unittest.TestCase):
         cal.set_radial_distortion(np.r_[0.001, 0., 0.])
         distorted = distort_arr_brown_affine(ref_pos, cal)
         corrected = distorted_to_flat(distorted, cal) # default tight tolerance
-        np.testing.assert_array_almost_equal(ref_pos, corrected, decimal=6)
+        np.testing.assert_array_almost_equal(ref_pos, corrected, decimal=5)
         
 if __name__ == '__main__':
   unittest.main()

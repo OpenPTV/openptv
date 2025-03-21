@@ -26,6 +26,59 @@ python -m build
 pip install dist/*.whl
 ```
 
+## Creating Binary Wheels
+
+### Local Binary Wheels
+
+To create platform-specific binary wheels:
+
+1. Navigate to the py_bind directory:
+```bash
+cd py_bind
+```
+
+2. Clean previous build artifacts:
+```bash
+rm -rf build/ dist/ *.egg-info/
+rm -rf optv/*.c  # Remove Cython-generated files
+```
+
+3. Prepare the source files:
+```bash
+python setup.py prepare
+```
+
+4. Build the wheel:
+```bash
+python -m pip wheel . -w dist/
+```
+
+The wheel will be created in the `dist/` directory with a platform-specific name like:
+- Linux: `openptv-0.3.0-cp311-cp311-linux_x86_64.whl`
+- Windows: `openptv-0.3.0-cp311-cp311-win_amd64.whl`
+- macOS: `openptv-0.3.0-cp311-cp311-macosx_10_9_x86_64.whl`
+
+### Building Wheels for Multiple Platforms
+
+For building wheels for multiple platforms and Python versions, we use `cibuildwheel`:
+
+1. Install cibuildwheel:
+```bash
+pip install cibuildwheel
+```
+
+2. Build wheels for all supported platforms:
+```bash
+# Linux/macOS
+python -m cibuildwheel --platform linux --arch x86_64
+# or
+python -m cibuildwheel --platform macos --arch x86_64
+# or on Windows
+python -m cibuildwheel --platform windows --arch AMD64
+```
+
+The wheels will be available in the `wheelhouse/` directory.
+
 ## Development Installation
 
 For development, you can install the package in editable mode:

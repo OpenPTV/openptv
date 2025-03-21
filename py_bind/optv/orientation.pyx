@@ -327,7 +327,7 @@ def full_calibration(Calibration cal,
         raise ValueError("Orientation iteration failed, need better setup.")
     
     ret = np.empty((len(img_pts), 2))
-    used = np.empty(len(img_pts), dtype=np.int_)
+    used = np.empty(len(img_pts), dtype=np.int32)
     
     for ix in range(len(img_pts)):
         ret[ix] = (residuals[2*ix], residuals[2*ix + 1])
