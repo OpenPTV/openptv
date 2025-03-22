@@ -19,8 +19,15 @@ add_library (optv SHARED tracking_frame_buf.c calibration.c parameters.c lsqadj.
 
 
 if(UNIX)
-  target_link_libraries(optv m 
-    debug efence)
+  target_link_libraries(optv PRIVATE m)
+  target_link_libraries(optv PRIVATE ${CMAKE_DL_LIBS})
+  if(CMAKE_BUILD_TYPE STREQUAL "Debug")
+    target_link_libraries(optv PRIVATE efence)
+  endif()
 endif(UNIX)
+
+if(WIN32)
+  target_link_libraries(optv PRIVATE ws2_32)  # Add Windows socket library if needed
+endif(WIN32)
 
 install(TARGETS optv DESTINATION lib)

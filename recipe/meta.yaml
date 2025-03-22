@@ -34,15 +34,13 @@ build:
 
 requirements:
   build:
-    # If your project compiles code (such as a C extension) then add the required
-    # compilers as separate entries here. Compilers are named 'c', 'cxx' and 'fortran'.
     - {{ compiler('c') }}
   host:
     - python
     - setuptools
     - pip
-    - numpy<1.24
-    - cython<3.0
+    - numpy
+    - cython
     - pyyaml
     - six
   run:

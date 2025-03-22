@@ -14,28 +14,32 @@ def flat_image_coordinates(np.ndarray[ndim=2, dtype=np.float_t] input,
     distortions
     
     Arguments:
-    input - a numpy array of vectors of position in 3D (X,Y,Z real space)
-    Calibration cal - parameters of the camera on which to project.
-    MultimediaParams mult_params- layer thickness and refractive index parameters.
-    output (optional) - a numpy array of input length containing x,y pixel 
-        coordinates of projection in the image space. New array is created if
-        ``output`` is ``None``. 
+    input : ndarray[float64] 
+        A numpy array of vectors of position in 3D (X,Y,Z real space)
+    cal : Calibration
+        Parameters of the camera on which to project.
+    mult_params : MultimediaParams
+        Layer thickness and refractive index parameters.
+    output : ndarray[float64], optional
+        A numpy array of input length containing x,y pixel coordinates of
+        projection in the image space. New array is created if output=None.
+        
+    Returns:
+    ndarray[float64]
+        Array containing the projected coordinates
     '''
     check_arrays(input, output)
     
-    # If no array was passed for output:
-    # create new array with same number of rows as in input 
-    # with only 2 columns    
     if output is None:        
         output = np.empty((input.shape[0], 2))
     input = np.ascontiguousarray(input)
      
     for i in range(input.shape[0]):
-        flat_image_coord(<vec3d>np.PyArray_GETPTR2(input, i, 0),
+        flat_image_coord(<vec3d>&input[i,0],
                          cal._calibration,
                          mult_params._mm_np,
-                         < double *> np.PyArray_GETPTR2(output, i, 0),
-                         < double *> np.PyArray_GETPTR2(output, i, 1))
+                         &output[i,0],
+                         &output[i,1])
     return output
 
 def image_coordinates(np.ndarray[ndim=2, dtype=np.float_t] input,
@@ -64,11 +68,11 @@ def image_coordinates(np.ndarray[ndim=2, dtype=np.float_t] input,
     input = np.ascontiguousarray(input)
      
     for i in range(input.shape[0]):
-        img_coord(<vec3d>np.PyArray_GETPTR2(input, i, 0),
+        img_coord(<vec3d>&input[i,0],
                          cal._calibration,
                          mult_params._mm_np,
-                         < double *> np.PyArray_GETPTR2(output, i, 0),
-                         < double *> np.PyArray_GETPTR2(output, i, 1))
+                         &output[i,0],
+                         &output[i,1])
     return output
     
 def check_arrays(np.ndarray[ndim=2, dtype=np.float_t] input,

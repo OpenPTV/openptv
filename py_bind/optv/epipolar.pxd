@@ -1,9 +1,5 @@
-# -*- coding: utf-8 -*-
-"""
-Created on Thu Apr 18 11:12:36 2018
-
-@author: alexlib
-"""
+# cython: language_level=3
+# distutils: language = c
 
 from optv.calibration cimport calibration
 from optv.parameters cimport mm_np, volume_par

@@ -166,30 +166,81 @@ void metric_to_pixel(double * x_pixel
     ap_52 ap - distortion parameters struct.
     double *x1, *y1 - output metric distorted parameters.
 */
-void distort_brown_affin (double x, double y, ap_52 ap, double *x1, double *y1){
-  double		r;
-  
-  
-  r = sqrt (x*x + y*y);
-  if (r != 0)
-    {
-      x += x * (ap.k1*r*r + ap.k2*r*r*r*r + ap.k3*r*r*r*r*r*r)
-	+ ap.p1 * (r*r + 2*x*x) + 2*ap.p2*x*y;
-      
-      y += y * (ap.k1*r*r + ap.k2*r*r*r*r + ap.k3*r*r*r*r*r*r)
-	+ ap.p2 * (r*r + 2*y*y) + 2*ap.p1*x*y;
-      
-      *x1 = ap.scx * x - sin(ap.she) * y;  *y1 = cos(ap.she) * y;
+void distort_brown_affin (double x, double y, ap_52 ap, double *x1, double *y1) {
+    double r = sqrt(x*x + y*y);
+    
+    if (r < 1e-10) {
+        *x1 = 0;
+        *y1 = 0;
+        return;
     }
+    
+    // Apply radial distortion
+    double r2 = r*r;
+    double r4 = r2*r2;
+    double r6 = r4*r2;
+    double radial_factor = 1.0 + ap.k1*r2 + ap.k2*r4 + ap.k3*r6;
+    
+    // Apply decentering distortion
+    double x_dist = x * radial_factor + ap.p1 * (r2 + 2*x*x) + 2*ap.p2*x*y;
+    double y_dist = y * radial_factor + ap.p2 * (r2 + 2*y*y) + 2*ap.p1*x*y;
+    
+    // Apply affine transformation more stably
+    double sin_she = sin(ap.she);
+    double cos_she = cos(ap.she);
+    
+    // Scale first, then shear to maintain better numerical precision
+    *x1 = ap.scx * (x_dist - sin_she * y_dist);
+    *y1 = ap.scx * cos_she * y_dist;  // Apply same scale to maintain aspect ratio
 }
 
 /*  correct distorted to flat-image coordinates, see correct_brown_affine_exact(),
     this one is the same except it ensures only one iteration for backward 
     compatibility.
 */
-void correct_brown_affin (double x, double y, ap_52 ap, double *x1, double *y1)
-{
-    correct_brown_affine_exact(x, y, ap, x1, y1, 100000);
+void correct_brown_affin (double x, double y, ap_52 ap, double *x1, double *y1) {
+    // Use a more stable iteration scheme with better initial guess
+    const double sin_she = sin(ap.she);
+    const double cos_she = cos(ap.she);
+    const double inv_scx = 1.0/ap.scx;
+    
+    // Initial guess: inverse affine transformation
+    double xq = x * inv_scx;
+    double yq = y * inv_scx / cos_she;  // Corrected for scale
+    xq += yq * sin_she;  // Apply shear correction
+    
+    const int MAX_ITER = 20;
+    const double DAMPING = 0.7;  // Adjusted damping factor
+    const double TOL = 1e-8;  // Tight tolerance for convergence
+    
+    for (int i = 0; i < MAX_ITER; i++) {
+        // Store previous values for convergence check
+        double xq_old = xq;
+        double yq_old = yq;
+        
+        // Calculate distorted position for current guess
+        double xt, yt;
+        distort_brown_affin(xq, yq, ap, &xt, &yt);
+        
+        // Calculate error
+        double dx = (x - xt) * inv_scx;
+        double dy = (y - yt) * inv_scx;
+        
+        // Update estimate with damping
+        xq += dx * DAMPING;
+        yq += dy * DAMPING;
+        
+        // Check convergence using relative error
+        double change = sqrt((xq - xq_old)*(xq - xq_old) + 
+                           (yq - yq_old)*(yq - yq_old));
+        double pos_magnitude = sqrt(xq*xq + yq*yq);
+        if (pos_magnitude > 1e-10 && change/pos_magnitude < TOL) {
+            break;
+        }
+    }
+    
+    *x1 = xq;
+    *y1 = yq;
 }
 
 /*  correct_brown_affine_exact() attempts to iteratively solve the inverse
@@ -207,44 +258,57 @@ void correct_brown_affin (double x, double y, ap_52 ap, double *x1, double *y1)
 void correct_brown_affine_exact(double x, double y, ap_52 ap, 
     double *x1, double *y1, double tol)
 {
-    double  r, rq, xq, yq;
-    int itnum = 0;
-  
-    if ((x == 0) && (y == 0)) return;
+    const double r_init = sqrt(x*x + y*y);
     
-    /* Initial guess for the flat point is the distorted point, assuming 
-       distortion is small. */
-    rq = sqrt (x*x + y*y);
-    xq = x; yq = y;
+    if (r_init < 1e-10) {
+        *x1 = 0;
+        *y1 = 0;
+        return;
+    }
     
-    do {
-        r = rq;
-        xq = (x + yq*sin(ap.she))/ap.scx
-            - xq * (ap.k1*r*r + ap.k2*r*r*r*r + ap.k3*r*r*r*r*r*r)
-            - ap.p1 * (r*r + 2*xq*xq) - 2*ap.p2*xq*yq;
-        yq = y/cos(ap.she)
-            - yq * (ap.k1*r*r + ap.k2*r*r*r*r + ap.k3*r*r*r*r*r*r)
-            - ap.p2 * (r*r + 2*yq*yq) - 2*ap.p1*xq*yq;
-        rq = sqrt (xq*xq + yq*yq);
+    // Pre-compute trig values
+    const double sin_she = sin(ap.she);
+    const double cos_she = cos(ap.she);
+    const double inv_scx = 1.0/ap.scx;
+    
+    // Initial guess: inverse affine transformation
+    double xq = (x + y*sin_she)*inv_scx;
+    double yq = y/cos_she;
+    
+    const int MAX_ITER = 50;  // Increased for large shear angles
+    const double DAMPING = 0.5;  // More conservative damping
+    
+    for (int i = 0; i < MAX_ITER; i++) {
+        double r2 = xq*xq + yq*yq;
+        double r4 = r2*r2;
+        double r6 = r4*r2;
         
-        /* Limit divergent iteration. I realize these are "magic values" here
-           but they should work in most cases and trying to automatically find
-           non-magic values will slow this down considerably. 
-        */
-        if (rq > 1.2*r) rq = 0.5*r;
+        // Calculate distortion factors
+        double radial_factor = ap.k1*r2 + ap.k2*r4 + ap.k3*r6;
         
-        itnum++;
-    } while ((fabs(rq - r)/r > tol) && (itnum < 201));
+        // Calculate correction terms
+        double dx = xq * radial_factor + ap.p1 * (r2 + 2*xq*xq) + 2*ap.p2*xq*yq;
+        double dy = yq * radial_factor + ap.p2 * (r2 + 2*yq*yq) + 2*ap.p1*xq*yq;
+        
+        // Calculate new estimates
+        double xq_new = (x + y*sin_she)*inv_scx - dx;
+        double yq_new = y/cos_she - dy;
+        
+        // Apply damping
+        double dx_change = xq_new - xq;
+        double dy_change = yq_new - yq;
+        
+        xq += DAMPING * dx_change;
+        yq += DAMPING * dy_change;
+        
+        // Check convergence
+        if (sqrt(dx_change*dx_change + dy_change*dy_change) < tol) {
+            break;
+        }
+    }
     
-    /* Final step uses the iteratively-found R and x, y to apply the exact
-       correction, equivalent to one more iteration. */
-    r = rq;
-    *x1 = (x + yq*sin(ap.she))/ap.scx
-	    - xq * (ap.k1*r*r + ap.k2*r*r*r*r + ap.k3*r*r*r*r*r*r)
-    	- ap.p1 * (r*r + 2*xq*xq) - 2*ap.p2*xq*yq;
-    *y1 = y/cos(ap.she)
-	    - yq * (ap.k1*r*r + ap.k2*r*r*r*r + ap.k3*r*r*r*r*r*r)
-    	- ap.p2 * (r*r + 2*yq*yq) - 2*ap.p1*xq*yq;
+    *x1 = xq;
+    *y1 = yq;
 }
 
 

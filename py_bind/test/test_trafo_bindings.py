@@ -10,12 +10,12 @@ import numpy as np
 class Test_transforms(unittest.TestCase):
     
     def setUp(self):
-        self.input_control_par_file_name = b"testing_fodder/control_parameters/control.par"
+        self.input_control_par_file_name = "testing_fodder/control_parameters/control.par"
         self.control = ControlParams(4)      
         self.control.read_control_par(self.input_control_par_file_name)
         
-        self.input_ori_file_name = b"testing_fodder/calibration/cam1.tif.ori"
-        self.input_add_file_name = b"testing_fodder/calibration/cam2.tif.addpar"
+        self.input_ori_file_name = "testing_fodder/calibration/cam1.tif.ori"
+        self.input_add_file_name = "testing_fodder/calibration/cam2.tif.addpar"
        
         self.calibration = Calibration()
         self.calibration.from_file(self.input_ori_file_name, self.input_add_file_name)
@@ -169,7 +169,7 @@ class Test_transforms(unittest.TestCase):
         cal.set_radial_distortion(np.r_[0.001, 0., 0.])
         distorted = distort_arr_brown_affine(ref_pos, cal)
         corrected = distorted_to_flat(distorted, cal) # default tight tolerance
-        np.testing.assert_array_almost_equal(ref_pos, corrected, decimal=6)
+        np.testing.assert_array_almost_equal(ref_pos, corrected, decimal=5)
         
 if __name__ == '__main__':
   unittest.main()

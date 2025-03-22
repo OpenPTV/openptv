@@ -3,6 +3,10 @@
 from libc.stdlib cimport malloc, free
 cimport numpy as np
 import numpy as np
+np.import_array()
+
+DTYPE = np.float64
+ctypedef np.float64_t DTYPE_t
 
 from optv.vec_utils cimport vec3d, vec_copy
 

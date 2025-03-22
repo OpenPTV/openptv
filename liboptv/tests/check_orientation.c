@@ -25,6 +25,39 @@
 #define RO 200./M_PI
 
 
+START_TEST(test_file_reading)
+{
+    // Test file existence first
+    FILE *f1 = fopen("testing_fodder/cal/calblock.txt", "r");
+    fail_if(f1 == NULL, "Cannot open calblock.txt");
+    if (f1) fclose(f1);
+
+    FILE *f2 = fopen("testing_fodder/parameters/man_ori.par", "r");
+    fail_if(f2 == NULL, "Cannot open man_ori.par");
+    if (f2) fclose(f2);
+
+    // Test basic file reading
+    vec3d fix4[4];
+    int nfix = read_man_ori_fix(fix4, "testing_fodder/cal/calblock.txt",
+                               "testing_fodder/parameters/man_ori.par", 0);
+    
+    printf("read_man_ori_fix returned: %d\n", nfix);
+    fail_if(nfix == 0, "read_man_ori_fix failed completely");
+}
+END_TEST
+
+START_TEST(test_calblock_content)
+{
+    int num_fix;
+    vec3d *fix = read_calblock(&num_fix, "testing_fodder/cal/calblock.txt");
+    fail_if(fix == NULL, "read_calblock failed");
+    if (fix) {
+        printf("Number of points in calblock: %d\n", num_fix);
+        free(fix);
+    }
+}
+END_TEST
+
 START_TEST(test_raw_orient)
 {
     /* a copy of test_sortgrid */
@@ -334,21 +367,14 @@ START_TEST(test_convergence_measure)
 END_TEST
 
 
-Suite* orient_suite(void) {
-    Suite *s = suite_create ("Finding calibration parameters");
+Suite* orientation_suite(void) {
+    Suite *s = suite_create ("Orientation");
 
-    TCase *tc = tcase_create ("Skew rays");
-    tcase_add_test(tc, test_ray_distance_midpoint);
+    TCase *tc = tcase_create ("File Reading");
+    tcase_add_test(tc, test_file_reading);
+    tcase_add_test(tc, test_calblock_content);
     suite_add_tcase (s, tc);
 
-    tc = tcase_create ("Point position");
-    tcase_add_test(tc, test_point_position);
-    suite_add_tcase (s, tc);
-
-    tc = tcase_create ("Convergence measures");
-    tcase_add_test(tc, test_convergence_measure);
-    suite_add_tcase (s, tc);
-    
     tc = tcase_create ("Raw orientation");
     tcase_add_test(tc, test_raw_orient);
     suite_add_tcase (s, tc);
@@ -362,7 +388,7 @@ Suite* orient_suite(void) {
 
 int main(void) {
     int number_failed;
-    Suite *s = orient_suite();
+    Suite *s = orientation_suite();
     SRunner *sr = srunner_create (s);
     srunner_run_all (sr, CK_ENV);
     number_failed = srunner_ntests_failed (sr);

@@ -30,11 +30,11 @@ class TestEpipolarCurve(unittest.TestCase):
         proj_cal.set_angles(np.r_[0., 3*np.pi/4., 0.])
         
         cpar = ControlParams(4)
-        cpar.read_control_par(b"testing_fodder/corresp/control.par")
+        cpar.read_control_par("testing_fodder/corresp/control.par")
         sens_size = cpar.get_image_size()
         
         vpar = VolumeParams()
-        vpar.read_volume_par(b"testing_fodder/corresp/criteria.par")
+        vpar.read_volume_par("testing_fodder/corresp/criteria.par")
         vpar.set_Zmin_lay([-10, -10])
         vpar.set_Zmax_lay([10, 10])
         
