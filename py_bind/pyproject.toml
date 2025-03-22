@@ -1,50 +1,36 @@
 [build-system]
 requires = [
-    "setuptools>=61.0",
-    "wheel",
+    "scikit-build-core>=0.8.0",
+    "cmake>=3.15",
+    "ninja",
     "cython>=3.0.0",
-    "numpy>=1.21.0"
+    "numpy>=1.21.0",
+    "setuptools>=61.0.0"
 ]
-build-backend = "setuptools.build_meta"
+build-backend = "scikit_build_core.build"
 
 [project]
 name = "optv"
 version = "0.3.0"
 description = "OpenPTV Python bindings"
+readme = "README.txt"
 requires-python = ">=3.10"
+license = "LGPL-3.0-or-later"
+authors = [
+    {name = "OpenPTV Community", email = "openptv@googlegroups.com"}
+]
 dependencies = [
     "numpy>=1.21.0",
     "pyyaml",
 ]
 
+[tool.scikit-build]
+cmake.version = ">=3.15"  # Fixed: Added version specifier
+cmake.source-dir = "../liboptv"
+cmake.build-type = "Release"
+wheel.packages = ["optv"]
+wheel.expand-macos-universal-tags = true
+
 [tool.setuptools]
 packages = ["optv"]
-
-[tool.cibuildwheel]
-skip = ["cp36-*", "cp37-*", "cp38-*", "cp39-*"]
-build-frontend = "build"
-
-# Platform specific settings
-windows = ["cp310-*", "cp311-*", "cp312-*", "cp313-*"]
-manylinux-x86_64-image = "manylinux2014"
-macos = ["cp310-*", "cp311-*", "cp312-*", "cp313-*"]
-
-[tool.cibuildwheel.environment]
-CYTHON_BUILD_IN_SOURCE = "1"
-
-[tool.cibuildwheel.before-build]
-command = [
-    "pip install numpy",
-    "pip install cython",
-    "python setup.py prepare",
-    "python setup.py build_ext --inplace"
-]
-
-[tool.cibuildwheel.test]
-command = "pytest {project}/tests"
-extras = ["test"]
-
-[tool.pytest.ini_options]
-testpaths = ["test"]
-python_files = "test_*.py"
-pythonpath = ["."]
+package-dir = {"optv" = "optv"}
