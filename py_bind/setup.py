@@ -4,7 +4,6 @@ import glob
 import shutil
 import sys
 import numpy as np
-from distutils.command.build_ext import build_ext
 
 class PrepareCommand(Command):
     """Prepare the C sources by copying them from liboptv and converting pyx to C"""
@@ -36,7 +35,7 @@ class PrepareCommand(Command):
         
         # Convert pyx to C
         from Cython.Build import cythonize
-        cythonize(['src/optv/*.pyx'], compiler_directives={'language_level': '3'})
+        cythonize(['optv/*.pyx'], compiler_directives={'language_level': '3'})
 
 # Common include directories
 include_dirs = ['liboptv/include', np.get_include()]
@@ -46,7 +45,7 @@ extra_compile_args = ['-Wno-cpp', '-Wno-unused-function'] if not sys.platform.st
 extra_link_args = ['-Wl,-rpath,$ORIGIN'] if not sys.platform.startswith('win') else []
 
 # Define extension modules by finding all pyx files
-pyx_files = glob.glob('src/optv/*.pyx')
+pyx_files = glob.glob('optv/*.pyx')
 ext_modules = [
     Extension(
         f"optv.{os.path.splitext(os.path.basename(pyx_file))[0]}", 
@@ -61,7 +60,7 @@ ext_modules = [
 setup(
     name='optv',
     packages=['optv'],
-    package_dir={'optv': 'src/optv'},
+    package_dir={'optv': 'optv'},
     ext_modules=ext_modules,
     cmdclass={
         'prepare': PrepareCommand,

@@ -1,3 +1,0 @@
--e .[dev,test]
-build
-pip>=23.0

@@ -1,21 +1,19 @@
 [build-system]
 requires = [
-    "scikit-build-core>=0.8.0",
-    "cmake>=3.15",
-    "ninja",
+    "setuptools>=61.0.0",
+    "wheel",
     "cython>=3.0.0",
-    "numpy>=1.21.0",
-    "setuptools>=61.0.0"
+    "numpy>=1.21.0"
 ]
-build-backend = "scikit_build_core.build"
+build-backend = "setuptools.build_meta"
 
 [project]
 name = "optv"
 version = "0.3.0"
 description = "OpenPTV Python bindings"
-readme = "README.txt"
+readme = {file = "README.txt", content-type = "text/x-rst"}
 requires-python = ">=3.10"
-license = "LGPL-3.0-or-later"
+license = "LGPL-3.0-or-later"  # Changed from table to SPDX string
 authors = [
     {name = "OpenPTV Community", email = "openptv@googlegroups.com"}
 ]
@@ -23,13 +21,6 @@ dependencies = [
     "numpy>=1.21.0",
     "pyyaml",
 ]
-
-[tool.scikit-build]
-cmake.version = ">=3.15"  # Fixed: Added version specifier
-cmake.source-dir = "../liboptv"
-cmake.build-type = "Release"
-wheel.packages = ["optv"]
-wheel.expand-macos-universal-tags = true
 
 [tool.setuptools]
 packages = ["optv"]

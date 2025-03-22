@@ -10,18 +10,16 @@ set -x
 rm -rf build/
 rm -rf *.egg-info/
 rm -rf dist/
-rm -rf wheelhouse/
-rm -rf src/optv/*.c
-rm -rf src/src/
+rm optv/*.c
 rm -rf .venv*/
 rm -rf liboptv/
 
-# Create correct directory structure
-mkdir -p src/optv
 
 # Copy liboptv headers for building
-mkdir -p liboptv/include
-cp -r ../liboptv/include/* liboptv/include/
+# mkdir -p liboptv/include
+# cp -r ../liboptv/include/*.h liboptv/include/
+# mkdir -p liboptv/src
+# cp -r ../liboptv/src/*.c liboptv/src/
 
 # Install uv if not already installed
 if ! command -v uv &> /dev/null; then
@@ -41,18 +39,22 @@ for py_version in "${PYTHON_VERSIONS[@]}"; do
     # Install build dependencies
     uv pip install --upgrade pip
     uv pip install \
-        scikit-build-core>=0.8.0 \
-        cmake>=3.15 \
+        scikit-build-core">=0.8.0" \
+        cmake">=3.15" \
         ninja \
-        cython>=3.0.0 \
-        numpy>=1.21.0 \
-        setuptools>=61.0.0 \
+        cython">=3.0.0" \
+        numpy">=1.21.0" \
+        setuptools">=61.0.0" \
+        pytest \
         build
 
     # Run build steps
     python setup.py prepare
     python setup.py build_ext --inplace
     python -m build --wheel --outdir dist/py${py_version}
+    uv pip install dist/py${py_version}/*.whl --force-reinstall
+    cd test
+    python -m pytest --verbose
 
     # Deactivate virtual environment
     deactivate
