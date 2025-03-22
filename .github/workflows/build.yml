@@ -29,9 +29,12 @@ jobs:
     
     - name: Build and install
       run: |
-        python -m build
-        pip install dist/*.whl
+        cd py_bind
+        python setup.prepare
+        python -m build_ext --inplace
+        python -m pip wheel . -w dist/
+        python -m pip install dist/*.whl
     
     - name: Test
       run: |
-        pytest python/tests
+        python -m pytest py_bind/test/
