@@ -1,6 +1,6 @@
 [build-system]
 requires = [
-    "setuptools>=61.0",
+    "setuptools>=61.0.0",
     "wheel",
     "cython>=3.0.0",
     "numpy>=1.21.0"
@@ -11,7 +11,12 @@ build-backend = "setuptools.build_meta"
 name = "optv"
 version = "0.3.0"
 description = "OpenPTV Python bindings"
+readme = {file = "README.txt", content-type = "text/x-rst"}
 requires-python = ">=3.10"
+license = "LGPL-3.0-or-later"  # Changed from table to SPDX string
+authors = [
+    {name = "OpenPTV Community", email = "openptv@googlegroups.com"}
+]
 dependencies = [
     "numpy>=1.21.0",
     "pyyaml",
@@ -19,32 +24,4 @@ dependencies = [
 
 [tool.setuptools]
 packages = ["optv"]
-
-[tool.cibuildwheel]
-skip = ["cp36-*", "cp37-*", "cp38-*", "cp39-*"]
-build-frontend = "build"
-
-# Platform specific settings
-windows = ["cp310-*", "cp311-*", "cp312-*", "cp313-*"]
-manylinux-x86_64-image = "manylinux2014"
-macos = ["cp310-*", "cp311-*", "cp312-*", "cp313-*"]
-
-[tool.cibuildwheel.environment]
-CYTHON_BUILD_IN_SOURCE = "1"
-
-[tool.cibuildwheel.before-build]
-command = [
-    "pip install numpy",
-    "pip install cython",
-    "python setup.py prepare",
-    "python setup.py build_ext --inplace"
-]
-
-[tool.cibuildwheel.test]
-command = "pytest {project}/tests"
-extras = ["test"]
-
-[tool.pytest.ini_options]
-testpaths = ["test"]
-python_files = "test_*.py"
-pythonpath = ["."]
+package-dir = {"optv" = "optv"}
