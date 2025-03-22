@@ -1,3 +1,6 @@
+# cython: language_level=3
+# distutils: language = c
+
 # -*- coding: utf-8 -*-
 """
 Cython definitions for correspondences and related data structures.

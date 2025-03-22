@@ -1,0 +1,31 @@
+# Build artifacts
+build/
+dist/
+wheelhouse/
+*.egg-info/
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+*.so
+*.dll
+
+# Generated C files
+optv/*.c
+liboptv/
+
+# Virtual environment
+venv/
+
+# IDE files
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Temporary files
+*.tmp
+*~
+
+# Test cache
+.pytest_cache/

@@ -1,32 +1,50 @@
 [build-system]
-requires = ["setuptools", "wheel", "cibuildwheel", "cython"]
+requires = [
+    "setuptools>=61.0",
+    "wheel",
+    "cython>=3.0.0",
+    "numpy>=1.21.0"
+]
 build-backend = "setuptools.build_meta"
-# py_modules = ["optv"]
-# where = ["."]
-# include = ["liboptv","py_bind"]
 
-[tool.cibuildwheel]
-skip = ["cp36-*", "cp37-*"]
-
-before-build = [
-    "pip install numpy'<1.24'",
-    "pip install cython'<3'",
-    "python setup.py prepare",
-    "python setup.py build_ext --inplace",
-    "cd ../"
+[project]
+name = "optv"
+version = "0.3.0"
+description = "OpenPTV Python bindings"
+requires-python = ">=3.10"
+dependencies = [
+    "numpy>=1.21.0",
+    "pyyaml",
 ]
 
-# Specify the Python versions and platforms you want to build for
-# For example, to build for manylinux, macOS, and Windows:
-windows = ["cp38", "cp39", "cp310"]
+[tool.setuptools]
+packages = ["optv"]
+
+[tool.cibuildwheel]
+skip = ["cp36-*", "cp37-*", "cp38-*", "cp39-*"]
+build-frontend = "build"
+
+# Platform specific settings
+windows = ["cp310-*", "cp311-*", "cp312-*", "cp313-*"]
 manylinux-x86_64-image = "manylinux2014"
-manylinux-i686-image = "manylinux2014"
-macos = ["cp38", "cp39", "cp310"]
+macos = ["cp310-*", "cp311-*", "cp312-*", "cp313-*"]
 
+[tool.cibuildwheel.environment]
+CYTHON_BUILD_IN_SOURCE = "1"
 
-# Run tests after building the wheel
-test-command = "pytest {project}/tests"
+[tool.cibuildwheel.before-build]
+command = [
+    "pip install numpy",
+    "pip install cython",
+    "python setup.py prepare",
+    "python setup.py build_ext --inplace"
+]
 
-[[tool.cibuildwheel.overrides]]
-select = "cp3{8,9}-*"
-manylinux-x86_64-image = "manylinux2010"
+[tool.cibuildwheel.test]
+command = "pytest {project}/tests"
+extras = ["test"]
+
+[tool.pytest.ini_options]
+testpaths = ["test"]
+python_files = "test_*.py"
+pythonpath = ["."]

@@ -58,4 +58,15 @@ void trackcorr_c_loop (tracking_run *run_info, int step);
 void trackcorr_c_finish(tracking_run *run_info, int step);
 double trackback_c(tracking_run *run_info);
 
+/* add_particle() inserts a particle at a given position to the end of the 
+ * frame, along with associated targets.
+ * 
+ * Arguments:
+ * frame *frm - the frame to store the particle.
+ * vec3d pos - position of inserted particle in the global coordinates.
+ * int cand_inds[][MAX_CANDS] - indices of candidate targets for association
+ *    with this particle.
+ */
+void add_particle(frame *frm, vec3d pos, int cand_inds[][MAX_CANDS]);
+
 #endif

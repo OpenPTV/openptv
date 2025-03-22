@@ -1,36 +1,20 @@
-# Implementation of Python binding to parameters.h
+# distutils: language = c
+# cython: language_level=3
+
+import numpy as np
+cimport numpy as np
+from numpy cimport PyArray_SimpleNewFromData, npy_intp, NPY_DOUBLE, NPY_INT
+np.import_array()  # Important! Initialize NumPy C-API
+
+from cpython.ref cimport PyObject, Py_INCREF
 from libc.stdlib cimport malloc, free
 from libc.string cimport strncpy
 
-import numpy
-numpy.import_array()
+# Declare the NumPy C-API function we need
+cdef extern from "numpy/arrayobject.h":
+    int PyArray_SetBaseObject(np.ndarray arr, PyObject* obj) except -1
 
-cimport numpy as numpy
-from cpython cimport PyObject, Py_INCREF
-
-cdef extern from "optv/parameters.h":
-    int c_compare_mm_np "compare_mm_np"(mm_np * mm_np1, mm_np * mm_np2)
-    
-    track_par * c_read_track_par "read_track_par"(char * file_name)
-    int c_compare_track_par "compare_track_par"(track_par * t1, track_par * t2)
-    
-    sequence_par * c_read_sequence_par "read_sequence_par"(char * filename, int num_cams)
-    sequence_par * c_new_sequence_par "new_sequence_par"(int num_cams)
-    void c_free_sequence_par "free_sequence_par"(sequence_par * sp)
-    int c_compare_sequence_par "compare_sequence_par"(sequence_par * sp1, sequence_par * sp2)
-    
-    volume_par * c_read_volume_par "read_volume_par"(char * filename);
-    int c_compare_volume_par "compare_volume_par"(volume_par * v1, volume_par * v2);
-    
-    control_par * c_read_control_par "read_control_par"(char * filename);
-    control_par * c_new_control_par "new_control_par"(int cams);
-    void c_free_control_par "free_control_par"(control_par * cp);
-    int c_compare_control_par "compare_control_par"(control_par * c1, control_par * c2);
-    
-    target_par* read_target_par(char *filename)
-
-cdef numpy.ndarray wrap_1d_c_arr_as_ndarray(object base_obj, 
-    int arr_size, int num_type, void * data, int copy):
+cdef wrap_1d_c_arr_as_ndarray(object base_obj, int arr_size, int num_type, const void* data, int copy):
     """
     Returns as NumPy array a value internally represented as a C array.
     
@@ -38,7 +22,7 @@ cdef numpy.ndarray wrap_1d_c_arr_as_ndarray(object base_obj,
     object base_obj - the object supplying the memory. Needed for refcounting.
     int arr_size - length of the C array.
     int num_type - type number as required by PyArray_SimpleNewFromData
-    void* data - the underlying C array.
+    const void* data - the underlying C array.
     int copy - 0 to return an ndarray whose data is the original data,
         1 to return a copy of the data.
     
@@ -46,44 +30,55 @@ cdef numpy.ndarray wrap_1d_c_arr_as_ndarray(object base_obj,
     ndarray of length arr_size
     """
     cdef:
-        numpy.npy_intp shape[1]  # for 1 dimensional array
-        numpy.ndarray ndarr
-    shape[0] = <numpy.npy_intp> arr_size
+        np.npy_intp shape[1]  # for 1 dimensional array
+        np.ndarray ndarr
     
-    ndarr = numpy.PyArray_SimpleNewFromData(1, shape, num_type, data)
-    ndarr.base = <PyObject *> base_obj
-    Py_INCREF(base_obj)
+    shape[0] = <np.npy_intp> arr_size
+    ndarr = <np.ndarray>PyArray_SimpleNewFromData(1, shape, num_type, <void*>data)
+    
+    if not copy:
+        Py_INCREF(base_obj)
+        PyArray_SetBaseObject(ndarr, <PyObject*>base_obj)
     
     if copy:
-        return numpy.copy(ndarr)
+        ndarr = ndarr.copy()
     
     return ndarr
-    
-cdef class MultimediaParams:
-    """
-    Relates to photographing through several transparent media (air, tank 
-    wall, water, etc.). Holds parameters related to media thickness and 
-    refractive index.
-    """
 
-    def __init__(self, **kwargs):
+cdef class MultimediaParams:   
+    def __init__(self, n1=1.0, n2=None, n3=1.0, d=None):
         """
         Arguments (all optional):
-        nlay - number of layers (default 1).
-        n1 - index of refraction of first medium (usually air, 1).
-        n2 - array, refr. indices of all but first and last layer.
-        n3 - index of refraction of final medium (e.g. water, 1.33).
-        d - thickness of all but first and last layers, [mm].
+        n1 - index of refraction of the first medium (air = 1.0)
+        n2 - sequence of indices of refraction of intermediate layers
+        n3 - index of refraction of the last medium
+        d - sequence of thickness values for intermediate layers
         """
-        self._mm_np = < mm_np *> malloc(sizeof(mm_np))
+        self._mm_np = <mm_np *> malloc(sizeof(mm_np))
+        if self._mm_np is NULL:
+            raise MemoryError("Failed to allocate multimedia parameters")
         
-        if kwargs.has_key('n1') and kwargs['n1'] is not None:
-            self.set_n1(kwargs['n1'])
-        if kwargs.has_key('n2') and kwargs.has_key('d') \
-            and kwargs['n2'] is not None and kwargs['d'] is not None:
-            self.set_layers(kwargs['n2'], kwargs['d'])
-        if kwargs.has_key('n3') and kwargs['n3'] is not None:
-            self.set_n3(kwargs['n3'])
+        # Set default values
+        self._mm_np[0].n1 = 1.0 if n1 is None else n1
+        self._mm_np[0].n3 = 1.0 if n3 is None else n3
+        self._mm_np[0].nlay = 0
+        
+        # Initialize arrays with zeros
+        for i in range(3):
+            self._mm_np[0].n2[i] = 0.0
+            self._mm_np[0].d[i] = 0.0
+        
+        # Only process n2 and d if both are provided
+        if n2 is not None and d is not None:
+            if len(n2) != len(d):
+                raise ValueError("Length of n2 and d must be equal")
+            if len(n2) > 3:
+                raise ValueError("Maximum number of layers (3) exceeded")
+            
+            self._mm_np[0].nlay = len(n2)
+            for i in range(len(n2)):
+                self._mm_np[0].n2[i] = n2[i]
+                self._mm_np[0].d[i] = d[i]
              
     cdef void set_mm_np(self, mm_np * other_mm_np_c_struct):
         free(self._mm_np)
@@ -109,57 +104,44 @@ cdef class MultimediaParams:
                 self._mm_np[0].d[i] = thickness[i]
             
             self._mm_np[0].nlay = len(refr_index)
-            
+
     def get_n2(self, copy=True):
         """
-        get the mid-layer refractive indices (n2) as a numpy array
-        
-        Arguments: 
+        Arguments:
         copy - False for returned numpy object to take ownership of 
             the memory of the n2 field of the underlying mm_np struct. True
             (default) to return a COPY instead.
         """
-        arr_size = sizeof(self._mm_np[0].n2) / sizeof(self._mm_np[0].n2[0])
-        return wrap_1d_c_arr_as_ndarray(self, arr_size, numpy.NPY_DOUBLE, 
-            self._mm_np[0].n2, copy)
-    
+        cdef int arr_size = <int>(sizeof(self._mm_np[0].n2) / sizeof(self._mm_np[0].n2[0]))
+        return wrap_1d_c_arr_as_ndarray(self, arr_size, NPY_DOUBLE, 
+            self._mm_np[0].n2, (1 if copy else 0))
+            
     def get_d(self, copy=True):
-        arr_size = sizeof(self._mm_np[0].d) / sizeof(self._mm_np[0].d[0])
-        return wrap_1d_c_arr_as_ndarray(self, arr_size , numpy.NPY_DOUBLE, self._mm_np[0].d, copy)
-           
+        """
+        Arguments:
+        copy - False for returned numpy object to take ownership of 
+            the memory of the d field of the underlying mm_np struct. True
+            (default) to return a COPY instead.
+        """
+        cdef int arr_size = <int>(sizeof(self._mm_np[0].d) / sizeof(self._mm_np[0].d[0]))
+        return wrap_1d_c_arr_as_ndarray(self, arr_size, NPY_DOUBLE, 
+            self._mm_np[0].d, (1 if copy else 0))
+            
     def get_n3(self):
         return self._mm_np[0].n3
-    
+        
     def set_n3(self, n3):
         self._mm_np[0].n3 = n3
 
-    def __richcmp__(MultimediaParams self, MultimediaParams other, operator):
-        c_compare_result = c_compare_mm_np(self._mm_np, other._mm_np)
-        if (operator == 2):  # "==" action was performed
-            return (c_compare_result != 0)
-        elif(operator == 3):  # "!=" action was performed
-                return (c_compare_result == 0)
-        else: raise TypeError("Unhandled comparison operator " + operator)
-        
-    def __str__(self):
-        n2_str = "{"
-        for i in range(sizeof(self._mm_np[0].n2) / sizeof(self._mm_np[0].n2[0]) - 1):
-            n2_str = n2_str + str(self._mm_np[0].n2[i]) + ", "
-        n2_str += str(self._mm_np[0].n2[i + 1]) + "}"
-        
-        d_str = "{"
-        for i in range(sizeof(self._mm_np[0].d) / sizeof(self._mm_np[0].d[0]) - 1) :
-            d_str += str(self._mm_np[0].d[i]) + ", "
-            
-        d_str += str(self._mm_np[0].d[i + 1]) + "}"
-        
-        return "nlay=\t{} \nn1=\t{} \nn2=\t{} \nd=\t{} \nn3=\t{} ".format(
-                str(self._mm_np[0].nlay),
-                str(self._mm_np[0].n1),
-                n2_str,
-                d_str,
-                str(self._mm_np[0].n3))
-        
+    def __richcmp__(MultimediaParams self, MultimediaParams other, int operator):
+        cdef int c_compare_result = compare_mm_np(self._mm_np, other._mm_np)
+        if operator == 2:  # "==" action was performed
+            return c_compare_result != 0
+        elif operator == 3:  # "!=" action was performed
+            return c_compare_result == 0
+        else:
+            raise TypeError("Unhandled comparison operator")
+
     def __dealloc__(self):
         free(self._mm_np)
 
@@ -217,24 +199,32 @@ cdef class TrackingParams:
     # Argument: 
     # file_name - path to the text file containing the parameters.
       
-    def read_track_par(self, file_name):
+    def read_track_par(self, str filename):
         """
         Reads tracking parameters from an old-style .par file having the
         objects' arguments ordered one per line.
         """
+        self._filename_bytes = filename.encode('utf-8')
+        # Cast away const
+        cdef char* c_filename = <char*><char*>self._filename_bytes
         free(self._track_par)
-        self._track_par = c_read_track_par(file_name)
+        self._track_par = read_track_par(c_filename)
+        
+        # Ensure the file is properly closed after reading
+        if hasattr(self, '_file') and self._file is not None:
+            self._file.close()
     
     # Checks for equality between this and other trackParams objects
     # Gives the ability to use "==" and "!=" operators on two trackParams objects
-    def __richcmp__(TrackingParams self, TrackingParams other, operator):
-        c_compare_result = c_compare_track_par(self._track_par, other._track_par)
-        if (operator == 2):  # "==" action was performed
-            return (c_compare_result != 0)
-        elif(operator == 3):  # "!=" action was performed
-                return (c_compare_result == 0)
-        else: raise TypeError("Unhandled comparison operator " + operator)
-             
+    def __richcmp__(TrackingParams self, TrackingParams other, int operator):
+        cdef int c_compare_result = compare_track_par(self._track_par, other._track_par)
+        if operator == 2:  # "==" action was performed
+            return c_compare_result != 0
+        elif operator == 3:  # "!=" action was performed
+            return c_compare_result == 0
+        else:
+            raise TypeError("Unhandled comparison operator")
+
     # Getters and setters    
     def get_dacc(self):
         return self._track_par[0].dacc
@@ -337,11 +327,13 @@ cdef class SequenceParams:
     def __init__(self, **kwargs):
         """
         Arguments (all optional, but either num_cams or image_base required):
-        num_cams - number of camras used in the scene.
+        num_cams - number of cameras used in the scene.
         image_base - a list of image base names, to which the frame number 
             is added during sequence operations.
         frame_range - (first, last)
         """
+        cdef int num_cams
+        
         if 'num_cams' in kwargs:
             num_cams = kwargs['num_cams']
         elif 'image_base' in kwargs:
@@ -350,7 +342,9 @@ cdef class SequenceParams:
             raise ValueError(
                 "SequenceParams requires either num_cams or image_base")
         
-        self._sequence_par = c_new_sequence_par(num_cams)
+        self._sequence_par = new_sequence_par(num_cams)
+        if self._sequence_par is NULL:
+            raise MemoryError("Failed to allocate sequence parameters")
         
         if 'frame_range' in kwargs:
             self.set_first(kwargs['frame_range'][0])
@@ -358,7 +352,7 @@ cdef class SequenceParams:
         if 'image_base' in kwargs:
             for cam in range(num_cams):
                 self.set_img_base_name(cam, kwargs['image_base'][cam])
-        
+    
     def get_first(self):
         return self._sequence_par[0].first
     
@@ -371,29 +365,28 @@ cdef class SequenceParams:
     def set_last(self, last):
         self._sequence_par[0].last = last
         
-    def read_sequence_par(self, filename, num_cams):
-        """
-        Reads sequence parameters from a config file with the following format:
-        each line is a value, first num_cams values are image names, 
-        (num_cams+1)th is the first number in the sequence, (num_cams+2)th line
-        is the last value in the sequence.
+    def read_sequence_par(self, str filename, int num_cams):
+        """Read sequence parameters from a text file.
         
         Arguments:
-        filename - path to the text file containing the parameters.
-        num_cams - expected number of cameras
+            filename: path to the parameter file
+            num_cams: number of cameras
         """
-        # free the memory of previous C struct and its inner strings before 
-        # creating a new one.
-        c_free_sequence_par(self._sequence_par)
+        self._filename_bytes = filename.encode('utf-8')
+        cdef char* c_filename = <char*><char*>self._filename_bytes
         
-        # read parameters from file to a new sequence_par C struct
-        self._sequence_par = c_read_sequence_par(filename, num_cams)
+        if self._sequence_par != NULL:
+            free_sequence_par(self._sequence_par)
+        
+        self._sequence_par = read_sequence_par(c_filename, num_cams)
         
     # Get image base name of camera #cam
     def get_img_base_name(self, cam):
+        """Get image base name of camera #cam"""
         cdef char * c_str = self._sequence_par[0].img_base_name[cam]
-        cdef py_str = c_str
-        return py_str
+        if c_str is NULL:
+            return None
+        return c_str.decode('utf-8')
     
     # Set image base name for camera #cam
     def set_img_base_name(self, cam, str new_img_name):
@@ -403,16 +396,20 @@ cdef class SequenceParams:
     
     # Checks for equality between this and other SequenceParams objects
     # Gives the ability to use "==" and "!=" operators on two SequenceParams objects
-    def __richcmp__(SequenceParams self, SequenceParams other, operator):
-        c_compare_result = c_compare_sequence_par(self._sequence_par, other._sequence_par)
-        if (operator == 2):  # "==" action was performed
-            return (c_compare_result != 0)
-        elif(operator == 3):  # "!=" action was performed
-                return (c_compare_result == 0)
-        else: raise TypeError("Unhandled comparison operator " + operator)
-        
+    def __richcmp__(SequenceParams self, SequenceParams other, int operator):
+        cdef int c_compare_result = compare_sequence_par(self._sequence_par, other._sequence_par)
+        if operator == 2:  # "==" action was performed
+            return c_compare_result != 0
+        elif operator == 3:  # "!=" action was performed
+            return c_compare_result == 0
+        else:
+            raise TypeError("Unhandled comparison operator")
+
     def __dealloc__(self):
-        c_free_sequence_par(self._sequence_par)
+        """Free sequence_par struct."""
+        if self._sequence_par is not NULL:
+            free_sequence_par(self._sequence_par)
+            self._sequence_par = NULL
         
 cdef class VolumeParams:
     """
@@ -460,25 +457,28 @@ cdef class VolumeParams:
     
     # Getters and setters
     def get_X_lay(self, copy=True):
-        arr_size = sizeof(self._volume_par[0].X_lay) / sizeof(self._volume_par[0].X_lay[0])
-        return wrap_1d_c_arr_as_ndarray(self, arr_size , numpy.NPY_DOUBLE, self._volume_par[0].X_lay, copy)
+        cdef int arr_size = <int>(sizeof(self._volume_par[0].X_lay) / sizeof(self._volume_par[0].X_lay[0]))
+        return wrap_1d_c_arr_as_ndarray(self, arr_size, NPY_DOUBLE, 
+            self._volume_par[0].X_lay, copy)
+    
+    def get_Zmin_lay(self, copy=True):
+        cdef int arr_size = <int>(sizeof(self._volume_par[0].Zmin_lay) / sizeof(self._volume_par[0].Zmin_lay[0]))
+        return wrap_1d_c_arr_as_ndarray(self, arr_size, NPY_DOUBLE, 
+            self._volume_par[0].Zmin_lay, copy)
+    
+    def get_Zmax_lay(self, copy=True):
+        cdef int arr_size = <int>(sizeof(self._volume_par[0].Zmax_lay) / sizeof(self._volume_par[0].Zmax_lay[0]))
+        return wrap_1d_c_arr_as_ndarray(self, arr_size, NPY_DOUBLE, 
+            self._volume_par[0].Zmax_lay, copy)
     
     def set_X_lay(self, X_lay):
         for i in range(len(X_lay)):
             self._volume_par[0].X_lay[i] = X_lay[i]
             
-    def get_Zmin_lay(self, copy=True):
-        arr_size = sizeof(self._volume_par[0].Zmin_lay) / sizeof(self._volume_par[0].Zmin_lay[0])
-        return wrap_1d_c_arr_as_ndarray(self, arr_size , numpy.NPY_DOUBLE, self._volume_par[0].Zmin_lay, copy)
-
     def set_Zmin_lay(self, Zmin_lay):
         for i in range(len(Zmin_lay)):
             self._volume_par[0].Zmin_lay[i] = Zmin_lay[i]
             
-    def get_Zmax_lay(self, copy=True):
-        arr_size = sizeof(self._volume_par[0].Zmax_lay) / sizeof(self._volume_par[0].Zmax_lay[0])
-        return wrap_1d_c_arr_as_ndarray(self, arr_size , numpy.NPY_DOUBLE, self._volume_par[0].Zmax_lay, copy)
-    
     def set_Zmax_lay(self, Zmax_lay):
         for i in range(len(Zmax_lay)):
             self._volume_par[0].Zmax_lay[i] = Zmax_lay[i]
@@ -519,42 +519,36 @@ cdef class VolumeParams:
     def set_corrmin(self, corrmin):
         self._volume_par[0].corrmin = corrmin
         
-    def read_volume_par(self, filename):
-        """
-        read_volume_par() reads parameters of illuminated volume from a config 
-        file with the following format: each line is a value, in this order:
+    def read_volume_par(self, str filename):
+        """Read volume parameters from a text file.
         
-        1. X_lay[0]
-        2. Zmin_lay[0]
-        3. Zmax_lay[0]
-        4. X_lay[1]
-        5. Zmin_lay[1]
-        6. Zmax_lay[1]
-        7. cnx
-        8. cny
-        9. cn
-        10.csumg
-        11.corrmin
-        12.eps0
-        
-        Argument:
-        filename - path to the text file containing the parameters.
+        Arguments:
+            filename: path to the parameter file
         """
-        # free the memory of previous C struct 
-        free(self._volume_par)
-        # read parameters from file to a new volume_par C struct
-        self._volume_par = c_read_volume_par(filename)
+        # Store the bytes object as an instance attribute to prevent garbage collection
+        self._filename_bytes = filename.encode('utf-8')
+        cdef char* c_filename = <char*><char*>self._filename_bytes
+        
+        # Free existing volume_par if it exists
+        if self._volume_par != NULL:
+            free(self._volume_par)
+            
+        # Read new parameters
+        self._volume_par = read_volume_par(c_filename)
+        if self._volume_par == NULL:
+            raise IOError("Failed to read volume parameters from " + filename)
     
     # Checks for equality between self and other VolumeParams objects
     # Gives the ability to use "==" and "!=" operators on two VolumeParams objects
-    def __richcmp__(VolumeParams self, VolumeParams other, operator):
-        c_compare_result = c_compare_volume_par(self._volume_par, other._volume_par)
-        if (operator == 2):  # "==" action was performed
-            return (c_compare_result != 0)
-        elif(operator == 3):  # "!=" action was performed
-                return (c_compare_result == 0)
-        else: raise TypeError("Unhandled comparison operator " + operator)
-        
+    def __richcmp__(VolumeParams self, VolumeParams other, int operator):
+        cdef int c_compare_result = compare_volume_par(self._volume_par, other._volume_par)
+        if operator == 2:  # "==" action was performed
+            return c_compare_result != 0
+        elif operator == 3:  # "!=" action was performed
+            return c_compare_result == 0
+        else:
+            raise TypeError("Unhandled comparison operator")
+
     def __dealloc__(self):
         free(self._volume_par)
         
@@ -564,32 +558,45 @@ cdef class ControlParams:
     pythonic access. Objects of this type can be checked for equality using 
     "==" and "!=" operators.
     """
-    def __init__(self, cams, flags=[], image_size=None, pixel_size=None,
+    def __init__(self, int num_cams, flags=None, image_size=None, pixel_size=None,
         cam_side_n=None, wall_ns=None, wall_thicks=None, object_side_n=None):
         """
         Arguments (all optional except num_cams):
-        num_cams - number of camras used in the scene.
-        flags - a list containings name of set flags, select from 'hp', 
+        cams - number of cameras used in the scene.
+        flags - a list containing name of set flags, select from 'hp', 
             'allcam', 'headers'.
         image_size - sequence, w,h image size in pixels.
         pixel_size - sequence, w,h pixel size in mm.
         cam_side_n, wall_ns, wall_thicks, object_side_n - see MultimediaParams
         """
-        self._control_par = c_new_control_par(cams)
+        if flags is None:
+            flags = []
+            
+        # Initialize the control parameter structure
+        self._control_par = new_control_par(num_cams)
+        if self._control_par is NULL:
+            raise MemoryError("Failed to allocate control parameters")
+            
+        # Set the flags
         self.set_hp_flag('hp' in flags)
         self.set_allCam_flag('allcam' in flags)
         self.set_tiff_flag('headers' in flags)
-        self.set_chfield(0) # legacy stuff.
+        self.set_chfield(0)  # legacy stuff
         
+        # Set optional parameters
         if image_size is not None:
             self.set_image_size(image_size)
         if pixel_size is not None:
             self.set_pixel_size(pixel_size)
         
+        # Initialize multimedia parameters
         self._multimedia_params = MultimediaParams(
             n1=cam_side_n, n2=wall_ns, d=wall_thicks, n3=object_side_n)
-        free(self._control_par[0].mm)
-        self._control_par[0].mm = self._multimedia_params._mm_np
+        
+        # Update multimedia parameters pointer
+        if self._control_par != NULL and self._control_par.mm != NULL:
+            free(self._control_par.mm)
+        self._control_par.mm = self._multimedia_params._mm_np
         
     # Getters and setters
     def get_num_cams(self):
@@ -676,22 +683,30 @@ cdef class ControlParams:
     #   
     # Arguments:
     # filename - path to text file containing the parameters.
-    def read_control_par(self, filename):
-        # free the memory of previous C struct and its inner strings before creating a new one
-        c_free_control_par(self._control_par)
-        # memory for _multimedia_params' mm_np struct was just freed,
-        # so set _multimedia params' mm_np pointer to NULL to avoid double free corruption 
+    def read_control_par(self, str filename):
+        """Read control parameters from a text file.
+        
+        Arguments:
+            filename: path to the parameter file
+        """
+        self._filename_bytes = filename.encode('utf-8')
+        cdef char* c_filename = <char*><char*>self._filename_bytes
+        
+        if self._control_par != NULL:
+            self._control_par[0].mm = NULL  # Prevent double free
+            free_control_par(self._control_par)
+        
         self._multimedia_params._mm_np = NULL
-        # read parameters from file to a new control_par C struct
-        self._control_par = c_read_control_par(filename)
-        # set _multimedia_params's _mm_np to the new mm_np that just allocated and read into _control_par
+        self._control_par = read_control_par(c_filename)
         self._multimedia_params.set_mm_np(self._control_par[0].mm)
         
     # Get image base name of camera #cam
     def get_img_base_name(self, cam):
+        """Get image base name of camera #cam"""
         cdef char * c_str = self._control_par[0].img_base_name[cam]
-        cdef py_str = c_str
-        return py_str
+        if c_str is NULL:
+            return None
+        return c_str.decode('utf-8')
     
     # Set image base name for camera #cam
     def set_img_base_name(self, cam, str new_img_name):
@@ -701,9 +716,11 @@ cdef class ControlParams:
     
     # Get calibration image base name of camera #cam
     def get_cal_img_base_name(self, cam):
+        """Get calibration image base name of camera #cam"""
         cdef char * c_str = self._control_par[0].cal_img_base_name[cam]
-        cdef py_str = c_str
-        return py_str
+        if c_str is NULL:
+            return None
+        return c_str.decode('utf-8')
     
     # Set calibration image base name for camera #cam
     def set_cal_img_base_name(self, cam, str new_img_name):
@@ -716,21 +733,24 @@ cdef class ControlParams:
     
     # Checks for equality between this and other ControlParams objects
     # Gives the ability to use "==" and "!=" operators on two ControlParams objects
-    def __richcmp__(ControlParams self, ControlParams other, operator):
-        c_compare_result = c_compare_control_par(self._control_par, other._control_par)
-        if (operator == 2):  # "==" action was performed
-            return (c_compare_result != 0)
-        elif(operator == 3):  # "!=" action was performed
-                return (c_compare_result == 0)
-        else: raise TypeError("Unhandled comparison operator " + operator)
-        
+    def __richcmp__(ControlParams self, ControlParams other, int operator):
+        cdef int c_compare_result = compare_control_par(self._control_par, other._control_par)
+        if operator == 2:  # "==" action was performed
+            return c_compare_result != 0
+        elif operator == 3:  # "!=" action was performed
+            return c_compare_result == 0
+        else:
+            raise TypeError("Unhandled comparison operator")
+
     def __dealloc__(self):
-        # set the mm pointer to NULL in order to prevent c_free_control_par 
-        # function from freeing it. MultimediaParams object will free this
-        # memory in its python destructor when there will be no references to it.
-        
-        self._control_par[0].mm = NULL
-        c_free_control_par(self._control_par)
+        """Deallocate control_par struct."""
+        if self._control_par != NULL:
+            # set the mm pointer to NULL to prevent c_free_control_par 
+            # from freeing it. MultimediaParams object will free this
+            # memory in its python destructor when there will be no references to it.
+            self._control_par[0].mm = NULL
+            free_control_par(self._control_par)  # Use the declared free function
+            self._control_par = NULL
 
 cdef class TargetParams:
     """
@@ -782,7 +802,7 @@ cdef class TargetParams:
         copy - if True, return a copy of the underlying array. This way the 
             original is safe.
         """
-        return wrap_1d_c_arr_as_ndarray(self, num_cams, numpy.NPY_INT, 
+        return wrap_1d_c_arr_as_ndarray(self, num_cams, NPY_INT, 
             self._targ_par.gvthres, (1 if copy else 0))
         
     def set_grey_thresholds(self, gvthresh):
@@ -850,7 +870,7 @@ cdef class TargetParams:
     def set_cross_size(self, int cr_sz):
         self._targ_par.cr_sz = cr_sz
     
-    def read(self, inp_filename):
+    def read(self, str inp_filename):
         """
         Reads target recognition parameters from a legacy .par file, which 
         holds one parameter per line. The arguments are read in this order:
@@ -871,8 +891,14 @@ cdef class TargetParams:
         
         Fills up the fields of the object from the file and returns.
         """
+        # Convert the string to bytes and store it
+        self._filename_bytes = inp_filename.encode('utf-8')
+        
+        # Get a pointer to the underlying buffer
+        cdef char* c_filename = <char*><char*>self._filename_bytes
+        
         free(self._targ_par)
-        self._targ_par = read_target_par(inp_filename)
+        self._targ_par = read_target_par(c_filename)
         
         if self._targ_par == NULL:
             raise IOError("Problem reading target recognition parameters.")

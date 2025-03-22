@@ -1,6 +1,8 @@
+# cython: language_level=3
+# distutils: language = c
+
 # Cython definitions for tracking_frame_buf.h
 # Implementing a minimal Python binding for frame and target.
-# With time, this will grow to encompass what's needed.
 
 from optv.vec_utils cimport vec3d
 

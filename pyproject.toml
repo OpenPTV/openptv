@@ -1,21 +1,49 @@
 [build-system]
-requires = ["setuptools", "wheel", "cibuildwheel", "cython"]
+requires = [
+    "setuptools>=61.0",
+    "wheel",
+    "cmake>=3.15",
+    "ninja",
+    "cython>=3.0.0",
+    "numpy>=1.21.0",
+]
 build-backend = "setuptools.build_meta"
 
+[project]
+name = "openptv"
+version = "0.3.0"
+description = "OpenPTV - framework for particle tracking velocimetry"
+readme = "README.md"
+requires-python = ">=3.10"
+license = {file = "LICENSE"}
+authors = [
+    {name = "OpenPTV Community", email = "openptv@googlegroups.com"}
+]
+dependencies = [
+    "numpy",
+    "cython",
+    "pyyaml",
+    "matplotlib"
+]
+
+[tool.setuptools]
+packages = ["optv"]
+package-dir = {"" = "python"}
+
+[tool.pytest.ini_options]
+testpaths = ["test"]
+python_files = "test_*.py"
+pythonpath = [
+    ".",
+    "python"
+]
+
 [tool.cibuildwheel]
-# Specify the Python versions and platforms you want to build for
-# For example, to build for manylinux, macOS, and Windows:
-windows = ["cp38", "cp39", "cp310"]
+skip = ["cp36-*", "cp37-*", "cp38-*", "cp39-*"]
+build-frontend = "build"
+# Support Python 3.10-3.13
+windows = ["cp310-*", "cp311-*", "cp312-*", "cp313-*"]
 manylinux-x86_64-image = "manylinux2014"
-manylinux-i686-image = "manylinux2014"
-macos = ["cp38", "cp39", "cp310"]
+macos = ["cp310-*", "cp311-*", "cp312-*", "cp313-*"]
 
-# Run the prepare command before building the wheel
-before-build = "cd py_bind && pip install numpy'<1.24' cython'<3' && python setup.py prepare && pip install ."
-
-# Run tests after building the wheel
-test-command = "pytest {project}/tests"
-
-[[tool.cibuildwheel.overrides]]
-select = "cp3{8,9}-*"
-manylinux-x86_64-image = "manylinux2010"
+before-build = "cd py_bind && pip install numpy cython && python setup.py prepare && pip install ."

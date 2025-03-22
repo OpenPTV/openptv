@@ -30,7 +30,7 @@ class TestTracker(unittest.TestCase):
             yaml_conf = yaml.load(f, Loader=yaml.FullLoader)
         seq_cfg = yaml_conf['sequence']
 
-        cals = []
+        self.cals = []
         img_base = []
         print((yaml_conf['cameras']))
         for cix, cam_spec in enumerate(yaml_conf['cameras']):
@@ -38,17 +38,17 @@ class TestTracker(unittest.TestCase):
             cal = Calibration()
             cal.from_file(cam_spec['ori_file'].encode(),
                           cam_spec['addpar_file'].encode())
-            cals.append(cal)
+            self.cals.append(cal)
             img_base.append(seq_cfg['targets_template'].format(cam=cix + 1))
 
-        cpar = ControlParams(len(yaml_conf['cameras']), **yaml_conf['scene'])
-        vpar = VolumeParams(**yaml_conf['correspondences'])
-        tpar = TrackingParams(**yaml_conf['tracking'])
-        spar = SequenceParams(
+        self.cpar = ControlParams(len(yaml_conf['cameras']), **yaml_conf['scene'])
+        self.vpar = VolumeParams(**yaml_conf['correspondences'])
+        self.tpar = TrackingParams(**yaml_conf['tracking'])
+        self.spar = SequenceParams(
             image_base=img_base,
             frame_range=(seq_cfg['first'], seq_cfg['last']))
 
-        self.tracker = Tracker(cpar, vpar, tpar, spar, cals, framebuf_naming)
+        self.tracker = Tracker(self.cpar, self.vpar, self.tpar, self.spar, self.cals, framebuf_naming)
 
     def test_forward(self):
         """Manually running a full forward tracking run."""
@@ -87,6 +87,38 @@ class TestTracker(unittest.TestCase):
         self.tracker.full_backward()
         # if it passes without error, we assume it's ok. The actual test is in
         # the C code.
+
+    def test_tracker_string_handling(self):
+        """Test that Tracker handles both strings and bytes correctly"""
+        # Using regular strings - will be encoded automatically
+        naming_strings = {
+            'corres': 'res/rt_is',
+            'linkage': 'res/ptv_is',
+            'prio': 'res/added'
+        }
+        tracker1 = Tracker(self.cpar, self.vpar, self.tpar, self.spar, self.cals, naming_strings)
+
+        # Using bytes directly - will be passed through
+        naming_bytes = {
+            'corres': b'res/rt_is',
+            'linkage': b'res/ptv_is',
+            'prio': b'res/added'
+        }
+        tracker2 = Tracker(self.cpar, self.vpar, self.tpar, self.spar, self.cals, naming_bytes)
+
+        # Using mixed - both will work
+        naming_mixed = {
+            'corres': 'res/rt_is',  # string
+            'linkage': b'res/ptv_is',  # bytes
+            'prio': 'res/added'  # string
+        }
+        tracker3 = Tracker(self.cpar, self.vpar, self.tpar, self.spar, self.cals, naming_mixed)
+
+        # Using partial dict - missing keys will use defaults
+        naming_partial = {
+            'corres': 'res/rt_is'  # only specify what you need to change
+        }
+        tracker4 = Tracker(self.cpar, self.vpar, self.tpar, self.spar, self.cals, naming_partial)
 
     def tearDown(self):
         if os.path.exists("testing_fodder/track/res/"):
