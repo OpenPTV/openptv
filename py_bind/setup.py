@@ -7,7 +7,7 @@ import glob
 import numpy as np
 from setuptools import setup, Extension, Command
 from setuptools.command.build_ext import build_ext
-
+from Cython.Build import cythonize
 
 class PrepareCommand(Command):
     """Prepare the C sources by copying them from liboptv and converting pyx to C"""
@@ -39,7 +39,7 @@ class PrepareCommand(Command):
             shutil.copy(h_file, dest)
         
         # Convert pyx to C
-        from Cython.Build import cythonize
+        
         cythonize(['optv/*.pyx'], compiler_directives={'language_level': '3'})
 
 
