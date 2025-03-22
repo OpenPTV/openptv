@@ -29,7 +29,7 @@ if %errorlevel% neq 0 (
 )
 
 :: Define Python versions to build for
-set "PYTHON_VERSIONS=3.10 3.11 3.12"
+set "PYTHON_VERSIONS=3.10 3.11"
 
 for %%v in (%PYTHON_VERSIONS%) do (
     echo Building for Python %%v

@@ -27,7 +27,7 @@ if ! command -v uv &> /dev/null; then
 fi
 
 # Define Python versions to build for
-PYTHON_VERSIONS=("3.10" "3.11" "3.12")
+PYTHON_VERSIONS=("3.10" "3.11")
 
 for py_version in "${PYTHON_VERSIONS[@]}"; do
     echo "Building for Python ${py_version}"
