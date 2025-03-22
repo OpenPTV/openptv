@@ -17,6 +17,12 @@ from optv.tracker cimport (
     trackcorr_c_finish, trackback_c, TR_BUFSPACE, MAX_TARGETS
 )
 
+def _encode_if_needed(s):
+    """Helper function to encode strings to bytes if needed"""
+    if isinstance(s, str):
+        return s.encode('utf-8')
+    return s  # Already bytes or None
+
 default_naming = {
     'corres': b'res/rt_is',
     'linkage': b'res/ptv_is',
@@ -32,7 +38,7 @@ cdef class Tracker:
     """
     def __init__(self, ControlParams cpar, VolumeParams vpar, 
         TrackingParams tpar, SequenceParams spar, list cals,
-        dict naming=default_naming, flatten_tol=0.0001):
+        dict naming=None, flatten_tol=0.0001):
         """
         Arguments:
         ControlParams cpar, VolumeParams vpar, TrackingParams tpar, 
@@ -40,11 +46,29 @@ cdef class Tracker:
             anywhere.
         cals - a list of Calibration objects.
         dict naming - a dictionary with naming rules for the frame buffer 
-            files. See the ``default_naming`` member (which is the default).
+            files. Keys: 'corres', 'linkage', 'prio'. Values can be either
+            strings or bytes. Strings will be automatically encoded to UTF-8 bytes.
+            If None, uses default_naming.
+        flatten_tol - tolerance parameter for flattening operations.
         """
         # We need to keep a reference to the Python objects so that their
         # allocations are not freed.
         self._keepalive = (cpar, vpar, tpar, spar, cals)
+        
+        # Handle naming dictionary with automatic encoding
+        if naming is None:
+            naming = default_naming
+        else:
+            # Create new dict with encoded values
+            naming = {
+                k: _encode_if_needed(v)
+                for k, v in naming.items()
+            }
+            
+            # Ensure all required keys are present
+            for key in default_naming:
+                if key not in naming:
+                    naming[key] = default_naming[key]
         
         self.run_info = tr_new(spar._sequence_par, tpar._track_par,
             vpar._volume_par, cpar._control_par, TR_BUFSPACE, MAX_TARGETS,
