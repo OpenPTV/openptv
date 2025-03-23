@@ -52,8 +52,8 @@ for %%v in (%PYTHON_VERSIONS%) do (
 
     :: Run build steps
     python setup.py prepare
-    python -m build --wheel --outdir dist/py%%v
-    uv pip install dist/py%%v/*.whl --force-reinstall
+    python -m build --wheel --outdir dist\py%%v
+    uv pip install dist\py%%v\*.whl --force-reinstall
     cd test && python -m pytest --verbose && cd ..
 
     :: Deactivate virtual environment
