@@ -1,0 +1,66 @@
+# Use Python 3.11 as base
+FROM python:3.11-slim
+
+# Install minimal system dependencies
+RUN apt-get update && apt-get install -y \
+    wget \
+    git \
+    build-essential \
+    cmake \
+    check \
+    libsubunit-dev \
+    pkg-config \
+    && rm -rf /var/lib/apt/lists/*
+
+# Set working directory
+WORKDIR /app
+
+# Install uv and add to PATH
+RUN curl -LsSf https://astral.sh/uv/install.sh | sh && \
+    echo 'export PATH="/root/.cargo/bin:$PATH"' >> ~/.bashrc && \
+    . ~/.bashrc
+
+# Copy the entire project
+COPY . .
+
+# Make the build script executable and run it
+WORKDIR /app/liboptv
+
+SHELL ["/bin/bash", "-c"] 
+RUN mkdir -p build && \
+    cd build && \
+    rm -rf * && \
+    cmake .. && \
+    make && \
+    sudo make install && \
+    make verify
+
+# Set working directory to py_bind
+WORKDIR /app/py_bind
+
+# Create virtual environment and build
+SHELL ["/bin/bash", "-c"]
+RUN source ~/.bashrc && \
+    uv venv .venv && \
+    . .venv/bin/activate && \
+    uv pip install --upgrade pip && \
+    uv pip install \
+        scikit-build-core>=0.8.0 \
+        cmake>=3.15 \
+        ninja \
+        cython>=3.0.0 \
+        numpy==1.26.4 \
+        setuptools>=61.0.0 \
+        pytest \
+        build && \
+    python setup.py prepare && \
+    python -m build --wheel --outdir dist && \
+    uv pip install dist/*.whl --force-reinstall && \
+    cd test && python -m pytest --verbose && cd ..
+
+# Create a directory for the output wheels
+RUN mkdir -p /wheels && \
+    cp -r dist/*.whl /wheels/
+
+# Default command to show the built wheels
+CMD ls -l /wheels

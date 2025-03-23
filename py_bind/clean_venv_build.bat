@@ -15,12 +15,6 @@ del /q optv\*.c 2>nul
 rd /s /q .venv* 2>nul
 rd /s /q liboptv 2>nul
 
-:: Copy liboptv headers for building
-:: mkdir liboptv\include 2>nul
-:: xcopy /y /i ..\liboptv\include\*.h liboptv\include\
-:: mkdir liboptv\src 2>nul
-:: xcopy /y /i ..\liboptv\src\*.c liboptv\src\
-
 :: Install uv if not already installed
 where uv >nul 2>&1
 if %errorlevel% neq 0 (
@@ -28,6 +22,7 @@ if %errorlevel% neq 0 (
     del install-uv.ps1
 )
 
+<<<<<<< Updated upstream
 :: Define Python versions to build for
 set "PYTHON_VERSIONS=3.10 3.11"
 
@@ -59,6 +54,32 @@ for %%v in (%PYTHON_VERSIONS%) do (
     :: Deactivate virtual environment
     deactivate
 )
+=======
+:: Create virtual environment with Python 3.11
+uv venv --python=3.11 .venv
+call .venv\Scripts\activate.bat
+
+:: Install build dependencies
+uv pip install --upgrade pip
+uv pip install ^
+    scikit-build-core">=0.8.0" ^
+    cmake">=3.15" ^
+    ninja ^
+    cython">=3.0.0" ^
+    numpy"==1.26.4" ^
+    setuptools">=61.0.0" ^
+    pytest ^
+    build
+
+:: Run build steps
+python setup.py prepare
+python -m build --wheel --outdir dist
+uv pip install dist\*.whl --force-reinstall
+cd test && python -m pytest --verbose && cd ..
+
+:: Deactivate virtual environment
+deactivate
+>>>>>>> Stashed changes
 
 :: List all built wheels
 echo Built wheels:

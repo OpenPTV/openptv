@@ -10,22 +10,16 @@ set -x
 rm -rf build/
 rm -rf *.egg-info/
 rm -rf dist/
-rm optv/*.c
+rm -rf optv/*.c
 rm -rf .venv*/
 rm -rf liboptv/
-
-
-# Copy liboptv headers for building
-# mkdir -p liboptv/include
-# cp -r ../liboptv/include/*.h liboptv/include/
-# mkdir -p liboptv/src
-# cp -r ../liboptv/src/*.c liboptv/src/
 
 # Install uv if not already installed
 if ! command -v uv &> /dev/null; then
     curl -LsSf https://astral.sh/uv/install.sh | sh
 fi
 
+<<<<<<< Updated upstream
 # Define Python versions to build for
 PYTHON_VERSIONS=("3.10" "3.11")
 
@@ -58,6 +52,31 @@ for py_version in "${PYTHON_VERSIONS[@]}"; do
     # Deactivate virtual environment
     deactivate
 done
+=======
+# Create virtual environment with Python 3.11
+uv venv --python=3.11 .venv
+source .venv/bin/activate
+
+# Install build dependencies
+uv pip install --upgrade pip
+uv pip install \
+    pyyaml \
+    cython">=3.0.0" \
+    numpy"==1.26.4" \
+    setuptools">=61.0.0" \
+    pytest \
+    build
+
+# Run build steps
+python setup.py prepare
+python setup.py build_ext --inplace
+python -m build --wheel --outdir dist
+uv pip install dist/*.whl --force-reinstall
+cd test && python -m pytest --verbose && cd ..
+
+# Deactivate virtual environment
+deactivate
+>>>>>>> Stashed changes
 
 # List all built wheels
 echo "Built wheels:"
