@@ -50,6 +50,7 @@ for py_version in "${PYTHON_VERSIONS[@]}"; do
 
     # Run build steps
     python setup.py prepare
+    python setup.py build_ext --inplace
     python -m build --wheel --outdir dist/py${py_version}
     uv pip install dist/py${py_version}/*.whl --force-reinstall
     cd test && python -m pytest --verbose && cd ..
