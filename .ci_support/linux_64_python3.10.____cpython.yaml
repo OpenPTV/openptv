@@ -1,0 +1,22 @@
+ace:
+- 8.0.1
+c_compiler:
+- gcc
+c_compiler_version:
+- '13'
+cdt_name:
+- conda
+channel_sources:
+- conda-forge
+channel_targets:
+- conda-forge main
+docker_image:
+- quay.io/condaforge/linux-anvil-x86_64:alma9
+pin_run_as_build:
+  python:
+    min_pin: x.x
+    max_pin: x.x
+python:
+- 3.10.* *_cpython
+target_platform:
+- linux-64

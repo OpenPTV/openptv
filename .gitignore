@@ -25,4 +25,8 @@ py_bind/wheelhouse/*
 *.pyd
 *.pyc
 *.so
-py_bind/optv/*.html
+# conda smithy ci-skeleton start
+*.pyc
+build_artifacts
+# conda smithy ci-skeleton end
+*.whl

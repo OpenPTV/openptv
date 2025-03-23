@@ -1,3 +1,6 @@
+# cython: language_level=3
+# distutils: language = c
+
 from optv.parameters cimport control_par
 
 cdef extern from "optv/image_processing.h":

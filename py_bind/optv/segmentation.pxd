@@ -1,3 +1,6 @@
+# cython: language_level=3
+# distutils: language = c
+
 # -*- coding: utf-8 -*-
 """
 Created on Thu Aug 18 11:12:36 2016

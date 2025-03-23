@@ -1,11 +1,23 @@
 # A Dockerfile for an Ubuntu machine that can compile liboptv and the Cython extensions
+FROM python:3.12-slim
 
-FROM python:3.7-stretch
+# Install system dependencies
+RUN apt-get update && apt-get install --no-install-recommends -y \
+    cmake \
+    g++ \
+    ninja-build \
+    && rm -rf /var/lib/apt/lists/*
 
-RUN apt-get update
-RUN apt-get --assume-yes install cmake
-RUN apt-get --assume-yes install g++
-# RUN apt-get --assume-yes install python-pip
-# RUN apt-get --assume-yes install python3
-# RUN pip install virtualenv
-RUN python3 -m venv /env
+# Set working directory
+WORKDIR /app
+
+# Copy the entire project
+COPY . .
+
+# Make the build script executable and run it
+RUN chmod +x py_bind/build_all.sh && \
+    cd py_bind && \
+    ./build_all.sh
+
+# Set the default command
+CMD ["python3"]

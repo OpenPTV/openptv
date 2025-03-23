@@ -8,8 +8,6 @@ from libc.stdlib cimport malloc, free
 import numpy
 cimport numpy as cnp
 
-from optv.calibration import Calibration
-
 cdef extern from "optv/calibration.h":
     calibration *read_calibration(char *ori_file, char *add_file,
         char *fallback_file)
@@ -71,10 +69,16 @@ cdef class Calibration:
         fallback_file - optional path to file used in case ``add_file`` fails
             to open.
         """
-        free(self._calibration);
+        # Convert strings to bytes if needed
+        ori_bytes = ori_file.encode('utf-8') if isinstance(ori_file, str) else ori_file
+        add_bytes = add_file.encode('utf-8') if isinstance(add_file, str) and add_file is not None else add_file
+        fallback_bytes = fallback_file.encode('utf-8') if isinstance(fallback_file, str) and fallback_file is not None else fallback_file
+        
+        free(self._calibration)
         self._calibration = read_calibration(
-            (<char *>ori_file if ori_file != None else < char *> 0),
-            (<char *>add_file if add_file != None else < char *> 0), NULL)
+            (<char *>ori_bytes if ori_bytes is not None else <char *>0),
+            (<char *>add_bytes if add_bytes is not None else <char *>0),
+            (<char *>fallback_bytes if fallback_bytes is not None else <char *>0))
         
     def write(self, filename, add_file):
         """
@@ -280,4 +284,3 @@ cdef class Calibration:
     # Free memory
     def __dealloc__(self):
         free(self._calibration)
-

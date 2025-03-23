@@ -1,3 +1,6 @@
+# cython: language_level=3
+# distutils: language = c
+
 from optv.calibration cimport calibration
 from optv.parameters cimport control_par, mm_np
 from optv.tracking_framebuf cimport target

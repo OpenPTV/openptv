@@ -10,7 +10,12 @@ Created on Fri Oct 28 13:46:39 2016
 from libc.stdlib cimport malloc, calloc, free
 cimport numpy as np
 import numpy as np
+np.import_array()
 
+DTYPE = np.float64
+ITYPE = np.intp  # Add explicit integer type
+ctypedef np.float64_t DTYPE_t
+ctypedef np.intp_t ITYPE_t  # Add integer type definition
 
 from optv.transforms cimport pixel_to_metric, dist_to_flat
 from optv.parameters cimport ControlParams, VolumeParams
@@ -84,28 +89,28 @@ cdef class MatchedCoords:
         pnr - n-length array, the corresponding target number for each point.
         """
         cdef:
-            np.ndarray[ndim=2, dtype=np.float64_t] positions
-            np.ndarray[ndim=1, dtype=np.int64_t] point_numbers
+            np.ndarray[ndim=2, dtype=DTYPE_t] pos
+            np.ndarray[ndim=1, dtype=ITYPE_t] pnr
             int pt
         
-        positions = np.empty((self._num_pts, 2))
-        point_numbers = np.empty(self._num_pts, dtype=np.int_)
+        pos = np.empty((self._num_pts, 2))
+        pnr = np.empty(self._num_pts, dtype=ITYPE)  # Changed to use ITYPE
         
         for pt in range(self._num_pts):
-            positions[pt,0] = self.buf[pt].x
-            positions[pt,1] = self.buf[pt].y
-            point_numbers[pt] = self.buf[pt].pnr
+            pos[pt,0] = self.buf[pt].x
+            pos[pt,1] = self.buf[pt].y
+            pnr[pt] = self.buf[pt].pnr
         
-        return positions, point_numbers
+        return pos, pnr
     
-    def get_by_pnrs(self, np.ndarray[ndim=1, dtype=np.int64_t] pnrs):
+    def get_by_pnrs(self, np.ndarray[ndim=1, dtype=ITYPE_t] pnrs):  # Changed from dtype=ITYPE_t
         """
         Return the flat positions of points whose pnr property is given, as an
         (n,2) flat position array. Assumes all pnrs are to be found, otherwise
         there will be garbage at the end of the position array.
         """
         cdef:
-            np.ndarray[ndim=2, dtype=np.float64_t] pos
+            np.ndarray[ndim=2, dtype=DTYPE_t] pos
             int pt
         
         pos = np.full((len(pnrs), 2), COORD_UNUSED, dtype=np.float64)
@@ -161,7 +166,7 @@ def correspondences(list img_pts, list flat_coords, list cals,
             num_cams * sizeof(coord_2d *))
         frame frm
         
-        np.ndarray[ndim=2, dtype=np.int64_t] clique_ids
+        np.ndarray[ndim=2, dtype=ITYPE_t] clique_ids
         np.ndarray[ndim=3, dtype=np.float64_t] clique_targs
         
         # Return buffers:

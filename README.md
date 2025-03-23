@@ -1,50 +1,97 @@
-<!--- 
-[![gitcheese.com](https://api.gitcheese.com/v1/projects/055c2faf-6c1e-4f01-9cd3-15a2e005f8fc/badges)](https://www.gitcheese.com/app/#/projects/055c2faf-6c1e-4f01-9cd3-15a2e005f8fc/pledges/create)
--->
-
-
+# OpenPTV
 
 OpenPTV - framework for particle tracking velocimetry
-=====================================================
 
-![Build status](https://github.com/openptv/openptv/actions/workflows/main.yml/badge.svg)
- [![DOI](https://zenodo.org/badge/6985516.svg)](https://zenodo.org/badge/latestdoi/6985516)
+## Installation
 
+### Prerequisites
+- Python 3.10 or newer
+- CMake 3.15 or newer
+- C compiler (gcc, clang, or MSVC)
+- pip
 
+### Quick Install
 
-This is the code collection of the OpenPTV project - an effort to create
-common code for different aspects of the Particle Tracking Velocimetry
-method. The code is required to meet the community standards for quality, and
-all code here is therefore peer reviewed.
+1. Create and activate a virtual environment:
+```bash
+python -m venv venv
+source venv/bin/activate  # On Windows: venv\Scripts\activate
+```
 
-The quality standards are decided upon open discussion on the community 
-mailing-list, 
-  
-  https://groups.google.com/forum/#!forum/openptv
+2. Install build dependencies:
+```bash
+python -m pip install --upgrade pip
+python -m pip install build numpy cython
+```
 
-The peer-review process happens in the open on the same mailing list.
+3. Build and install:
+```bash
+cd py_bind
+python setup.py prepare
+pip install -e .
+```
 
+4. Verify installation:
+```bash
+pytest test/
+```
 
-How to help
------------
-To contribute code: fork this repository, build on your fork an orderly branch
-with your changes, then create a pull request on Github and inform the mailing
-list, or post a patch series to the mailing list. Be prepared to answer 
-questions and amend your code to satisfy reviewer comments. Be mindful of the
-agreed coding standards (whose URL will be soon updated here).
+### Developer Guide
 
-To follow and participate in the technical discussion: join the mailing list
-through Google Groups.
+#### Running Tests
 
+The C library tests use the Check framework and can be run in several ways:
 
-Instalation
------------
-See the documentation on <http://openptv-python.readthedocs.io/en/latest/> or respective subdirectories' README files for instructions on installing subpackages.
+1. Run all tests with debug output:
+```bash
+CK_FORK=no CK_VERBOSITY=verbose ctest -V
+```
 
-Donations
----------
+2. Run a specific test (e.g., check_track) with debug output:
+```bash
+CK_FORK=no CK_VERBOSITY=verbose ctest -V -R check_track
+```
+
+3. Run a single test case with maximum debug information:
+```bash
+CTEST_OUTPUT_ON_FAILURE=1 CK_FORK=no CK_VERBOSITY=verbose CK_RUN_CASE="test_single_particle_track" ctest --output-on-failure -VV -R check_track
+```
+
+Environment variables explained:
+- `CK_FORK=no`: Prevents Check from forking processes, ensuring all output is visible
+- `CK_VERBOSITY=verbose`: Enables verbose output from Check framework
+- `CK_RUN_CASE`: Specifies a single test case to run
+- `CTEST_OUTPUT_ON_FAILURE=1`: Shows output for failed tests
+
+### Troubleshooting
+
+If you encounter build issues, clean the build artifacts and try again:
+```bash
+rm -rf build/
+rm -rf *.egg-info/
+rm -rf dist/
+```
+
+## Basic Usage
+
+```python
+from optv.tracking_framebuf import Target
+from optv.tracker import Tracker
+from optv.calibration import Calibration
+```
+
+## For C Library Users
+
+```bash
+cd liboptv
+mkdir build && cd build
+cmake ../
+sudo make install
+make verify
+```
+
+## Donations
+
 Please consider donation to support our website and domain expenses and our developers during their job transitions.
 
 [![paypal](https://www.paypalobjects.com/en_US/i/btn/btn_donateCC_LG.gif)](https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_id=RK3FHXTCJDSWL)
-
-

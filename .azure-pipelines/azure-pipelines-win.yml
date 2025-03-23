@@ -1,0 +1,47 @@
+# This file was generated automatically from conda-smithy. To update this configuration,
+# update the conda-forge.yml and/or the recipe/meta.yaml.
+# -*- mode: yaml -*-
+
+jobs:
+- job: win
+  pool:
+    vmImage: windows-2022
+  strategy:
+    matrix:
+      win_64_python3.10.____cpython:
+        CONFIG: win_64_python3.10.____cpython
+        UPLOAD_PACKAGES: 'True'
+      win_64_python3.11.____cpython:
+        CONFIG: win_64_python3.11.____cpython
+        UPLOAD_PACKAGES: 'True'
+      win_64_python3.12.____cpython:
+        CONFIG: win_64_python3.12.____cpython
+        UPLOAD_PACKAGES: 'True'
+      win_64_python3.9.____cpython:
+        CONFIG: win_64_python3.9.____cpython
+        UPLOAD_PACKAGES: 'True'
+  timeoutInMinutes: 360
+  variables:
+    CONDA_BLD_PATH: D:\\bld\\
+    MINIFORGE_HOME: D:\Miniforge
+    UPLOAD_TEMP: D:\\tmp
+
+  steps:
+    - checkout: self
+      fetchDepth: 0
+
+    - script: |
+        call ".scripts\run_win_build.bat"
+      displayName: Run Windows build
+      env:
+        MINIFORGE_HOME: $(MINIFORGE_HOME)
+        CONDA_BLD_PATH: $(CONDA_BLD_PATH)
+        PYTHONUNBUFFERED: 1
+        CONFIG: $(CONFIG)
+        CI: azure
+        flow_run_id: azure_$(Build.BuildNumber).$(System.JobAttempt)
+        remote_url: $(Build.Repository.Uri)
+        sha: $(Build.SourceVersion)
+        UPLOAD_PACKAGES: $(UPLOAD_PACKAGES)
+        UPLOAD_TEMP: $(UPLOAD_TEMP)
+        BINSTAR_TOKEN: $(BINSTAR_TOKEN)
