@@ -4,7 +4,7 @@ import os
 import shutil
 import sys
 import glob
-import numpy as np
+import numpy
 from setuptools import setup, Extension, Command
 from setuptools.command.build_ext import build_ext
 from Cython.Build import cythonize
@@ -31,12 +31,11 @@ class PrepareCommand(Command):
         # Copy liboptv headers
         for h_file in glob.glob('../liboptv/include/*.h'):
             print(f"Copying header: {h_file}")
-            dest = os.path.join('liboptv/include', os.path.basename(h_file))
-            shutil.copy(h_file, dest)
+            shutil.copy(h_file, 'liboptv/include/')
             
-            # Also copy headers to the root liboptv directory for compatibility
-            dest = os.path.join('liboptv', os.path.basename(h_file))
-            shutil.copy(h_file, dest)
+            # # Also copy headers to the root liboptv directory for compatibility
+            # dest = os.path.join('liboptv', os.path.basename(h_file))
+            # shutil.copy(h_file, dest)
         
         # Convert pyx to C
         
@@ -46,7 +45,6 @@ class PrepareCommand(Command):
 class BuildExt(build_ext):
     def finalize_options(self):
         build_ext.finalize_options(self)
-        import numpy
         self.include_dirs.append(numpy.get_include())
 
     def run(self):
@@ -74,9 +72,9 @@ def mk_ext(name, files):
         name,
         files + get_liboptv_sources(),
         include_dirs=[
-            np.get_include(),
+            numpy.get_include(),
             './liboptv/include/',
-            os.path.join(sys.prefix, 'include')
+            #os.path.join(sys.prefix, 'include')
         ],
         extra_compile_args=extra_compile_args,
         extra_link_args=extra_link_args,
