@@ -9,11 +9,11 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "optv"
-version = "0.3.0"
+dynamic = ["version"]
 description = "OpenPTV Python bindings"
 readme = {file = "README.txt", content-type = "text/x-rst"}
 requires-python = ">=3.10"
-license = "LGPL-3.0-or-later"  # Changed from table to SPDX string
+license = "LGPL-3.0-or-later"
 authors = [
     {name = "OpenPTV Community", email = "openptv@googlegroups.com"}
 ]
@@ -25,3 +25,6 @@ dependencies = [
 [tool.setuptools]
 packages = ["optv"]
 package-dir = {"optv" = "optv"}
+
+[tool.setuptools.dynamic]
+version = {attr = "optv.version.__version__"}
