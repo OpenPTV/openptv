@@ -197,7 +197,7 @@ def correspondences(list img_pts, list flat_coords, list cals,
         clique_targs = np.full((num_cams, num_points, 2), PT_UNUSED, 
             dtype=np.float64)
         clique_ids = np.full((num_cams, num_points), CORRES_NONE, 
-            dtype=np.int_)
+            dtype=np.intp)
         
         # Trace back the pixel target properties through the flat metric
         # intermediary that's x-sorted.
