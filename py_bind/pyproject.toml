@@ -13,7 +13,7 @@ dynamic = ["version"]
 description = "OpenPTV Python bindings"
 readme = {file = "README.md", content-type = "text/markdown"}
 requires-python = ">=3.10"
-license = {text = "LGPL-3.0-or-later"}
+license = "LGPL-3.0-or-later"
 authors = [
     {name = "OpenPTV Community", email = "openptv@googlegroups.com"}
 ]
