@@ -30,21 +30,4 @@ py_bind/wheelhouse/*
 build_artifacts
 # conda smithy ci-skeleton end
 *.whl
-py_bind/optv/optv/calibration.h
-py_bind/optv/optv/correspondences.h
-py_bind/optv/optv/epi.h
-py_bind/optv/optv/glass.h
-py_bind/optv/optv/image_processing.h
-py_bind/optv/optv/imgcoord.h
-py_bind/optv/optv/lsqadj.h
-py_bind/optv/optv/multimed.h
-py_bind/optv/optv/orientation.h
-py_bind/optv/optv/parameters.h
-py_bind/optv/optv/ray_tracing.h
-py_bind/optv/optv/segmentation.h
-py_bind/optv/optv/sortgrid.h
-py_bind/optv/optv/track.h
-py_bind/optv/optv/tracking_frame_buf.h
-py_bind/optv/optv/tracking_run.h
-py_bind/optv/optv/trafo.h
-py_bind/optv/optv/vec_utils.h
+py_bind/optv/optv/*.h
