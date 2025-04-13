@@ -22,9 +22,40 @@ dependencies = [
     "pyyaml",
 ]
 
+[project.optional-dependencies]
+test = [
+    "pytest",
+]
+
 [tool.setuptools]
 packages = ["optv"]
 package-dir = {"optv" = "optv"}
 
 [tool.setuptools.dynamic]
 version = {attr = "optv.version.__version__"}
+
+[tool.cibuildwheel]
+skip = "pp* cp36-* cp37-* cp38-* cp39-*"
+test-command = "cd {project}/py_bind/test && python -m pytest test_version.py"
+test-extras = ["test"]
+test-requires = ["pytest"]
+test-skip = "*-musllinux*"
+build-verbosity = 1
+
+# Environment variables for all platforms
+environment = { CFLAGS="-Iliboptv/include" }
+
+[tool.cibuildwheel.linux]
+before-build = [
+    "pip install numpy==1.26.4 cython>=3.0.0"
+]
+
+[tool.cibuildwheel.macos]
+before-build = [
+    "pip install numpy==1.26.4 cython>=3.0.0"
+]
+
+[tool.cibuildwheel.windows]
+before-build = [
+    "pip install numpy==1.26.4 cython>=3.0.0"
+]
