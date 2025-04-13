@@ -11,4 +11,4 @@ python setup.py prepare
 
 # Run cibuildwheel
 cd ..
-CIBW_TEST_REQUIRES="pytest" CIBW_TEST_COMMAND="cd {project}/py_bind/test && python -m pytest test_version.py" python -m cibuildwheel --output-dir wheelhouse py_bind/ --only cp310-manylinux_x86_64
+CIBW_TEST_REQUIRES="pytest" CIBW_TEST_COMMAND="cd {project}/py_bind/test && python -m pytest test_version.py" python -m cibuildwheel --output-dir wheelhouse py_bind/ --only "cp310-manylinux_x86_64 cp311-manylinux_x86_64"
