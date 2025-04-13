@@ -68,16 +68,8 @@ def mk_ext(name, files):
         header_name = os.path.basename(header)
         target_path = os.path.join('optv/optv', header_name)
         if not os.path.exists(target_path):
-            if sys.platform.startswith('win'):
-                # On Windows, copy the file
-                shutil.copy(header, target_path)
-            else:
-                # On Unix, create a symlink
-                try:
-                    os.symlink(f'../../{header}', target_path)
-                except OSError:
-                    # Fallback to copy if symlink fails
-                    shutil.copy(header, target_path)
+            # Always copy the file for consistency across platforms
+            shutil.copy(header, target_path)
 
     if not sys.platform.startswith('win'):
         extra_compile_args.extend(['-Wno-cpp', '-Wno-unused-function'])
@@ -85,15 +77,23 @@ def mk_ext(name, files):
     else:
         extra_compile_args.append('/W4')
 
+    include_dirs = [
+        numpy.get_include(),
+        './liboptv/include/',
+        './optv/',
+    ]
+
+    # Add absolute paths for Windows
+    if sys.platform.startswith('win'):
+        include_dirs.extend([
+            os.path.abspath('./liboptv/include/'),
+            os.path.abspath('./optv/'),
+        ])
+
     return Extension(
         name,
         files + get_liboptv_sources(),
-        include_dirs=[
-            numpy.get_include(),
-            './liboptv/include/',
-            './optv/',
-            #os.path.join(sys.prefix, 'include')
-        ],
+        include_dirs=include_dirs,
         extra_compile_args=extra_compile_args,
         extra_link_args=extra_link_args,
         define_macros=[("NPY_NO_DEPRECATED_API", "NPY_1_7_API_VERSION")]
