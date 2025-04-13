@@ -2,6 +2,13 @@
 
 OpenPTV - framework for particle tracking velocimetry
 
+## Project Structure
+
+The OpenPTV project consists of two main components:
+
+1. **liboptv** - The core C library implementing the particle tracking algorithms
+2. **py_bind** - Python bindings for the C library
+
 ## Installation
 
 ### Prerequisites
@@ -10,7 +17,7 @@ OpenPTV - framework for particle tracking velocimetry
 - C compiler (gcc, clang, or MSVC)
 - pip
 
-### Quick Install
+### Quick Install (Python Bindings)
 
 1. Create and activate a virtual environment:
 ```bash
@@ -33,17 +40,42 @@ pip install -e .
 
 4. Verify installation:
 ```bash
-pytest test/
+cd py_bind/test
+python -m pytest
 ```
 
-### Developer Guide
+### Installing from PyPI
 
-#### Running Tests
+You can also install the pre-built wheels from PyPI:
+
+```bash
+pip install optv
+```
+
+## Developer Guide
+
+### Running Tests
+
+#### Python Tests
+
+The Python tests are located in the `py_bind/test` directory and should be run from within that directory:
+
+```bash
+cd py_bind/test
+python -m pytest                # Run all tests
+python -m pytest test_version.py # Run a specific test file
+python -m pytest -v              # Run with verbose output
+```
+
+#### C Library Tests
 
 The C library tests use the Check framework and can be run in several ways:
 
 1. Run all tests with debug output:
 ```bash
+cd liboptv
+mkdir -p build && cd build
+cmake ../
 CK_FORK=no CK_VERBOSITY=verbose ctest -V
 ```
 
@@ -63,13 +95,33 @@ Environment variables explained:
 - `CK_RUN_CASE`: Specifies a single test case to run
 - `CTEST_OUTPUT_ON_FAILURE=1`: Shows output for failed tests
 
+### Building Wheels
+
+You can build wheels for distribution using cibuildwheel:
+
+```bash
+# Install cibuildwheel
+pip install cibuildwheel
+
+# Build wheels for the current platform
+python -m cibuildwheel --output-dir wheelhouse py_bind/
+
+# Build wheels for a specific Python version
+python -m cibuildwheel --output-dir wheelhouse py_bind/ --only cp310-*
+```
+
+The project includes a GitHub Actions workflow that automatically builds wheels for multiple platforms when tags are pushed.
+
 ### Troubleshooting
 
 If you encounter build issues, clean the build artifacts and try again:
 ```bash
+cd py_bind
 rm -rf build/
 rm -rf *.egg-info/
 rm -rf dist/
+rm -rf optv/optv
+find . -name "*.so" -o -name "*.c" | xargs rm -f
 ```
 
 ## Basic Usage
