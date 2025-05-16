@@ -11,9 +11,9 @@ build-backend = "setuptools.build_meta"
 name = "optv"
 dynamic = ["version"]
 description = "OpenPTV Python bindings"
-readme = {file = "README.txt", content-type = "text/x-rst"}
+readme = {file = "README.md", content-type = "text/markdown"}
 requires-python = ">=3.10"
-license = {text = "LGPL-3.0-or-later"}  # Fixed: removed extra quotes
+license = {text = "LGPL-3.0-or-later"}
 authors = [
     {name = "OpenPTV Community", email = "openptv@googlegroups.com"}
 ]

@@ -11,34 +11,34 @@ from Cython.Build import cythonize
 
 class PrepareCommand(Command):
     """Prepare the C sources by copying them from liboptv and converting pyx to C"""
-    
+
     description = "Prepare C sources and Cython files"
     user_options = []
-    
+
     def initialize_options(self): pass
     def finalize_options(self): pass
-    
+
     def run(self):
         # Create necessary directories
         os.makedirs('liboptv/include', exist_ok=True)
         os.makedirs('liboptv/src', exist_ok=True)
-        
+
         # Copy liboptv sources
         for c_file in glob.glob('../liboptv/src/*.c'):
             print(f"Copying source: {c_file}")
             shutil.copy(c_file, 'liboptv/src/')
-        
+
         # Copy liboptv headers
         for h_file in glob.glob('../liboptv/include/*.h'):
             print(f"Copying header: {h_file}")
             shutil.copy(h_file, 'liboptv/include/')
-            
+
             # # Also copy headers to the root liboptv directory for compatibility
             # dest = os.path.join('liboptv', os.path.basename(h_file))
             # shutil.copy(h_file, dest)
-        
+
         # Convert pyx to C
-        
+
         cythonize(['optv/*.pyx'], compiler_directives={'language_level': '3'})
 
 
@@ -61,21 +61,39 @@ def get_liboptv_sources():
 def mk_ext(name, files):
     extra_compile_args = []
     extra_link_args = []
-    
+
+    # Create optv directory structure for include files
+    os.makedirs('optv/optv', exist_ok=True)
+    for header in glob.glob('liboptv/include/*.h'):
+        header_name = os.path.basename(header)
+        target_path = os.path.join('optv/optv', header_name)
+        if not os.path.exists(target_path):
+            # Always copy the file for consistency across platforms
+            shutil.copy(header, target_path)
+
     if not sys.platform.startswith('win'):
         extra_compile_args.extend(['-Wno-cpp', '-Wno-unused-function'])
         extra_link_args.extend(['-Wl,-rpath,$ORIGIN'])
     else:
         extra_compile_args.append('/W4')
 
+    include_dirs = [
+        numpy.get_include(),
+        './liboptv/include/',
+        './optv/',
+    ]
+
+    # Add absolute paths for Windows
+    if sys.platform.startswith('win'):
+        include_dirs.extend([
+            os.path.abspath('./liboptv/include/'),
+            os.path.abspath('./optv/'),
+        ])
+
     return Extension(
         name,
         files + get_liboptv_sources(),
-        include_dirs=[
-            numpy.get_include(),
-            './liboptv/include/',
-            #os.path.join(sys.prefix, 'include')
-        ],
+        include_dirs=include_dirs,
         extra_compile_args=extra_compile_args,
         extra_link_args=extra_link_args,
         define_macros=[("NPY_NO_DEPRECATED_API", "NPY_1_7_API_VERSION")]
