@@ -20,6 +20,9 @@ cdef extern from "optv/tracking_frame_buf.h":
     void free_frame(frame *self)
     int read_frame(frame *self, char *corres_file_base, char *linkage_file_base,
         char *prio_file_base, char **target_file_base, int frame_num)
+    void fb_init(framebuf *new_buf, int buf_len, int num_cams, int max_targets,
+        char *corres_file_base, char *linkage_file_base, char *prio_file_base,
+        char **target_file_base)
 
 cdef extern from "optv/correspondences.h":
     void quicksort_target_y(target *pix, int num)
@@ -28,102 +31,144 @@ DEF MAX_TARGETS = 20000 # Until improvement of read_targets to auto-allocate.
 ctypedef np.float64_t pos_t
 
 cdef class Target:
-    def __init__(self, **kwd):
-        """
-        Initialises the Target instance: either as an empy one (to be set later
-        from C using set() ); or with initial values from Python. For the first
-        case, do not supply arguments to inin. For the later case, supply all
-        arguments listed below as keyword arguments.
-        
-        At the time of writing, the second case appears to be needed only for
-        testing.
-        
-        Arguments:
-        pnr - integer, used by the tracking code.
-        x, y - doubles, target position in its 2D image, in pixels.
-        n, nx, ny - number of pixels in target (total, width, height)
-        tnr - used by the tracking code.
-        """
-        if len(kwd.keys()) == 0:
-            self._owns_data = 0
-            return
-        
+    def __cinit__(self, pnr=0, tnr=0, x=0.0, y=0.0, n=0, nx=0, ny=0, sumg=0):
+        self._targ = <target*>malloc(sizeof(target))
+        if self._targ != NULL:
+            self._targ.pnr = pnr
+            self._targ.tnr = tnr
+            self._targ.x = x
+            self._targ.y = y
+            self._targ.n = n
+            self._targ.nx = nx
+            self._targ.ny = ny
+            self._targ.sumg = sumg
         self._owns_data = 1
-        self._targ = <target *>malloc(sizeof(target))
-        
-        self.set_pnr(kwd['pnr'])
-        self.set_tnr(kwd['tnr'])
-        self.set_pos([kwd['x'], kwd['y']])
-        self.set_pixel_counts(kwd['n'], kwd['nx'], kwd['ny'])
-        self.set_sum_grey_value(kwd['sumg'])
-    
-    def __dealloc__(self):
-        if self._owns_data == 1:
+    cdef void set(self, target* targ):
+        if self._owns_data == 1 and self._targ != NULL:
             free(self._targ)
-    
-    cdef void set(Target self, target* targ):
-        self._owns_data = 0
         self._targ = targ
-    
-    def tnr(self):
-        return self._targ[0].tnr
-    
-    def set_tnr(self, tnr):
-        self._targ[0].tnr = tnr
-    
+        self._owns_data = 0
     def pnr(self):
-        return self._targ[0].pnr
-    
-    def set_pnr(self, pnr):
-        self._targ[0].pnr = pnr
-    
+        if self._targ == NULL:
+            raise ValueError("Target pointer is NULL")
+        return self._targ.pnr
+    def tnr(self):
+        if self._targ == NULL:
+            raise ValueError("Target pointer is NULL")
+        return self._targ.tnr
+    def x(self):
+        if self._targ == NULL:
+            raise ValueError("Target pointer is NULL")
+        return self._targ.x
+    def y(self):
+        if self._targ == NULL:
+            raise ValueError("Target pointer is NULL")
+        return self._targ.y
     def pos(self):
-        """
-        Get target position - a tuple (x,y)
-        """
-        return self._targ[0].x, self._targ[0].y
-    
-    def set_pos(self, pos):
-        """
-        Set target position in pixel coordinates.
-        
-        Arguments:
-        pos - a 2-element sequence, for the x and y pixel position.
-        """
-        self._targ[0].x = pos[0]
-        self._targ[0].y = pos[1]
-
+        if self._targ == NULL:
+            raise ValueError("Target pointer is NULL")
+        return (self._targ.x, self._targ.y)
     def count_pixels(self):
-        """
-        Get the pixel counts associated with this target.
-        
-        Returns:
-        n, nx, ny - number of pixels in target (total, width, height)
-        """
-        return self._targ.n, self._targ.nx, self._targ.ny
-
-    def set_pixel_counts(self, n, nx, ny):
-        """
-        Set the pixel counts associated with this target.
-        
-        Arguments:
-        n, nx, ny - number of pixels in target (total, width, height)
-        """
+        if self._targ == NULL:
+            raise ValueError("Target pointer is NULL")
+        return (self._targ.n, self._targ.nx, self._targ.ny)
+    def sum_grey_value(self):
+        if self._targ == NULL:
+            raise ValueError("Target pointer is NULL")
+        return self._targ.sumg
+    def set_pos(self, pos):
+        if self._targ == NULL:
+            raise ValueError("Target pointer is NULL")
+        self._targ.x = pos[0]
+        self._targ.y = pos[1]
+    def set_pnr(self, int pnr):
+        if self._targ == NULL:
+            raise ValueError("Target pointer is NULL")
+        self._targ.pnr = pnr
+    def set_pixel_counts(self, int n, int nx, int ny):
+        if self._targ == NULL:
+            raise ValueError("Target pointer is NULL")
         self._targ.n = n
         self._targ.nx = nx
         self._targ.ny = ny
-    
-    def sum_grey_value(self):
-        """
-        Returns the sum of grey values of pixels belonging to target.
-        """
-        return self._targ.sumg
-    
-    def set_sum_grey_value(self, sumg):
-        """
-        Returns the sum of grey values of pixels belonging to target.
-        """
+    def set_sum_grey_value(self, int sumg):
+        if self._targ == NULL:
+            raise ValueError("Target pointer is NULL")
         self._targ.sumg = sumg
+    def __dealloc__(self):
+        if self._owns_data == 1 and self._targ != NULL:
+            free(self._targ)
+        self._targ = NULL
+
+cdef class FrameBuf:
+    cdef framebuf* _fb
+    def __cinit__(self, *args):
+        cdef int buf_len
+        cdef int num_cams
+        cdef int max_targets
+        cdef char* c_corres
+        cdef char* c_linkage
+        cdef char* c_prio
+        cdef char** c_targets
+        self._fb = <framebuf*>malloc(sizeof(framebuf))
+        if len(args) == 1 and isinstance(args[0], str):
+            # Backward compatible: single file (not recommended for real data)
+            pass  # TODO: implement if needed
+        elif len(args) == 4:
+            corres_file_base, linkage_file_base, target_file_base, frame_num = args
+            buf_len = 1
+            num_cams = len(target_file_base)
+            max_targets = 20000
+            py_corres = corres_file_base.encode('utf-8')
+            py_linkage = linkage_file_base.encode('utf-8')
+            c_corres = <char*>py_corres
+            c_linkage = <char*>py_linkage
+            c_prio = NULL  # Not used in this test
+            py_targets = [cam.encode('utf-8') for cam in target_file_base]
+            c_targets = <char**>malloc(num_cams * sizeof(char*))
+            for i in range(num_cams):
+                c_targets[i] = <char*>py_targets[i]
+            fb_init(self._fb, buf_len, num_cams, max_targets,
+                   c_corres, c_linkage, c_prio, c_targets)
+        else:
+            raise ValueError("FrameBuf expects either a single file or (corres_file_base, linkage_file_base, target_file_base, frame_num)")
+    def num_frames(self):
+        if self._fb == NULL:
+            return 0
+        n = fb_num_frames(self._fb)
+        if n < 0:
+            return 0
+        return n
+    def current_frame(self):
+        if self._fb == NULL:
+            return -1
+        return fb_current_frame(self._fb)
+    def next_frame(self):
+        if self._fb == NULL:
+            return 0
+        return fb_next_frame(self._fb)
+    def num_targets(self):
+        if self._fb == NULL:
+            return 0
+        n = fb_num_targets(self._fb)
+        if n < 0:
+            return 0
+        return n
+    def get_targets(self):
+        n = self.num_targets()
+        if n <= 0:
+            return []
+        return [self._wrap_target(fb_get_target(self._fb, i)) for i in range(n)]
+    cdef Target _wrap_target(self, target* t):
+        if t == NULL:
+            return Target()
+        obj = Target()
+        obj.set(t)
+        return obj
+    def __dealloc__(self):
+        if self._fb != NULL:
+            free(self._fb)
+            self._fb = NULL
 
 cdef class TargetArray:
     """
@@ -308,10 +353,10 @@ cdef class Frame:
         frame.
         """
         cdef: 
-            np.ndarray[ndim=2, dtype=pos_t] pos3d
+            np.ndarray[pos_t, ndim=2] pos3d
             double *vec
         
-        pos3d = np.empty((self._frm.num_parts, 3))
+        pos3d = np.empty((self._frm.num_parts, 3), dtype=np.float64)
         for pt in range(self._frm.num_parts):
             vec = <double *>np.PyArray_GETPTR2(pos3d, pt, 0)
             vec_copy(vec, self._frm.path_info[pt].x)
@@ -333,14 +378,14 @@ cdef class Frame:
             camera belongs to the 3D position, its target is set to NaN. 
         """
         cdef:
-            np.ndarray[ndim=2, dtype=pos_t] pos2d
+            np.ndarray[pos_t, ndim=2] pos2d
             int tix
         
-        pos2d = np.empty((self._frm.num_parts, 2))
+        pos2d = np.empty((self._frm.num_parts, 2), dtype=np.float64)
         for pt in range(self._frm.num_parts):
             tix = self._frm.correspond[pt].p[cam]
             
-            if tix == CORRES_NONE:
+            if tix == -1:  # CORRES_NONE is -1
                 pos2d[pt] = np.nan
             else:
                 pos2d[pt,0] = self._frm.targets[cam][tix].x

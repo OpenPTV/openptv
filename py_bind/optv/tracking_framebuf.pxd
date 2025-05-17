@@ -36,6 +36,11 @@ cdef extern from "optv/tracking_frame_buf.h":
         pass
     
     void fb_free(framebuf *self)
+    int fb_num_frames(framebuf *fb)
+    int fb_current_frame(framebuf *fb)
+    int fb_next_frame(framebuf *fb)
+    int fb_num_targets(framebuf *fb)
+    target* fb_get_target(framebuf *fb, int i)
     
 cdef class Target:
     cdef target* _targ

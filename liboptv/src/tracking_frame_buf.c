@@ -722,3 +722,33 @@ int fb_disk_write_frame_from_start(framebuf_base *self_base, int frame_num) {
         frame_num);
 }
 
+// --- Interactive/debugging helpers ---
+
+int fb_num_frames(framebuf *fb) {
+    return fb->num_frames;
+}
+
+int fb_current_frame(framebuf *fb) {
+    return fb->current_frame;
+}
+
+int fb_next_frame(framebuf *fb) {
+    if (fb->current_frame < fb->num_frames - 1) {
+        fb->current_frame++;
+        return 1;
+    }
+    return 0;
+}
+
+int fb_num_targets(framebuf *fb) {
+    // Return number of targets in the current frame, camera 0 (or as needed)
+    int idx = fb->current_frame % fb->base.buf_len;
+    return fb->base.buf[idx]->num_targets[0];
+}
+
+target* fb_get_target(framebuf *fb, int i) {
+    int idx = fb->current_frame % fb->base.buf_len;
+    if (i < 0 || i >= fb->base.buf[idx]->num_targets[0]) return NULL;
+    return &fb->base.buf[idx]->targets[0][i];
+}
+

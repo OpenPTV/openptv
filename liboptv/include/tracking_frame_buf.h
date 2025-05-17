@@ -147,9 +147,10 @@ void fb_prev(framebuf_base *self);
 // child class that reads from _target files.
 typedef struct {
     framebuf_base base; // must be 1st member.
-    
     char *corres_file_base, *linkage_file_base, *prio_file_base;
     char **target_file_base;
+    int current_frame; // index of the current frame in the buffer
+    int num_frames;    // number of frames in the buffer (filled)
 } framebuf;
 
 void fb_init(framebuf *new_buf, int buf_len, int num_cams, int max_targets,\
@@ -159,5 +160,20 @@ void fb_init(framebuf *new_buf, int buf_len, int num_cams, int max_targets,\
 void fb_disk_free(framebuf_base *self);
 int fb_disk_read_frame_at_end(framebuf_base *self, int frame_num, int read_links);
 int fb_disk_write_frame_from_start(framebuf_base *self, int frame_num);
+
+// Returns the number of frames in the buffer (interactive/debugging helper)
+int fb_num_frames(framebuf *fb);
+
+// Returns the current frame index (interactive/debugging helper)
+int fb_current_frame(framebuf *fb);
+
+// Advances to the next frame, returns 1 if successful, 0 if at end (interactive/debugging helper)
+int fb_next_frame(framebuf *fb);
+
+// Returns the number of targets in the current frame (interactive/debugging helper)
+int fb_num_targets(framebuf *fb);
+
+// Returns a pointer to the i-th target in the current frame (interactive/debugging helper)
+target* fb_get_target(framebuf *fb, int i);
 
 #endif
