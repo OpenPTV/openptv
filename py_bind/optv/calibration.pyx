@@ -79,6 +79,8 @@ cdef class Calibration:
             (<char *>ori_bytes if ori_bytes is not None else <char *>0),
             (<char *>add_bytes if add_bytes is not None else <char *>0),
             (<char *>fallback_bytes if fallback_bytes is not None else <char *>0))
+        if self._calibration == NULL:
+            raise IOError("Failed to read calibration from file(s): {} {} {}".format(ori_file, add_file, fallback_file))
         
     def write(self, filename, add_file):
         """
@@ -90,6 +92,8 @@ cdef class Calibration:
             parameters.
         add_file - optional path to file containing distortion parameters.
         """
+        if self._calibration == NULL:
+            raise ValueError("Calibration data is NULL; cannot write calibration.")
         success = write_calibration(self._calibration, filename, add_file)
         if not success:
             raise IOError("Failed to write calibration.")
