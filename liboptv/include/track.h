@@ -24,7 +24,7 @@
  */
 #define TR_BUFSPACE 4
 #define TR_MAX_CAMS 4
-#define MAX_TARGETS 20000
+#define MAX_TARGETS 60000
 #define MAX_CANDS 4         // max candidates, nearest neighbours
 #define ADD_PART 3          // search region 3 pix around a particle
 
