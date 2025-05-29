@@ -97,10 +97,10 @@ def test_write_ori(tmp_path):
     cal_read = Calibration.read_ori(ori_file, add_file)
     assert Calibration.compare_calib(cal, cal_read)
 
-def test_read_ori():
-    ori_file = "testing_fodder/calibration/cam1.tif.ori"
-    add_file = "testing_fodder/calibration/cam1.tif.addpar"
-    cal = Calibration.read_ori(ori_file, add_file)
+def test_read_ori(calibration_data_dir):
+    ori_file = calibration_data_dir / "cam1.tif.ori"
+    add_file = calibration_data_dir / "cam1.tif.addpar"
+    cal = Calibration.read_ori(str(ori_file), str(add_file))
     assert cal.ext_par.x0 == 105.2632
     assert cal.ext_par.y0 == 102.7458
     assert cal.ext_par.z0 == 403.8822

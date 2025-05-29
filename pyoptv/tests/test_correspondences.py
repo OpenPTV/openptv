@@ -128,6 +128,10 @@ def test_match_pairs():
             self.x = x
             self.y = y
             self.pnr = pnr
+            self.n = 10  # number of pixels in target
+            self.nx = 3  # size in x direction
+            self.ny = 3  # size in y direction
+            self.sumg = 100  # sum of grey values
 
     class Frame:
         def __init__(self):
@@ -136,14 +140,33 @@ def test_match_pairs():
                             [Target(0, 0, 0), Target(1, 1, 1), Target(2, 2, 2)]]
 
     class Calibration:
-        pass
+        def __init__(self):
+            self.int_par = self.InteriorParams()
+
+        class InteriorParams:
+            def __init__(self):
+                self.xh = 0.0
+                self.yh = 0.0 # Though yh is not used in the failing line, it's good practice to add it
 
     class ControlParams:
         def __init__(self):
             self.num_cams = 2
+            self.mm = MultimediaParams()  # Add multimedia parameters
+            self.pix_x = 0.01 # Added pix_x
+            self.pix_y = 0.01 # Added pix_y for completeness
+            self.imx = 1280 # Added imx
+            self.imy = 1024 # Added imy for completeness
+
+    class MultimediaParams:
+        pass
 
     class VolumeParams:
-        pass
+        def __init__(self):
+            self.X_lay = [-250.0, 250.0]  # X boundaries for the measurement volume
+            self.Zmin_lay = [-100.0, -100.0]  # minimum Z values
+            self.Zmax_lay = [100.0, 100.0]  # maximum Z values
+            self.eps0 = 25.0  # epipolar band width
+            self.corrmin = 0.5  # minimum correlation
 
     class Corrected:
         def __init__(self, x, y, pnr):
@@ -182,6 +205,10 @@ def test_correspondences():
             self.x = x
             self.y = y
             self.pnr = pnr
+            self.n = 10  # number of pixels in target
+            self.nx = 3  # size in x direction
+            self.ny = 3  # size in y direction  
+            self.sumg = 100  # sum of grey values
 
     class Frame:
         def __init__(self):
@@ -195,9 +222,18 @@ def test_correspondences():
     class ControlParams:
         def __init__(self):
             self.num_cams = 2
+            self.mm = MultimediaParams()  # Add multimedia parameters
+
+    class MultimediaParams:
+        pass
 
     class VolumeParams:
-        pass
+        def __init__(self):
+            self.X_lay = [-250.0, 250.0]  # X boundaries for the measurement volume
+            self.Zmin_lay = [-100.0, -100.0]  # minimum Z values
+            self.Zmax_lay = [100.0, 100.0]  # maximum Z values
+            self.eps0 = 25.0  # epipolar band width
+            self.corrmin = 0.5  # minimum correlation
 
     class Corrected:
         def __init__(self, x, y, pnr):

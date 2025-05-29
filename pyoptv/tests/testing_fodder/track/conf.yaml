@@ -1,0 +1,47 @@
+# Values taken from the parameters used in the C test for adding a particle.
+
+cameras:
+  - ori_file: testing_fodder/track/cal/sym_cam1.tif.ori
+    addpar_file: testing_fodder/track/cal/cam1.tif.addpar
+
+  - ori_file: testing_fodder/track/cal/sym_cam2.tif.ori
+    addpar_file: testing_fodder/track/cal/cam1.tif.addpar
+
+  - ori_file: testing_fodder/track/cal/sym_cam3.tif.ori
+    addpar_file: testing_fodder/track/cal/cam1.tif.addpar
+
+scene:
+    flags: hp, headers
+    image_size: [ 1920, 1080 ]
+    pixel_size: [ 0.00556, 0.00556 ]
+    
+    # Multimedia parameters:
+    cam_side_n: 1 
+    object_side_n: 1
+    wall_ns: [ 1 ] 
+    wall_thicks: [ 0 ]
+
+correspondences:
+    x_span: [-30., 30.]
+    z_spans:
+        - [-20., 20.]
+        - [-20., 20.]
+    
+    pixels_x: 0.02
+    pixels_y: 0.02
+    pixels_tot: 0.02
+    
+    ref_gray: 0.02
+    min_correlation: 33
+    epipolar_band: 0.15   # mm on sensor plane.
+    
+sequence:
+    targets_template: testing_fodder/track/newpart/cam{cam:1d}.
+    first: 10001
+    last: 10005
+
+tracking:
+    velocity_lims: [[-1.5, 1.5], [-1.5, 1.5], [-1.5, 1.5]]
+    angle_lim: 110
+    accel_lim: 0.5
+    add_particle: 1

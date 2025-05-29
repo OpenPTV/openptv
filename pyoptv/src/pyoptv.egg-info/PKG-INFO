@@ -1,0 +1,117 @@
+Metadata-Version: 2.4
+Name: pyoptv
+Version: 0.1.0
+Summary: Pure Python implementation of OpenPTV - Open Source Particle Tracking Velocimetry
+Author-email: OpenPTV Contributors <openptv@googlegroups.com>
+License: LGPL-3.0
+Project-URL: Homepage, https://github.com/OpenPTV/openptv
+Project-URL: Documentation, https://openptv.readthedocs.io
+Project-URL: Repository, https://github.com/OpenPTV/openptv.git
+Project-URL: Bug Tracker, https://github.com/OpenPTV/openptv/issues
+Keywords: particle tracking,velocimetry,computer vision,fluid mechanics,PIV,PTV
+Classifier: Development Status :: 4 - Beta
+Classifier: Intended Audience :: Science/Research
+Classifier: License :: OSI Approved :: GNU Lesser General Public License v3 (LGPLv3)
+Classifier: Operating System :: OS Independent
+Classifier: Programming Language :: Python :: 3
+Classifier: Programming Language :: Python :: 3.8
+Classifier: Programming Language :: Python :: 3.9
+Classifier: Programming Language :: Python :: 3.10
+Classifier: Programming Language :: Python :: 3.11
+Classifier: Programming Language :: Python :: 3.12
+Classifier: Topic :: Scientific/Engineering
+Classifier: Topic :: Scientific/Engineering :: Image Processing
+Classifier: Topic :: Scientific/Engineering :: Physics
+Requires-Python: >=3.8
+Description-Content-Type: text/markdown
+Requires-Dist: numpy>=1.19.0
+Requires-Dist: scipy>=1.6.0
+Requires-Dist: matplotlib>=3.3.0
+Provides-Extra: numba
+Requires-Dist: numba>=0.50.0; extra == "numba"
+Provides-Extra: dev
+Requires-Dist: pytest>=6.0; extra == "dev"
+Requires-Dist: pytest-cov>=2.10; extra == "dev"
+Requires-Dist: black>=21.0; extra == "dev"
+Requires-Dist: flake8>=3.8; extra == "dev"
+Requires-Dist: mypy>=0.800; extra == "dev"
+Provides-Extra: all
+Requires-Dist: numba>=0.50.0; extra == "all"
+
+# PyOptv - Pure Python OpenPTV
+
+PyOptv is a pure Python implementation of OpenPTV (Open Source Particle Tracking Velocimetry), providing tools for 3D particle tracking velocimetry analysis.
+
+## Features
+
+- Camera calibration and orientation
+- Image processing and particle detection
+- 3D correspondence and tracking
+- Ray tracing and stereoscopic reconstruction
+- Pure Python implementation (no compiled dependencies)
+- Optional Numba acceleration for performance-critical operations
+
+## Installation
+
+### From source
+
+```bash
+cd pyoptv
+pip install -e .
+```
+
+### Development installation
+
+```bash
+cd pyoptv
+pip install -e ".[dev]"
+```
+
+This will install the package in development mode with all development dependencies including testing tools.
+
+## Usage
+
+```python
+import pyoptv
+from pyoptv.calibration import Calibration
+from pyoptv.tracking_frame_buf import FrameBuf
+
+# Create a calibration object
+cal = Calibration()
+
+# Set camera parameters
+cal.set_pos([100.0, 200.0, 300.0])
+cal.set_angles([0.1, 0.2, 0.3])
+```
+
+## Testing
+
+Run the test suite:
+
+```bash
+pytest
+```
+
+Run tests with coverage:
+
+```bash
+pytest --cov=pyoptv
+```
+
+## Dependencies
+
+- NumPy >= 1.20.0
+- SciPy >= 1.7.0
+- Matplotlib >= 3.3.0
+
+### Optional dependencies
+
+- Numba >= 0.56.0 (for performance acceleration)
+
+## License
+
+This project is licensed under the GNU Lesser General Public License v3.0 (LGPL-3.0).
+
+## Contributing
+
+Please see the main OpenPTV repository for contribution guidelines.
