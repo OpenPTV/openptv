@@ -77,12 +77,12 @@ class VolumePar:
         self.X_lay = [0.0, 0.0]
         self.Zmin_lay = [0.0, 0.0]
         self.Zmax_lay = [0.0, 0.0]
-        self.cn = 0.0
         self.cnx = 0.0
         self.cny = 0.0
+        self.cn = 0.0
         self.csumg = 0.0
-        self.eps0 = 0.0
         self.corrmin = 0.0
+        self.eps0 = 0.0
 
 def read_volume_par(filename):
     ret = VolumePar()
@@ -101,26 +101,19 @@ def read_volume_par(filename):
         ret.eps0 = float(fpp.readline().strip())
     return ret
 
-def compare_volume_par(v1, v2):
-    return (v1.X_lay[0] == v2.X_lay[0] and v1.Zmin_lay[0] == v2.Zmin_lay[0] and
-            v1.Zmax_lay[0] == v2.Zmax_lay[0] and v1.X_lay[1] == v2.X_lay[1] and
-            v1.Zmin_lay[1] == v2.Zmin_lay[1] and v1.Zmax_lay[1] == v2.Zmax_lay[1] and
-            v1.cn == v2.cn and v1.cnx == v2.cnx and v1.cny == v2.cny and
-            v1.csumg == v2.csumg and v1.corrmin == v2.corrmin and v1.eps0 == v2.eps0)
-
 class MMNP:
     def __init__(self):
-        self.nlay = 0
-        self.n1 = 0.0
-        self.n2 = [0.0, 0.0, 0.0]
+        self.nlay = 1
+        self.n1 = 1.0
+        self.n2 = [1.0, 1.0, 1.0]
         self.d = [0.0, 0.0, 0.0]
-        self.n3 = 0.0
+        self.n3 = 1.0
 
 class ControlPar:
-    def __init__(self, cams):
-        self.num_cams = cams
-        self.img_base_name = [""] * cams
-        self.cal_img_base_name = [""] * cams
+    def __init__(self, num_cams):
+        self.num_cams = num_cams
+        self.img_base_name = [""] * num_cams
+        self.cal_img_base_name = [""] * num_cams
         self.hp_flag = 0
         self.allCam_flag = 0
         self.tiff_flag = 0
@@ -131,13 +124,10 @@ class ControlPar:
         self.chfield = 0
         self.mm = MMNP()
 
-def new_control_par(cams):
-    return ControlPar(cams)
-
 def read_control_par(filename):
     with open(filename, "r") as par_file:
         num_cams = int(par_file.readline().strip())
-        ret = new_control_par(num_cams)
+        ret = ControlPar(num_cams)
         for cam in range(num_cams):
             ret.img_base_name[cam] = par_file.readline().strip()
             ret.cal_img_base_name[cam] = par_file.readline().strip()

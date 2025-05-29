@@ -10,9 +10,11 @@ from pyoptv.trafo import (
     correct_brown_affine_exact,
     flat_to_dist,
     dist_to_flat,
-    ControlPar,
-    Calibration,
-    AddedPar,
+)
+from pyoptv.calibration import Calibration
+
+from pyoptv.parameters import (
+    ControlPar
 )
 
 def test_old_pixel_to_metric():
@@ -83,3 +85,7 @@ def test_dist_to_flat():
     flat_x, flat_y = dist_to_flat(dist_x, dist_y, cal, tol)
     assert np.isclose(flat_x, 0.9)
     assert np.isclose(flat_y, 1.9)
+
+
+if __name__ == "__main__":
+    pytest.main([__file__])
