@@ -1,15 +1,43 @@
 import numpy as np
-import numba
+try:
+    import numba
+    HAS_NUMBA = True
+except ImportError:
+    HAS_NUMBA = False
 from scipy.optimize import minimize
 import matplotlib.pyplot as plt
 
 class Calibration:
     def __init__(self, pos=None, angs=None, prim_point=None, rad_dist=None,
-                 decent=None, affine=None, glass=None):
-        self.ext_par = Exterior()
-        self.int_par = Interior()
-        self.glass_par = Glass()
-        self.added_par = ap_52()
+                 decent=None, affine=None, glass=None, ext_par=None, int_par=None,
+                 glass_par=None, added_par=None):
+        """
+        All arguments are optional arrays, default for all is zeros except 
+        affine that defaults to [1, 0].
+        
+        Arguments can be either parameter arrays or parameter objects.
+        """
+        # Initialize with parameter objects if provided, otherwise create new ones
+        if ext_par is not None:
+            self.ext_par = ext_par
+        else:
+            self.ext_par = Exterior()
+            
+        if int_par is not None:
+            self.int_par = int_par
+        else:
+            self.int_par = Interior()
+            
+        if glass_par is not None:
+            self.glass_par = glass_par
+        else:
+            self.glass_par = Glass()
+            
+        if added_par is not None:
+            self.added_par = added_par
+        else:
+            self.added_par = ap_52()
+            
         self.mmlut = mmlut()
 
         if pos is not None:
@@ -28,30 +56,96 @@ class Calibration:
             self.set_glass_vec(glass)
 
     def set_pos(self, pos):
+        """
+        Sets exterior position.
+        Parameter: pos - numpy array of 3 elements for x, y, z
+        """
+        if len(pos) != 3:
+             raise ValueError("Illegal array argument " + str(pos) + \
+                " for x, y, z. Expected array/list of 3 numbers")
         self.ext_par.x0, self.ext_par.y0, self.ext_par.z0 = pos
 
     def set_angles(self, angs):
+        """
+        Sets angles (omega, phi, kappa) and recalculates Dmatrix accordingly
+        Parameter: angs - array of 3 elements.
+        """
+        if len(angs) != 3:
+            raise ValueError("Illegal array argument " + str(angs) + \
+                " for omega, phi, kappa. Expected array/list of 3 numbers")
         self.ext_par.omega, self.ext_par.phi, self.ext_par.kappa = angs
         self.ext_par.dm = self.rotation_matrix(self.ext_par.omega, self.ext_par.phi, self.ext_par.kappa)
 
     def set_primary_point(self, prim_point):
+        """
+        Set the camera's primary point position (a.k.a. interior orientation).
+        
+        Arguments:
+        prim_point - a 3 element array holding the values of x and y shift
+            of point from sensor middle and sensor-point distance, in this 
+            order.
+        """
+        if len(prim_point) != 3:
+            raise ValueError("Expected a 3-element array")
         self.int_par.xh, self.int_par.yh, self.int_par.cc = prim_point
 
     def set_radial_distortion(self, rad_dist):
+        """
+        Sets the parameters for the image radial distortion, where the x/y
+        coordinates are corrected by a polynomial in r = sqrt(x**2 + y**2):
+        p = k1*r**2 + k2*r**4 + k3*r**6
+        
+        Arguments:
+        rad_dist - length-3 array, holding k_i.
+        """
+        if len(rad_dist) != 3:
+            raise ValueError("Expected a 3-element array")
         self.added_par.k1, self.added_par.k2, self.added_par.k3 = rad_dist
 
     def set_decentering(self, decent):
+        """
+        Sets the parameters of decentering distortion (a.k.a. p1, p2).
+        
+        Arguments:
+        decent - array, holding p_i
+        """
+        if len(decent) != 2:
+            raise ValueError("Expected a 2-element array")
         self.added_par.p1, self.added_par.p2 = decent
 
     def set_affine_trans(self, affine):
+        """
+        Sets the affine transform parameters (x-scale, shear) applied to the
+        image.
+        
+        Arguments:
+        affine - array, holding (x-scale, shear) in order.
+        """
+        if len(affine) != 2:
+            raise ValueError("Expected a 2-element array")
         self.added_par.scx, self.added_par.she = affine
 
     def set_glass_vec(self, glass):
+        """
+        Sets the glass vector: a vector from the origin to the glass, directed
+        normal to the glass.
+        
+        Arguments:
+        glass - a 3-element array, the glass vector.
+        """
+        if len(glass) != 3:
+            raise ValueError("Expected a 3-element array")
         self.glass_par.vec_x, self.glass_par.vec_y, self.glass_par.vec_z = glass
 
     @staticmethod
-    @numba.jit(nopython=True)
     def rotation_matrix(omega, phi, kappa):
+        if HAS_NUMBA:
+            return Calibration._rotation_matrix_numba(omega, phi, kappa)
+        else:
+            return Calibration._rotation_matrix_numpy(omega, phi, kappa)
+    
+    @staticmethod
+    def _rotation_matrix_numpy(omega, phi, kappa):
         cp = np.cos(phi)
         sp = np.sin(phi)
         co = np.cos(omega)
@@ -93,29 +187,30 @@ class Calibration:
         with open(filename, 'r') as f:
             lines = f.readlines()
 
-        ext_par = Exterior()
-        int_par = Interior()
-        glass_par = Glass()
-        added_par = ap_52()
-
-        ext_par.x0, ext_par.y0, ext_par.z0 = map(float, lines[0].split())
-        ext_par.omega, ext_par.phi, ext_par.kappa = map(float, lines[1].split())
-        ext_par.dm = np.array([list(map(float, line.split())) for line in lines[2:5]])
-        int_par.xh, int_par.yh = map(float, lines[5].split())
-        int_par.cc = float(lines[6])
-        glass_par.vec_x, glass_par.vec_y, glass_par.vec_z = map(float, lines[7].split())
+        cal = Calibration()
+        
+        cal.ext_par.x0, cal.ext_par.y0, cal.ext_par.z0 = map(float, lines[0].split())
+        cal.ext_par.omega, cal.ext_par.phi, cal.ext_par.kappa = map(float, lines[1].split())
+        cal.ext_par.dm = np.array([list(map(float, line.split())) for line in lines[2:5]])
+        cal.int_par.xh, cal.int_par.yh = map(float, lines[5].split())
+        cal.int_par.cc = float(lines[6])
+        cal.glass_par.vec_x, cal.glass_par.vec_y, cal.glass_par.vec_z = map(float, lines[7].split())
 
         if add_file or add_fallback:
             try:
                 with open(add_file, 'r') as f:
                     add_lines = f.readlines()
-            except FileNotFoundError:
-                with open(add_fallback, 'r') as f:
-                    add_lines = f.readlines()
+            except (FileNotFoundError, TypeError):
+                if add_fallback:
+                    with open(add_fallback, 'r') as f:
+                        add_lines = f.readlines()
+                else:
+                    # If no add file, use defaults
+                    return cal
 
-            added_par.k1, added_par.k2, added_par.k3, added_par.p1, added_par.p2, added_par.scx, added_par.she = map(float, add_lines[0].split())
+            cal.added_par.k1, cal.added_par.k2, cal.added_par.k3, cal.added_par.p1, cal.added_par.p2, cal.added_par.scx, cal.added_par.she = map(float, add_lines[0].split())
 
-        return Calibration(ext_par, int_par, glass_par, added_par)
+        return cal
 
     @staticmethod
     def compare_calib(c1, c2):
@@ -148,6 +243,100 @@ class Calibration:
         return Calibration.read_ori(ori_file, add_file, fallback_file)
 
     def write_calibration(self, filename, add_file=None):
+        self.write_ori(filename, add_file)
+
+    def get_pos(self):
+        """
+        Returns numpy array of 3 elements representing exterior's x, y, z
+        """
+        return np.array([self.ext_par.x0, self.ext_par.y0, self.ext_par.z0])
+
+    def get_angles(self):
+        """
+        Returns a numpy array of 3 elements representing omega, phi, kappa
+        """
+        return np.array([self.ext_par.omega, self.ext_par.phi, self.ext_par.kappa])
+
+    def get_rotation_matrix(self):
+        """
+        Returns a 3x3 numpy array that represents Exterior's rotation matrix.
+        """
+        return self.ext_par.dm.copy()
+
+    def get_primary_point(self):
+        """
+        Returns the primary point position (a.k.a. interior orientation) as a 3
+        element array holding the values of x and y shift of point from sensor
+        middle and sensor-point distance, in this order.
+        """
+        return np.array([self.int_par.xh, self.int_par.yh, self.int_par.cc])
+
+    def get_radial_distortion(self):
+        """
+        Returns the radial distortion polynomial coefficients as a 3 element
+        array, from lowest power to highest.
+        """
+        return np.array([self.added_par.k1, self.added_par.k2, self.added_par.k3])
+
+    def get_decentering(self):
+        """
+        Returns the decentering parameters as a 2 element array, (p_1, p_2).
+        """
+        return np.array([self.added_par.p1, self.added_par.p2])
+
+    def get_affine(self):
+        """
+        Returns the affine transform parameters as a 2 element array, (scx, she).
+        """
+        return np.array([self.added_par.scx, self.added_par.she])
+
+    def get_glass_vec(self):
+        """
+        Returns the glass vector, a 3-element array.
+        """
+        return np.array([self.glass_par.vec_x, self.glass_par.vec_y, self.glass_par.vec_z])
+
+    def from_file(self, ori_file, add_file=None, fallback_file=None):
+        """
+        Populate calibration fields from .ori and .addpar files.
+        
+        Arguments:
+        ori_file - path to file containing exterior, interior and glass
+            parameters.
+        add_file - optional path to file containing distortion parameters.
+        fallback_file - optional path to file used in case ``add_file`` fails
+            to open.
+        """
+        # Convert bytes to string if needed
+        if isinstance(ori_file, bytes):
+            ori_file = ori_file.decode('utf-8')
+        if isinstance(add_file, bytes):
+            add_file = add_file.decode('utf-8')
+        if isinstance(fallback_file, bytes):
+            fallback_file = fallback_file.decode('utf-8')
+            
+        cal = self.read_ori(ori_file, add_file, fallback_file)
+        self.ext_par = cal.ext_par
+        self.int_par = cal.int_par
+        self.glass_par = cal.glass_par
+        self.added_par = cal.added_par
+
+    def write(self, filename, add_file):
+        """
+        Write the calibration data to disk. Uses two output file, one for the
+        linear calibration part, and one for distortion parameters.
+        
+        Arguments:
+        filename - path to file containing exterior, interior and glass
+            parameters.
+        add_file - optional path to file containing distortion parameters.
+        """
+        # Convert bytes to string if needed
+        if isinstance(filename, bytes):
+            filename = filename.decode('utf-8')
+        if isinstance(add_file, bytes):
+            add_file = add_file.decode('utf-8')
+            
         self.write_ori(filename, add_file)
 
 class Exterior:

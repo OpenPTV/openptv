@@ -1,6 +1,6 @@
 import unittest
 # Importing the Calibration class, which provides methods to handle camera calibration data.
-from optv.calibration import Calibration
+from pyoptv.calibration import Calibration
 import numpy, os, filecmp, shutil
 
 class Test_Calibration(unittest.TestCase):
