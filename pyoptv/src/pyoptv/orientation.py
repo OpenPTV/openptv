@@ -1,9 +1,14 @@
 # type: ignore
 import numpy as np
+from typing import List, Tuple, Optional
 from scipy.optimize import least_squares
 import matplotlib.pyplot as plt
-from pyoptv.calibration import Calibration
+from pyoptv.calibration import Calibration, Exterior
 from pyoptv.parameters import ControlPar
+from pyoptv.trafo import pixel_to_metric, correct_brown_affin
+from pyoptv.imgcoord import img_coord
+from pyoptv.ray_tracing import ray_tracing
+from pyoptv.sortgrid import read_calblock
 
 COORD_UNUSED = -1e10
 IDT = 10
@@ -13,7 +18,25 @@ POS_INF = 1E20
 CONVERGENCE = 0.00001
 
 class OrientPar:
-    def __init__(self, useflag=0, ccflag=0, xhflag=0, yhflag=0, k1flag=0, k2flag=0, k3flag=0, p1flag=0, p2flag=0, scxflag=0, sheflag=0, interfflag=0):
+    """
+    Parameter flags for orientation adjustment.
+    Each flag controls whether a parameter is included in the adjustment.
+    """
+    def __init__(
+        self,
+        useflag: int = 0,
+        ccflag: int = 0,
+        xhflag: int = 0,
+        yhflag: int = 0,
+        k1flag: int = 0,
+        k2flag: int = 0,
+        k3flag: int = 0,
+        p1flag: int = 0,
+        p2flag: int = 0,
+        scxflag: int = 0,
+        sheflag: int = 0,
+        interfflag: int = 0,
+    ):
         self.useflag = useflag
         self.ccflag = ccflag
         self.xhflag = xhflag
@@ -26,7 +49,13 @@ class OrientPar:
         self.scxflag = scxflag
         self.sheflag = sheflag
         self.interfflag = interfflag
-def skew_midpoint(vert1, direct1, vert2, direct2):
+
+def skew_midpoint(
+    vert1: np.ndarray, direct1: np.ndarray, vert2: np.ndarray, direct2: np.ndarray
+) -> Tuple[float, np.ndarray]:
+    """
+    Computes the shortest distance and midpoint between two skew lines in 3D.
+    """
     sp_diff = vert2 - vert1
     perp_both = np.cross(direct1, direct2)
     scale = np.dot(perp_both, perp_both)
@@ -36,15 +65,26 @@ def skew_midpoint(vert1, direct1, vert2, direct2):
     on2 = vert2 + np.dot(perp_both, temp) / scale * direct2
     res = (on1 + on2) / 2
     return np.linalg.norm(on1 - on2), res
-def point_position(targets, num_cams, multimed_pars, cals):
+
+def point_position(
+    targets: np.ndarray,
+    num_cams: int,
+    multimed_pars,
+    cals: List[Calibration],
+) -> Tuple[float, np.ndarray]:
+    """
+    Computes the average intersection point and mean distance between rays from multiple cameras.
+    """
     num_used_pairs = 0
-    dtot = 0
+    dtot = 0.0
     point_tot = np.zeros(3)
     vertices = np.zeros((num_cams, 3))
     directs = np.zeros((num_cams, 3))
     for cam in range(num_cams):
         if targets[cam, 0] != COORD_UNUSED:
-            vertices[cam], directs[cam] = ray_tracing(targets[cam, 0], targets[cam, 1], cals[cam], multimed_pars)
+            vertices[cam], directs[cam] = ray_tracing(
+                targets[cam, 0], targets[cam, 1], cals[cam], multimed_pars
+            )
     for cam in range(num_cams):
         if targets[cam, 0] == COORD_UNUSED:
             continue
@@ -52,14 +92,28 @@ def point_position(targets, num_cams, multimed_pars, cals):
             if targets[pair, 0] == COORD_UNUSED:
                 continue
             num_used_pairs += 1
-            dist, point = skew_midpoint(vertices[cam], directs[cam], vertices[pair], directs[pair])
+            dist, point = skew_midpoint(
+                vertices[cam], directs[cam], vertices[pair], directs[pair]
+            )
             dtot += dist
             point_tot += point
     res = point_tot / num_used_pairs
     return dtot / num_used_pairs, res
-def weighted_dumbbell_precision(targets, num_targs, num_cams, multimed_pars, cals, db_length, db_weight):
-    dtot = 0
-    len_err_tot = 0
+
+def weighted_dumbbell_precision(
+    targets: np.ndarray,
+    num_targs: int,
+    num_cams: int,
+    multimed_pars,
+    cals: List[Calibration],
+    db_length: float,
+    db_weight: float,
+) -> float:
+    """
+    Computes a weighted precision metric for a dumbbell calibration object.
+    """
+    dtot = 0.0
+    len_err_tot = 0.0
     res = np.zeros((2, 3))
     for pt in range(num_targs):
         res_current = res[pt % 2]
@@ -69,24 +123,60 @@ def weighted_dumbbell_precision(targets, num_targs, num_cams, multimed_pars, cal
             dist = np.linalg.norm(res[0] - res[1])
             len_err_tot += 1 - (db_length / dist if dist > db_length else dist / db_length)
     return dtot / num_targs + db_weight * len_err_tot / (0.5 * num_targs)
-def num_deriv_exterior(cal, cpar, dpos, dang, pos):
+
+def num_deriv_exterior(
+    cal: Calibration,
+    cpar: ControlPar,
+    dpos: float,
+    dang: float,
+    pos: np.ndarray,
+) -> Tuple[np.ndarray, np.ndarray]:
+    """
+    Numerically computes derivatives of image coordinates with respect to exterior orientation parameters.
+    NOTE: This function mutates cal.ext_par fields in-place for finite differencing.
+    """
     x_ders = np.zeros(6)
     y_ders = np.zeros(6)
-    vars = [cal.ext_par.x0, cal.ext_par.y0, cal.ext_par.z0, cal.ext_par.omega, cal.ext_par.phi, cal.ext_par.kappa]
+    vars = [
+        cal.ext_par.x0,
+        cal.ext_par.y0,
+        cal.ext_par.z0,
+        cal.ext_par.omega,
+        cal.ext_par.phi,
+        cal.ext_par.kappa,
+    ]
     xs, ys = img_coord(pos, cal, cpar.mm)
     for pd in range(6):
         step = dang if pd > 2 else dpos
         vars[pd] += step
         if pd > 2:
-            rotation_matrix(cal.ext_par)
+            cal.ext_par.dm = Calibration.rotation_matrix(
+                cal.ext_par.omega, cal.ext_par.phi, cal.ext_par.kappa
+            )
         xpd, ypd = img_coord(pos, cal, cpar.mm)
         x_ders[pd] = (xpd - xs) / step
         y_ders[pd] = (ypd - ys) / step
         vars[pd] -= step
-    rotation_matrix(cal.ext_par)
+    cal.ext_par.dm = Calibration.rotation_matrix(
+        cal.ext_par.omega, cal.ext_par.phi, cal.ext_par.kappa
+    )
     return x_ders, y_ders
 
-def orient(cal_in, cpar, nfix, fix, pix, flags, sigmabeta):
+def orient(
+    cal_in: Calibration,
+    cpar: ControlPar,
+    nfix: int,
+    fix: np.ndarray,
+    pix: List,
+    flags: OrientPar,
+    sigmabeta: np.ndarray,
+) -> Optional[np.ndarray]:
+    """
+    Performs iterative orientation adjustment for camera calibration.
+    Updates cal_in in-place if converged.
+    Returns residuals if converged, else None.
+    NOTE: This function mutates cal_in and expects pix to have .pnr attribute.
+    """
     cal = cal_in.copy()
     maxsize = nfix * 2 + IDT
     P = np.ones(maxsize)
@@ -228,7 +318,17 @@ def orient(cal_in, cpar, nfix, fix, pix, flags, sigmabeta):
     else:
         return None
 
-def raw_orient(cal, cpar, nfix, fix, pix):
+def raw_orient(
+    cal: Calibration,
+    cpar: ControlPar,
+    nfix: int,
+    fix: np.ndarray,
+    pix: List,
+) -> bool:
+    """
+    Performs a raw orientation adjustment (no distortion parameters).
+    Returns True if converged, else False.
+    """
     X = np.zeros((10, 6))
     y = np.zeros(10)
     cal.added_par.k1 = 0
@@ -266,7 +366,16 @@ def raw_orient(cal, cpar, nfix, fix, pix):
         rotation_matrix(cal.ext_par)
     return stopflag
 
-def read_man_ori_fix(fix4, calblock_filename, man_ori_filename, cam):
+def read_man_ori_fix(
+    fix4: np.ndarray,
+    calblock_filename: str,
+    man_ori_filename: str,
+    cam: int,
+) -> int:
+    """
+    Reads four manually oriented calibration points from file and fills fix4.
+    Returns the number of matches found.
+    """
     with open(man_ori_filename, "r") as fpp:
         for _ in range(cam):
             fpp.readline()
@@ -281,7 +390,10 @@ def read_man_ori_fix(fix4, calblock_filename, man_ori_filename, cam):
             break
     return num_match
 
-def read_orient_par(filename):
+def read_orient_par(filename: str) -> OrientPar:
+    """
+    Reads orientation parameter flags from a file and returns an OrientPar instance.
+    """
     with open(filename, "r") as file:
         params = list(map(int, file.read().split()))
     return OrientPar(*params)

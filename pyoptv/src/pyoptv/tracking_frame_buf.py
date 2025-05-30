@@ -9,6 +9,9 @@ NEXT_NONE: int = -2
 PRIO_DEFAULT: int = 4
 
 class Target:
+    """
+    Represents a detected target (particle) in an image.
+    """
     pnr: int
     x: float
     y: float
@@ -17,6 +20,7 @@ class Target:
     ny: int
     sumg: float
     tnr: int
+
     def __init__(self, pnr: int, x: float, y: float, n: int, nx: int, ny: int, sumg: float, tnr: int) -> None:
         self.pnr = pnr
         self.x = x
@@ -28,13 +32,20 @@ class Target:
         self.tnr = tnr
 
 class Corres:
+    """
+    Correspondence information for a 3D particle across cameras.
+    """
     nr: int
     p: List[int]
+
     def __init__(self, nr: int, p: List[int]) -> None:
         self.nr = nr
         self.p = p
 
 class PathInfo:
+    """
+    Path information for a tracked particle.
+    """
     prev: int
     next: int
     prio: int
@@ -43,6 +54,7 @@ class PathInfo:
     x: np.ndarray
     decis: np.ndarray
     linkdecis: np.ndarray
+
     def __init__(self, prev: int, next: int, prio: int, finaldecis: float, inlist: int, x: np.ndarray, decis: np.ndarray, linkdecis: np.ndarray) -> None:
         self.prev = prev
         self.next = next
@@ -53,7 +65,26 @@ class PathInfo:
         self.decis = decis
         self.linkdecis = linkdecis
 
+    def register_link_candidate(self, fitness: float, cand: int) -> None:
+        """
+        Register a candidate link in the path info structure.
+        """
+        self.decis[self.inlist] = fitness
+        self.linkdecis[self.inlist] = cand
+        self.inlist += 1
+
+    def reset_links(self) -> None:
+        """
+        Reset the link information for this path.
+        """
+        self.prev = PREV_NONE
+        self.next = NEXT_NONE
+        self.prio = PRIO_DEFAULT
+
 class Frame:
+    """
+    Represents a frame in the tracking buffer, holding all targets, correspondences, and path info.
+    """
     num_cams: int
     max_targets: int
     num_parts: int
@@ -61,6 +92,7 @@ class Frame:
     correspond: List[Corres]
     targets: List[List[Target]]
     num_targets: List[int]
+
     def __init__(self, num_cams: int, max_targets: int) -> None:
         self.num_cams = num_cams
         self.max_targets = max_targets
@@ -115,16 +147,17 @@ def compare_path_info(p1: PathInfo, p2: PathInfo) -> bool:
         if p1.decis[iter] != p2.decis[iter] or p1.linkdecis[iter] != p2.linkdecis[iter]:
             return False
     return True
-def register_link_candidate(self, fitness: float, cand: int) -> None:
-    self.decis[self.inlist] = fitness
-    self.linkdecis[self.inlist] = cand
-    self.inlist += 1
-def reset_links(self) -> None:
-    self.prev = PREV_NONE
-    self.next = NEXT_NONE
-    self.prio = PRIO_DEFAULT
-
-def read_path_frame(cor_buf: List[Corres], path_buf: List[PathInfo], corres_file_base: str, linkage_file_base: str, prio_file_base: str, frame_num: int) -> int:
+def read_path_frame(
+    cor_buf: List[Corres],
+    path_buf: List[PathInfo],
+    corres_file_base: str,
+    linkage_file_base: str,
+    prio_file_base: str,
+    frame_num: int
+) -> int:
+    """
+    Read a path frame from disk into correspondence and path buffers.
+    """
     try:
         with open(f"{corres_file_base}.{frame_num}", "r") as filein:
             num_points = int(filein.readline().strip())
@@ -160,7 +193,18 @@ def read_path_frame(cor_buf: List[Corres], path_buf: List[PathInfo], corres_file
         print(f"Error reading path frame: {e}")
         return -1
 
-def write_path_frame(cor_buf: List[Corres], path_buf: List[PathInfo], num_parts: int, corres_file_base: str, linkage_file_base: str, prio_file_base: str, frame_num: int) -> int:
+def write_path_frame(
+    cor_buf: List[Corres],
+    path_buf: List[PathInfo],
+    num_parts: int,
+    corres_file_base: str,
+    linkage_file_base: str,
+    prio_file_base: str,
+    frame_num: int
+) -> int:
+    """
+    Write a path frame to disk from correspondence and path buffers.
+    """
     try:
         with open(f"{corres_file_base}.{frame_num}", "w") as corres_file:
             corres_file.write(f"{num_parts}\n")
@@ -182,6 +226,9 @@ def write_path_frame(cor_buf: List[Corres], path_buf: List[PathInfo], num_parts:
         return 0
 
 def frame_init(new_frame: Frame, num_cams: int, max_targets: int) -> None:
+    """
+    Initialize a Frame object with the given number of cameras and targets.
+    """
     new_frame.path_info = [PathInfo(PREV_NONE, NEXT_NONE, PRIO_DEFAULT, 1000000.0, 0, np.zeros(3), np.zeros(POSI), np.zeros(POSI)) for _ in range(max_targets)]
     new_frame.correspond = [Corres(-1, [-1, -1, -1, -1]) for _ in range(max_targets)]
     new_frame.targets = [[Target(-1, 0, 0, 0, 0, 0, 0, -1) for _ in range(max_targets)] for _ in range(num_cams)]
@@ -191,12 +238,25 @@ def frame_init(new_frame: Frame, num_cams: int, max_targets: int) -> None:
     new_frame.num_parts = 0
 
 def free_frame(frame: Frame) -> None:
+    """
+    Free the memory associated with a Frame object.
+    """
     frame.path_info = None
     frame.correspond = None
     frame.num_targets = None
     frame.targets = None
 
-def read_frame(frame: Frame, corres_file_base: str, linkage_file_base: str, prio_file_base: str, target_file_base: List[str], frame_num: int) -> int:
+def read_frame(
+    frame: Frame,
+    corres_file_base: str,
+    linkage_file_base: str,
+    prio_file_base: str,
+    target_file_base: List[str],
+    frame_num: int
+) -> int:
+    """
+    Read a frame from disk into a Frame object.
+    """
     frame.num_parts = read_path_frame(frame.correspond, frame.path_info, corres_file_base, linkage_file_base, prio_file_base, frame_num)
     if frame.num_parts == -1:
         return 0
@@ -206,7 +266,17 @@ def read_frame(frame: Frame, corres_file_base: str, linkage_file_base: str, prio
             return 0
     return 1
 
-def write_frame(self, corres_file_base: str, linkage_file_base: str, prio_file_base: str, target_file_base: List[str], frame_num: int) -> int:
+def write_frame(
+    self: Frame,
+    corres_file_base: str,
+    linkage_file_base: str,
+    prio_file_base: str,
+    target_file_base: List[str],
+    frame_num: int
+) -> int:
+    """
+    Write a Frame object to disk.
+    """
     status = write_path_frame(self.correspond, self.path_info, self.num_parts, corres_file_base, linkage_file_base, prio_file_base, frame_num)
     if status == 0:
         return 0
@@ -217,6 +287,9 @@ def write_frame(self, corres_file_base: str, linkage_file_base: str, prio_file_b
     return 1
 
 class FrameBufferBase:
+    """
+    Base class for frame buffer objects, implements ring buffer logic.
+    """
     def __init__(self, buf_len: int, num_cams: int, max_targets: int) -> None:
         self.buf_len = buf_len
         self.num_cams = num_cams
@@ -225,15 +298,27 @@ class FrameBufferBase:
         self._vptr = None
 
     def free(self) -> None:
+        """
+        Free the frame buffer.
+        """
         self._vptr.free(self)
 
     def read_frame_at_end(self, frame_num: int, read_links: bool) -> int:
+        """
+        Read a frame at the end of the buffer.
+        """
         return self._vptr.read_frame_at_end(self, frame_num, read_links)
 
     def write_frame_from_start(self, frame_num: int) -> int:
+        """
+        Write a frame from the start of the buffer.
+        """
         return self._vptr.write_frame_from_start(self, frame_num)
 
 def fb_base_init(new_buf: FrameBufferBase, buf_len: int, num_cams: int, max_targets: int) -> None:
+    """
+    Initialize a FrameBufferBase object.
+    """
     new_buf.buf_len = buf_len
     new_buf.num_cams = num_cams
     new_buf._ring_vec = [Frame(num_cams, max_targets) for _ in range(buf_len * 2)]
@@ -241,6 +326,9 @@ def fb_base_init(new_buf: FrameBufferBase, buf_len: int, num_cams: int, max_targ
     new_buf._vptr = None
 
 def fb_base_free(fb: FrameBufferBase) -> None:
+    """
+    Free the memory associated with a FrameBufferBase object.
+    """
     fb.buf = fb._ring_vec[:fb.buf_len]
     for frame in fb.buf:
         free_frame(frame)
@@ -249,7 +337,19 @@ def fb_base_free(fb: FrameBufferBase) -> None:
     fb._vptr = None
 
 class FrameBuffer(FrameBufferBase):
-    def __init__(self, buf_len: int, num_cams: int, max_targets: int, corres_file_base: str, linkage_file_base: str, prio_file_base: str, target_file_base: List[str]) -> None:
+    """
+    Frame buffer for tracking, with file I/O support.
+    """
+    def __init__(
+        self,
+        buf_len: int,
+        num_cams: int,
+        max_targets: int,
+        corres_file_base: str,
+        linkage_file_base: str,
+        prio_file_base: str,
+        target_file_base: List[str]
+    ) -> None:
         super().__init__(buf_len, num_cams, max_targets)
         self.corres_file_base = corres_file_base
         self.linkage_file_base = linkage_file_base
@@ -258,26 +358,46 @@ class FrameBuffer(FrameBufferBase):
         self._vptr = self
 
     def free(self) -> None:
+        """
+        Free the frame buffer.
+        """
         fb_base_free(self)
 
     def read_frame_at_end(self, frame_num: int, read_links: bool) -> int:
+        """
+        Read a frame at the end of the buffer.
+        """
         if read_links:
             return read_frame(self.buf[-1], self.corres_file_base, self.linkage_file_base, self.prio_file_base, self.target_file_base, frame_num)
         else:
             return read_frame(self.buf[-1], self.corres_file_base, None, None, self.target_file_base, frame_num)
 
     def write_frame_from_start(self, frame_num: int) -> int:
+        """
+        Write a frame from the start of the buffer.
+        """
         return write_frame(self.buf[0], self.corres_file_base, self.linkage_file_base, self.prio_file_base, self.target_file_base, frame_num)
 
     def fb_next(self) -> None:
+        """
+        Advance the buffer to the next frame.
+        """
         self.buf = self.buf[1:] + self.buf[:1]
 
     def fb_prev(self) -> None:
+        """
+        Move the buffer to the previous frame.
+        """
         self.buf = self.buf[-1:] + self.buf[:-1]
 
-
 def fb_write_frame_from_start(fb: FrameBuffer, frame_num: int) -> int:
+    """
+    Write a frame from the start of the buffer using the FrameBuffer interface.
+    """
     return fb.write_frame_from_start(frame_num)
 
 def fb_read_frame_at_end(fb: FrameBuffer, frame_num: int, read_links: bool) -> int:
+    """
+    Read a frame at the end of the buffer using the FrameBuffer interface.
+    """
     return fb.read_frame_at_end(frame_num, read_links)

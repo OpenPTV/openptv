@@ -1,6 +1,7 @@
 import numpy as np
-from typing import Tuple
-from .calibration import Calibration
+from typing import Tuple, Optional
+from pyoptv.calibration import Calibration
+from pyoptv.parameters import ControlPar, MMNP
 from .multimed import trans_Cam_Point, multimed_nlay, back_trans_Point
 from .trafo import vec_set, flat_to_dist
 
@@ -8,7 +9,7 @@ from .trafo import vec_set, flat_to_dist
 def flat_image_coord(
     orig_pos: Tuple[float, float, float],
     cal: Calibration,
-    mm: object,
+    mm: MMNP
 ) -> Tuple[float, float]:
     """
     Calculates projection from coordinates in world space to metric coordinates in image space without distortions.
@@ -59,7 +60,7 @@ def flat_image_coord(
 def img_coord(
     pos: Tuple[float, float, float],
     cal: Calibration,
-    mm: object,
+    mm: MMNP
 ) -> Tuple[float, float]:
     """
     Uses flat_image_coord to estimate metric coordinates in image space from the 3D position in the world and distorts it using the Brown distortion model.

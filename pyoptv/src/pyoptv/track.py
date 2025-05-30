@@ -1,5 +1,5 @@
 import numpy as np
-from typing import List, Optional, Sequence
+from typing import List, Optional, Sequence, Any
 from .vec_utils import (
     Vec2D, Vec3D, vec_subt, vec_dot, vec_norm, vec_diff_norm, vec_scalar_mul, vec_set, vec_copy
 )
@@ -15,6 +15,8 @@ from .parameters import ControlPar, TrackPar
 from .calibration import Calibration
 
 TR_UNUSED = -1
+PT_UNUSED = -999
+COORD_UNUSED = -1e10  # Added to represent unused coordinate values
 TR_BUFSPACE = 4
 TR_MAX_CAMS = 4
 MAX_TARGETS = 20000
@@ -125,7 +127,7 @@ def pos3d_in_bounds(pos: Vec3D, bounds: TrackPar) -> bool:
     )
 
 
-def angle_acc(start: Vec3D, pred: Vec3D, cand: Vec3D) -> tuple[float, float]:
+def angle_acc(start: Vec3D, pred: Vec3D, cand: Vec3D) -> tuple:
     """Compute the angle and acceleration between predicted and candidate positions."""
     v0 = vec_subt(pred, start)
     v1 = vec_subt(cand, start)
@@ -150,7 +152,7 @@ def candsearch_in_pix(
     dr: float,
     du: float,
     dd: float,
-    p,
+    p: Any,
     cpar: ControlPar,
 ) -> int:
     """Search for up to four nearest candidate targets in a region."""
@@ -248,7 +250,16 @@ def candsearch_in_pix_rest(
     return counter
 
 
-def searchquader(point: Vec3D, xr, xl, yd, yu, tpar: TrackPar, cpar: ControlPar, cal: list[Calibration]) -> None:
+def searchquader(
+    point: Vec3D,
+    xr: np.ndarray,
+    xl: np.ndarray,
+    yd: np.ndarray,
+    yu: np.ndarray,
+    tpar: TrackPar,
+    cpar: ControlPar,
+    cal: List[Calibration],
+) -> None:
     """Project a 3D cuboid (search volume) to image space and compute search bounds for each camera."""
     mins = vec_set(tpar.dvxmin, tpar.dvymin, tpar.dvzmin)
     maxes = vec_set(tpar.dvxmax, tpar.dvymax, tpar.dvzmax)
@@ -320,15 +331,14 @@ def sort_candidates_by_freq(item: List[FoundPix], num_cams: int) -> int:
     return different
 
 
-def sort(n: int, a, b) -> None:
-    """Sort two arrays in parallel using bubble sort."""
+def sort(arr: List[Any]) -> List[Any]:
+    """Sort an array in place using bubble sort."""
     flag = 0
     while True:
         flag = 0
-        for i in range(n - 1):
-            if a[i] > a[i + 1]:
-                a[i], a[i + 1] = a[i + 1], a[i]
-                b[i], b[i + 1] = b[i + 1], b[i]
+        for i in range(len(arr) - 1):
+            if arr[i] > arr[i + 1]:
+                arr[i], arr[i + 1] = arr[i + 1], arr[i]
                 flag = 1
         if flag == 0:
             break
@@ -379,7 +389,7 @@ def sorted_candidates_in_volume(
 def assess_new_position(
     pos: Vec3D,
     targ_pos: List[Vec2D],
-    cand_inds: List[List[int]],
+    cand_inds: np.ndarray,
     frm: Frame,
     run: TrackingRun,
 ) -> int:
@@ -428,7 +438,7 @@ def assess_new_position(
     return valid_cams
 
 
-def add_particle(frm: Frame, pos: Vec3D, cand_inds: List[List[int]]) -> None:
+def add_particle(frm: Frame, pos: Vec3D, cand_inds: np.ndarray) -> None:
     """Add a new particle to the frame at the specified position."""
     num_parts = frm.num_parts
     ref_path_inf = PathInfo(pos, PREV_NONE, NEXT_NONE, 0, np.zeros(MAX_CANDS), np.zeros(MAX_CANDS), 0)

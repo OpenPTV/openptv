@@ -438,6 +438,10 @@ class Glass:
         self.vec_x: float = 0.0
         self.vec_y: float = 0.0
         self.vec_z: float = 0.0
+        self.n1: float = 0.0
+        self.n2: float = 0.0
+        self.n3: float = 0.0
+        self.d: float = 0.0
 
 
 class ap_52:

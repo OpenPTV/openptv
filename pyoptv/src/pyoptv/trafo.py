@@ -1,6 +1,6 @@
 import numpy as np
-from typing import Tuple
-from .cpar import ControlPar
+from typing import Tuple, Any
+from .parameters import ControlPar
 from .calibration import ap_52, Calibration
 
 
@@ -18,6 +18,9 @@ def old_pixel_to_metric(
     pix_size_y: float,
     y_remap_mode: int,
 ) -> Tuple[float, float]:
+    """
+    Convert pixel coordinates to metric coordinates using legacy formula.
+    """
     if y_remap_mode == 1:
         y_pixel = 2.0 * y_pixel + 1.0
     elif y_remap_mode == 2:
@@ -32,6 +35,9 @@ def old_pixel_to_metric(
 def pixel_to_metric(
     x_pixel: float, y_pixel: float, cpar: ControlPar
 ) -> Tuple[float, float]:
+    """
+    Convert pixel coordinates to metric coordinates using camera parameters.
+    """
     return old_pixel_to_metric(
         x_pixel,
         y_pixel,
@@ -52,6 +58,9 @@ def old_metric_to_pixel(
     pix_size_y: float,
     y_remap_mode: int,
 ) -> Tuple[float, float]:
+    """
+    Convert metric coordinates to pixel coordinates using legacy formula.
+    """
     x_pixel = (x_metric / pix_size_x) + (im_size_x / 2.0)
     y_pixel = (im_size_y / 2.0) - (y_metric / pix_size_y)
 
@@ -66,6 +75,9 @@ def old_metric_to_pixel(
 def metric_to_pixel(
     x_metric: float, y_metric: float, cpar: ControlPar
 ) -> Tuple[float, float]:
+    """
+    Convert metric coordinates to pixel coordinates using camera parameters.
+    """
     return old_metric_to_pixel(
         x_metric,
         y_metric,
@@ -78,6 +90,15 @@ def metric_to_pixel(
 
 
 def distort_brown_affin(x: float, y: float, ap: ap_52) -> Tuple[float, float]:
+    """
+    Apply Brown distortion and affine transformation to coordinates.
+    Args:
+        x: x coordinate in flat (undistorted) space
+        y: y coordinate in flat (undistorted) space
+        ap: ap_52 object containing distortion parameters
+    Returns:
+        Tuple[float, float]: distorted x and y coordinates
+    """
     r = np.sqrt(x * x + y * y)
     if r < 1e-10:
         return 0.0, 0.0
@@ -100,15 +121,15 @@ def distort_brown_affin(x: float, y: float, ap: ap_52) -> Tuple[float, float]:
 
 
 def correct_brown_affin(x: float, y: float, ap: ap_52) -> Tuple[float, float]:
-    """ Corrects the distortion using the Brown model with affine transformation.
+    """
+    Corrects the distortion using the Brown model with affine transformation.
     Args:
         x: x coordinate in distorted space
         y: y coordinate in distorted space
-        ap: ap_52 object containing the distortion cpar
+        ap: ap_52 object containing the distortion parameters
     Returns:
-        Tuple[float, float]: corrected x and y coordinates in distorted space
+        Tuple[float, float]: corrected x and y coordinates in flat (undistorted) space
     """
-
 
 
     sin_she = np.sin(ap.she)
@@ -144,6 +165,16 @@ def correct_brown_affin(x: float, y: float, ap: ap_52) -> Tuple[float, float]:
 def correct_brown_affine_exact(
     x: float, y: float, ap: ap_52, tol: float
 ) -> Tuple[float, float]:
+    """
+    Iteratively corrects Brown distortion and affine transformation to a given tolerance.
+    Args:
+        x: x coordinate in distorted space
+        y: y coordinate in distorted space
+        ap: ap_52 object containing the distortion parameters
+        tol: tolerance for convergence
+    Returns:
+        Tuple[float, float]: corrected x and y coordinates in flat (undistorted) space
+    """
     r_init = np.sqrt(x * x + y * y)
     if r_init < 1e-10:
         return 0.0, 0.0
@@ -182,6 +213,15 @@ def correct_brown_affine_exact(
 
 
 def flat_to_dist(flat_x: float, flat_y: float, cal: Calibration) -> Tuple[float, float]:
+    """
+    Convert flat (undistorted) coordinates to distorted coordinates using calibration.
+    Args:
+        flat_x: x coordinate in flat space
+        flat_y: y coordinate in flat space
+        cal: Calibration object
+    Returns:
+        Tuple[float, float]: distorted x and y coordinates
+    """
     flat_x += cal.int_par.xh
     flat_y += cal.int_par.yh
 
@@ -191,6 +231,16 @@ def flat_to_dist(flat_x: float, flat_y: float, cal: Calibration) -> Tuple[float,
 def dist_to_flat(
     dist_x: float, dist_y: float, cal: Calibration, tol: float
 ) -> Tuple[float, float]:
+    """
+    Convert distorted coordinates to flat (undistorted) coordinates using calibration.
+    Args:
+        dist_x: x coordinate in distorted space
+        dist_y: y coordinate in distorted space
+        cal: Calibration object
+        tol: tolerance for convergence
+    Returns:
+        Tuple[float, float]: flat (undistorted) x and y coordinates
+    """
     flat_x, flat_y = correct_brown_affine_exact(dist_x, dist_y, cal.added_par, tol)
     flat_x -= cal.int_par.xh
     flat_y -= cal.int_par.yh

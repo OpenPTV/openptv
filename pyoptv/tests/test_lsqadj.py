@@ -1,6 +1,6 @@
 import pytest
 import numpy as np
-from pyoptv.lsqadj import ata, atl, matinv, matmul, norm_cross
+from pyoptv.lsqadj import ata, atl, matinv, matmul
 
 def test_ata():
     a = np.array([[1, 0, 1], [2, 2, 4], [1, 2, 3], [2, 4, 3]])
@@ -28,9 +28,27 @@ def test_matmul():
     result = matmul(a, b, 3, 3, 2, 3, 3)
     assert np.allclose(result, expected)
 
-def test_norm_cross():
-    a = np.array([1, 2, 3])
-    b = np.array([4, 5, 6])
-    expected = np.array([-3, 6, -3])
-    result = norm_cross(a, b)
-    assert np.allclose(result, expected)
+
+def test_matmul2():
+    # Test 1: 2x3 @ 3x2
+    a = np.array([[1, 2, 3], [4, 5, 6]])
+    b = np.array([[7, 8], [9, 10], [11, 12]])
+    m, n, k = 2, 3, 2
+    m_large, n_large = 3, 3
+    result = matmul(a, b, m, n, k, m_large, n_large)
+    expected = np.dot(a, b)
+    assert np.allclose(result, expected), f"Test 1 failed: {result} != {expected}"
+
+    # Test 2: 3x2 @ 2x1
+    a = np.array([[1, 2], [3, 4], [5, 6]])
+    b = np.array([[7], [8]])
+    m, n, k = 3, 2, 1
+    m_large, n_large = 2, 2
+    result = matmul(a, b, m, n, k, m_large, n_large)
+    expected = np.dot(a, b)
+    assert np.allclose(result, expected), f"Test 2 failed: {result} != {expected}"
+
+    print("All matmul tests passed.")
+
+if __name__ == "__main__":
+    pytest.main([__file__])

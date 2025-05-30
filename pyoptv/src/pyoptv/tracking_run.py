@@ -106,18 +106,3 @@ class TrackingRun:
         del self.vpar
         del self.cpar
 
-    def track_forward_start(self) -> None:
-        # Placeholder for the actual implementation
-        pass
-
-    def trackcorr_c_loop(self, step: int) -> None:
-        # Placeholder for the actual implementation
-        pass
-
-    def trackcorr_c_finish(self, step: int) -> None:
-        # Placeholder for the actual implementation
-        pass
-
-    def trackback_c(self) -> None:
-        # Placeholder for the actual implementation
-        pass

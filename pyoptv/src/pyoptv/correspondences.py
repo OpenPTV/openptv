@@ -1,4 +1,5 @@
 import numpy as np
+from typing import List, Any
 from scipy.optimize import minimize
 import matplotlib.pyplot as plt
 from .epi import epi_mm, find_candidate
@@ -7,19 +8,19 @@ nmax = 202400
 MAXCAND = 100
 
 class NTupel:
-    def __init__(self, p, corr):
-        self.p = p
-        self.corr = corr
+    def __init__(self, indices: List[int], corr: float):
+        self.indices: List[int] = indices
+        self.corr: float = corr
 
 class Correspond:
-    def __init__(self, p1, n, p2, corr, dist):
-        self.p1 = p1
-        self.n = n
-        self.p2 = p2
-        self.corr = corr
-        self.dist = dist
+    def __init__(self, nr: int, n: int, dist: np.ndarray, corr: np.ndarray, p2: np.ndarray):
+        self.nr: int = nr
+        self.n: int = n
+        self.dist: np.ndarray = dist
+        self.corr: np.ndarray = corr
+        self.p2: np.ndarray = p2
 
-def quicksort_con(con):
+def quicksort_con(con: List[Correspond]) -> None:
     if len(con) > 0:
         qs_con(con, 0, len(con) - 1)
 
@@ -44,7 +45,7 @@ def qs_con(con, left, right):
     if i < right:
         qs_con(con, i, right)
 
-def quicksort_target_y(pix):
+def quicksort_target_y(pix: List[Any]) -> None:
     qs_target_y(pix, 0, len(pix) - 1)
 
 def qs_target_y(pix, left, right):
@@ -68,7 +69,7 @@ def qs_target_y(pix, left, right):
     if i < right:
         qs_target_y(pix, i, right)
 
-def quicksort_coord2d_x(crd):
+def quicksort_coord2d_x(crd: List[Any]) -> None:
     qs_coord2d_x(crd, 0, len(crd) - 1)
 
 def qs_coord2d_x(crd, left, right):
@@ -92,17 +93,17 @@ def qs_coord2d_x(crd, left, right):
     if i < right:
         qs_coord2d_x(crd, i, right)
 
-def safely_allocate_target_usage_marks(num_cams):
+def safely_allocate_target_usage_marks(num_cams: int) -> np.ndarray:
     try:
         tusage = np.zeros((num_cams, nmax), dtype=np.int32)
         return tusage
     except MemoryError:
         return None
 
-def deallocate_target_usage_marks(tusage):
+def deallocate_target_usage_marks(tusage: np.ndarray) -> None:
     del tusage
 
-def safely_allocate_adjacency_lists(num_cams, target_counts):
+def safely_allocate_adjacency_lists(num_cams: int, num_targets: List[int]) -> List[List[List[Any]]]:
     try:
         lists = [[None for _ in range(num_cams)] for _ in range(num_cams)]
         for c1 in range(num_cams - 1):
@@ -112,12 +113,18 @@ def safely_allocate_adjacency_lists(num_cams, target_counts):
     except MemoryError:
         return None
 
-def deallocate_adjacency_lists(lists):
+def deallocate_adjacency_lists(lists: List[List[List[Any]]]) -> None:
     del lists
 
-def four_camera_matching(lists, base_target_count, accept_corr, scratch, scratch_size):
+def four_camera_matching(
+    lists: List[List[List[Any]]],
+    num_targets: int,
+    corrmin: float,
+    scratch: List[NTupel],
+    scratch_size: int
+) -> int:
     matched = 0
-    for i in range(base_target_count):
+    for i in range(num_targets):
         p1 = lists[0][1][i].p1
         for j in range(lists[0][1][i].n):
             for k in range(lists[0][2][i].n):
@@ -151,7 +158,7 @@ def four_camera_matching(lists, base_target_count, accept_corr, scratch, scratch
                                                + lists[1][3][p2].dist[n]
                                                + lists[2][3][p3].dist[o])
 
-                                if corr <= accept_corr:
+                                if corr <= corrmin:
                                     continue
 
                                 scratch[matched] = NTupel([p1, p2, p3, p4], corr)
@@ -161,7 +168,15 @@ def four_camera_matching(lists, base_target_count, accept_corr, scratch, scratch
                                     return matched
     return matched
 
-def three_camera_matching(lists, num_cams, target_counts, accept_corr, scratch, scratch_size, tusage):
+def three_camera_matching(
+    lists: List[List[List[Any]]],
+    num_targets: int,
+    num_targets_arr: List[int],
+    corrmin: float,
+    scratch: List[NTupel],
+    scratch_size: int,
+    tusage: np.ndarray
+) -> int:
     matched = 0
     for i1 in range(num_cams - 2):
         for i in range(target_counts[i1]):
@@ -192,7 +207,7 @@ def three_camera_matching(lists, num_cams, target_counts, accept_corr, scratch, 
                                                + lists[i1][i3][i].dist[k]
                                                + lists[i2][i3][p2].dist[m])
 
-                                if corr <= accept_corr:
+                                if corr <= corrmin:
                                     continue
 
                                 scratch[matched] = NTupel([-2] * num_cams, corr)
@@ -205,7 +220,15 @@ def three_camera_matching(lists, num_cams, target_counts, accept_corr, scratch, 
                                     return matched
     return matched
 
-def consistent_pair_matching(lists, num_cams, target_counts, accept_corr, scratch, scratch_size, tusage):
+def consistent_pair_matching(
+    lists: List[List[List[Any]]],
+    num_targets: int,
+    num_targets_arr: List[int],
+    corrmin: float,
+    scratch: List[NTupel],
+    scratch_size: int,
+    tusage: np.ndarray
+) -> int:
     matched = 0
     for i1 in range(num_cams - 1):
         for i2 in range(i1 + 1, num_cams):
@@ -222,7 +245,7 @@ def consistent_pair_matching(lists, num_cams, target_counts, accept_corr, scratc
                     continue
 
                 corr = lists[i1][i2][i].corr[0] / lists[i1][i2][i].dist[0]
-                if corr <= accept_corr:
+                if corr <= corrmin:
                     continue
 
                 scratch[matched] = NTupel([-2] * num_cams, corr)
@@ -234,7 +257,14 @@ def consistent_pair_matching(lists, num_cams, target_counts, accept_corr, scratc
                     return matched
     return matched
 
-def match_pairs(lists, corrected, frm, vpar, cpar, calib):
+def match_pairs(
+    lists: List[List[List[Any]]],
+    corrected: List[List[Any]],
+    frm: Any,
+    vpar: Any,
+    cpar: Any,
+    calib: List[Any]
+) -> None:
     for i1 in range(cpar.num_cams - 1):
         for i2 in range(i1 + 1, cpar.num_cams):
             for i in range(frm.num_targets[i1]):
@@ -263,11 +293,17 @@ def match_pairs(lists, corrected, frm, vpar, cpar, calib):
                     lists[i1][i2][i].dist[j] = cand[j].tol
                 lists[i1][i2][i].n = count
 
-def take_best_candidates(src, dst, num_cams, num_cands, tusage):
+def take_best_candidates(
+    src: List[NTupel],
+    dst: List[NTupel],
+    num_cams: int,
+    num: int,
+    tusage: np.ndarray
+) -> int:
     quicksort_con(src)
     taken = 0
 
-    for cand in range(num_cands):
+    for cand in range(num):
         has_used_target = False
         for cam in range(num_cams):
             tnum = src[cand].p[cam]
@@ -287,7 +323,13 @@ def take_best_candidates(src, dst, num_cams, num_cands, tusage):
 
     return taken
 
-def correspondences(frm, corrected, vpar, cpar, calib):
+def correspondences(
+    frm: Any,
+    corrected: List[List[Any]],
+    vpar: Any,
+    cpar: Any,
+    calib: List[Any]
+) -> List[Any]:
     con0 = [NTupel([-1] * cpar.num_cams, 0.0) for _ in range(nmax)]
     con = [NTupel([-1] * cpar.num_cams, 0.0) for _ in range(nmax)]
     tim = safely_allocate_target_usage_marks(cpar.num_cams)

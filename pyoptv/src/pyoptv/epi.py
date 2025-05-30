@@ -6,7 +6,8 @@ from .imgcoord import flat_image_coord as imgcoord_flat_image_coord
 from .ray_tracing import ray_tracing as real_ray_tracing
 from .parameters import ControlPar, VolumePar, MMNP
 from .calibration import Calibration
-from .vec_utils import Vec2D, Vec3D
+from .vec_utils import Vec2D
+
 
 MAXCAND = 100  # Avoid circular import, match value from correspondences.py
 
@@ -161,8 +162,3 @@ def epipolar_curve(
         line_points[pt_ix, 0] = x
         line_points[pt_ix, 1] = y
     return line_points
-
-# Replace stubs with real functions
-ray_tracing = real_ray_tracing
-flat_image_coord = imgcoord_flat_image_coord
-# correct_brown_affin is imported from trafo

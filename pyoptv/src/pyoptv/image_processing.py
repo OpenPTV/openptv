@@ -1,8 +1,9 @@
 import numpy as np
+from typing import Tuple
 from scipy.ndimage import convolve
 import matplotlib.pyplot as plt
 
-def filter_3(img, filt):
+def filter_3(img: np.ndarray, filt: np.ndarray) -> np.ndarray:
     """
     Perform a 3x3 filtering over an image. The first and last lines are not processed at all, the rest uses wrap-around on the image edges. Minimal brightness output in processed pixels is 8.
 
@@ -21,7 +22,7 @@ def filter_3(img, filt):
     img_lp = np.clip(img_lp / sum_filt, 8, 255).astype(np.uint8)
     return img_lp
 
-def lowpass_3(img):
+def lowpass_3(img: np.ndarray) -> np.ndarray:
     """
     Perform a 3x3 lowpass filtering over an image.
 
@@ -33,7 +34,7 @@ def lowpass_3(img):
     """
     filt = np.ones((3, 3))
     return filter_3(img, filt)
-def fast_box_blur(filt_span, src):
+def fast_box_blur(filt_span: int, src: np.ndarray) -> np.ndarray:
     """
     Perform a box blur of an image using a given kernel size.
 
@@ -88,7 +89,7 @@ def fast_box_blur(filt_span, src):
 
     return dest
 
-def split(img, half_selector):
+def split(img: np.ndarray, half_selector: int) -> np.ndarray:
     """
     Cram into the first half of a given image either its even or odd lines. Used with interlaced cameras, a mostly obsolete device. The lower half of the image is set to the number 2.
 
@@ -111,7 +112,7 @@ def split(img, half_selector):
     img_new[img.shape[0] // 2:, :] = 2
     return img_new
 
-def subtract_img(img1, img2):
+def subtract_img(img1: np.ndarray, img2: np.ndarray) -> np.ndarray:
     """
     Subtract img2 from img1.
 
@@ -123,7 +124,7 @@ def subtract_img(img1, img2):
     """
     return np.clip(img1 - img2, 0, None).astype(np.uint8)
 
-def subtract_mask(img, img_mask):
+def subtract_mask(img: np.ndarray, img_mask: np.ndarray) -> np.ndarray:
     """
     Compare img with img_mask and create a masked image img_new. Pixels that are equal to zero in the img_mask are overwritten with a default value (=0) in img_new.
 
@@ -138,7 +139,7 @@ def subtract_mask(img, img_mask):
     img_new[img_mask == 0] = 0
     return img_new
 
-def copy_images(src):
+def copy_images(src: np.ndarray) -> np.ndarray:
     """
     Copy one image into another.
 
@@ -150,7 +151,7 @@ def copy_images(src):
     """
     return np.copy(src)
 
-def prepare_image(img, dim_lp, filter_hp, filter_file, cpar):
+def prepare_image(img: np.ndarray, dim_lp: int, filter_hp: int, filter_file: str, cpar: dict) -> np.ndarray:
     """
     Perform the steps necessary for preparing an image to particle detection: an averaging (smoothing) filter on an image, optionally followed by additional user-defined filter.
 
@@ -178,3 +179,53 @@ def prepare_image(img, dim_lp, filter_hp, filter_file, cpar):
         img_hp = filter_3(img_hp, filt)
 
     return img_hp
+
+def threshold_image(img: np.ndarray, threshold: float) -> np.ndarray:
+    """
+    Apply a binary threshold to the image.
+
+    Arguments:
+    img - input image as a 2D numpy array.
+    threshold - threshold value.
+
+    Returns:
+    Binary image as a 2D numpy array.
+    """
+    return (img > threshold).astype(np.uint8) * 255
+
+def find_local_maxima(img: np.ndarray) -> np.ndarray:
+    """
+    Find local maxima in the image.
+
+    Arguments:
+    img - input image as a 2D numpy array.
+
+    Returns:
+    Image of the same size as img, with local maxima marked.
+    """
+    from scipy.ndimage import maximum_filter, gaussian_filter
+
+    # Smooth the image with a Gaussian filter
+    img_smoothed = gaussian_filter(img, sigma=1)
+
+    # Find maxima using a maximum filter
+    img_maxima = maximum_filter(img_smoothed, size=3) == img_smoothed
+
+    return img_maxima.astype(np.uint8) * 255
+
+def label_connected_components(img: np.ndarray) -> Tuple[np.ndarray, int]:
+    """
+    Label connected components in the image.
+
+    Arguments:
+    img - input image as a 2D numpy array.
+
+    Returns:
+    A tuple of (labeled_image, num_features), where labeled_image is the input image with connected components labeled, and num_features is the number of connected components.
+    """
+    from scipy.ndimage import label
+
+    # Label connected components
+    labeled_image, num_features = label(img)
+
+    return labeled_image, num_features
