@@ -1,61 +1,77 @@
 import numpy as np
-from scipy.optimize import minimize
-import matplotlib.pyplot as plt
+from typing import Tuple
+from .calibration import Calibration
+from .multimed import trans_Cam_Point, multimed_nlay, back_trans_Point
+from .trafo import vec_set, flat_to_dist
 
-def flat_image_coord(pos, cal, mm):
-    # Accepts cal as a Calibration object
-    deno = (cal.ext_par.dm[0][2] * (pos[0] - cal.ext_par.x0) +
-            cal.ext_par.dm[1][2] * (pos[1] - cal.ext_par.y0) +
-            cal.ext_par.dm[2][2] * (pos[2] - cal.ext_par.z0))
 
-    x = -cal.int_par.cc * (cal.ext_par.dm[0][0] * (pos[0] - cal.ext_par.x0) +
-                           cal.ext_par.dm[1][0] * (pos[1] - cal.ext_par.y0) +
-                           cal.ext_par.dm[2][0] * (pos[2] - cal.ext_par.z0)) / deno
+def flat_image_coord(
+    orig_pos: Tuple[float, float, float],
+    cal: Calibration,
+    mm: object,
+) -> Tuple[float, float]:
+    """
+    Calculates projection from coordinates in world space to metric coordinates in image space without distortions.
+    Args:
+        orig_pos: 3D position (X, Y, Z real space)
+        cal: Camera calibration parameters
+        mm: Layer thickness and refractive index parameters
+    Returns:
+        (x, y): metric coordinates of projection in the image space
+    """
+    # Prepare temporary calibration and variables
+    cal_t = Calibration()
+    cal_t.mmlut = cal.mmlut
+    cross_p = np.zeros(3)
+    cross_c = np.zeros(3)
+    pos_t = np.zeros(3)
+    pos = np.zeros(3)
 
-    y = -cal.int_par.cc * (cal.ext_par.dm[0][1] * (pos[0] - cal.ext_par.x0) +
-                           cal.ext_par.dm[1][1] * (pos[1] - cal.ext_par.y0) +
-                           cal.ext_par.dm[2][1] * (pos[2] - cal.ext_par.z0)) / deno
+    # Calculate 3D position in air-filled space (no refraction)
+    trans_Cam_Point(
+        cal.ext_par, mm, cal.glass_par, orig_pos, cal_t.ext_par, pos_t, cross_p, cross_c
+    )
+    X_t, Y_t = multimed_nlay(cal_t, mm, pos_t)
+    pos_t = vec_set(X_t, Y_t, pos_t[2])
+    back_trans_Point(pos_t, mm, cal.glass_par, cross_p, cross_c, pos)
 
+    dx = pos[0] - cal.ext_par.x0
+    dy = pos[1] - cal.ext_par.y0
+    dz = pos[2] - cal.ext_par.z0
+    deno = (
+        cal.ext_par.dm[0][2] * dx
+        + cal.ext_par.dm[1][2] * dy
+        + cal.ext_par.dm[2][2] * dz
+    )
+    x = -cal.int_par.cc * (
+        cal.ext_par.dm[0][0] * dx
+        + cal.ext_par.dm[1][0] * dy
+        + cal.ext_par.dm[2][0] * dz
+    ) / deno
+    y = -cal.int_par.cc * (
+        cal.ext_par.dm[0][1] * dx
+        + cal.ext_par.dm[1][1] * dy
+        + cal.ext_par.dm[2][1] * dz
+    ) / deno
     return x, y
 
-def img_coord(pos, cal, mm):
+
+def img_coord(
+    pos: Tuple[float, float, float],
+    cal: Calibration,
+    mm: object,
+) -> Tuple[float, float]:
+    """
+    Uses flat_image_coord to estimate metric coordinates in image space from the 3D position in the world and distorts it using the Brown distortion model.
+    Args:
+        pos: 3D position (X, Y, Z real space)
+        cal: Camera calibration parameters
+        mm: Layer thickness and refractive index parameters
+    Returns:
+        (x, y): metric distorted coordinates of projection in the image space
+    """
     x, y = flat_image_coord(pos, cal, mm)
     x, y = flat_to_dist(x, y, cal)
     return x, y
 
-def flat_to_dist(x, y, cal):
-    r = np.sqrt(x**2 + y**2)
-    x_dist = x * (1 + cal.dist_par.k1 * r**2 + cal.dist_par.k2 * r**4 + cal.dist_par.k3 * r**6)
-    y_dist = y * (1 + cal.dist_par.k1 * r**2 + cal.dist_par.k2 * r**4 + cal.dist_par.k3 * r**6)
-    return x_dist, y_dist
-def flat_image_coord_numba(pos, cal, mm):
-    deno = (cal['ext_par']['dm'][0][2] * (pos[0] - cal['ext_par']['x0']) +
-            cal['ext_par']['dm'][1][2] * (pos[1] - cal['ext_par']['y0']) +
-            cal['ext_par']['dm'][2][2] * (pos[2] - cal['ext_par']['z0']))
 
-    x = -cal['int_par']['cc'] * (cal['ext_par']['dm'][0][0] * (pos[0] - cal['ext_par']['x0']) +
-                                 cal['ext_par']['dm'][1][0] * (pos[1] - cal['ext_par']['y0']) +
-                                 cal['ext_par']['dm'][2][0] * (pos[2] - cal['ext_par']['z0'])) / deno
-
-    y = -cal['int_par']['cc'] * (cal['ext_par']['dm'][0][1] * (pos[0] - cal['ext_par']['x0']) +
-                                 cal['ext_par']['dm'][1][1] * (pos[1] - cal['ext_par']['y0']) +
-                                 cal['ext_par']['dm'][2][1] * (pos[2] - cal['ext_par']['z0'])) / deno
-
-    return x, y
-def img_coord_numba(pos, cal, mm):
-    x, y = flat_image_coord_numba(pos, cal, mm)
-    x, y = flat_to_dist_numba(x, y, cal)
-    return x, y
-def flat_to_dist_numba(x, y, cal):
-    r = np.sqrt(x**2 + y**2)
-    x_dist = x * (1 + cal['dist_par']['k1'] * r**2 + cal['dist_par']['k2'] * r**4 + cal['dist_par']['k3'] * r**6)
-    y_dist = y * (1 + cal['dist_par']['k1'] * r**2 + cal['dist_par']['k2'] * r**4 + cal['dist_par']['k3'] * r**6)
-    return x_dist, y_dist
-
-def plot_image_coords(pos, cal, mm):
-    x, y = img_coord(pos, cal, mm)
-    plt.scatter(x, y)
-    plt.xlabel('X')
-    plt.ylabel('Y')
-    plt.title('Image Coordinates')
-    plt.show()

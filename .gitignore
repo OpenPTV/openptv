@@ -30,3 +30,7 @@ py_bind/wheelhouse/*
 build_artifacts
 # conda smithy ci-skeleton end
 *.whl
+corres.0
+linkage.0
+prio.0
+target_targets

@@ -14,14 +14,13 @@ from .tracking_run import TrackingRun
 from .parameters import ControlPar, TrackPar
 from .calibration import Calibration
 
-from .track import (
-    TR_UNUSED,
-    MAX_CANDS,
-    COORD_UNUSED,
-    CORRES_NONE,
-    ADD_PART,
-    PT_UNUSED,
-)
+TR_UNUSED = -1
+TR_BUFSPACE = 4
+TR_MAX_CAMS = 4
+MAX_TARGETS = 20000
+MAX_CANDS = 4         # max candidates, nearest neighbours
+ADD_PART = 3          # search region 3 pix around a particle
+
 
 class FoundPix:
     """Represents a found pixel candidate for tracking correspondence.

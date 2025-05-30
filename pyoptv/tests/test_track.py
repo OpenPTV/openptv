@@ -64,7 +64,7 @@ def test_reset_foundpix_array():
     arr = [FoundPix(1, 2, [1, 1, 1]) for _ in range(5)]
     reset_foundpix_array(arr, 5, 3)
     for item in arr:
-        assert item.ftnr == -999  # TR_UNUSED
+        assert item.ftnr == TR_UNUSED  # TR_UNUSED
         assert item.freq == 0
         assert item.whichcam == [0, 0, 0]
 
@@ -85,7 +85,7 @@ def test_register_closest_neighbs():
     assert reg[0].ftnr == 0
     assert reg[1].ftnr == 1
     assert reg[2].ftnr == 2
-    assert reg[3].ftnr == -999
+    assert reg[3].ftnr == TR_UNUSED
 
 def test_search_volume_center_moving():
     prev_pos = Vec3D(1, 2, 3)
@@ -189,7 +189,7 @@ def test_point_to_pixel():
 def test_sorted_candidates_in_volume():
     center = Vec3D(1, 2, 3)
     center_proj = [Vec2D(1, 2), Vec2D(3, 4), Vec2D(5, 6)]
-    frm = Frame(3, 3, 10, 'corres', 'linkage', 'prio', ['target', 'target', 'target'])
+    frm = Frame(3, 3)
     seq_par = type('SeqPar', (), {'img_base_name': ['target'], 'first': 0, 'last': 2})()
     cpar = ControlPar(3)
     vpar = VolumePar()
@@ -207,7 +207,7 @@ def test_assess_new_position():
     pos = Vec3D(1, 2, 3)
     targ_pos = [Vec2D(1, 2), Vec2D(3, 4), Vec2D(5, 6)]
     cand_inds = np.zeros((3, 1), dtype=np.int32)
-    frm = Frame(3, 3, 10, 'corres', 'linkage', 'prio', ['target', 'target', 'target'])
+    frm = Frame(3, 3)
     seq_par = type('SeqPar', (), {'img_base_name': ['target'], 'first': 0, 'last': 2})()
     cpar = ControlPar(3)
     vpar = VolumePar()
@@ -222,14 +222,11 @@ def test_assess_new_position():
     assert result == 0
 
 def test_add_particle():
-    frm = Frame(3, 3, 10, 'corres', 'linkage', 'prio', ['target', 'target', 'target'])
+    frm = Frame(3, 3)
     frm.num_parts = 0
     pos = Vec3D(1, 2, 3)
     cand_inds = np.zeros((3, 1), dtype=np.int32)
     from pyoptv.tracking_frame_buf import PathInfo, PREV_NONE, NEXT_NONE, PRIO_DEFAULT
-    # Use a valid PathInfo constructor
-    # PathInfo(prev, next, prio, finaldecis, inlist, x, decis, linkdecis)
-    # No patching needed if add_particle uses the correct signature
     add_particle(frm, pos, cand_inds)
     assert frm.num_parts == 1
 
@@ -269,3 +266,7 @@ def test_trackback_c():
 
 def test_tr_unused_value():
     assert TR_UNUSED == -1
+
+
+if __name__ == "__main__":
+    pytest.main([__file__])
