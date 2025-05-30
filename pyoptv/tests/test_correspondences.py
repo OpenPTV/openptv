@@ -9,9 +9,7 @@ from pyoptv.correspondences import (
     quicksort_con,
     match_pairs,
     safely_allocate_adjacency_lists,
-    deallocate_adjacency_lists,
     safely_allocate_target_usage_marks,
-    deallocate_target_usage_marks,
     four_camera_matching,
     three_camera_matching,
     consistent_pair_matching,
@@ -160,8 +158,13 @@ def test_pairwise_matching(testing_fodder_dir):
     calib = read_all_calibration(cpar, testing_fodder_dir)
     frm = generate_test_set(calib, cpar, vpar)
     corrected = correct_frame(frm, calib, cpar, 0.0001)
+    print(corrected)
     lists = safely_allocate_adjacency_lists(cpar.num_cams, frm.num_targets)
     match_pairs(lists, corrected, frm, vpar, cpar, calib)
+
+    print(lists)
+
+
     for cam in range(cpar.num_cams - 1):
         for subcam in range(cam + 1, cpar.num_cams):
             for part in range(frm.num_targets[cam]):
@@ -175,7 +178,6 @@ def test_pairwise_matching(testing_fodder_dir):
                         found = True
                         break
                 assert found
-    deallocate_adjacency_lists(lists, cpar.num_cams)
 
 def test_four_camera_matching(testing_fodder_dir):
     cpar = read_control_par(str(testing_fodder_dir / "parameters" / "ptv.par"))
@@ -192,7 +194,6 @@ def test_four_camera_matching(testing_fodder_dir):
     con = [NTupel() for _ in range(16)]
     matched = four_camera_matching(lists, 16, 1.0, con, 16)
     assert matched == 16
-    deallocate_adjacency_lists(lists, cpar.num_cams)
 
 def test_three_camera_matching(testing_fodder_dir):
     cpar = read_control_par(str(testing_fodder_dir / "parameters" / "ptv.par"))
@@ -212,8 +213,7 @@ def test_three_camera_matching(testing_fodder_dir):
     tusage = safely_allocate_target_usage_marks(cpar.num_cams)
     matched = three_camera_matching(lists, 4, frm.num_targets, 100000.0, con, 4*16, tusage)
     assert matched == 16
-    deallocate_adjacency_lists(lists, cpar.num_cams)
-    deallocate_target_usage_marks(tusage, cpar.num_cams)
+
 
 def test_two_camera_matching(testing_fodder_dir):
     cpar = read_control_par(str(testing_fodder_dir / "parameters" / "ptv.par"))
@@ -235,8 +235,7 @@ def test_two_camera_matching(testing_fodder_dir):
     tusage = safely_allocate_target_usage_marks(cpar.num_cams)
     matched = consistent_pair_matching(lists, 2, frm.num_targets, 10000.0, con, 4*16, tusage)
     assert matched == 16
-    deallocate_adjacency_lists(lists, cpar.num_cams)
-    deallocate_target_usage_marks(tusage, cpar.num_cams)
+
 
 def test_correspondences(testing_fodder_dir):
     cpar = read_control_par(str(testing_fodder_dir / "parameters" / "ptv.par"))
@@ -247,8 +246,7 @@ def test_correspondences(testing_fodder_dir):
     frm = generate_test_set(calib, cpar, vpar)
     corrected = correct_frame(frm, calib, cpar, 0.0001)
     from pyoptv.correspondences import NTupel
-    # match_counts = [0, 0, 0, 0]
-    match_counts = correspondences(frm, corrected, vpar, cpar, calib)
+    con, match_counts = correspondences(frm, corrected, vpar, cpar, calib)
     assert match_counts[0] == 16
     assert match_counts[1] == 0
     assert match_counts[2] == 0

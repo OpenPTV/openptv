@@ -26,6 +26,9 @@ class Correspond:
         self.dist: np.ndarray = np.zeros(MAXCAND, dtype=np.float64) if dist is None else dist.astype(np.float64)
         self.corr: np.ndarray = np.zeros(MAXCAND, dtype=np.float64) if corr is None else corr.astype(np.float64)
 
+    def __repr__(self):
+        return f"Correspond(p1={self.p1}, n={self.n}, len(p2)={len(self.p2)})"
+
 def quicksort_con(con: List[Correspond]) -> None:
     if len(con) > 0:
         qs_con(con, 0, len(con) - 1)
@@ -106,21 +109,21 @@ def safely_allocate_target_usage_marks(num_cams: int) -> np.ndarray:
     except MemoryError:
         return None
 
-def deallocate_target_usage_marks(tusage: np.ndarray) -> None:
-    del tusage
+# def deallocate_target_usage_marks(tusage: np.ndarray) -> None:
+#     del tusage
 
-def safely_allocate_adjacency_lists(num_cams: int, num_targets: List[int]) -> List[List[List[Correspond]]]:
+def safely_allocate_adjacency_lists(num_cams: int, target_counts: List[int]) -> List[List[List[Correspond]]] | None:
     try:
-        lists = [[None for _ in range(num_cams)] for _ in range(num_cams)]
+        lists = [[[] for _ in range(num_cams)] for _ in range(num_cams)]
         for c1 in range(num_cams - 1):
             for c2 in range(c1 + 1, num_cams):
-                lists[c1][c2] = [Correspond(0, 0, np.zeros(MAXCAND, dtype=np.int32), np.zeros(MAXCAND), np.zeros(MAXCAND)) for _ in range(num_targets[c1])]
+                lists[c1][c2] = [Correspond(n=0, p1=0) for _ in range(target_counts[c1])]
         return lists
     except MemoryError:
         return None
 
-def deallocate_adjacency_lists(lists: List[List[List[Correspond]]]) -> None:
-    del lists
+# def deallocate_adjacency_lists(lists: List[List[List[Correspond]]]) -> None:
+#     del lists
 
 def four_camera_matching(
     lists: List[List[List[Any]]],
@@ -266,8 +269,8 @@ def consistent_pair_matching(
     return matched
 
 def match_pairs(
-    lists: List[List[List[Any]]],
-    corrected: List[List[Any]],
+    lists: List[List[List[Correspond]]],
+    corrected: List[List[Target]],
     frm: Frame,
     vpar: VolumePar,
     cpar: ControlPar,
@@ -337,19 +340,19 @@ def correspondences(
     vpar: VolumePar,
     cpar: ControlPar,
     calib: List[Calibration]
-) -> List[NTupel]:
+) -> tuple[list[NTupel], list[int]]:
     con0 = [NTupel([-1] * cpar.num_cams, 0.0) for _ in range(nmax)]
     con = [NTupel([-1] * cpar.num_cams, 0.0) for _ in range(nmax)]
     tim = safely_allocate_target_usage_marks(cpar.num_cams)
     if tim is None:
         print("out of memory")
-        return None
+        return [], []
 
     lists = safely_allocate_adjacency_lists(cpar.num_cams, frm.num_targets)
     if lists is None:
         print("list is not allocated")
-        deallocate_target_usage_marks(tim)
-        return None
+        # deallocate_target_usage_marks(tim)
+        return [], []
 
     match_counts = [0] * 4
     match_pairs(lists, corrected, frm, vpar, cpar, calib)
@@ -377,7 +380,7 @@ def correspondences(
             if p1 > -1 and p1 < 1202590843:
                 frm.targets[j][p1].tnr = i
 
-    deallocate_adjacency_lists(lists)
-    deallocate_target_usage_marks(tim)
+    # deallocate_adjacency_lists(lists)
+    # deallocate_target_usage_marks(tim)
 
-    return con
+    return con, match_counts
