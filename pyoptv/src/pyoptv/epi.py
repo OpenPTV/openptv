@@ -135,10 +135,8 @@ def find_candidate(
 def quality_ratio(a: float, b: float) -> float:
     return min(a, b) / max(a, b)
 
-
-def move_along_ray(Z: float, pos: np.ndarray, v: np.ndarray) -> np.ndarray:
-    return pos + (Z - pos[2]) * v / v[2]
-
+def move_along_ray(Z: float, pos: Vec3D, v: Vec3D) -> Vec3D:
+    return pos + (Z - pos.z) * v / v.z
 
 def epipolar_curve(
     image_point: Tuple[float, float],

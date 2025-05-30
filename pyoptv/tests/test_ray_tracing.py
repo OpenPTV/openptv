@@ -14,8 +14,8 @@ def test_ray_tracing():
     expected_X = np.array([110.406944, 88.325788, 0.988076])
     expected_a = np.array([0.387960, 0.310405, -0.867834])
 
-    assert np.allclose([X.x, X.y, X.z], expected_X, atol=1e-5)
-    assert np.allclose([a.x, a.y, a.z], expected_a, atol=1e-5)
+    assert np.allclose(X, expected_X, atol=1e-5)
+    assert np.allclose(a, expected_a, atol=1e-5)
 
 def create_calibration():
     cal = Calibration()
