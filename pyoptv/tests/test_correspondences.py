@@ -1,159 +1,266 @@
-import pytest
 import numpy as np
+import pytest
 from pyoptv.correspondences import (
-    NTupel, Correspond, quicksort_con, quicksort_target_y, quicksort_coord2d_x,
-    safely_allocate_target_usage_marks, deallocate_target_usage_marks,
-    safely_allocate_adjacency_lists, deallocate_adjacency_lists,
-    four_camera_matching, three_camera_matching, consistent_pair_matching,
-    match_pairs, take_best_candidates, correspondences
+    qs_target_y,
+    quicksort_target_y,
+    quicksort_coord2d_x,
+    quicksort_con,
+    match_pairs,
+    safely_allocate_adjacency_lists,
+    deallocate_adjacency_lists,
+    safely_allocate_target_usage_marks,
+    deallocate_target_usage_marks,
+    four_camera_matching,
+    three_camera_matching,
+    consistent_pair_matching,
+    correspondences,
 )
-from pyoptv.tracking_frame_buf import Frame, Target
-from pyoptv.calibration import Calibration
-from pyoptv.parameters import ControlPar, MMNP, VolumePar
+from pyoptv.parameters import ControlPar, VolumePar, read_control_par, read_volume_par
+from pyoptv.calibration import Calibration, read_ori
+from pyoptv.imgcoord import img_coord
+from pyoptv.trafo import metric_to_pixel, pixel_to_metric, dist_to_flat
+from pyoptv.vec_utils import Vec3D
+from pathlib import Path
+from pyoptv.tracking_frame_buf import Target
+from pyoptv.correspondences import NTupel
 
-def test_quicksort_con():
-    con = [Correspond(0, 0, np.zeros(1), np.array([3]), np.zeros(1)),
-           Correspond(0, 0, np.zeros(1), np.array([1]), np.zeros(1)),
-           Correspond(0, 0, np.zeros(1), np.array([2]), np.zeros(1))]
-    quicksort_con(con)
-    assert con[0].corr[0] == 3
-    assert con[1].corr[0] == 2
-    assert con[2].corr[0] == 1
+@pytest.fixture(scope="session")
+def testing_fodder_dir():
+    """Fixture to provide the path to the testing_fodder directory inside pyoptv/tests."""
+    return Path(__file__).parent / "testing_fodder"
+
+# --- Sorting and utility tests ---
+def test_qs_target_y():
+
+    test_pix = [
+        Target(0, 0.0, -0.2, 5, 1, 2, 10, -999),
+        Target(6, 0.2, 0.0, 10, 8, 1, 20, -999),
+        Target(3, 0.2, 0.8, 10, 3, 3, 30, -999),
+        Target(4, 0.4, -1.1, 10, 3, 3, 40, -999),
+        Target(1, 0.7, -0.1, 10, 3, 3, 50, -999),
+        Target(7, 1.2, 0.3, 10, 3, 3, 60, -999),
+        Target(5, 10.4, 0.1, 10, 3, 3, 70, -999),
+    ]
+    qs_target_y(test_pix, 0, 6)
+    assert abs(test_pix[0].y + 1.1) < 1e-6
+    assert abs(test_pix[1].y + 0.2) < 1e-6
+    assert abs(test_pix[6].y - 0.8) < 1e-6
 
 def test_quicksort_target_y():
-    class DummyTarget:
-        def __init__(self, y):
-            self.y = y
-    pix = [DummyTarget(3), DummyTarget(1), DummyTarget(2)]
-    quicksort_target_y(pix)
-    assert pix[0].y == 1
-    assert pix[1].y == 2
-    assert pix[2].y == 3
+    class Target:
+        def __init__(self, pnr, x, y, n, nx, ny, sumg, tnr):
+            self.pnr = pnr; self.x = x; self.y = y; self.n = n; self.nx = nx; self.ny = ny; self.sumg = sumg; self.tnr = tnr
+    test_pix = [
+        Target(0, 0.0, -0.2, 5, 1, 2, 10, -999),
+        Target(6, 0.2, 0.0, 10, 8, 1, 20, -999),
+        Target(3, 0.2, 0.8, 10, 3, 3, 30, -999),
+        Target(4, 0.4, -1.1, 10, 3, 3, 40, -999),
+        Target(1, 0.7, -0.1, 10, 3, 3, 50, -999),
+        Target(7, 1.2, 0.3, 10, 3, 3, 60, -999),
+        Target(5, 10.4, 0.1, 10, 3, 3, 70, -999),
+    ]
+    num = len(test_pix)
+    quicksort_target_y(test_pix)
+    assert abs(test_pix[0].y + 1.1) < 1e-6
+    assert abs(test_pix[1].y + 0.2) < 1e-6
+    assert abs(test_pix[num-1].y - 0.8) < 1e-6
 
 def test_quicksort_coord2d_x():
-    class DummyCoord2D:
-        def __init__(self, x):
-            self.x = x
-    crd = [DummyCoord2D(3), DummyCoord2D(1), DummyCoord2D(2)]
-    quicksort_coord2d_x(crd)
-    assert crd[0].x == 1
-    assert crd[1].x == 2
-    assert crd[2].x == 3
-
-def test_safely_allocate_target_usage_marks():
-    tusage = safely_allocate_target_usage_marks(2)
-    assert tusage.shape == (2, 202400)
-    deallocate_target_usage_marks(tusage)
-
-def test_safely_allocate_adjacency_lists():
-    lists = safely_allocate_adjacency_lists(2, [3, 3])
-    assert len(lists) == 2
-    assert len(lists[0]) == 2
-    assert len(lists[0][1]) == 3
-    deallocate_adjacency_lists(lists)
-    assert lists is None or all(lst is None for lst in lists), "Deallocation of adjacency lists failed."
-
-def test_four_camera_matching():
-    lists = safely_allocate_adjacency_lists(4, [3, 3, 3, 3])
-    for i in range(3):
-        lists[0][1][i].n = 1
-        lists[0][1][i].p2[0] = i
-        lists[0][1][i].corr[0] = 1.0
-        lists[0][1][i].dist[0] = 1.0
-        lists[0][2][i].n = 1
-        lists[0][2][i].p2[0] = i
-        lists[0][2][i].corr[0] = 1.0
-        lists[0][2][i].dist[0] = 1.0
-        lists[0][3][i].n = 1
-        lists[0][3][i].p2[0] = i
-        lists[0][3][i].corr[0] = 1.0
-        lists[0][3][i].dist[0] = 1.0
-        lists[1][2][i].n = 1
-        lists[1][2][i].p2[0] = i
-        lists[1][2][i].corr[0] = 1.0
-        lists[1][2][i].dist[0] = 1.0
-        lists[1][3][i].n = 1
-        lists[1][3][i].p2[0] = i
-        lists[1][3][i].corr[0] = 1.0
-        lists[1][3][i].dist[0] = 1.0
-        lists[2][3][i].n = 1
-        lists[2][3][i].p2[0] = i
-        lists[2][3][i].corr[0] = 1.0
-        lists[2][3][i].dist[0] = 1.0
-    scratch = [NTupel([0, 0, 0, 0], 0.0) for _ in range(4 * 202400)]
-    matched = four_camera_matching(lists, 3, 0.5, scratch, 4 * 202400)
-    assert matched == 3
-    deallocate_adjacency_lists(lists)
-
-def test_three_camera_matching():
-    lists = safely_allocate_adjacency_lists(3, [3, 3, 3])
-    for i in range(3):
-        lists[0][1][i].n = 1
-        lists[0][1][i].p2[0] = i
-        lists[0][1][i].corr[0] = 1.0
-        lists[0][1][i].dist[0] = 1.0
-        lists[0][2][i].n = 1
-        lists[0][2][i].p2[0] = i
-        lists[0][2][i].corr[0] = 1.0
-        lists[0][2][i].dist[0] = 1.0
-        lists[1][2][i].n = 1
-        lists[1][2][i].p2[0] = i
-        lists[1][2][i].corr[0] = 1.0
-        lists[1][2][i].dist[0] = 1.0
-    scratch = [NTupel([0, 0, 0], 0.0) for _ in range(4 * 202400)]
-    tusage = safely_allocate_target_usage_marks(3)
-    matched = three_camera_matching(lists, 3, [3, 3, 3], 0.5, scratch, 4 * 202400, tusage)
-    assert matched == 3
-    deallocate_adjacency_lists(lists)
-    deallocate_target_usage_marks(tusage)
-
-def test_consistent_pair_matching():
-    lists = safely_allocate_adjacency_lists(2, [3, 3])
-    for i in range(3):
-        lists[0][1][i].n = 1
-        lists[0][1][i].p2[0] = i
-        lists[0][1][i].corr[0] = 1.0
-        lists[0][1][i].dist[0] = 1.0
-    scratch = [NTupel([0, 0], 0.0) for _ in range(4 * 202400)]
-    tusage = safely_allocate_target_usage_marks(2)
-    matched = consistent_pair_matching(lists, 2, [3, 3], 0.5, scratch, 4 * 202400, tusage)
-    assert matched == 3
-    deallocate_adjacency_lists(lists)
-    deallocate_target_usage_marks(tusage)
-
-def test_correspondences():
-    # Use real classes from the codebase
-    num_cams = 2
-    max_targets = 3
-    frm = Frame(num_cams, max_targets)
-    frm.num_targets = [3, 3]
-    frm.targets = [
-        [Target(0, 0, 0, 1, 1, 1, 10, 0), Target(1, 1, 1, 1, 1, 1, 10, 1), Target(2, 2, 2, 1, 1, 1, 10, 2)],
-        [Target(0, 0, 0, 1, 1, 1, 10, 0), Target(1, 1, 1, 1, 1, 1, 10, 1), Target(2, 2, 2, 1, 1, 1, 10, 2)]
+    class Coord2D:
+        def __init__(self, pnr, x, y):
+            self.pnr = pnr; self.x = x; self.y = y
+    test_crd = [
+        Coord2D(0, 0.0, 0.0),
+        Coord2D(6, 0.1, 0.1),
+        Coord2D(3, 0.2, -0.8),
+        Coord2D(4, -0.4, -1.1),
+        Coord2D(1, 0.7, -0.1),
+        Coord2D(7, 1.2, 0.3),
+        Coord2D(5, 10.4, 0.1),
     ]
-    # Create corrected targets (simulate as needed)
-    class Corrected:
-        def __init__(self, x, y, pnr):
-            self.x = x
-            self.y = y
-            self.pnr = pnr
-    corrected = [
-        [Corrected(0, 0, 0), Corrected(1, 1, 1), Corrected(2, 2, 2)],
-        [Corrected(0, 0, 0), Corrected(1, 1, 1), Corrected(2, 2, 2)]
+    num = len(test_crd)
+    quicksort_coord2d_x(test_crd)
+    assert abs(test_crd[0].x + 0.4) < 1e-6
+    assert abs(test_crd[1].x - 0.0) < 1e-6
+    assert abs(test_crd[num-1].x - 10.4) < 1e-6
+
+def test_quicksort_con():
+    class NTupel:
+        def __init__(self, p, corr):
+            self.p = p; self.corr = corr
+    test_con = [
+        NTupel([0, 1, 2, 3], 0.1),
+        NTupel([0, 1, 2, 3], 0.2),
+        NTupel([0, 1, 2, 3], 0.15),
     ]
-    vpar = VolumePar()
-    vpar.X_lay = [-250.0, 250.0]
-    vpar.Zmin_lay = [-100.0, -100.0]
-    vpar.Zmax_lay = [100.0, 100.0]
-    vpar.eps0 = 25.0
-    vpar.corrmin = 0.5
-    cpar = ControlPar(num_cams)
-    cpar.imx = 1000
-    cpar.imy = 1000
-    cpar.pix_x = 0.01
-    cpar.pix_y = 0.01
-    cpar.mm = MMNP()
-    calib = [Calibration(), Calibration()]
-    con = correspondences(frm, corrected, vpar, cpar, calib)
-    assert con is not None
-    assert len(con) >= 0
+    quicksort_con(test_con)
+    assert abs(test_con[0].corr - 0.2) < 1e-6
+    assert abs(test_con[2].corr - 0.1) < 1e-6
+
+
+@pytest.fixture(scope="session")
+def testing_fodder_dir():
+    """Fixture to provide the path to the testing_fodder directory inside pyoptv/tests."""
+    return Path(__file__).parent / "testing_fodder"
+
+def read_all_calibration(calib, cpar, testing_fodder_dir):
+    ori_tmpl = testing_fodder_dir / "cal" / "sym_cam{}.tif.ori"
+    added_name = testing_fodder_dir / "cal" / "cam1.tif.addpar"
+    for cam in range(cpar.num_cams):
+        ori_name = str(ori_tmpl).format(cam + 1)
+        calib[cam] = read_ori(ori_name, str(added_name))
+
+# Helper to generate a synthetic test set as in the C code
+def generate_test_set(calib, cpar, vpar):
+    class Target:
+        def __init__(self):
+            self.pnr = 0; self.x = 0; self.y = 0; self.n = 0; self.nx = 0; self.ny = 0; self.sumg = 0
+    frm = type('Frame', (), {})()
+    frm.num_targets = [16 for _ in range(cpar.num_cams)]
+    frm.targets = [[Target() for _ in range(16)] for _ in range(cpar.num_cams)]
+    for cam in range(cpar.num_cams):
+        for cpt_horz in range(4):
+            for cpt_vert in range(4):
+                cpt_ix = cpt_horz * 4 + cpt_vert
+                if cam % 2:
+                    cpt_ix = 15 - cpt_ix
+                targ = frm.targets[cam][cpt_ix]
+                targ.pnr = cpt_ix
+                tmp = np.array([cpt_vert * 10, cpt_horz * 10, 0.0])
+                x, y = img_coord(tmp, calib[cam], cpar.mm)
+                x, y = metric_to_pixel(x, y, cpar)
+                targ.x = x
+                targ.y = y
+                targ.n = 25
+                targ.nx = 5
+                targ.ny = 5
+                targ.sumg = 10
+    return frm
+
+def correct_frame(frm, calib, cpar, tol):
+    class Coord2D:
+        def __init__(self):
+            self.pnr = 0; self.x = 0; self.y = 0
+    corrected = []
+    for cam in range(cpar.num_cams):
+        cam_corr = []
+        for part in range(frm.num_targets[cam]):
+            c2d = Coord2D()
+            c2d.x, c2d.y = pixel_to_metric(frm.targets[cam][part].x, frm.targets[cam][part].y, cpar)
+            c2d.x, c2d.y = dist_to_flat(c2d.x, c2d.y, calib[cam], tol)
+            c2d.pnr = frm.targets[cam][part].pnr
+            cam_corr.append(c2d)
+        quicksort_coord2d_x(cam_corr)
+        corrected.append(cam_corr)
+    return corrected
+
+# --- Full correspondence and matching tests ---
+def test_pairwise_matching(testing_fodder_dir):
+    cpar = read_control_par(str(testing_fodder_dir / "parameters" / "ptv.par"))
+    vpar = read_volume_par(str(testing_fodder_dir / "parameters" / "criteria.par"))
+    cpar.mm.n2[0] = 1.0001
+    cpar.mm.n3 = 1.0001
+    calib = [None for _ in range(4)]
+    read_all_calibration(calib, cpar, testing_fodder_dir)
+    frm = generate_test_set(calib, cpar, vpar)
+    corrected = correct_frame(frm, calib, cpar, 0.0001)
+    lists = safely_allocate_adjacency_lists(cpar.num_cams, frm.num_targets)
+    match_pairs(lists, corrected, frm, vpar, cpar, calib)
+    for cam in range(cpar.num_cams - 1):
+        for subcam in range(cam + 1, cpar.num_cams):
+            for part in range(frm.num_targets[cam]):
+                if (subcam - cam) % 2 == 0:
+                    correct_pnr = corrected[cam][lists[cam][subcam][part].p1].pnr
+                else:
+                    correct_pnr = 15 - corrected[cam][lists[cam][subcam][part].p1].pnr
+                found = False
+                for cand in range(len(lists[cam][subcam][part].p2)):
+                    if corrected[subcam][lists[cam][subcam][part].p2[cand]].pnr == correct_pnr:
+                        found = True
+                        break
+                assert found
+    deallocate_adjacency_lists(lists, cpar.num_cams)
+
+def test_four_camera_matching(testing_fodder_dir):
+    cpar = ControlPar.read_control_par(str(testing_fodder_dir / "parameters" / "ptv.par"))
+    vpar = VolumePar.read_volume_par(str(testing_fodder_dir / "parameters" / "criteria.par"))
+    cpar.mm.n2[0] = 1.0001
+    cpar.mm.n3 = 1.0001
+    calib = [None for _ in range(4)]
+    read_all_calibration(calib, cpar, testing_fodder_dir)
+    frm = generate_test_set(calib, cpar, vpar)
+    corrected = correct_frame(frm, calib, cpar, 0.0001)
+    lists = safely_allocate_adjacency_lists(cpar.num_cams, frm.num_targets)
+    match_pairs(lists, corrected, frm, vpar, cpar, calib)
+    from pyoptv.correspondences import NTupel
+    con = [NTupel() for _ in range(16)]
+    matched = four_camera_matching(lists, 16, 1.0, con, 16)
+    assert matched == 16
+    deallocate_adjacency_lists(lists, cpar.num_cams)
+
+def test_three_camera_matching(testing_fodder_dir):
+    cpar = ControlPar.read_control_par(str(testing_fodder_dir / "parameters" / "ptv.par"))
+    vpar = VolumePar.read_volume_par(str(testing_fodder_dir / "parameters" / "criteria.par"))
+    cpar.mm.n2[0] = 1.0001
+    cpar.mm.n3 = 1.0001
+    calib = [None for _ in range(4)]
+    read_all_calibration(calib, cpar, testing_fodder_dir)
+    frm = generate_test_set(calib, cpar, vpar)
+    for part in range(frm.num_targets[1]):
+        targ = frm.targets[1][part]
+        targ.n = 0; targ.nx = 0; targ.ny = 0; targ.sumg = 0
+    corrected = correct_frame(frm, calib, cpar, 0.0001)
+    lists = safely_allocate_adjacency_lists(cpar.num_cams, frm.num_targets)
+    match_pairs(lists, corrected, frm, vpar, cpar, calib)
+    from pyoptv.correspondences import NTupel
+    con = [NTupel() for _ in range(4*16)]
+    tusage = safely_allocate_target_usage_marks(cpar.num_cams)
+    matched = three_camera_matching(lists, 4, frm.num_targets, 100000.0, con, 4*16, tusage)
+    assert matched == 16
+    deallocate_adjacency_lists(lists, cpar.num_cams)
+    deallocate_target_usage_marks(tusage, cpar.num_cams)
+
+def test_two_camera_matching(testing_fodder_dir):
+    cpar = ControlPar.read_control_par(str(testing_fodder_dir / "parameters" / "ptv.par"))
+    vpar = VolumePar.read_volume_par(str(testing_fodder_dir / "parameters" / "criteria.par"))
+    cpar.mm.n2[0] = 1.0001
+    cpar.mm.n3 = 1.0001
+    vpar.Zmin_lay[0] = -1
+    vpar.Zmin_lay[1] = -1
+    vpar.Zmax_lay[0] = 1
+    vpar.Zmax_lay[1] = 1
+    calib = [None for _ in range(4)]
+    read_all_calibration(calib, cpar, testing_fodder_dir)
+    frm = generate_test_set(calib, cpar, vpar)
+    cpar.num_cams = 2
+    corrected = correct_frame(frm, calib, cpar, 0.0001)
+    lists = safely_allocate_adjacency_lists(cpar.num_cams, frm.num_targets)
+    match_pairs(lists, corrected, frm, vpar, cpar, calib)
+    from pyoptv.correspondences import NTupel
+    con = [NTupel() for _ in range(4*16)]
+    tusage = safely_allocate_target_usage_marks(cpar.num_cams)
+    matched = consistent_pair_matching(lists, 2, frm.num_targets, 10000.0, con, 4*16, tusage)
+    assert matched == 16
+    deallocate_adjacency_lists(lists, cpar.num_cams)
+    deallocate_target_usage_marks(tusage, cpar.num_cams)
+
+def test_correspondences(testing_fodder_dir):
+    cpar = read_control_par(str(testing_fodder_dir / "parameters" / "ptv.par"))
+    vpar = read_volume_par(str(testing_fodder_dir / "parameters" / "criteria.par"))
+    cpar.mm.n2[0] = 1.0001
+    cpar.mm.n3 = 1.0001
+    calib = [None for _ in range(4)]
+    read_all_calibration(calib, cpar, testing_fodder_dir)
+    frm = generate_test_set(calib, cpar, vpar)
+    corrected = correct_frame(frm, calib, cpar, 0.0001)
+    from pyoptv.correspondences import NTupel
+    # match_counts = [0, 0, 0, 0]
+    match_counts = correspondences(frm, corrected, vpar, cpar, calib)
+    assert match_counts[0] == 16
+    assert match_counts[1] == 0
+    assert match_counts[2] == 0
+    assert match_counts[3] == 16
+
+
+if __name__ == "__main__":
+    pytest.main([__file__])

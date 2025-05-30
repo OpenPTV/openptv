@@ -1,5 +1,8 @@
 import numpy as np
 from typing import List, Any
+from pyoptv.calibration import Calibration
+from pyoptv.parameters import ControlPar, VolumePar
+from pyoptv.tracking_frame_buf import Frame, Target
 from scipy.optimize import minimize
 import matplotlib.pyplot as plt
 from .epi import epi_mm, find_candidate
@@ -263,10 +266,10 @@ def consistent_pair_matching(
 def match_pairs(
     lists: List[List[List[Any]]],
     corrected: List[List[Any]],
-    frm: Any,
-    vpar: Any,
-    cpar: Any,
-    calib: List[Any]
+    frm: Frame,
+    vpar: VolumePar,
+    cpar: ControlPar,
+    calib: List[Calibration]
 ) -> None:
     for i1 in range(cpar.num_cams - 1):
         for i2 in range(i1 + 1, cpar.num_cams):
@@ -327,12 +330,12 @@ def take_best_candidates(
     return taken
 
 def correspondences(
-    frm: Any,
-    corrected: List[List[Any]],
-    vpar: Any,
-    cpar: Any,
-    calib: List[Any]
-) -> List[Any]:
+    frm: Frame,
+    corrected: List[List[Target]],
+    vpar: VolumePar,
+    cpar: ControlPar,
+    calib: List[Calibration]
+) -> List[NTupel]:
     con0 = [NTupel([-1] * cpar.num_cams, 0.0) for _ in range(nmax)]
     con = [NTupel([-1] * cpar.num_cams, 0.0) for _ in range(nmax)]
     tim = safely_allocate_target_usage_marks(cpar.num_cams)
