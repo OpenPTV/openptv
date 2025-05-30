@@ -11,6 +11,8 @@ from .trafo import pixel_to_metric, metric_to_pixel, dist_to_flat
 from .imgcoord import img_coord
 from .orientation import point_position
 from .tracking_run import TrackingRun
+from .parameters import ControlPar, TrackPar
+from .calibration import Calibration
 
 TR_UNUSED: int = -1
 MAX_CANDS: int = 4
@@ -20,41 +22,80 @@ ADD_PART: int = 3
 PT_UNUSED: int = -999
 
 class FoundPix:
+    """Represents a found pixel candidate for tracking correspondence.
+
+    Attributes:
+        ftnr: Feature/track number.
+        freq: Frequency of appearance across cameras.
+        whichcam: List indicating which cameras detected this candidate.
+    """
     ftnr: int
     freq: int
     whichcam: List[int]
-    def __init__(self, ftnr: int = TR_UNUSED, freq: int = 0, whichcam: Optional[List[int]] = None) -> None:
+
+    def __init__(
+        self, ftnr: int = TR_UNUSED, freq: int = 0, whichcam: Optional[List[int]] = None
+    ) -> None:
         self.ftnr = ftnr
         self.freq = freq
         self.whichcam = [0, 0, 0, 0] if whichcam is None else whichcam
 
+
 def register_link_candidate(path_info: PathInfo, fitness: float, cand: int) -> None:
+    """Register a candidate link in the path info structure."""
     path_info.decis[path_info.inlist] = fitness
     path_info.linkdecis[path_info.inlist] = cand
     path_info.inlist += 1
 
+
 def make_v2(num_cams: int) -> List[Vec2D]:
+    """Create a list of Vec2D initialized to zero for each camera."""
     return [Vec2D(0, 0) for _ in range(num_cams)]
+
+
 def make_philf(num_cams: int) -> List[List[int]]:
+    """Create a 2D list for candidate indices, initialized to PT_UNUSED."""
     return [[PT_UNUSED for _ in range(MAX_CANDS)] for _ in range(num_cams)]
 
+
 def reset_foundpix_array(arr: List[FoundPix], arr_len: int, num_cams: int) -> None:
+    """Reset an array of FoundPix objects to default values."""
     for i in range(arr_len):
         arr[i].ftnr = TR_UNUSED
         arr[i].freq = 0
         for cam in range(num_cams):
             arr[i].whichcam[cam] = 0
 
-def copy_foundpix_array(dest: List[FoundPix], src: List[FoundPix], arr_len: int, num_cams: int) -> None:
+
+def copy_foundpix_array(
+    dest: List[FoundPix], src: List[FoundPix], arr_len: int, num_cams: int
+) -> None:
+    """Copy an array of FoundPix objects from src to dest."""
     for i in range(arr_len):
         dest[i].ftnr = src[i].ftnr
         dest[i].freq = src[i].freq
         for cam in range(num_cams):
             dest[i].whichcam[cam] = src[i].whichcam[cam]
 
-def register_closest_neighbs(targets: Sequence[Target], num_targets: int, cam: int, cent_x: float, cent_y: float, dl: float, dr: float, du: float, dd: float, reg: List[FoundPix], cpar) -> None:
+
+def register_closest_neighbs(
+    targets: List[Target],
+    num_targets: int,
+    cam: int,
+    cent_x: float,
+    cent_y: float,
+    dl: float,
+    dr: float,
+    du: float,
+    dd: float,
+    reg: List[FoundPix],
+    cpar: ControlPar,
+) -> None:
+    """Register the closest neighbor candidates for a given camera and search region."""
     all_cands = np.zeros(MAX_CANDS, dtype=np.int32)
-    cand = candsearch_in_pix(targets, num_targets, cent_x, cent_y, dl, dr, du, dd, all_cands, cpar)
+    cand = candsearch_in_pix(
+        targets, num_targets, cent_x, cent_y, dl, dr, du, dd, all_cands, cpar
+    )
     for cand in range(MAX_CANDS):
         if all_cands[cand] == -999:
             reg[cand].ftnr = TR_UNUSED
@@ -62,31 +103,56 @@ def register_closest_neighbs(targets: Sequence[Target], num_targets: int, cam: i
             reg[cand].whichcam[cam] = 1
             reg[cand].ftnr = targets[all_cands[cand]].tnr
 
+
 def search_volume_center_moving(prev_pos: Vec3D, curr_pos: Vec3D) -> Vec3D:
+    """Predict the next position in 3D by linear extrapolation."""
     output = vec_scalar_mul(curr_pos, 2)
     return vec_subt(output, prev_pos)
 
+
 def predict(prev_pos: Vec2D, curr_pos: Vec2D) -> Vec2D:
+    """Predict the next 2D position by linear extrapolation."""
     return Vec2D(2 * curr_pos.x - prev_pos.x, 2 * curr_pos.y - prev_pos.y)
 
-def pos3d_in_bounds(pos: Vec3D, bounds) -> bool:
-    return (bounds.dvxmin < pos.x < bounds.dvxmax and
-            bounds.dvymin < pos.y < bounds.dvymax and
-            bounds.dvzmin < pos.z < bounds.dvzmax)
+
+def pos3d_in_bounds(pos: Vec3D, bounds: TrackPar) -> bool:
+    """Check if a 3D position is within the specified tracking bounds."""
+    return (
+        bounds.dvxmin < pos.x < bounds.dvxmax
+        and bounds.dvymin < pos.y < bounds.dvymax
+        and bounds.dvzmin < pos.z < bounds.dvzmax
+    )
+
 
 def angle_acc(start: Vec3D, pred: Vec3D, cand: Vec3D) -> tuple[float, float]:
+    """Compute the angle and acceleration between predicted and candidate positions."""
     v0 = vec_subt(pred, start)
     v1 = vec_subt(cand, start)
     acc = vec_diff_norm(v0, v1)
-    if (v0.x == -v1.x and v0.y == -v1.y and v0.z == -v1.z):
+    if v0.x == -v1.x and v0.y == -v1.y and v0.z == -v1.z:
         angle = 200.0
-    elif (v0.x == v1.x and v0.y == v1.y and v0.z == v1.z):
+    elif v0.x == v1.x and v0.y == v1.y and v0.z == v1.z:
         angle = 0.0
     else:
-        angle = (200. / np.pi) * np.arccos(vec_dot(v0, v1) / vec_norm(v0) / vec_norm(v1))
+        angle = (200.0 / np.pi) * np.arccos(
+            vec_dot(v0, v1) / vec_norm(v0) / vec_norm(v1)
+        )
     return angle, acc
 
-def candsearch_in_pix(next: Sequence[Target], num_targets: int, cent_x: float, cent_y: float, dl: float, dr: float, du: float, dd: float, p, cpar) -> int:
+
+def candsearch_in_pix(
+    next: List[Target],
+    num_targets: int,
+    cent_x: float,
+    cent_y: float,
+    dl: float,
+    dr: float,
+    du: float,
+    dd: float,
+    p,
+    cpar: ControlPar,
+) -> int:
+    """Search for up to four nearest candidate targets in a region."""
     j0 = num_targets // 2
     dj = num_targets // 4
     while dj > 1:
@@ -125,7 +191,20 @@ def candsearch_in_pix(next: Sequence[Target], num_targets: int, cent_x: float, c
             counter += 1
     return counter
 
-def candsearch_in_pix_rest(next: Sequence[Target], num_targets: int, cent_x: float, cent_y: float, dl: float, dr: float, du: float, dd: float, p, cpar) -> int:
+
+def candsearch_in_pix_rest(
+    next: List[Target],
+    num_targets: int,
+    cent_x: float,
+    cent_y: float,
+    dl: float,
+    dr: float,
+    du: float,
+    dd: float,
+    p,
+    cpar: ControlPar,
+) -> int:
+    """Search for the nearest unused candidate target in a region."""
     j0 = num_targets // 2
     dj = num_targets // 4
     while dj > 1:
@@ -152,7 +231,9 @@ def candsearch_in_pix_rest(next: Sequence[Target], num_targets: int, cent_x: flo
         counter += 1
     return counter
 
-def searchquader(point: Vec3D, xr, xl, yd, yu, tpar, cpar, cal) -> None:
+
+def searchquader(point: Vec3D, xr, xl, yd, yu, tpar: TrackPar, cpar: ControlPar, cal: list[Calibration]) -> None:
+    """Project a 3D cuboid (search volume) to image space and compute search bounds for each camera."""
     mins = vec_set(tpar.dvxmin, tpar.dvymin, tpar.dvzmin)
     maxes = vec_set(tpar.dvxmax, tpar.dvymax, tpar.dvzmax)
     quader = [vec_copy(point) for _ in range(8)]
@@ -191,7 +272,9 @@ def searchquader(point: Vec3D, xr, xl, yd, yu, tpar, cpar, cal) -> None:
         yd[i] -= center.y
         yu[i] = center.y - yu[i]
 
+
 def sort_candidates_by_freq(item: List[FoundPix], num_cams: int) -> int:
+    """Sort candidate found pixels by frequency and return the number of unique candidates."""
     different = 0
     for i in range(num_cams * MAX_CANDS):
         for j in range(num_cams):
@@ -220,7 +303,9 @@ def sort_candidates_by_freq(item: List[FoundPix], num_cams: int) -> int:
             different += 1
     return different
 
+
 def sort(n: int, a, b) -> None:
+    """Sort two arrays in parallel using bubble sort."""
     flag = 0
     while True:
         flag = 0
@@ -232,11 +317,20 @@ def sort(n: int, a, b) -> None:
         if flag == 0:
             break
 
-def point_to_pixel(point: Vec3D, cal, cpar) -> Vec2D:
+
+def point_to_pixel(point: Vec3D, cal: Calibration, cpar: ControlPar) -> Vec2D:
+    """Project a 3D point to 2D pixel coordinates for a given camera."""
     x, y = img_coord(point, cal, cpar.mm)
     return metric_to_pixel(x, y, cpar)
 
-def sorted_candidates_in_volume(center: Vec3D, center_proj: List[Vec2D], frm, run: TrackingRun) -> Optional[List[FoundPix]]:
+
+def sorted_candidates_in_volume(
+    center: Vec3D,
+    center_proj: List[Vec2D],
+    frm,
+    run: TrackingRun,
+) -> Optional[List[FoundPix]]:
+    """Find and sort candidate targets in a 3D search volume across all cameras."""
     num_cams = frm.num_cams
     points: List[FoundPix] = [FoundPix(TR_UNUSED, 0, [0] * num_cams) for _ in range(num_cams * MAX_CANDS)]
     reset_foundpix_array(points, num_cams * MAX_CANDS, num_cams)
@@ -246,32 +340,72 @@ def sorted_candidates_in_volume(center: Vec3D, center_proj: List[Vec2D], frm, ru
     up = np.zeros(num_cams)
     searchquader(center, right, left, down, up, run.tpar, run.cpar, run.cal)
     for cam in range(num_cams):
-        register_closest_neighbs(frm.targets[cam], frm.num_targets[cam], cam, center_proj[cam].x, center_proj[cam].y, left[cam], right[cam], up[cam], down[cam], points[cam * MAX_CANDS:], run.cpar)
+        register_closest_neighbs(
+            frm.targets[cam],
+            frm.num_targets[cam],
+            cam,
+            center_proj[cam].x,
+            center_proj[cam].y,
+            left[cam],
+            right[cam],
+            up[cam],
+            down[cam],
+            points[cam * MAX_CANDS :],
+            run.cpar,
+        )
     num_cands = sort_candidates_by_freq(points, num_cams)
     if num_cands > 0:
         return points[:num_cands]
     else:
         return None
 
-def assess_new_position(pos: Vec3D, targ_pos: List[Vec2D], cand_inds: List[List[int]], frm, run: TrackingRun) -> int:
+
+def assess_new_position(
+    pos: Vec3D,
+    targ_pos: List[Vec2D],
+    cand_inds: List[List[int]],
+    frm,
+    run: TrackingRun,
+) -> int:
+    """Assess the new 3D position by searching for corresponding 2D targets in all cameras.
+
+    Returns the number of valid cameras where a target was found.
+    """
     left = right = up = down = ADD_PART
     for cam in range(run.cpar.num_cams):
         targ_pos[cam] = Vec2D(COORD_UNUSED, COORD_UNUSED)
     for cam in range(run.cpar.num_cams):
         pixel = point_to_pixel(pos, run.cal[cam], run.cpar)
-        num_cands = candsearch_in_pix_rest(frm.targets[cam], frm.num_targets[cam], pixel.x, pixel.y, left, right, up, down, cand_inds[cam], run.cpar)
+        num_cands = candsearch_in_pix_rest(
+            frm.targets[cam],
+            frm.num_targets[cam],
+            pixel.x,
+            pixel.y,
+            left,
+            right,
+            up,
+            down,
+            cand_inds[cam],
+            run.cpar,
+        )
         if num_cands > 0:
             _ix = cand_inds[cam][0]
             targ_pos[cam] = Vec2D(frm.targets[cam][_ix].x, frm.targets[cam][_ix].y)
     valid_cams = 0
     for cam in range(run.cpar.num_cams):
         if targ_pos[cam].x != COORD_UNUSED and targ_pos[cam].y != COORD_UNUSED:
-            targ_pos[cam] = pixel_to_metric(targ_pos[cam].x, targ_pos[cam].y, run.cpar)
-            targ_pos[cam] = dist_to_flat(targ_pos[cam].x, targ_pos[cam].y, run.cal[cam], run.flatten_tol)
+            targ_pos[cam] = pixel_to_metric(
+                targ_pos[cam].x, targ_pos[cam].y, run.cpar
+            )
+            targ_pos[cam] = dist_to_flat(
+                targ_pos[cam].x, targ_pos[cam].y, run.cal[cam], run.flatten_tol
+            )
             valid_cams += 1
     return valid_cams
 
+
 def add_particle(frm, pos: Vec3D, cand_inds: List[List[int]]) -> None:
+    """Add a new particle to the frame at the specified position."""
     num_parts = frm.num_parts
     ref_path_inf = PathInfo(pos, PREV_NONE, NEXT_NONE, 0, np.zeros(MAX_CANDS), np.zeros(MAX_CANDS), 0)
     frm.path_info.append(ref_path_inf)
@@ -284,7 +418,9 @@ def add_particle(frm, pos: Vec3D, cand_inds: List[List[int]]) -> None:
             ref_corres.p[cam] = _ix
     frm.num_parts += 1
 
+
 def trackcorr_c_loop(run_info: TrackingRun, step: int) -> None:
+    """Main tracking loop for updating particle correspondences between frames."""
     fb = run_info.fb
     cal = run_info.cal
     tpar = run_info.tpar
