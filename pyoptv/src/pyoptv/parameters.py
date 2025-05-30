@@ -1,11 +1,14 @@
 import numpy as np
-from scipy.optimize import minimize
-import matplotlib.pyplot as plt
+from typing import List
 
-SEQ_FNAME_MAX_LEN = 240
+SEQ_FNAME_MAX_LEN: int = 240
 
 class SequencePar:
-    def __init__(self, num_cams):
+    num_cams: int
+    img_base_name: List[str]
+    first: int
+    last: int
+    def __init__(self, num_cams: int) -> None:
         self.num_cams = num_cams
         self.img_base_name = [""] * num_cams
         self.first = 0
@@ -35,7 +38,20 @@ def compare_sequence_par(sp1, sp2):
     return True
 
 class TrackPar:
-    def __init__(self):
+    dacc: float
+    dangle: float
+    dvxmax: float
+    dvxmin: float
+    dvymax: float
+    dvymin: float
+    dvzmax: float
+    dvzmin: float
+    dsumg: int
+    dn: int
+    dnx: int
+    dny: int
+    add: int
+    def __init__(self) -> None:
         self.dacc = 0.0
         self.dangle = 0.0
         self.dvxmax = 0.0
@@ -73,7 +89,16 @@ def compare_track_par(t1, t2):
             t1.dnx == t2.dnx and t1.dny == t2.dny and t1.add == t2.add)
 
 class VolumePar:
-    def __init__(self):
+    X_lay: List[float]
+    Zmin_lay: List[float]
+    Zmax_lay: List[float]
+    cnx: float
+    cny: float
+    cn: float
+    csumg: float
+    corrmin: float
+    eps0: float
+    def __init__(self) -> None:
         self.X_lay = [0.0, 0.0]
         self.Zmin_lay = [0.0, 0.0]
         self.Zmax_lay = [0.0, 0.0]
@@ -115,7 +140,12 @@ def compare_volume_par(v1, v2):
     )
 
 class MMNP:
-    def __init__(self):
+    nlay: int
+    n1: float
+    n2: List[float]
+    d: List[float]
+    n3: float
+    def __init__(self) -> None:
         self.nlay = 1
         self.n1 = 1.0
         self.n2 = [1.0, 1.0, 1.0]
@@ -123,7 +153,19 @@ class MMNP:
         self.n3 = 1.0
 
 class ControlPar:
-    def __init__(self, num_cams):
+    num_cams: int
+    img_base_name: List[str]
+    cal_img_base_name: List[str]
+    hp_flag: int
+    allCam_flag: int
+    tiff_flag: int
+    imx: int
+    imy: int
+    pix_x: float
+    pix_y: float
+    chfield: int
+    mm: MMNP
+    def __init__(self, num_cams: int) -> None:
         self.num_cams = num_cams
         self.img_base_name = [""] * num_cams
         self.cal_img_base_name = [""] * num_cams
@@ -137,7 +179,7 @@ class ControlPar:
         self.chfield = 0
         self.mm = MMNP()
 
-def read_control_par(filename):
+def read_control_par(filename: str) -> ControlPar:
     with open(filename, "r") as par_file:
         num_cams = int(par_file.readline().strip())
         ret = ControlPar(num_cams)
@@ -159,10 +201,10 @@ def read_control_par(filename):
     ret.mm.nlay = 1
     return ret
 
-def free_control_par(cp):
+def free_control_par(cp: ControlPar) -> None:
     del cp
 
-def compare_control_par(c1, c2):
+def compare_control_par(c1: ControlPar, c2: ControlPar) -> bool:
     if c1.num_cams != c2.num_cams:
         return False
     for cam in range(c1.num_cams):
@@ -177,7 +219,7 @@ def compare_control_par(c1, c2):
         return False
     return compare_mm_np(c1.mm, c2.mm)
 
-def compare_mm_np(mm_np1, mm_np2):
+def compare_mm_np(mm_np1: MMNP, mm_np2: MMNP) -> bool:
     if mm_np1.n2[0] != mm_np2.n2[0] or mm_np1.d[0] != mm_np2.d[0]:
         return False
     if mm_np1.nlay != mm_np2.nlay or mm_np1.n1 != mm_np2.n1 or mm_np1.n3 != mm_np2.n3:
@@ -185,7 +227,17 @@ def compare_mm_np(mm_np1, mm_np2):
     return True
 
 class TargetPar:
-    def __init__(self):
+    discont: int
+    gvthres: List[int]
+    nnmin: int
+    nnmax: int
+    nxmin: int
+    nxmax: int
+    nymin: int
+    nymax: int
+    sumg_min: int
+    cr_sz: int
+    def __init__(self) -> None:
         self.discont = 0
         self.gvthres = [0, 0, 0, 0]
         self.nnmin = 0
@@ -197,7 +249,7 @@ class TargetPar:
         self.sumg_min = 0
         self.cr_sz = 0
 
-def read_target_par(filename):
+def read_target_par(filename: str = "target.par") -> TargetPar:
     ret = TargetPar()
     with open(filename, "r") as file:
         ret.gvthres[0] = int(file.readline().strip())
@@ -212,7 +264,7 @@ def read_target_par(filename):
         ret.cr_sz = int(file.readline().strip())
     return ret
 
-def compare_target_par(targ1, targ2):
+def compare_target_par(targ1: TargetPar, targ2: TargetPar) -> bool:
     return (targ1.discont == targ2.discont and
             targ1.gvthres[0] == targ2.gvthres[0] and
             targ1.gvthres[1] == targ2.gvthres[1] and
@@ -223,7 +275,7 @@ def compare_target_par(targ1, targ2):
             targ1.nymin == targ2.nymin and targ1.nymax == targ2.nymax and
             targ1.sumg_min == targ2.sumg_min and targ1.cr_sz == targ2.cr_sz)
 
-def write_target_par(targ, filename):
+def write_target_par(targ: TargetPar, filename: str) -> None:
     with open(filename, "w") as file:
         file.write(f"{targ.gvthres[0]}\n{targ.gvthres[1]}\n{targ.gvthres[2]}\n{targ.gvthres[3]}\n")
         file.write(f"{targ.discont}\n{targ.nnmin} {targ.nnmax}\n{targ.nxmin} {targ.nxmax}\n")

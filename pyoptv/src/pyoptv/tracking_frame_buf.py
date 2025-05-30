@@ -1,15 +1,22 @@
 import numpy as np
-from scipy.optimize import minimize
-import matplotlib.pyplot as plt
+from typing import Any, List
 
-STR_MAX_LEN = 255
-POSI = 4
-PREV_NONE = -1
-NEXT_NONE = -2
-PRIO_DEFAULT = 4
+STR_MAX_LEN: int = 255
+POSI: int = 4
+PREV_NONE: int = -1
+NEXT_NONE: int = -2
+PRIO_DEFAULT: int = 4
 
 class Target:
-    def __init__(self, pnr, x, y, n, nx, ny, sumg, tnr):
+    pnr: int
+    x: float
+    y: float
+    n: int
+    nx: int
+    ny: int
+    sumg: float
+    tnr: int
+    def __init__(self, pnr: int, x: float, y: float, n: int, nx: int, ny: int, sumg: float, tnr: int) -> None:
         self.pnr = pnr
         self.x = x
         self.y = y
@@ -20,12 +27,22 @@ class Target:
         self.tnr = tnr
 
 class Corres:
-    def __init__(self, nr, p):
+    nr: int
+    p: List[int]
+    def __init__(self, nr: int, p: List[int]) -> None:
         self.nr = nr
         self.p = p
 
 class PathInfo:
-    def __init__(self, prev, next, prio, finaldecis, inlist, x, decis, linkdecis):
+    prev: int
+    next: int
+    prio: int
+    finaldecis: float
+    inlist: int
+    x: np.ndarray
+    decis: np.ndarray
+    linkdecis: np.ndarray
+    def __init__(self, prev: int, next: int, prio: int, finaldecis: float, inlist: int, x: np.ndarray, decis: np.ndarray, linkdecis: np.ndarray) -> None:
         self.prev = prev
         self.next = next
         self.prio = prio
@@ -36,7 +53,14 @@ class PathInfo:
         self.linkdecis = linkdecis
 
 class Frame:
-    def __init__(self, num_cams, max_targets):
+    num_cams: int
+    max_targets: int
+    num_parts: int
+    path_info: List[PathInfo]
+    correspond: List[Corres]
+    targets: List[List[Target]]
+    num_targets: List[int]
+    def __init__(self, num_cams: int, max_targets: int) -> None:
         self.num_cams = num_cams
         self.max_targets = max_targets
         self.num_parts = 0
@@ -44,12 +68,15 @@ class Frame:
         self.correspond = [Corres(-1, [-1, -1, -1, -1]) for _ in range(max_targets)]
         self.targets = [[Target(-1, 0, 0, 0, 0, 0, 0, -1) for _ in range(max_targets)] for _ in range(num_cams)]
         self.num_targets = [0] * num_cams
-def compare_targets(t1, t2):
-    return (t1.pnr == t2.pnr and t1.x == t2.x and t1.y == t2.y and
-            t1.n == t2.n and t1.nx == t2.nx and t1.ny == t2.ny and
-            t1.sumg == t2.sumg and t1.tnr == t2.tnr)
 
-def read_targets(file_base, frame_num):
+def compare_targets(t1: Target, t2: Target) -> bool:
+    return (
+        t1.pnr == t2.pnr and t1.x == t2.x and t1.y == t2.y and
+        t1.n == t2.n and t1.nx == t2.nx and t1.ny == t2.ny and
+        t1.sumg == t2.sumg and t1.tnr == t2.tnr
+    )
+
+def read_targets(file_base: str, frame_num: int) -> List[Target]:
     filein = f"{file_base}{frame_num:04d}_targets" if frame_num > 0 else f"{file_base}_targets"
     try:
         with open(filein, "r") as f:
@@ -63,7 +90,7 @@ def read_targets(file_base, frame_num):
         print(f"Error reading file {filein}: {e}")
         return -1
 
-def write_targets(buffer, num_targets, file_base, frame_num):
+def write_targets(buffer: List[Target], num_targets: int, file_base: str, frame_num: int) -> int:
     fileout = f"{file_base}{frame_num:04d}_targets" if frame_num > 0 else f"{file_base}_targets"
     try:
         with open(fileout, "w") as f:
@@ -74,11 +101,11 @@ def write_targets(buffer, num_targets, file_base, frame_num):
     except Exception as e:
         print(f"Error writing file {fileout}: {e}")
         return 0
-def compare_corres(c1, c2):
+def compare_corres(c1: Corres, c2: Corres) -> bool:
     return (c1.nr == c2.nr and c1.p[0] == c2.p[0] and
             c1.p[1] == c2.p[1] and c1.p[2] == c2.p[2] and
             c1.p[3] == c2.p[3])
-def compare_path_info(p1, p2):
+def compare_path_info(p1: PathInfo, p2: PathInfo) -> bool:
     if not (p1.prev == p2.prev and p1.next == p2.next and
             p1.prio == p2.prio and p1.finaldecis == p2.finaldecis and
             p1.inlist == p2.inlist and np.array_equal(p1.x, p2.x)):
@@ -87,16 +114,16 @@ def compare_path_info(p1, p2):
         if p1.decis[iter] != p2.decis[iter] or p1.linkdecis[iter] != p2.linkdecis[iter]:
             return False
     return True
-def register_link_candidate(self, fitness, cand):
+def register_link_candidate(self, fitness: float, cand: int) -> None:
     self.decis[self.inlist] = fitness
     self.linkdecis[self.inlist] = cand
     self.inlist += 1
-def reset_links(self):
+def reset_links(self) -> None:
     self.prev = PREV_NONE
     self.next = NEXT_NONE
     self.prio = PRIO_DEFAULT
 
-def read_path_frame(cor_buf, path_buf, corres_file_base, linkage_file_base, prio_file_base, frame_num):
+def read_path_frame(cor_buf: List[Corres], path_buf: List[PathInfo], corres_file_base: str, linkage_file_base: str, prio_file_base: str, frame_num: int) -> int:
     try:
         with open(f"{corres_file_base}.{frame_num}", "r") as filein:
             num_points = int(filein.readline().strip())
@@ -132,7 +159,7 @@ def read_path_frame(cor_buf, path_buf, corres_file_base, linkage_file_base, prio
         print(f"Error reading path frame: {e}")
         return -1
 
-def write_path_frame(cor_buf, path_buf, num_parts, corres_file_base, linkage_file_base, prio_file_base, frame_num):
+def write_path_frame(cor_buf: List[Corres], path_buf: List[PathInfo], num_parts: int, corres_file_base: str, linkage_file_base: str, prio_file_base: str, frame_num: int) -> int:
     try:
         with open(f"{corres_file_base}.{frame_num}", "w") as corres_file:
             corres_file.write(f"{num_parts}\n")
@@ -153,7 +180,7 @@ def write_path_frame(cor_buf, path_buf, num_parts, corres_file_base, linkage_fil
         print(f"Error writing path frame: {e}")
         return 0
 
-def frame_init(new_frame, num_cams, max_targets):
+def frame_init(new_frame: Frame, num_cams: int, max_targets: int) -> None:
     new_frame.path_info = [PathInfo(PREV_NONE, NEXT_NONE, PRIO_DEFAULT, 1000000.0, 0, np.zeros(3), np.zeros(POSI), np.zeros(POSI)) for _ in range(max_targets)]
     new_frame.correspond = [Corres(-1, [-1, -1, -1, -1]) for _ in range(max_targets)]
     new_frame.targets = [[Target(-1, 0, 0, 0, 0, 0, 0, -1) for _ in range(max_targets)] for _ in range(num_cams)]
@@ -162,23 +189,23 @@ def frame_init(new_frame, num_cams, max_targets):
     new_frame.max_targets = max_targets
     new_frame.num_parts = 0
 
-def free_frame(self):
-    self.path_info = None
-    self.correspond = None
-    self.num_targets = None
-    self.targets = None
+def free_frame(frame: Frame) -> None:
+    frame.path_info = None
+    frame.correspond = None
+    frame.num_targets = None
+    frame.targets = None
 
-def read_frame(self, corres_file_base, linkage_file_base, prio_file_base, target_file_base, frame_num):
-    self.num_parts = read_path_frame(self.correspond, self.path_info, corres_file_base, linkage_file_base, prio_file_base, frame_num)
-    if self.num_parts == -1:
+def read_frame(frame: Frame, corres_file_base: str, linkage_file_base: str, prio_file_base: str, target_file_base: List[str], frame_num: int) -> int:
+    frame.num_parts = read_path_frame(frame.correspond, frame.path_info, corres_file_base, linkage_file_base, prio_file_base, frame_num)
+    if frame.num_parts == -1:
         return 0
-    for cam in range(self.num_cams):
-        self.num_targets[cam] = read_targets(target_file_base[cam], frame_num)
-        if self.num_targets[cam] == -1:
+    for cam in range(frame.num_cams):
+        frame.num_targets[cam] = read_targets(target_file_base[cam], frame_num)
+        if frame.num_targets[cam] == -1:
             return 0
     return 1
 
-def write_frame(self, corres_file_base, linkage_file_base, prio_file_base, target_file_base, frame_num):
+def write_frame(self, corres_file_base: str, linkage_file_base: str, prio_file_base: str, target_file_base: List[str], frame_num: int) -> int:
     status = write_path_frame(self.correspond, self.path_info, self.num_parts, corres_file_base, linkage_file_base, prio_file_base, frame_num)
     if status == 0:
         return 0
@@ -189,39 +216,39 @@ def write_frame(self, corres_file_base, linkage_file_base, prio_file_base, targe
     return 1
 
 class FrameBufferBase:
-    def __init__(self, buf_len, num_cams, max_targets):
+    def __init__(self, buf_len: int, num_cams: int, max_targets: int) -> None:
         self.buf_len = buf_len
         self.num_cams = num_cams
         self._ring_vec = [Frame(num_cams, max_targets) for _ in range(buf_len * 2)]
         self.buf = self._ring_vec[:buf_len]
         self._vptr = None
 
-    def free(self):
+    def free(self) -> None:
         self._vptr.free(self)
 
-    def read_frame_at_end(self, frame_num, read_links):
+    def read_frame_at_end(self, frame_num: int, read_links: bool) -> int:
         return self._vptr.read_frame_at_end(self, frame_num, read_links)
 
-    def write_frame_from_start(self, frame_num):
+    def write_frame_from_start(self, frame_num: int) -> int:
         return self._vptr.write_frame_from_start(self, frame_num)
 
-def fb_base_init(new_buf, buf_len, num_cams, max_targets):
+def fb_base_init(new_buf: FrameBufferBase, buf_len: int, num_cams: int, max_targets: int) -> None:
     new_buf.buf_len = buf_len
     new_buf.num_cams = num_cams
     new_buf._ring_vec = [Frame(num_cams, max_targets) for _ in range(buf_len * 2)]
     new_buf.buf = new_buf._ring_vec[:buf_len]
     new_buf._vptr = None
 
-def fb_base_free(self):
-    self.buf = self._ring_vec[:self.buf_len]
-    for frame in self.buf:
+def fb_base_free(fb: FrameBufferBase) -> None:
+    fb.buf = fb._ring_vec[:fb.buf_len]
+    for frame in fb.buf:
         free_frame(frame)
-    self.buf = None
-    self._ring_vec = None
-    self._vptr = None
+    fb.buf = None
+    fb._ring_vec = None
+    fb._vptr = None
 
 class FrameBuffer(FrameBufferBase):
-    def __init__(self, buf_len, num_cams, max_targets, corres_file_base, linkage_file_base, prio_file_base, target_file_base):
+    def __init__(self, buf_len: int, num_cams: int, max_targets: int, corres_file_base: str, linkage_file_base: str, prio_file_base: str, target_file_base: List[str]) -> None:
         super().__init__(buf_len, num_cams, max_targets)
         self.corres_file_base = corres_file_base
         self.linkage_file_base = linkage_file_base
@@ -229,26 +256,27 @@ class FrameBuffer(FrameBufferBase):
         self.target_file_base = target_file_base
         self._vptr = self
 
-    def free(self):
+    def free(self) -> None:
         fb_base_free(self)
 
-    def read_frame_at_end(self, frame_num, read_links):
+    def read_frame_at_end(self, frame_num: int, read_links: bool) -> int:
         if read_links:
             return read_frame(self.buf[-1], self.corres_file_base, self.linkage_file_base, self.prio_file_base, self.target_file_base, frame_num)
         else:
             return read_frame(self.buf[-1], self.corres_file_base, None, None, self.target_file_base, frame_num)
 
-    def write_frame_from_start(self, frame_num):
+    def write_frame_from_start(self, frame_num: int) -> int:
         return write_frame(self.buf[0], self.corres_file_base, self.linkage_file_base, self.prio_file_base, self.target_file_base, frame_num)
 
-def fb_next(self):
-    self.buf = self.buf[1:] + self.buf[:1]
+    def fb_next(self) -> None:
+        self.buf = self.buf[1:] + self.buf[:1]
 
-def fb_prev(self):
-    self.buf = self.buf[-1:] + self.buf[:-1]
+    def fb_prev(self) -> None:
+        self.buf = self.buf[-1:] + self.buf[:-1]
 
-def fb_write_frame_from_start(fb, frame_num):
+
+def fb_write_frame_from_start(fb: FrameBuffer, frame_num: int) -> int:
     return fb.write_frame_from_start(frame_num)
 
-def fb_read_frame_at_end(fb, frame_num, read_links):
+def fb_read_frame_at_end(fb: FrameBuffer, frame_num: int, read_links: bool) -> int:
     return fb.read_frame_at_end(frame_num, read_links)
