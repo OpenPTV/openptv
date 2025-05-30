@@ -1,31 +1,18 @@
 import numpy as np
-from scipy.optimize import minimize
-import matplotlib.pyplot as plt
+from typing import Tuple
+from .parameters import ControlPar
+from .calibration import ap_52, Calibration
 
-class ControlPar:
-    def __init__(self, imx, imy, pix_x, pix_y, chfield):
-        self.imx = imx
-        self.imy = imy
-        self.pix_x = pix_x
-        self.pix_y = pix_y
-        self.chfield = chfield
 
-class Calibration:
-    def __init__(self, xh, yh, added_par):
-        self.xh = xh
-        self.yh = yh
-        self.added_par = added_par
-
-class AddedPar:
-    def __init__(self, k1, k2, k3, p1, p2, scx, she):
-        self.k1 = k1
-        self.k2 = k2
-        self.k3 = k3
-        self.p1 = p1
-        self.p2 = p2
-        self.scx = scx
-        self.she = she
-def old_pixel_to_metric(x_pixel, y_pixel, im_size_x, im_size_y, pix_size_x, pix_size_y, y_remap_mode):
+def old_pixel_to_metric(
+    x_pixel: float,
+    y_pixel: float,
+    im_size_x: float,
+    im_size_y: float,
+    pix_size_x: float,
+    pix_size_y: float,
+    y_remap_mode: int,
+) -> Tuple[float, float]:
     if y_remap_mode == 1:
         y_pixel = 2.0 * y_pixel + 1.0
     elif y_remap_mode == 2:
@@ -36,9 +23,30 @@ def old_pixel_to_metric(x_pixel, y_pixel, im_size_x, im_size_y, pix_size_x, pix_
 
     return x_metric, y_metric
 
-def pixel_to_metric(x_pixel, y_pixel, parameters):
-    return old_pixel_to_metric(x_pixel, y_pixel, parameters.imx, parameters.imy, parameters.pix_x, parameters.pix_y, parameters.chfield)
-def old_metric_to_pixel(x_metric, y_metric, im_size_x, im_size_y, pix_size_x, pix_size_y, y_remap_mode):
+
+def pixel_to_metric(
+    x_pixel: float, y_pixel: float, parameters: ControlPar
+) -> Tuple[float, float]:
+    return old_pixel_to_metric(
+        x_pixel,
+        y_pixel,
+        parameters.imx,
+        parameters.imy,
+        parameters.pix_x,
+        parameters.pix_y,
+        parameters.chfield,
+    )
+
+
+def old_metric_to_pixel(
+    x_metric: float,
+    y_metric: float,
+    im_size_x: float,
+    im_size_y: float,
+    pix_size_x: float,
+    pix_size_y: float,
+    y_remap_mode: int,
+) -> Tuple[float, float]:
     x_pixel = (x_metric / pix_size_x) + (im_size_x / 2.0)
     y_pixel = (im_size_y / 2.0) - (y_metric / pix_size_y)
 
@@ -49,9 +57,22 @@ def old_metric_to_pixel(x_metric, y_metric, im_size_x, im_size_y, pix_size_x, pi
 
     return x_pixel, y_pixel
 
-def metric_to_pixel(x_metric, y_metric, parameters):
-    return old_metric_to_pixel(x_metric, y_metric, parameters.imx, parameters.imy, parameters.pix_x, parameters.pix_y, parameters.chfield)
-def distort_brown_affin(x, y, ap):
+
+def metric_to_pixel(
+    x_metric: float, y_metric: float, parameters: ControlPar
+) -> Tuple[float, float]:
+    return old_metric_to_pixel(
+        x_metric,
+        y_metric,
+        parameters.imx,
+        parameters.imy,
+        parameters.pix_x,
+        parameters.pix_y,
+        parameters.chfield,
+    )
+
+
+def distort_brown_affin(x: float, y: float, ap: ap_52) -> Tuple[float, float]:
     r = np.sqrt(x * x + y * y)
     if r < 1e-10:
         return 0.0, 0.0
@@ -72,7 +93,21 @@ def distort_brown_affin(x, y, ap):
 
     return x1, y1
 
-def correct_brown_affin(x, y, ap):
+
+def correct_brown_affin(x: float, y: float, ap: ap_52) -> Tuple[float, float]:
+    """ Corrects the distortion using the Brown model with affine transformation.
+    Args:
+        x: x coordinate in distorted space
+        y: y coordinate in distorted space
+        ap: ap_52 object containing the distortion parameters
+    Returns:
+        Tuple[float, float]: corrected x and y coordinates in distorted space
+    """
+
+    MAX_ITER = 50
+    DAMPING = 0.5
+    TOL = 1e-8
+
     sin_she = np.sin(ap.she)
     cos_she = np.cos(ap.she)
     inv_scx = 1.0 / ap.scx
@@ -81,9 +116,7 @@ def correct_brown_affin(x, y, ap):
     yq = y * inv_scx / cos_she
     xq += yq * sin_she
 
-    MAX_ITER = 20
-    DAMPING = 0.7
-    TOL = 1e-8
+
 
     for _ in range(MAX_ITER):
         xq_old = xq
@@ -104,7 +137,10 @@ def correct_brown_affin(x, y, ap):
 
     return xq, yq
 
-def correct_brown_affine_exact(x, y, ap, tol):
+
+def correct_brown_affine_exact(
+    x: float, y: float, ap: ap_52, tol: float
+) -> Tuple[float, float]:
     r_init = np.sqrt(x * x + y * y)
     if r_init < 1e-10:
         return 0.0, 0.0
@@ -143,13 +179,17 @@ def correct_brown_affine_exact(x, y, ap, tol):
 
     return xq, yq
 
-def flat_to_dist(flat_x, flat_y, cal):
+
+def flat_to_dist(flat_x: float, flat_y: float, cal: Calibration) -> Tuple[float, float]:
     flat_x += cal.int_par.xh
     flat_y += cal.int_par.yh
 
     return distort_brown_affin(flat_x, flat_y, cal.added_par)
 
-def dist_to_flat(dist_x, dist_y, cal, tol):
+
+def dist_to_flat(
+    dist_x: float, dist_y: float, cal: Calibration, tol: float
+) -> Tuple[float, float]:
     flat_x, flat_y = correct_brown_affine_exact(dist_x, dist_y, cal.added_par, tol)
     flat_x -= cal.int_par.xh
     flat_y -= cal.int_par.yh

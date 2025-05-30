@@ -1,26 +1,64 @@
 import numpy as np
-from scipy.optimize import minimize
-import matplotlib.pyplot as plt
+from typing import List, Tuple, Any
 from .trafo import pixel_to_metric, dist_to_flat, metric_to_pixel, correct_brown_affin
 from .imgcoord import flat_image_coord as imgcoord_flat_image_coord
 from .ray_tracing import ray_tracing as real_ray_tracing
+from .parameters import ControlPar, VolumePar, MMNP
+from .calibration import Calibration
+from .vec_utils import Vec2D, Vec3D
 
 MAXCAND = 100  # Avoid circular import, match value from correspondences.py
 
-def epi_mm(xl, yl, cal1, cal2, mmp, vpar):
+
+def epi_mm(
+    xl: float,
+    yl: float,
+    cal1: Calibration,
+    cal2: Calibration,
+    mmp: MMNP,
+    vpar: VolumePar,
+) -> Tuple[float, float, float, float]:
     pos, v = ray_tracing(xl, yl, cal1, mmp)
-    Zmin = vpar.Zmin_lay[0] + (pos[0] - vpar.X_lay[0]) * (vpar.Zmin_lay[1] - vpar.Zmin_lay[0]) / (vpar.X_lay[1] - vpar.X_lay[0])
-    Zmax = vpar.Zmax_lay[0] + (pos[0] - vpar.X_lay[0]) * (vpar.Zmax_lay[1] - vpar.Zmax_lay[0]) / (vpar.X_lay[1] - vpar.X_lay[0])
+    Zmin = vpar.Zmin_lay[0] + (pos[0] - vpar.X_lay[0]) * (vpar.Zmin_lay[1] - vpar.Zmin_lay[0]) / (
+        vpar.X_lay[1] - vpar.X_lay[0]
+    )
+    Zmax = vpar.Zmax_lay[0] + (pos[0] - vpar.X_lay[0]) * (vpar.Zmax_lay[1] - vpar.Zmax_lay[0]) / (
+        vpar.X_lay[1] - vpar.X_lay[0]
+    )
     xmin, ymin = flat_image_coord(move_along_ray(Zmin, pos, v), cal2, mmp)
     xmax, ymax = flat_image_coord(move_along_ray(Zmax, pos, v), cal2, mmp)
     return xmin, ymin, xmax, ymax
 
-def epi_mm_2D(xl, yl, cal1, mmp, vpar):
+
+def epi_mm_2D(
+    xl: float, yl: float, cal1: Calibration, mmp: MMNP, vpar: VolumePar
+) -> np.ndarray:
     pos, v = ray_tracing(xl, yl, cal1, mmp)
-    Zmin = vpar.Zmin_lay[0] + (pos[0] - vpar.X_lay[0]) * (vpar.Zmin_lay[1] - vpar.Zmin_lay[0]) / (vpar.X_lay[1] - vpar.X_lay[0])
-    Zmax = vpar.Zmax_lay[0] + (pos[0] - vpar.X_lay[0]) * (vpar.Zmax_lay[1] - vpar.Zmax_lay[0]) / (vpar.X_lay[1] - vpar.X_lay[0])
+    Zmin = vpar.Zmin_lay[0] + (pos[0] - vpar.X_lay[0]) * (vpar.Zmin_lay[1] - vpar.Zmin_lay[0]) / (
+        vpar.X_lay[1] - vpar.X_lay[0]
+    )
+    Zmax = vpar.Zmax_lay[0] + (pos[0] - vpar.X_lay[0]) * (vpar.Zmax_lay[1] - vpar.Zmax_lay[0]) / (
+        vpar.X_lay[1] - vpar.X_lay[0]
+    )
     return move_along_ray(0.5 * (Zmin + Zmax), pos, v)
-def find_candidate(crd, pix, num, xa, ya, xb, yb, n, nx, ny, sumg, vpar, cpar, cal):
+
+
+def find_candidate(
+    crd: List[Vec2D],
+    pix: List[Any],
+    num: int,
+    xa: float,
+    ya: float,
+    xb: float,
+    yb: float,
+    n: int,
+    nx: int,
+    ny: int,
+    sumg: float,
+    vpar: VolumePar,
+    cpar: ControlPar,
+    cal: Calibration,
+) -> Tuple[int, List[Tuple[int, float, float]]]:
     tol_band_width = vpar.eps0
     xmin = -cpar.pix_x * cpar.imx / 2 - cal.int_par.xh
     ymin = -cpar.pix_y * cpar.imy / 2 - cal.int_par.yh
@@ -56,7 +94,7 @@ def find_candidate(crd, pix, num, xa, ya, xb, yb, n, nx, ny, sumg, vpar, cpar, c
     if j0 < 0:
         j0 = 0
 
-    candidates = []
+    candidates: List[Tuple[int, float, float]] = []
     for j in range(j0, num):
         if crd[j].x > xb + tol_band_width:
             return len(candidates), candidates
@@ -91,32 +129,23 @@ def find_candidate(crd, pix, num, xa, ya, xb, yb, n, nx, ny, sumg, vpar, cpar, c
 
     return len(candidates), candidates
 
-def quality_ratio(a, b):
+
+def quality_ratio(a: float, b: float) -> float:
     return min(a, b) / max(a, b)
 
-def ray_tracing(xl, yl, cal, mmp):
-    # Placeholder function for ray_tracing
-    pos = np.array([0.0, 0.0, 0.0])
-    v = np.array([0.0, 0.0, 0.0])
-    return pos, v
 
-def move_along_ray(Z, pos, v):
-    # Placeholder function for move_along_ray
-    return np.array([0.0, 0.0, 0.0])
+def move_along_ray(Z: float, pos: np.ndarray, v: np.ndarray) -> np.ndarray:
+    return pos + (Z - pos[2]) * v / v[2]
 
-def flat_image_coord(X, cal, mmp):
-    # Placeholder function for flat_image_coord
-    return 0.0, 0.0
 
-def correct_brown_affin(x, y, added_par):
-    # Placeholder function for correct_brown_affin
-    return x, y
-
-def epipolar_curve(image_point, origin_cam, project_cam, num_points, cparam, vpar):
-    """
-    Compute the epipolar curve (line) in the projection camera for a given image point in the origin camera.
-    Returns (num_points, 2) array of pixel coordinates in the projection camera.
-    """
+def epipolar_curve(
+    image_point: Tuple[float, float],
+    origin_cam: Calibration,
+    project_cam: Calibration,
+    num_points: int,
+    cparam: ControlPar,
+    vpar: VolumePar,
+) -> np.ndarray:
     img_pt = pixel_to_metric(image_point[0], image_point[1], cparam)
     img_pt = dist_to_flat(img_pt[0], img_pt[1], origin_cam, 1e-5)
     X = np.zeros(3)
