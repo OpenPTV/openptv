@@ -1,8 +1,19 @@
 import numpy as np
 from typing import Union
 
-Vec2D = np.ndarray  # shape (2,)
-Vec3D = np.ndarray  # shape (3,)
+class Vec2D(np.ndarray):
+    def __new__(cls, input_array=None):
+        obj = np.asarray(input_array if input_array is not None else [np.nan, np.nan], dtype=float).view(cls)
+        if obj.shape != (2,):
+            raise ValueError("Vec2D must be of shape (2,)")
+        return obj
+
+class Vec3D(np.ndarray):
+    def __new__(cls, input_array=None):
+        obj = np.asarray(input_array if input_array is not None else [np.nan, np.nan, np.nan], dtype=float).view(cls)
+        if obj.shape != (3,):
+            raise ValueError("Vec3D must be of shape (3,)")
+        return obj
 
 EMPTY_CELL: float = np.nan
 

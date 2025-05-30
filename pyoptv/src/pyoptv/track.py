@@ -13,15 +13,9 @@ from .orientation import point_position
 from .tracking_run import TrackingRun
 from .parameters import ControlPar, TrackPar
 from .calibration import Calibration
-
-TR_UNUSED = -1
-PT_UNUSED = -999
-COORD_UNUSED = -1e10  # Added to represent unused coordinate values
-TR_BUFSPACE = 4
-TR_MAX_CAMS = 4
-MAX_TARGETS = 20000
-MAX_CANDS = 4         # max candidates, nearest neighbours
-ADD_PART = 3          # search region 3 pix around a particle
+from .constants import (
+    TR_UNUSED, PT_UNUSED, COORD_UNUSED, ADD_PART, CORRES_NONE, MAX_CANDS, MAX_TARGETS
+)
 
 
 class FoundPix:

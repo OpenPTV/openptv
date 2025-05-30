@@ -2,14 +2,28 @@
 import numpy as np
 from typing import List, Tuple, Any
 from .trafo import pixel_to_metric, dist_to_flat, metric_to_pixel, correct_brown_affin
-from .imgcoord import flat_image_coord as imgcoord_flat_image_coord
+from .imgcoord import flat_image_coord
 from .ray_tracing import ray_tracing
 from .parameters import ControlPar, VolumePar, MMNP
 from .calibration import Calibration
 from .vec_utils import Vec2D
+from dataclasses import dataclass
 
 
 MAXCAND = 100  # Avoid circular import, match value from correspondences.py
+
+
+@dataclass
+class Candidate:
+    pnr: int
+    tol: float
+    corr: float
+
+@dataclass
+class Coord2D:
+    pnr: int = -1
+    x: float = 0.0
+    y: float = 0.0
 
 
 def epi_mm(
@@ -60,7 +74,7 @@ def find_candidate(
     vpar: VolumePar,
     cpar: ControlPar,
     cal: Calibration,
-) -> Tuple[int, List[Tuple[int, float, float]]]:
+) -> Tuple[int, List[Candidate]]:
     tol_band_width = vpar.eps0
     xmin = -cpar.pix_x * cpar.imx / 2 - cal.int_par.xh
     ymin = -cpar.pix_y * cpar.imy / 2 - cal.int_par.yh
@@ -96,7 +110,7 @@ def find_candidate(
     if j0 < 0:
         j0 = 0
 
-    candidates: List[Tuple[int, float, float]] = []
+    candidates: List[Candidate] = []
     for j in range(j0, num):
         if crd[j].x > xb + tol_band_width:
             return len(candidates), candidates
@@ -127,7 +141,7 @@ def find_candidate(
             return len(candidates), candidates
 
         corr = (4 * qsumg + 2 * qn + qnx + qny) * (sumg + pix[p2].sumg)
-        candidates.append((j, d, corr))
+        candidates.append(Candidate(j, d, corr))
 
     return len(candidates), candidates
 
@@ -135,8 +149,13 @@ def find_candidate(
 def quality_ratio(a: float, b: float) -> float:
     return min(a, b) / max(a, b)
 
-def move_along_ray(Z: float, pos: Vec3D, v: Vec3D) -> Vec3D:
-    return pos + (Z - pos.z) * v / v.z
+def move_along_ray(Z: float, pos: np.ndarray, v: np.ndarray) -> np.ndarray:
+    out = np.empty(3)
+    out[0] = pos[0] + (Z - pos[2]) * v[0] / v[2]
+    out[1] = pos[1] + (Z - pos[2]) * v[1] / v[2]
+    out[2] = Z
+    return out
+
 
 def epipolar_curve(
     image_point: Tuple[float, float],

@@ -1,13 +1,8 @@
 # type: ignore
 import numpy as np
 from typing import Any, List
-
-STR_MAX_LEN: int = 255
-POSI: int = 4
-PREV_NONE: int = -1
-NEXT_NONE: int = -2
-PRIO_DEFAULT: int = 4
-CORRES_NONE: int = -999
+from .constants import MAX_TARGETS
+from .constants import POSI, PREV_NONE, NEXT_NONE, PRIO_DEFAULT, MAX_TARGETS
 
 class Target:
     """
@@ -22,7 +17,17 @@ class Target:
     sumg: float
     tnr: int
 
-    def __init__(self, pnr: int, x: float, y: float, n: int, nx: int, ny: int, sumg: float, tnr: int) -> None:
+    def __init__(
+        self,
+        pnr: int = -1,
+        x: float = 0.0,
+        y: float = 0.0,
+        n: int = 0,
+        nx: int = 0,
+        ny: int = 0,
+        sumg: float = 0.0,
+        tnr: int = -1
+    ) -> None:
         self.pnr = pnr
         self.x = x
         self.y = y
@@ -94,7 +99,9 @@ class Frame:
     targets: List[List[Target]]
     num_targets: List[int]
 
-    def __init__(self, num_cams: int, max_targets: int) -> None:
+    def __init__(self, num_cams: int, max_targets: int = None) -> None:
+        if max_targets is None:
+            max_targets = MAX_TARGETS
         self.num_cams = num_cams
         self.max_targets = max_targets
         self.num_parts = 0
@@ -102,6 +109,7 @@ class Frame:
         self.correspond = [Corres(-1, [-1, -1, -1, -1]) for _ in range(max_targets)]
         self.targets = [[Target(-1, 0, 0, 0, 0, 0, 0, -1) for _ in range(max_targets)] for _ in range(num_cams)]
         self.num_targets = [0] * num_cams
+
 
 def compare_targets(t1: Target, t2: Target) -> bool:
     return (

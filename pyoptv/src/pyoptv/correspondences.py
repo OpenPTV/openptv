@@ -5,24 +5,26 @@ from pyoptv.parameters import ControlPar, VolumePar
 from pyoptv.tracking_frame_buf import Frame, Target
 from scipy.optimize import minimize
 import matplotlib.pyplot as plt
-from .epi import epi_mm, find_candidate
+from .epi import Coord2D, epi_mm, find_candidate
+from .constants import MAXCAND
 
 nmax = 202400
-MAXCAND = 100
 
 class NTupel:
-    def __init__(self, indices: List[int], corr: float):
-        self.p: List[int] = indices
+    def __init__(self, indices: List[int] = None, corr: float = 0.0):
+        if indices is None:
+            self.p: List[int] = []
+        else:
+            self.p: List[int] = indices
         self.corr: float = corr
 
 class Correspond:
-    def __init__(self, nr: int, n: int, dist: np.ndarray, corr: np.ndarray, p2: np.ndarray):
-        self.nr: int = nr
+    def __init__(self, p1: int = 0, n: int = 0, dist: np.ndarray = None, corr: np.ndarray = None, p2: np.ndarray = None):
+        self.p1: int = p1  # Add p1 attribute for compatibility with tests
         self.n: int = n
-        self.dist: np.ndarray = dist
-        self.corr: np.ndarray = corr
-        self.p2: np.ndarray = p2
-        self.p1: int = 0  # Add p1 attribute for compatibility with tests
+        self.p2: np.ndarray = np.zeros(MAXCAND, dtype=np.int32) if p2 is None else p2.astype(np.int32)
+        self.dist: np.ndarray = np.zeros(MAXCAND, dtype=np.float64) if dist is None else dist.astype(np.float64)
+        self.corr: np.ndarray = np.zeros(MAXCAND, dtype=np.float64) if corr is None else corr.astype(np.float64)
 
 def quicksort_con(con: List[Correspond]) -> None:
     if len(con) > 0:
@@ -49,7 +51,7 @@ def qs_con(con, left, right):
     if i < right:
         qs_con(con, i, right)
 
-def quicksort_target_y(pix: List[Any]) -> None:
+def quicksort_target_y(pix: List[Target]) -> None:
     qs_target_y(pix, 0, len(pix) - 1)
 
 def qs_target_y(pix, left, right):
@@ -73,7 +75,7 @@ def qs_target_y(pix, left, right):
     if i < right:
         qs_target_y(pix, i, right)
 
-def quicksort_coord2d_x(crd: List[Any]) -> None:
+def quicksort_coord2d_x(crd: List[Coord2D]) -> None:
     qs_coord2d_x(crd, 0, len(crd) - 1)
 
 def qs_coord2d_x(crd, left, right):
@@ -107,7 +109,7 @@ def safely_allocate_target_usage_marks(num_cams: int) -> np.ndarray:
 def deallocate_target_usage_marks(tusage: np.ndarray) -> None:
     del tusage
 
-def safely_allocate_adjacency_lists(num_cams: int, num_targets: list) -> list:
+def safely_allocate_adjacency_lists(num_cams: int, num_targets: List[int]) -> List[List[List[Correspond]]]:
     try:
         lists = [[None for _ in range(num_cams)] for _ in range(num_cams)]
         for c1 in range(num_cams - 1):
@@ -117,7 +119,7 @@ def safely_allocate_adjacency_lists(num_cams: int, num_targets: list) -> list:
     except MemoryError:
         return None
 
-def deallocate_adjacency_lists(lists: List[List[List[Any]]]) -> None:
+def deallocate_adjacency_lists(lists: List[List[List[Correspond]]]) -> None:
     del lists
 
 def four_camera_matching(

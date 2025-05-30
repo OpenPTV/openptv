@@ -1,4 +1,6 @@
+from typing import List
 import numpy as np
+from pyoptv.epi import Coord2D
 import pytest
 from pyoptv.correspondences import (
     qs_target_y,
@@ -15,14 +17,12 @@ from pyoptv.correspondences import (
     consistent_pair_matching,
     correspondences,
 )
-from pyoptv.parameters import ControlPar, VolumePar, read_control_par, read_volume_par
+from pyoptv.parameters import ControlPar, read_control_par, read_volume_par
 from pyoptv.calibration import Calibration, read_ori
 from pyoptv.imgcoord import img_coord
 from pyoptv.trafo import metric_to_pixel, pixel_to_metric, dist_to_flat
-from pyoptv.vec_utils import Vec3D
 from pathlib import Path
-from pyoptv.tracking_frame_buf import Target
-from pyoptv.correspondences import NTupel
+from pyoptv.tracking_frame_buf import Frame, Target
 
 @pytest.fixture(scope="session")
 def testing_fodder_dir():
@@ -103,19 +103,19 @@ def testing_fodder_dir():
     """Fixture to provide the path to the testing_fodder directory inside pyoptv/tests."""
     return Path(__file__).parent / "testing_fodder"
 
-def read_all_calibration(calib, cpar, testing_fodder_dir):
+def read_all_calibration(cpar, testing_fodder_dir):
     ori_tmpl = testing_fodder_dir / "cal" / "sym_cam{}.tif.ori"
     added_name = testing_fodder_dir / "cal" / "cam1.tif.addpar"
+    calib = [Calibration() for _ in range(cpar.num_cams)]
     for cam in range(cpar.num_cams):
         ori_name = str(ori_tmpl).format(cam + 1)
         calib[cam] = read_ori(ori_name, str(added_name))
 
+    return calib
+
 # Helper to generate a synthetic test set as in the C code
 def generate_test_set(calib, cpar, vpar):
-    class Target:
-        def __init__(self):
-            self.pnr = 0; self.x = 0; self.y = 0; self.n = 0; self.nx = 0; self.ny = 0; self.sumg = 0
-    frm = type('Frame', (), {})()
+    frm = Frame(cpar.num_cams)
     frm.num_targets = [16 for _ in range(cpar.num_cams)]
     frm.targets = [[Target() for _ in range(16)] for _ in range(cpar.num_cams)]
     for cam in range(cpar.num_cams):
@@ -137,10 +137,7 @@ def generate_test_set(calib, cpar, vpar):
                 targ.sumg = 10
     return frm
 
-def correct_frame(frm, calib, cpar, tol):
-    class Coord2D:
-        def __init__(self):
-            self.pnr = 0; self.x = 0; self.y = 0
+def correct_frame(frm: Frame, calib: List[Calibration], cpar: ControlPar, tol: float) -> List[List[Coord2D]]:
     corrected = []
     for cam in range(cpar.num_cams):
         cam_corr = []
@@ -160,8 +157,7 @@ def test_pairwise_matching(testing_fodder_dir):
     vpar = read_volume_par(str(testing_fodder_dir / "parameters" / "criteria.par"))
     cpar.mm.n2[0] = 1.0001
     cpar.mm.n3 = 1.0001
-    calib = [None for _ in range(4)]
-    read_all_calibration(calib, cpar, testing_fodder_dir)
+    calib = read_all_calibration(cpar, testing_fodder_dir)
     frm = generate_test_set(calib, cpar, vpar)
     corrected = correct_frame(frm, calib, cpar, 0.0001)
     lists = safely_allocate_adjacency_lists(cpar.num_cams, frm.num_targets)
@@ -182,12 +178,12 @@ def test_pairwise_matching(testing_fodder_dir):
     deallocate_adjacency_lists(lists, cpar.num_cams)
 
 def test_four_camera_matching(testing_fodder_dir):
-    cpar = ControlPar.read_control_par(str(testing_fodder_dir / "parameters" / "ptv.par"))
-    vpar = VolumePar.read_volume_par(str(testing_fodder_dir / "parameters" / "criteria.par"))
+    cpar = read_control_par(str(testing_fodder_dir / "parameters" / "ptv.par"))
+    vpar = read_volume_par(str(testing_fodder_dir / "parameters" / "criteria.par"))
     cpar.mm.n2[0] = 1.0001
     cpar.mm.n3 = 1.0001
-    calib = [None for _ in range(4)]
-    read_all_calibration(calib, cpar, testing_fodder_dir)
+    
+    calib = read_all_calibration(cpar, testing_fodder_dir)
     frm = generate_test_set(calib, cpar, vpar)
     corrected = correct_frame(frm, calib, cpar, 0.0001)
     lists = safely_allocate_adjacency_lists(cpar.num_cams, frm.num_targets)
@@ -199,12 +195,11 @@ def test_four_camera_matching(testing_fodder_dir):
     deallocate_adjacency_lists(lists, cpar.num_cams)
 
 def test_three_camera_matching(testing_fodder_dir):
-    cpar = ControlPar.read_control_par(str(testing_fodder_dir / "parameters" / "ptv.par"))
-    vpar = VolumePar.read_volume_par(str(testing_fodder_dir / "parameters" / "criteria.par"))
+    cpar = read_control_par(str(testing_fodder_dir / "parameters" / "ptv.par"))
+    vpar = read_volume_par(str(testing_fodder_dir / "parameters" / "criteria.par"))
     cpar.mm.n2[0] = 1.0001
     cpar.mm.n3 = 1.0001
-    calib = [None for _ in range(4)]
-    read_all_calibration(calib, cpar, testing_fodder_dir)
+    calib = read_all_calibration(cpar, testing_fodder_dir)
     frm = generate_test_set(calib, cpar, vpar)
     for part in range(frm.num_targets[1]):
         targ = frm.targets[1][part]
@@ -221,16 +216,15 @@ def test_three_camera_matching(testing_fodder_dir):
     deallocate_target_usage_marks(tusage, cpar.num_cams)
 
 def test_two_camera_matching(testing_fodder_dir):
-    cpar = ControlPar.read_control_par(str(testing_fodder_dir / "parameters" / "ptv.par"))
-    vpar = VolumePar.read_volume_par(str(testing_fodder_dir / "parameters" / "criteria.par"))
+    cpar = read_control_par(str(testing_fodder_dir / "parameters" / "ptv.par"))
+    vpar = read_volume_par(str(testing_fodder_dir / "parameters" / "criteria.par"))
     cpar.mm.n2[0] = 1.0001
     cpar.mm.n3 = 1.0001
     vpar.Zmin_lay[0] = -1
     vpar.Zmin_lay[1] = -1
     vpar.Zmax_lay[0] = 1
     vpar.Zmax_lay[1] = 1
-    calib = [None for _ in range(4)]
-    read_all_calibration(calib, cpar, testing_fodder_dir)
+    calib = read_all_calibration(cpar, testing_fodder_dir)
     frm = generate_test_set(calib, cpar, vpar)
     cpar.num_cams = 2
     corrected = correct_frame(frm, calib, cpar, 0.0001)
@@ -249,8 +243,7 @@ def test_correspondences(testing_fodder_dir):
     vpar = read_volume_par(str(testing_fodder_dir / "parameters" / "criteria.par"))
     cpar.mm.n2[0] = 1.0001
     cpar.mm.n3 = 1.0001
-    calib = [None for _ in range(4)]
-    read_all_calibration(calib, cpar, testing_fodder_dir)
+    calib = read_all_calibration(cpar, testing_fodder_dir)
     frm = generate_test_set(calib, cpar, vpar)
     corrected = correct_frame(frm, calib, cpar, 0.0001)
     from pyoptv.correspondences import NTupel
