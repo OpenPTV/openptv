@@ -1,9 +1,19 @@
 import numpy as np
+from typing import Optional, Tuple
 from scipy.optimize import minimize
 import matplotlib.pyplot as plt
-from .vec_utils import vec_set, vec_copy, vec_subt, vec_add, vec_scalar_mul, vec_norm, vec_dot, unit_vector
+from .vec_utils import vec_set, vec_subt, vec_add, vec_scalar_mul, vec_norm, vec_dot, unit_vector
+from pyoptv.calibration import Calibration
+from pyoptv.parameters import MMNP
 
-def ray_tracing(x, y, cal, mm, X=None, a=None):
+def ray_tracing(
+    x: float,
+    y: float,
+    cal: Calibration,
+    mm: MMNP,
+    X: Optional[np.ndarray] = None,
+    a: Optional[np.ndarray] = None
+) -> Optional[Tuple[np.ndarray, np.ndarray]]:
     """
     C-style: ray_tracing(x, y, cal, mm, X, a) modifies X, a in-place
     Pythonic: ray_tracing(x, y, cal, mm) -> (X, a)
@@ -18,7 +28,14 @@ def ray_tracing(x, y, cal, mm, X=None, a=None):
         return X, a
 
 # The C-like implementation for internal use
-def _ray_tracing_impl(x, y, cal, mm, X, a):
+def _ray_tracing_impl(
+    x: float,
+    y: float,
+    cal: Calibration,
+    mm: MMNP,
+    X: np.ndarray,
+    a: np.ndarray
+) -> None:
     tmp1 = vec_set(x, y, -1 * cal.int_par.cc)
     tmp1 = unit_vector(tmp1)
     start_dir = np.dot(cal.ext_par.dm, tmp1)

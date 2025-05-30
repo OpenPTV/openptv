@@ -1,7 +1,12 @@
 import numpy as np
 from typing import Tuple
-from .parameters import ControlPar
+from .cpar import ControlPar
 from .calibration import ap_52, Calibration
+
+
+MAX_ITER = 50
+DAMPING = 0.5
+TOL = 1e-8
 
 
 def old_pixel_to_metric(
@@ -25,16 +30,16 @@ def old_pixel_to_metric(
 
 
 def pixel_to_metric(
-    x_pixel: float, y_pixel: float, parameters: ControlPar
+    x_pixel: float, y_pixel: float, cpar: ControlPar
 ) -> Tuple[float, float]:
     return old_pixel_to_metric(
         x_pixel,
         y_pixel,
-        parameters.imx,
-        parameters.imy,
-        parameters.pix_x,
-        parameters.pix_y,
-        parameters.chfield,
+        cpar.imx,
+        cpar.imy,
+        cpar.pix_x,
+        cpar.pix_y,
+        cpar.chfield,
     )
 
 
@@ -59,16 +64,16 @@ def old_metric_to_pixel(
 
 
 def metric_to_pixel(
-    x_metric: float, y_metric: float, parameters: ControlPar
+    x_metric: float, y_metric: float, cpar: ControlPar
 ) -> Tuple[float, float]:
     return old_metric_to_pixel(
         x_metric,
         y_metric,
-        parameters.imx,
-        parameters.imy,
-        parameters.pix_x,
-        parameters.pix_y,
-        parameters.chfield,
+        cpar.imx,
+        cpar.imy,
+        cpar.pix_x,
+        cpar.pix_y,
+        cpar.chfield,
     )
 
 
@@ -99,14 +104,12 @@ def correct_brown_affin(x: float, y: float, ap: ap_52) -> Tuple[float, float]:
     Args:
         x: x coordinate in distorted space
         y: y coordinate in distorted space
-        ap: ap_52 object containing the distortion parameters
+        ap: ap_52 object containing the distortion cpar
     Returns:
         Tuple[float, float]: corrected x and y coordinates in distorted space
     """
 
-    MAX_ITER = 50
-    DAMPING = 0.5
-    TOL = 1e-8
+
 
     sin_she = np.sin(ap.she)
     cos_she = np.cos(ap.she)
@@ -152,8 +155,6 @@ def correct_brown_affine_exact(
     xq = (x + y * sin_she) * inv_scx
     yq = y / cos_she
 
-    MAX_ITER = 50
-    DAMPING = 0.5
 
     for _ in range(MAX_ITER):
         r2 = xq * xq + yq * yq

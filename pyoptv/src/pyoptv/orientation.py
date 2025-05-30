@@ -1,6 +1,9 @@
+# type: ignore
 import numpy as np
 from scipy.optimize import least_squares
 import matplotlib.pyplot as plt
+from pyoptv.calibration import Calibration
+from pyoptv.parameters import ControlPar
 
 COORD_UNUSED = -1e10
 IDT = 10

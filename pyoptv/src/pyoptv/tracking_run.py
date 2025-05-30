@@ -1,3 +1,4 @@
+# type: ignore
 import numpy as np
 from typing import List, Optional, Tuple
 from .tracking_frame_buf import FrameBuffer
