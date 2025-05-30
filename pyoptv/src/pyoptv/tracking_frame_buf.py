@@ -246,3 +246,9 @@ def fb_next(self):
 
 def fb_prev(self):
     self.buf = self.buf[-1:] + self.buf[:-1]
+
+def fb_write_frame_from_start(fb, frame_num):
+    return fb.write_frame_from_start(frame_num)
+
+def fb_read_frame_at_end(fb, frame_num, read_links):
+    return fb.read_frame_at_end(frame_num, read_links)

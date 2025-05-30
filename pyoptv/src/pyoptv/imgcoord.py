@@ -25,8 +25,8 @@ def img_coord(pos, cal, mm):
 
 def flat_to_dist(x, y, cal):
     r = np.sqrt(x**2 + y**2)
-    x_dist = x * (1 + cal['dist_par']['k1'] * r**2 + cal['dist_par']['k2'] * r**4 + cal['dist_par']['k3'] * r**6)
-    y_dist = y * (1 + cal['dist_par']['k1'] * r**2 + cal['dist_par']['k2'] * r**4 + cal['dist_par']['k3'] * r**6)
+    x_dist = x * (1 + cal.dist_par.k1 * r**2 + cal.dist_par.k2 * r**4 + cal.dist_par.k3 * r**6)
+    y_dist = y * (1 + cal.dist_par.k1 * r**2 + cal.dist_par.k2 * r**4 + cal.dist_par.k3 * r**6)
     return x_dist, y_dist
 def flat_image_coord_numba(pos, cal, mm):
     deno = (cal['ext_par']['dm'][0][2] * (pos[0] - cal['ext_par']['x0']) +

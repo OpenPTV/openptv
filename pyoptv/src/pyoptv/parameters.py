@@ -101,6 +101,19 @@ def read_volume_par(filename):
         ret.eps0 = float(fpp.readline().strip())
     return ret
 
+def compare_volume_par(v1, v2):
+    return (
+        v1.X_lay == v2.X_lay and
+        v1.Zmin_lay == v2.Zmin_lay and
+        v1.Zmax_lay == v2.Zmax_lay and
+        v1.cnx == v2.cnx and
+        v1.cny == v2.cny and
+        v1.cn == v2.cn and
+        v1.csumg == v2.csumg and
+        v1.corrmin == v2.corrmin and
+        v1.eps0 == v2.eps0
+    )
+
 class MMNP:
     def __init__(self):
         self.nlay = 1
