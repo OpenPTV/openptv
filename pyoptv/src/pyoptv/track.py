@@ -5,7 +5,7 @@ from .vec_utils import (
 )
 from .tracking_frame_buf import (
     PathInfo, Corres, PREV_NONE, NEXT_NONE, PRIO_DEFAULT, Target,
-    fb_next, fb_prev, fb_write_frame_from_start, fb_read_frame_at_end, Frame
+    fb_next, fb_prev, fb_write_frame_from_start, fb_read_frame_at_end, Frame, FrameBuffer
 )
 from .trafo import pixel_to_metric, metric_to_pixel, dist_to_flat
 from .imgcoord import img_coord
@@ -13,14 +13,15 @@ from .orientation import point_position
 from .tracking_run import TrackingRun
 from .parameters import ControlPar, TrackPar
 from .calibration import Calibration
-from pyoptv import tracking_frame_buf
 
-TR_UNUSED: int = -1
-MAX_CANDS: int = 4
-COORD_UNUSED: int = -999
-CORRES_NONE: int = -1
-ADD_PART: int = 3
-PT_UNUSED: int = -999
+from .track import (
+    TR_UNUSED,
+    MAX_CANDS,
+    COORD_UNUSED,
+    CORRES_NONE,
+    ADD_PART,
+    PT_UNUSED,
+)
 
 class FoundPix:
     """Represents a found pixel candidate for tracking correspondence.
@@ -380,7 +381,7 @@ def assess_new_position(
     pos: Vec3D,
     targ_pos: List[Vec2D],
     cand_inds: List[List[int]],
-    frm: TrackingFrameBuf,
+    frm: Frame,
     run: TrackingRun,
 ) -> int:
     """Assess the new 3D position by searching for corresponding 2D targets in all cameras.
@@ -428,7 +429,7 @@ def assess_new_position(
     return valid_cams
 
 
-def add_particle(frm, pos: Vec3D, cand_inds: List[List[int]]) -> None:
+def add_particle(frm: Frame, pos: Vec3D, cand_inds: List[List[int]]) -> None:
     """Add a new particle to the frame at the specified position."""
     num_parts = frm.num_parts
     ref_path_inf = PathInfo(pos, PREV_NONE, NEXT_NONE, 0, np.zeros(MAX_CANDS), np.zeros(MAX_CANDS), 0)

@@ -4,7 +4,7 @@ from pyoptv.vec_utils import (
     Vec3D, Vec2D, vec_scalar_mul, vec_subt, vec_diff_norm, vec_dot, vec_norm, vec_set, vec_copy
 )
 from pyoptv.track import (
-    TrackingRun, FrameBuffer, FoundPix,
+    TrackingRun, TR_UNUSED, Frame, FoundPix,
     reset_foundpix_array, copy_foundpix_array, register_closest_neighbs, search_volume_center_moving,
     predict, pos3d_in_bounds, angle_acc, candsearch_in_pix, candsearch_in_pix_rest, searchquader,
     sort_candidates_by_freq, sort, point_to_pixel, sorted_candidates_in_volume, assess_new_position,
@@ -12,7 +12,7 @@ from pyoptv.track import (
 )
 from pyoptv.parameters import ControlPar, TrackPar, VolumePar
 from pyoptv.calibration import Calibration
-from pyoptv.tracking_frame_buf import Target
+from pyoptv.tracking_frame_buf import Target, FrameBuffer
 
 def test_vec_scalar_mul():
     vec = Vec3D(1, 2, 3)
@@ -189,7 +189,7 @@ def test_point_to_pixel():
 def test_sorted_candidates_in_volume():
     center = Vec3D(1, 2, 3)
     center_proj = [Vec2D(1, 2), Vec2D(3, 4), Vec2D(5, 6)]
-    frm = FrameBuffer(3, 3, 10, 'corres', 'linkage', 'prio', ['target', 'target', 'target'])
+    frm = Frame(3, 3, 10, 'corres', 'linkage', 'prio', ['target', 'target', 'target'])
     seq_par = type('SeqPar', (), {'img_base_name': ['target'], 'first': 0, 'last': 2})()
     cpar = ControlPar(3)
     vpar = VolumePar()
@@ -207,7 +207,7 @@ def test_assess_new_position():
     pos = Vec3D(1, 2, 3)
     targ_pos = [Vec2D(1, 2), Vec2D(3, 4), Vec2D(5, 6)]
     cand_inds = np.zeros((3, 1), dtype=np.int32)
-    frm = FrameBuffer(3, 3, 10, 'corres', 'linkage', 'prio', ['target', 'target', 'target'])
+    frm = Frame(3, 3, 10, 'corres', 'linkage', 'prio', ['target', 'target', 'target'])
     seq_par = type('SeqPar', (), {'img_base_name': ['target'], 'first': 0, 'last': 2})()
     cpar = ControlPar(3)
     vpar = VolumePar()
@@ -222,7 +222,7 @@ def test_assess_new_position():
     assert result == 0
 
 def test_add_particle():
-    frm = FrameBuffer(3, 3, 10, 'corres', 'linkage', 'prio', ['target', 'target', 'target'])
+    frm = Frame(3, 3, 10, 'corres', 'linkage', 'prio', ['target', 'target', 'target'])
     frm.num_parts = 0
     pos = Vec3D(1, 2, 3)
     cand_inds = np.zeros((3, 1), dtype=np.int32)
@@ -266,3 +266,6 @@ def test_trackback_c():
     except IndexError:
         result = 0
     assert result == 0
+
+def test_tr_unused_value():
+    assert TR_UNUSED == -1
