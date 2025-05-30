@@ -5,7 +5,7 @@ from .vec_utils import (
 )
 from .tracking_frame_buf import (
     PathInfo, Corres, PREV_NONE, NEXT_NONE, PRIO_DEFAULT, Target,
-    fb_next, fb_prev, fb_write_frame_from_start, fb_read_frame_at_end
+    fb_next, fb_prev, fb_write_frame_from_start, fb_read_frame_at_end, Frame
 )
 from .trafo import pixel_to_metric, metric_to_pixel, dist_to_flat
 from .imgcoord import img_coord
@@ -13,6 +13,7 @@ from .orientation import point_position
 from .tracking_run import TrackingRun
 from .parameters import ControlPar, TrackPar
 from .calibration import Calibration
+from pyoptv import tracking_frame_buf
 
 TR_UNUSED: int = -1
 MAX_CANDS: int = 4
@@ -201,10 +202,24 @@ def candsearch_in_pix_rest(
     dr: float,
     du: float,
     dd: float,
-    p,
+    p: List[int],
     cpar: ControlPar,
 ) -> int:
-    """Search for the nearest unused candidate target in a region."""
+    """Search for the nearest unused candidate target in a region.
+
+    Args:
+        next: List of Target objects to search.
+        num_targets: Number of targets in the list.
+        cent_x: Center x coordinate of the search region.
+        cent_y: Center y coordinate of the search region.
+        dl, dr, du, dd: Search region bounds (left, right, up, down).
+        p: Output array (list or numpy array) to store found candidate indices.
+        cpar: ControlPar object with camera parameters.
+
+    Returns:
+        The number of found candidates (0 or 1).
+    """
+    # p is an output array (list or numpy array) where the index of the found candidate is stored.
     j0 = num_targets // 2
     dj = num_targets // 4
     while dj > 1:
@@ -218,6 +233,7 @@ def candsearch_in_pix_rest(
         j0 = 0
     counter = 0
     dmin = 1e20
+    p[0] = PT_UNUSED
     for j in range(j0, num_targets):
         if next[j].tnr == TR_UNUSED:
             if next[j].y > cent_y + dd:
@@ -327,7 +343,7 @@ def point_to_pixel(point: Vec3D, cal: Calibration, cpar: ControlPar) -> Vec2D:
 def sorted_candidates_in_volume(
     center: Vec3D,
     center_proj: List[Vec2D],
-    frm,
+    frm: Frame,
     run: TrackingRun,
 ) -> Optional[List[FoundPix]]:
     """Find and sort candidate targets in a 3D search volume across all cameras."""
@@ -364,12 +380,20 @@ def assess_new_position(
     pos: Vec3D,
     targ_pos: List[Vec2D],
     cand_inds: List[List[int]],
-    frm,
+    frm: TrackingFrameBuf,
     run: TrackingRun,
 ) -> int:
     """Assess the new 3D position by searching for corresponding 2D targets in all cameras.
 
-    Returns the number of valid cameras where a target was found.
+    Args:
+        pos: The 3D position to assess.
+        targ_pos: List to store the corresponding 2D positions for each camera.
+        cand_inds: List of candidate indices for each camera.
+        frm: The current frame buffer containing target information (expected type: TrackingFrameBuf).
+        run: The tracking run configuration.
+
+    Returns:
+        The number of valid cameras where a target was found.
     """
     left = right = up = down = ADD_PART
     for cam in range(run.cpar.num_cams):
