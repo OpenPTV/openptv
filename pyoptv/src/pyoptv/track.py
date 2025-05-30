@@ -1,90 +1,58 @@
 import numpy as np
-from scipy.optimize import minimize
-import matplotlib.pyplot as plt
+from typing import List, Optional, Sequence
+from .vec_utils import (
+    Vec2D, Vec3D, vec_subt, vec_dot, vec_norm, vec_diff_norm, vec_scalar_mul, vec_set, vec_copy
+)
+from .tracking_frame_buf import (
+    PathInfo, Corres, PREV_NONE, NEXT_NONE, PRIO_DEFAULT, Target,
+    fb_next, fb_prev, fb_write_frame_from_start, fb_read_frame_at_end
+)
+from .trafo import pixel_to_metric, metric_to_pixel, dist_to_flat
+from .imgcoord import img_coord
+from .orientation import point_position
+from .tracking_run import TrackingRun
 
-TR_UNUSED = -1
-MAX_CANDS = 4
-COORD_UNUSED = -999
-CORRES_NONE = -1
-NEXT_NONE = -1
-PREV_NONE = -1
-ADD_PART = 3
-
-class TrackingRun:
-    def __init__(self, seq_par, tpar, vpar, cpar, cal, fb, ymin, ymax, lmax, nlinks, npart):
-        self.seq_par = seq_par
-        self.tpar = tpar
-        self.vpar = vpar
-        self.cpar = cpar
-        self.cal = cal
-        self.fb = fb
-        self.ymin = ymin
-        self.ymax = ymax
-        self.lmax = lmax
-        self.nlinks = nlinks
-        self.npart = npart
-
-class FrameBuffer:
-    def __init__(self, num_cams, num_parts, targets, path_info, correspond):
-        self.num_cams = num_cams
-        self.num_parts = num_parts
-        self.targets = targets
-        self.path_info = path_info
-        self.correspond = correspond
-
-class PathInfo:
-    def __init__(self, x, prev, next, inlist, decis, linkdecis, finaldecis):
-        self.x = x
-        self.prev = prev
-        self.next = next
-        self.inlist = inlist
-        self.decis = decis
-        self.linkdecis = linkdecis
-        self.finaldecis = finaldecis
+TR_UNUSED: int = -1
+MAX_CANDS: int = 4
+COORD_UNUSED: int = -999
+CORRES_NONE: int = -1
+ADD_PART: int = 3
+PT_UNUSED: int = -999
 
 class FoundPix:
-    def __init__(self, ftnr, freq, whichcam):
+    ftnr: int
+    freq: int
+    whichcam: List[int]
+    def __init__(self, ftnr: int = TR_UNUSED, freq: int = 0, whichcam: Optional[List[int]] = None) -> None:
         self.ftnr = ftnr
         self.freq = freq
-        self.whichcam = whichcam
+        self.whichcam = [0, 0, 0, 0] if whichcam is None else whichcam
 
-class Vec3D:
-    def __init__(self, x, y, z):
-        self.x = x
-        self.y = y
-        self.z = z
+def register_link_candidate(path_info: PathInfo, fitness: float, cand: int) -> None:
+    path_info.decis[path_info.inlist] = fitness
+    path_info.linkdecis[path_info.inlist] = cand
+    path_info.inlist += 1
 
-class Vec2D:
-    def __init__(self, x, y):
-        self.x = x
-        self.y = y
-def vec_scalar_mul(vec, scalar):
-    return Vec3D(vec.x * scalar, vec.y * scalar, vec.z * scalar)
-def vec_subt(vec1, vec2):
-    return Vec3D(vec1.x - vec2.x, vec1.y - vec2.y, vec1.z - vec2.z)
-def vec_diff_norm(vec1, vec2):
-    return np.sqrt((vec1.x - vec2.x) ** 2 + (vec1.y - vec2.y) ** 2 + (vec1.z - vec2.z) ** 2)
-def vec_dot(vec1, vec2):
-    return vec1.x * vec2.x + vec1.y * vec2.y + vec1.z * vec2.z
-def vec_norm(vec):
-    return np.sqrt(vec.x ** 2 + vec.y ** 2 + vec.z ** 2)
-def vec_set(x, y, z):
-    return Vec3D(x, y, z)
-def vec_copy(vec):
-    return Vec3D(vec.x, vec.y, vec.z)
-def reset_foundpix_array(arr, arr_len, num_cams):
+def make_v2(num_cams: int) -> List[Vec2D]:
+    return [Vec2D(0, 0) for _ in range(num_cams)]
+def make_philf(num_cams: int) -> List[List[int]]:
+    return [[PT_UNUSED for _ in range(MAX_CANDS)] for _ in range(num_cams)]
+
+def reset_foundpix_array(arr: List[FoundPix], arr_len: int, num_cams: int) -> None:
     for i in range(arr_len):
         arr[i].ftnr = TR_UNUSED
         arr[i].freq = 0
         for cam in range(num_cams):
             arr[i].whichcam[cam] = 0
-def copy_foundpix_array(dest, src, arr_len, num_cams):
+
+def copy_foundpix_array(dest: List[FoundPix], src: List[FoundPix], arr_len: int, num_cams: int) -> None:
     for i in range(arr_len):
         dest[i].ftnr = src[i].ftnr
         dest[i].freq = src[i].freq
         for cam in range(num_cams):
             dest[i].whichcam[cam] = src[i].whichcam[cam]
-def register_closest_neighbs(targets, num_targets, cam, cent_x, cent_y, dl, dr, du, dd, reg, cpar):
+
+def register_closest_neighbs(targets: Sequence[Target], num_targets: int, cam: int, cent_x: float, cent_y: float, dl: float, dr: float, du: float, dd: float, reg: List[FoundPix], cpar) -> None:
     all_cands = np.zeros(MAX_CANDS, dtype=np.int32)
     cand = candsearch_in_pix(targets, num_targets, cent_x, cent_y, dl, dr, du, dd, all_cands, cpar)
     for cand in range(MAX_CANDS):
@@ -93,27 +61,32 @@ def register_closest_neighbs(targets, num_targets, cam, cent_x, cent_y, dl, dr, 
         else:
             reg[cand].whichcam[cam] = 1
             reg[cand].ftnr = targets[all_cands[cand]].tnr
-def search_volume_center_moving(prev_pos, curr_pos):
+
+def search_volume_center_moving(prev_pos: Vec3D, curr_pos: Vec3D) -> Vec3D:
     output = vec_scalar_mul(curr_pos, 2)
     return vec_subt(output, prev_pos)
-def predict(prev_pos, curr_pos):
+
+def predict(prev_pos: Vec2D, curr_pos: Vec2D) -> Vec2D:
     return Vec2D(2 * curr_pos.x - prev_pos.x, 2 * curr_pos.y - prev_pos.y)
-def pos3d_in_bounds(pos, bounds):
+
+def pos3d_in_bounds(pos: Vec3D, bounds) -> bool:
     return (bounds.dvxmin < pos.x < bounds.dvxmax and
             bounds.dvymin < pos.y < bounds.dvymax and
             bounds.dvzmin < pos.z < bounds.dvzmax)
-def angle_acc(start, pred, cand):
+
+def angle_acc(start: Vec3D, pred: Vec3D, cand: Vec3D) -> tuple[float, float]:
     v0 = vec_subt(pred, start)
     v1 = vec_subt(cand, start)
     acc = vec_diff_norm(v0, v1)
     if (v0.x == -v1.x and v0.y == -v1.y and v0.z == -v1.z):
-        angle = 200
+        angle = 200.0
     elif (v0.x == v1.x and v0.y == v1.y and v0.z == v1.z):
-        angle = 0
+        angle = 0.0
     else:
         angle = (200. / np.pi) * np.arccos(vec_dot(v0, v1) / vec_norm(v0) / vec_norm(v1))
     return angle, acc
-def candsearch_in_pix(next, num_targets, cent_x, cent_y, dl, dr, du, dd, p, cpar):
+
+def candsearch_in_pix(next: Sequence[Target], num_targets: int, cent_x: float, cent_y: float, dl: float, dr: float, du: float, dd: float, p, cpar) -> int:
     j0 = num_targets // 2
     dj = num_targets // 4
     while dj > 1:
@@ -151,7 +124,8 @@ def candsearch_in_pix(next, num_targets, cent_x, cent_y, dl, dr, du, dd, p, cpar
         if p[j] != PT_UNUSED:
             counter += 1
     return counter
-def candsearch_in_pix_rest(next, num_targets, cent_x, cent_y, dl, dr, du, dd, p, cpar):
+
+def candsearch_in_pix_rest(next: Sequence[Target], num_targets: int, cent_x: float, cent_y: float, dl: float, dr: float, du: float, dd: float, p, cpar) -> int:
     j0 = num_targets // 2
     dj = num_targets // 4
     while dj > 1:
@@ -177,7 +151,8 @@ def candsearch_in_pix_rest(next, num_targets, cent_x, cent_y, dl, dr, du, dd, p,
     if p[0] != PT_UNUSED:
         counter += 1
     return counter
-def searchquader(point, xr, xl, yd, yu, tpar, cpar, cal):
+
+def searchquader(point: Vec3D, xr, xl, yd, yu, tpar, cpar, cal) -> None:
     mins = vec_set(tpar.dvxmin, tpar.dvymin, tpar.dvzmin)
     maxes = vec_set(tpar.dvxmax, tpar.dvymax, tpar.dvzmax)
     quader = [vec_copy(point) for _ in range(8)]
@@ -215,7 +190,8 @@ def searchquader(point, xr, xl, yd, yu, tpar, cpar, cal):
         xl[i] = center.x - xl[i]
         yd[i] -= center.y
         yu[i] = center.y - yu[i]
-def sort_candidates_by_freq(item, num_cams):
+
+def sort_candidates_by_freq(item: List[FoundPix], num_cams: int) -> int:
     different = 0
     for i in range(num_cams * MAX_CANDS):
         for j in range(num_cams):
@@ -243,7 +219,8 @@ def sort_candidates_by_freq(item, num_cams):
         if item[i].freq != 0:
             different += 1
     return different
-def sort(n, a, b):
+
+def sort(n: int, a, b) -> None:
     flag = 0
     while True:
         flag = 0
@@ -254,12 +231,14 @@ def sort(n, a, b):
                 flag = 1
         if flag == 0:
             break
-def point_to_pixel(point, cal, cpar):
+
+def point_to_pixel(point: Vec3D, cal, cpar) -> Vec2D:
     x, y = img_coord(point, cal, cpar.mm)
     return metric_to_pixel(x, y, cpar)
-def sorted_candidates_in_volume(center, center_proj, frm, run):
+
+def sorted_candidates_in_volume(center: Vec3D, center_proj: List[Vec2D], frm, run: TrackingRun) -> Optional[List[FoundPix]]:
     num_cams = frm.num_cams
-    points = [FoundPix(TR_UNUSED, 0, [0] * num_cams) for _ in range(num_cams * MAX_CANDS)]
+    points: List[FoundPix] = [FoundPix(TR_UNUSED, 0, [0] * num_cams) for _ in range(num_cams * MAX_CANDS)]
     reset_foundpix_array(points, num_cams * MAX_CANDS, num_cams)
     right = np.zeros(num_cams)
     left = np.zeros(num_cams)
@@ -273,7 +252,8 @@ def sorted_candidates_in_volume(center, center_proj, frm, run):
         return points[:num_cands]
     else:
         return None
-def assess_new_position(pos, targ_pos, cand_inds, frm, run):
+
+def assess_new_position(pos: Vec3D, targ_pos: List[Vec2D], cand_inds: List[List[int]], frm, run: TrackingRun) -> int:
     left = right = up = down = ADD_PART
     for cam in range(run.cpar.num_cams):
         targ_pos[cam] = Vec2D(COORD_UNUSED, COORD_UNUSED)
@@ -290,11 +270,12 @@ def assess_new_position(pos, targ_pos, cand_inds, frm, run):
             targ_pos[cam] = dist_to_flat(targ_pos[cam].x, targ_pos[cam].y, run.cal[cam], run.flatten_tol)
             valid_cams += 1
     return valid_cams
-def add_particle(frm, pos, cand_inds):
+
+def add_particle(frm, pos: Vec3D, cand_inds: List[List[int]]) -> None:
     num_parts = frm.num_parts
     ref_path_inf = PathInfo(pos, PREV_NONE, NEXT_NONE, 0, np.zeros(MAX_CANDS), np.zeros(MAX_CANDS), 0)
     frm.path_info.append(ref_path_inf)
-    ref_corres = Correspond([CORRES_NONE] * frm.num_cams, num_parts)
+    ref_corres = Corres(num_parts, [CORRES_NONE] * frm.num_cams)
     frm.correspond.append(ref_corres)
     for cam in range(frm.num_cams):
         if cand_inds[cam][0] != PT_UNUSED:
@@ -302,7 +283,8 @@ def add_particle(frm, pos, cand_inds):
             frm.targets[cam][_ix].tnr = num_parts
             ref_corres.p[cam] = _ix
     frm.num_parts += 1
-def trackcorr_c_loop(run_info, step):
+
+def trackcorr_c_loop(run_info: TrackingRun, step: int) -> None:
     fb = run_info.fb
     cal = run_info.cal
     tpar = run_info.tpar
@@ -310,6 +292,8 @@ def trackcorr_c_loop(run_info, step):
     cpar = run_info.cpar
     curr_targets = fb.buf[1].targets
     orig_parts = fb.buf[1].num_parts
+    v2 = make_v2(fb.num_cams)
+    philf = make_philf(fb.num_cams)
     for h in range(orig_parts):
         curr_path_inf = fb.buf[1].path_info[h]
         curr_corres = fb.buf[1].correspond[h]
@@ -428,26 +412,32 @@ def trackcorr_c_loop(run_info, step):
         fb_write_frame_from_start(fb, step)
         if step < run_info.seq_par.last - 2:
             fb_read_frame_at_end(fb, step + 3, 0)
-def trackcorr_c_finish(run_info, step):
+
+def trackcorr_c_finish(run_info: TrackingRun, step: int) -> None:
     range_ = run_info.seq_par.last - run_info.seq_par.first
     npart = run_info.npart / range_
     nlinks = run_info.nlinks / range_
     print(f"Average over sequence, particles: {npart:.1f}, links: {nlinks:.1f}, lost: {npart - nlinks:.1f}")
     fb_next(run_info.fb)
     fb_write_frame_from_start(run_info.fb, step)
-def trackback_c(run_info):
+
+def trackback_c(run_info: TrackingRun) -> int:
     seq_par = run_info.seq_par
     tpar = run_info.tpar
     vpar = run_info.vpar
     cpar = run_info.cpar
     fb = run_info.fb
     cal = run_info.cal
+    v2 = make_v2(fb.num_cams)
+    philf = make_philf(fb.num_cams)
     for step in range(seq_par.last, seq_par.last - 4, -1):
         fb_read_frame_at_end(fb, step, 1)
         fb_next(fb)
     fb_prev(fb)
     npart = nlinks = 0
     for step in range(seq_par.last - 1, seq_par.first, -1):
+        v2 = make_v2(fb.num_cams)
+        philf = make_philf(fb.num_cams)
         for h in range(fb.buf[1].num_parts):
             curr_path_inf = fb.buf[1].path_info[h]
             if curr_path_inf.next < 0 or curr_path_inf.prev != -1:
@@ -513,10 +503,26 @@ def trackback_c(run_info):
                     if (acc < tpar.dacc and angle < tpar.dangle) or (acc < tpar.dacc / 10):
                         curr_path_inf.finaldecis = curr_path_inf.decis[0]
                         curr_path_inf.prev = curr_path_inf.linkdecis[0]
-                        fb.buf[2].path_info[curr_path_inf.prev].next = h
-                        num_added += 1
-            if curr_path_inf.prev != PREV_NONE:
-                count1 += 1
+        count1 = num_added = 0
+        for h in range(fb.buf[1].num_parts):
+            curr_path_inf = fb.buf[1].path_info[h]
+            if curr_path_inf.inlist > 0:
+                ref_path_inf = fb.buf[2].path_info[curr_path_inf.linkdecis[0]]
+                if ref_path_inf.prev == PREV_NONE and ref_path_inf.next == NEXT_NONE:
+                    curr_path_inf.finaldecis = curr_path_inf.decis[0]
+                    curr_path_inf.prev = curr_path_inf.linkdecis[0]
+                    fb.buf[2].path_info[curr_path_inf.prev].next = h
+                    num_added += 1
+                if ref_path_inf.prev != PREV_NONE and ref_path_inf.next == NEXT_NONE:
+                    X[0] = fb.buf[0].path_info[curr_path_inf.next].x
+                    X[1] = curr_path_inf.x
+                    X[3] = ref_path_inf.x
+                    X[4] = fb.buf[3].path_info[ref_path_inf.prev].x
+                    X[5] = Vec3D(0.5 * (5.0 * X[3].x - 4.0 * X[1].x + X[0].x), 0.5 * (5.0 * X[3].y - 4.0 * X[1].y + X[0].y), 0.5 * (5.0 * X[3].z - 4.0 * X[1].z + X[0].z))
+                    angle, acc = angle_acc(X[3], X[4], X[5])
+                    if (acc < tpar.dacc and angle < tpar.dangle) or (acc < tpar.dacc / 10):
+                        curr_path_inf.finaldecis = curr_path_inf.decis[0]
+                        curr_path_inf.prev = curr_path_inf.linkdecis[0]
         print(f"step: {step}, curr: {fb.buf[1].num_parts}, next: {fb.buf[2].num_parts}, links: {count1}, lost: {fb.buf[1].num_parts - count1}, add: {num_added}")
         npart += fb.buf[1].num_parts
         nlinks += count1
