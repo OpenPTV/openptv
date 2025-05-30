@@ -88,8 +88,15 @@ def trans_Cam_Point(
     Returns the transformed exterior, transformed position, and crossing points.
     """
     glass_dir = np.array([gl.vec_x, gl.vec_y, gl.vec_z])
-    primary_pt = np.array([ex.x0, ex.y0, ex.z0])
     dist_o_glas = np.linalg.norm(glass_dir)
+    if np.isclose(dist_o_glas, 0.0):
+        # No glass, return original values
+        ex_t = Exterior()
+        ex_t.x0 = ex.x0
+        ex_t.y0 = ex.y0
+        ex_t.z0 = ex.z0
+        return ex_t, pos, pos, pos
+    primary_pt = np.array([ex.x0, ex.y0, ex.z0])
     dist_cam_glas = (
         np.dot(primary_pt, glass_dir) / dist_o_glas - dist_o_glas - mm.d[0]
     )
@@ -108,21 +115,33 @@ def trans_Cam_Point(
     return ex_t, pos_t, cross_p, cross_c
 
 def back_trans_Point(
-    pos_t: np.ndarray, mm: MMNP, G: Glass, cross_p: np.ndarray, cross_c: np.ndarray
+    pos_t, mm: MMNP, G: Glass, cross_p, cross_c
 ) -> np.ndarray:
     """
     Back-transforms a point from glass coordinates to camera coordinates.
+    Accepts pos_t as either a numpy array or a Vec3D.
     """
     glass_dir = np.array([G.vec_x, G.vec_y, G.vec_z])
     nGl = np.linalg.norm(glass_dir)
+    if np.isclose(nGl, 0.0):
+        # Avoid division by zero if glass vector is zero (no glass)
+        if hasattr(pos_t, 'x') and hasattr(pos_t, 'y') and hasattr(pos_t, 'z'):
+            return np.array([pos_t.x, pos_t.y, pos_t.z])
+        else:
+            return np.array([pos_t[0], pos_t[1], pos_t[2]])
     renorm_glass = glass_dir * (mm.d[0] / nGl)
     after_glass = cross_c - renorm_glass
     temp = cross_p - after_glass
     nVe = np.linalg.norm(temp)
-    renorm_glass = glass_dir * (-pos_t[2] / nGl)
+    # Support both numpy array and Vec3D for pos_t
+    if hasattr(pos_t, 'x') and hasattr(pos_t, 'y') and hasattr(pos_t, 'z'):
+        pt0, pt2 = pos_t.x, pos_t.z
+    else:
+        pt0, pt2 = pos_t[0], pos_t[2]
+    renorm_glass = glass_dir * (-pt2 / nGl)
     pos = after_glass - renorm_glass
     if nVe > 0:
-        renorm_glass = temp * (-pos_t[0] / nVe)
+        renorm_glass = temp * (-pt0 / nVe)
         pos -= renorm_glass
     return pos
 

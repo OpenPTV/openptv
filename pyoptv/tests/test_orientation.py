@@ -4,7 +4,7 @@ from pyoptv.orientation import (
     skew_midpoint, point_position, weighted_dumbbell_precision, num_deriv_exterior,
     orient, raw_orient, read_man_ori_fix, read_orient_par, OrientPar
 )
-from pyoptv.epi import ray_tracing
+from pyoptv.ray_tracing import ray_tracing
 
 def test_skew_midpoint():
     vert1 = np.array([0, 0, 0])

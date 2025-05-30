@@ -3,7 +3,7 @@ import numpy as np
 from typing import List, Tuple, Any
 from .trafo import pixel_to_metric, dist_to_flat, metric_to_pixel, correct_brown_affin
 from .imgcoord import flat_image_coord as imgcoord_flat_image_coord
-from .ray_tracing import ray_tracing as real_ray_tracing
+from .ray_tracing import ray_tracing
 from .parameters import ControlPar, VolumePar, MMNP
 from .calibration import Calibration
 from .vec_utils import Vec2D

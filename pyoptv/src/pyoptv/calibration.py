@@ -159,10 +159,8 @@ class Calibration:
 
     @staticmethod
     def rotation_matrix(omega: float, phi: float, kappa: float) -> np.ndarray:
-        if HAS_NUMBA:
-            return Calibration._rotation_matrix_numba(omega, phi, kappa)
-        else:
-            return Calibration._rotation_matrix_numpy(omega, phi, kappa)
+        # Use only the numpy implementation, as _rotation_matrix_numba does not exist
+        return Calibration._rotation_matrix_numpy(omega, phi, kappa)
 
     @staticmethod
     def _rotation_matrix_numpy(omega: float, phi: float, kappa: float) -> np.ndarray:

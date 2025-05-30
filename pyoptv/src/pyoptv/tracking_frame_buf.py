@@ -7,6 +7,7 @@ POSI: int = 4
 PREV_NONE: int = -1
 NEXT_NONE: int = -2
 PRIO_DEFAULT: int = 4
+CORRES_NONE: int = -999
 
 class Target:
     """
@@ -401,3 +402,15 @@ def fb_read_frame_at_end(fb: FrameBuffer, frame_num: int, read_links: bool) -> i
     Read a frame at the end of the buffer using the FrameBuffer interface.
     """
     return fb.read_frame_at_end(frame_num, read_links)
+
+def fb_next(fb: FrameBuffer) -> None:
+    """
+    Advance the buffer to the next frame (C API compatibility).
+    """
+    fb.fb_next()
+
+def fb_prev(fb: FrameBuffer) -> None:
+    """
+    Move the buffer to the previous frame (C API compatibility).
+    """
+    fb.fb_prev()

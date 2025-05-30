@@ -150,7 +150,7 @@ class MMNP:
         self.nlay = 1
         self.n1 = 1.0
         self.n2 = [1.0, 1.0, 1.0]
-        self.d = [0.0, 0.0, 0.0]
+        self.d = [1.0, 0.0, 0.0]
         self.n3 = 1.0
 
 class ControlPar:

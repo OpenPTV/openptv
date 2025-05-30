@@ -3,7 +3,8 @@ from typing import Tuple, Optional
 from pyoptv.calibration import Calibration
 from pyoptv.parameters import ControlPar, MMNP
 from .multimed import trans_Cam_Point, multimed_nlay, back_trans_Point
-from .trafo import vec_set, flat_to_dist
+from .trafo import flat_to_dist
+from .vec_utils import vec_set
 
 
 def flat_image_coord(
@@ -23,27 +24,32 @@ def flat_image_coord(
     # Prepare temporary calibration and variables
     cal_t = Calibration()
     cal_t.mmlut = cal.mmlut
-    cross_p = np.zeros(3)
-    cross_c = np.zeros(3)
-    pos_t = np.zeros(3)
-    pos = np.zeros(3)
-
-    # Calculate 3D position in air-filled space (no refraction)
-    trans_Cam_Point(
-        cal.ext_par, mm, cal.glass_par, orig_pos, cal_t.ext_par, pos_t, cross_p, cross_c
+    # Use the correct Python API for trans_Cam_Point
+    ex_t, pos_t, cross_p, cross_c = trans_Cam_Point(
+        cal.ext_par, mm, cal.glass_par, np.asarray(orig_pos)
     )
+    cal_t.ext_par = ex_t
     X_t, Y_t = multimed_nlay(cal_t, mm, pos_t)
-    pos_t = vec_set(X_t, Y_t, pos_t[2])
-    back_trans_Point(pos_t, mm, cal.glass_par, cross_p, cross_c, pos)
+    pos_t = vec_set(X_t, Y_t, pos_t[2] if hasattr(pos_t, '__getitem__') else pos_t.z)
+    pos = back_trans_Point(pos_t, mm, cal.glass_par, cross_p, cross_c)
 
-    dx = pos[0] - cal.ext_par.x0
-    dy = pos[1] - cal.ext_par.y0
-    dz = pos[2] - cal.ext_par.z0
+    # Support both Vec3D and numpy array for pos
+    if hasattr(pos, 'x') and hasattr(pos, 'y') and hasattr(pos, 'z'):
+        dx = pos.x - cal.ext_par.x0
+        dy = pos.y - cal.ext_par.y0
+        dz = pos.z - cal.ext_par.z0
+    else:
+        dx = pos[0] - cal.ext_par.x0
+        dy = pos[1] - cal.ext_par.y0
+        dz = pos[2] - cal.ext_par.z0
+    # Avoid division by zero in denominator
     deno = (
         cal.ext_par.dm[0][2] * dx
         + cal.ext_par.dm[1][2] * dy
         + cal.ext_par.dm[2][2] * dz
     )
+    if np.isclose(deno, 0.0):
+        return np.nan, np.nan
     x = -cal.int_par.cc * (
         cal.ext_par.dm[0][0] * dx
         + cal.ext_par.dm[1][0] * dy

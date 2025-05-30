@@ -9,7 +9,7 @@ MAXCAND = 100
 
 class NTupel:
     def __init__(self, indices: List[int], corr: float):
-        self.indices: List[int] = indices
+        self.p: List[int] = indices
         self.corr: float = corr
 
 class Correspond:
@@ -19,6 +19,7 @@ class Correspond:
         self.dist: np.ndarray = dist
         self.corr: np.ndarray = corr
         self.p2: np.ndarray = p2
+        self.p1: int = 0  # Add p1 attribute for compatibility with tests
 
 def quicksort_con(con: List[Correspond]) -> None:
     if len(con) > 0:
@@ -103,12 +104,12 @@ def safely_allocate_target_usage_marks(num_cams: int) -> np.ndarray:
 def deallocate_target_usage_marks(tusage: np.ndarray) -> None:
     del tusage
 
-def safely_allocate_adjacency_lists(num_cams: int, num_targets: List[int]) -> List[List[List[Any]]]:
+def safely_allocate_adjacency_lists(num_cams: int, num_targets: list) -> list:
     try:
         lists = [[None for _ in range(num_cams)] for _ in range(num_cams)]
         for c1 in range(num_cams - 1):
             for c2 in range(c1 + 1, num_cams):
-                lists[c1][c2] = [Correspond(0, 0, np.zeros(MAXCAND, dtype=np.int32), np.zeros(MAXCAND), np.zeros(MAXCAND)) for _ in range(target_counts[c1])]
+                lists[c1][c2] = [Correspond(0, 0, np.zeros(MAXCAND, dtype=np.int32), np.zeros(MAXCAND), np.zeros(MAXCAND)) for _ in range(num_targets[c1])]
         return lists
     except MemoryError:
         return None
@@ -178,8 +179,9 @@ def three_camera_matching(
     tusage: np.ndarray
 ) -> int:
     matched = 0
+    num_cams = len(lists)
     for i1 in range(num_cams - 2):
-        for i in range(target_counts[i1]):
+        for i in range(num_targets_arr[i1]):
             for i2 in range(i1 + 1, num_cams - 1):
                 p1 = lists[i1][i2][i].p1
                 if p1 > nmax or tusage[i1][p1] > 0:
@@ -230,9 +232,10 @@ def consistent_pair_matching(
     tusage: np.ndarray
 ) -> int:
     matched = 0
+    num_cams = len(lists)
     for i1 in range(num_cams - 1):
         for i2 in range(i1 + 1, num_cams):
-            for i in range(target_counts[i1]):
+            for i in range(num_targets_arr[i1]):
                 p1 = lists[i1][i2][i].p1
                 if p1 > nmax or tusage[i1][p1] > 0:
                     continue
