@@ -2,14 +2,6 @@
 import numpy as np
 from typing import Optional, Any
 
-try:
-    import numba
-
-    HAS_NUMBA = True
-except ImportError:
-    HAS_NUMBA = False
-
-
 class Calibration:
     def __init__(
         self,
@@ -208,56 +200,6 @@ class Calibration:
                 f.write(f"{self.added_par.p1:.8f} {self.added_par.p2:.8f} ")
                 f.write(f"{self.added_par.scx:.8f} {self.added_par.she:.8f}")
 
-    @staticmethod
-    def read_ori(
-        filename: str,
-        add_file: Optional[str] = None,
-        add_fallback: Optional[str] = None,
-    ) -> "Calibration":
-        with open(filename, "r") as f:
-            lines = f.readlines()
-
-        # Remove empty lines and strip whitespace
-        lines = [line.strip() for line in lines if line.strip()]
-
-        cal = Calibration()
-
-        cal.ext_par.x0, cal.ext_par.y0, cal.ext_par.z0 = map(float, lines[0].split())
-        cal.ext_par.omega, cal.ext_par.phi, cal.ext_par.kappa = map(
-            float, lines[1].split()
-        )
-        cal.ext_par.dm = np.array(
-            [list(map(float, line.split())) for line in lines[2:5]]
-        )
-        cal.int_par.xh, cal.int_par.yh = map(float, lines[5].split())
-        cal.int_par.cc = float(lines[6])
-        cal.glass_par.vec_x, cal.glass_par.vec_y, cal.glass_par.vec_z = map(
-            float, lines[7].split()
-        )
-
-        if add_file or add_fallback:
-            try:
-                with open(add_file, "r") as f:
-                    add_lines = f.readlines()
-            except (FileNotFoundError, TypeError):
-                if add_fallback:
-                    with open(add_fallback, "r") as f:
-                        add_lines = f.readlines()
-                else:
-                    # If no add file, use defaults
-                    return cal
-
-            (
-                cal.added_par.k1,
-                cal.added_par.k2,
-                cal.added_par.k3,
-                cal.added_par.p1,
-                cal.added_par.p2,
-                cal.added_par.scx,
-                cal.added_par.she,
-            ) = map(float, add_lines[0].split())
-
-        return cal
 
     @staticmethod
     def compare_calib(c1: "Calibration", c2: "Calibration") -> bool:
@@ -412,45 +354,136 @@ class Calibration:
 
         self.write_ori(filename, add_file)
 
+def read_ori(
+    filename: str,
+    add_file: Optional[str] = None,
+    add_fallback: Optional[str] = None,
+) -> Calibration:
+    import os
+    
+    if not os.path.exists(filename):
+        raise FileNotFoundError(f"File {os.path.abspath(filename)} does not exist.")
+
+    with open(filename, "r") as f:
+        lines = f.readlines()
+
+    # Remove empty lines and strip whitespace
+    lines = [line.strip() for line in lines if line.strip()]
+
+    cal = Calibration()
+
+    cal.ext_par.x0, cal.ext_par.y0, cal.ext_par.z0 = map(float, lines[0].split())
+    cal.ext_par.omega, cal.ext_par.phi, cal.ext_par.kappa = map(
+        float, lines[1].split()
+    )
+    cal.ext_par.dm = np.array(
+        [list(map(float, line.split())) for line in lines[2:5]]
+    )
+    cal.int_par.xh, cal.int_par.yh = map(float, lines[5].split())
+    cal.int_par.cc = float(lines[6])
+    cal.glass_par.vec_x, cal.glass_par.vec_y, cal.glass_par.vec_z = map(
+        float, lines[7].split()
+    )
+
+    if add_file or add_fallback:
+        try:
+            with open(add_file, "r") as f:
+                add_lines = f.readlines()
+        except (FileNotFoundError, TypeError):
+            if add_fallback:
+                with open(add_fallback, "r") as f:
+                    add_lines = f.readlines()
+            else:
+                # If no add file, use defaults
+                return cal
+
+        (
+            cal.added_par.k1,
+            cal.added_par.k2,
+            cal.added_par.k3,
+            cal.added_par.p1,
+            cal.added_par.p2,
+            cal.added_par.scx,
+            cal.added_par.she,
+        ) = map(float, add_lines[0].split())
+
+    return cal
+
 
 class Exterior:
-    def __init__(self) -> None:
-        self.x0: float = 0.0
-        self.y0: float = 0.0
-        self.z0: float = 0.0
-        self.omega: float = 0.0
-        self.phi: float = 0.0
-        self.kappa: float = 0.0
-        self.dm: np.ndarray = np.zeros((3, 3))
+    def __init__(
+        self,
+        x0: float = 0.0,
+        y0: float = 0.0,
+        z0: float = 0.0,
+        omega: float = 0.0,
+        phi: float = 0.0,
+        kappa: float = 0.0,
+        dm: Optional[np.ndarray] = None,
+    ) -> None:
+        self.x0: float = x0
+        self.y0: float = y0
+        self.z0: float = z0
+        self.omega: float = omega
+        self.phi: float = phi
+        self.kappa: float = kappa
+        if dm is not None:
+            self.dm: np.ndarray = dm
+        else:
+            self.dm: np.ndarray = np.eye(3)
+
+    def update_rotation_matrix(self) -> None:
+        """
+        Updates the rotation matrix based on the current omega, phi, and kappa.
+        """
+        self.dm = Calibration._rotation_matrix_numpy(self.omega, self.phi, self.kappa)
 
 
 class Interior:
-    def __init__(self) -> None:
-        self.xh: float = 0.0
-        self.yh: float = 0.0
-        self.cc: float = 0.0
+    def __init__(self, xh: float = 0.0, yh: float = 0.0, cc: float = 0.0) -> None:
+        self.xh: float = xh
+        self.yh: float = yh
+        self.cc: float = cc
 
 
 class Glass:
-    def __init__(self) -> None:
-        self.vec_x: float = 0.0
-        self.vec_y: float = 0.0
-        self.vec_z: float = 0.0
-        self.n1: float = 0.0
-        self.n2: float = 0.0
-        self.n3: float = 0.0
-        self.d: float = 0.0
+    def __init__(
+        self,
+        vec_x: float = 0.0,
+        vec_y: float = 0.0,
+        vec_z: float = 0.0,
+        n1: float = 0.0,
+        n2: float = 0.0,
+        n3: float = 0.0,
+        d: float = 0.0,
+    ) -> None:
+        self.vec_x: float = vec_x
+        self.vec_y: float = vec_y
+        self.vec_z: float = vec_z
+        self.n1: float = n1
+        self.n2: float = n2
+        self.n3: float = n3
+        self.d: float = d
 
 
 class ap_52:
-    def __init__(self) -> None:
-        self.k1: float = 0.0
-        self.k2: float = 0.0
-        self.k3: float = 0.0
-        self.p1: float = 0.0
-        self.p2: float = 0.0
-        self.scx: float = 1.0
-        self.she: float = 0.0
+    def __init__(
+        self,
+        k1: float = 0.0,
+        k2: float = 0.0,
+        k3: float = 0.0,
+        p1: float = 0.0,
+        p2: float = 0.0,
+        scx: float = 1.0,
+        she: float = 0.0,
+    ) -> None:
+        self.k1: float = k1
+        self.k2: float = k2
+        self.k3: float = k3
+        self.p1: float = p1
+        self.p2: float = p2
+        self.scx: float = scx
+        self.she: float = she
 
 
 class mmlut:

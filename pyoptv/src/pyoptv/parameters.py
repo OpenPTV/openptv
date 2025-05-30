@@ -166,17 +166,17 @@ class ControlPar:
     pix_y: float
     chfield: int
     mm: MMNP
-    def __init__(self, num_cams: int) -> None:
-        self.num_cams = num_cams
-        self.img_base_name = [""] * num_cams
-        self.cal_img_base_name = [""] * num_cams
+    def __init__(self) -> None:
+        self.num_cams = 1
+        self.img_base_name = [""]
+        self.cal_img_base_name = [""]
         self.hp_flag = 0
         self.allCam_flag = 0
         self.tiff_flag = 0
-        self.imx = 0
-        self.imy = 0
-        self.pix_x = 0.0
-        self.pix_y = 0.0
+        self.imx = 256 # pix
+        self.imy = 256 # pix
+        self.pix_x = 0.01
+        self.pix_y = 0.01
         self.chfield = 0
         self.mm = MMNP()
 
