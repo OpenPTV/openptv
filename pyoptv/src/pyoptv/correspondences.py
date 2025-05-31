@@ -117,7 +117,10 @@ def safely_allocate_adjacency_lists(num_cams: int, target_counts: List[int]) -> 
         lists = [[[] for _ in range(num_cams)] for _ in range(num_cams)]
         for c1 in range(num_cams - 1):
             for c2 in range(c1 + 1, num_cams):
-                lists[c1][c2] = [Correspond(n=0, p1=0) for _ in range(target_counts[c1])]
+                lists[c1][c2] = [
+                    Correspond(n=0, p1=0)
+                    for _ in range(target_counts[c1])
+                ]
         return lists
     except MemoryError:
         return None
