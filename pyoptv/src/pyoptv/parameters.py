@@ -90,25 +90,27 @@ def compare_track_par(t1, t2):
             t1.dnx == t2.dnx and t1.dny == t2.dny and t1.add == t2.add)
 
 class VolumePar:
-    X_lay: List[float]
-    Zmin_lay: List[float]
-    Zmax_lay: List[float]
-    cnx: float
-    cny: float
-    cn: float
-    csumg: float
-    corrmin: float
-    eps0: float
-    def __init__(self) -> None:
-        self.X_lay = [0.0, 0.0]
-        self.Zmin_lay = [0.0, 0.0]
-        self.Zmax_lay = [0.0, 0.0]
-        self.cnx = 0.0
-        self.cny = 0.0
-        self.cn = 0.0
-        self.csumg = 0.0
-        self.corrmin = 0.0
-        self.eps0 = 0.0
+    def __init__(
+        self,
+        X_lay: List[float] = None,
+        Zmin_lay: List[float] = None,
+        Zmax_lay: List[float] = None,
+        cnx: float = 0.3,
+        cny: float = 0.3,
+        cn: float = 0.01,
+        csumg: float = 0.01,
+        corrmin: float = 33.0,
+        eps0: float = 1.0,
+    ) -> None:
+        self.X_lay = X_lay if X_lay is not None else [-100.0, 100.0]
+        self.Zmin_lay = Zmin_lay if Zmin_lay is not None else [-100.0, -100.0]
+        self.Zmax_lay = Zmax_lay if Zmax_lay is not None else [100.0, 100.0]
+        self.cnx = cnx
+        self.cny = cny
+        self.cn = cn
+        self.csumg = csumg
+        self.corrmin = corrmin
+        self.eps0 = eps0
 
 def read_volume_par(filename):
     ret = VolumePar()
@@ -143,15 +145,23 @@ def compare_volume_par(v1, v2):
 class MMNP:
     nlay: int
     n1: float
-    n2: List[float]
     d: List[float]
+    n2: List[float]
     n3: float
-    def __init__(self) -> None:
-        self.nlay = 1
-        self.n1 = 1.0
-        self.n2 = [1.0, 1.0, 1.0]
-        self.d = [1.0, 0.0, 0.0]
-        self.n3 = 1.0
+
+    def __init__(
+        self,
+        nlay: int = 1,
+        n1: float = 1.0,
+        d: List[float] = None,
+        n2: List[float] = None,
+        n3: float = 1.0,
+    ) -> None:
+        self.nlay = nlay
+        self.n1 = n1
+        self.n2 = n2 if n2 is not None else [1.0, 1.0, 1.0]
+        self.d = d if d is not None else [0.0, 0.0, 0.0]
+        self.n3 = n3
 
 class ControlPar:
     num_cams: int
@@ -180,6 +190,14 @@ class ControlPar:
         self.pix_y = 0.01
         self.chfield = 0
         self.mm = MMNP()
+
+    def set_image_size(self, size):
+        """Set image size (imx, imy) from a (width, height) tuple."""
+        self.imx, self.imy = size
+
+    def set_pixel_size(self, pix_size):
+        """Set pixel size (pix_x, pix_y) from a (pix_x, pix_y) tuple."""
+        self.pix_x, self.pix_y = pix_size
 
 def read_control_par(filename: str) -> ControlPar:
     with open(filename, "r") as par_file:

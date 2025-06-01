@@ -6,6 +6,7 @@ from .parameters import (
     SequencePar, TrackPar, VolumePar, ControlPar,
     read_control_par, read_sequence_par, read_track_par, read_volume_par
 )
+from .calibration import Calibration
 
 class TrackingRun:
     seq_par: SequencePar
@@ -27,7 +28,7 @@ class TrackingRun:
         tpar: TrackPar,
         vpar: VolumePar,
         cpar: ControlPar,
-        cal: List[object],
+        cal: List[Calibration],
         buf_len: int,
         max_targets: int,
         corres_file_base: str,

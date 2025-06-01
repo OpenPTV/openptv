@@ -38,7 +38,8 @@ def matmul(
     Multiplies matrices a (m, n_large) and b (n_large, k).
     Returns a matrix of shape (m, k).
     """
-    c = np.zeros((m, k))
+    # Ensure dimensions passed to np.zeros are integers
+    c = np.zeros((int(m), int(k)))
     for i in range(m):
         for j in range(k):
             for l in range(n):

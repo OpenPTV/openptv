@@ -6,7 +6,7 @@ from pyoptv.tracking_frame_buf import Frame, Target
 from scipy.optimize import minimize
 import matplotlib.pyplot as plt
 from .epi import Coord2D, epi_mm, find_candidate
-from .constants import MAXCAND
+from .constants import MAXCAND, PT_UNUSED
 
 nmax = 202400
 
@@ -19,7 +19,7 @@ class NTupel:
         self.corr: float = corr
 
 class Correspond:
-    def __init__(self, p1: int = 0, n: int = 0, dist: np.ndarray = None, corr: np.ndarray = None, p2: np.ndarray = None):
+    def __init__(self, p1: int = PT_UNUSED, n: int = 0, dist: np.ndarray = None, corr: np.ndarray = None, p2: np.ndarray = None):
         self.p1: int = p1  # Add p1 attribute for compatibility with tests
         self.n: int = n
         self.p2: np.ndarray = np.zeros(MAXCAND, dtype=np.int32) if p2 is None else p2.astype(np.int32)
@@ -118,7 +118,7 @@ def safely_allocate_adjacency_lists(num_cams: int, target_counts: List[int]) -> 
         for c1 in range(num_cams - 1):
             for c2 in range(c1 + 1, num_cams):
                 lists[c1][c2] = [
-                    Correspond(n=0, p1=0)
+                    Correspond(n=0, p1=PT_UNUSED)
                     for _ in range(target_counts[c1])
                 ]
         return lists

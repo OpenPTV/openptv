@@ -4,14 +4,7 @@ from typing import Optional, Any
 
 class Calibration:
     def __init__(
-        self,
-        pos: Optional[np.ndarray] = None,
-        angs: Optional[np.ndarray] = None,
-        prim_point: Optional[np.ndarray] = None,
-        rad_dist: Optional[np.ndarray] = None,
-        decent: Optional[np.ndarray] = None,
-        affine: Optional[np.ndarray] = None,
-        glass: Optional[np.ndarray] = None,
+        self,        
         ext_par: Optional["Exterior"] = None,
         int_par: Optional["Interior"] = None,
         glass_par: Optional["Glass"] = None,
@@ -26,6 +19,9 @@ class Calibration:
             self.ext_par = ext_par
         else:
             self.ext_par = Exterior()
+
+        # Ensure the rotation matrix is initialized
+        self.ext_par.update_rotation_matrix()
 
         if int_par is not None:
             self.int_par = int_par
@@ -44,20 +40,7 @@ class Calibration:
 
         self.mmlut = mmlut()
 
-        if pos is not None:
-            self.set_pos(pos)
-        if angs is not None:
-            self.set_angles(angs)
-        if prim_point is not None:
-            self.set_primary_point(prim_point)
-        if rad_dist is not None:
-            self.set_radial_distortion(rad_dist)
-        if decent is not None:
-            self.set_decentering(decent)
-        if affine is not None:
-            self.set_affine_trans(affine)
-        if glass is not None:
-            self.set_glass_vec(glass)
+        
 
     def set_pos(self, pos: np.ndarray) -> None:
         """
@@ -152,10 +135,7 @@ class Calibration:
     @staticmethod
     def rotation_matrix(omega: float, phi: float, kappa: float) -> np.ndarray:
         # Use only the numpy implementation, as _rotation_matrix_numba does not exist
-        return Calibration._rotation_matrix_numpy(omega, phi, kappa)
-
-    @staticmethod
-    def _rotation_matrix_numpy(omega: float, phi: float, kappa: float) -> np.ndarray:
+        
         cp = np.cos(phi)
         sp = np.sin(phi)
         co = np.cos(omega)
@@ -436,7 +416,7 @@ class Exterior:
         """
         Updates the rotation matrix based on the current omega, phi, and kappa.
         """
-        self.dm = Calibration._rotation_matrix_numpy(self.omega, self.phi, self.kappa)
+        self.dm = Calibration.rotation_matrix(self.omega, self.phi, self.kappa)
 
 
 class Interior:
@@ -451,19 +431,11 @@ class Glass:
         self,
         vec_x: float = 0.0,
         vec_y: float = 0.0,
-        vec_z: float = 0.0,
-        n1: float = 0.0,
-        n2: float = 0.0,
-        n3: float = 0.0,
-        d: float = 0.0,
+        vec_z: float = 1.0,
     ) -> None:
         self.vec_x: float = vec_x
         self.vec_y: float = vec_y
         self.vec_z: float = vec_z
-        self.n1: float = n1
-        self.n2: float = n2
-        self.n3: float = n3
-        self.d: float = d
 
 
 class ap_52:

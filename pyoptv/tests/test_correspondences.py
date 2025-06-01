@@ -14,6 +14,7 @@ from pyoptv.correspondences import (
     three_camera_matching,
     consistent_pair_matching,
     correspondences,
+    Correspond,
 )
 from pyoptv.parameters import ControlPar, read_control_par, read_volume_par
 from pyoptv.calibration import Calibration, read_ori
@@ -21,6 +22,7 @@ from pyoptv.imgcoord import img_coord
 from pyoptv.trafo import metric_to_pixel, pixel_to_metric, dist_to_flat
 from pathlib import Path
 from pyoptv.tracking_frame_buf import Frame, Target
+
 
 @pytest.fixture(scope="session")
 def testing_fodder_dir():
@@ -125,10 +127,11 @@ def generate_test_set(calib, cpar, vpar):
                 targ = frm.targets[cam][cpt_ix]
                 targ.pnr = cpt_ix
                 tmp = np.array([cpt_vert * 10, cpt_horz * 10, 0.0])
-                x, y = img_coord(tmp, calib[cam], cpar.mm)
-                x, y = metric_to_pixel(x, y, cpar)
-                targ.x = x
-                targ.y = y
+                # Store pixel coordinates (not metric) in Target.x/y
+                x_metric, y_metric = img_coord(tmp, calib[cam], cpar.mm)
+                x_pix, y_pix = metric_to_pixel(x_metric, y_metric, cpar)
+                targ.x = x_pix
+                targ.y = y_pix
                 targ.n = 25
                 targ.nx = 5
                 targ.ny = 5
@@ -158,26 +161,36 @@ def test_pairwise_matching(testing_fodder_dir):
     calib = read_all_calibration(cpar, testing_fodder_dir)
     frm = generate_test_set(calib, cpar, vpar)
     corrected = correct_frame(frm, calib, cpar, 0.0001)
-    print(corrected)
     lists = safely_allocate_adjacency_lists(cpar.num_cams, frm.num_targets)
     match_pairs(lists, corrected, frm, vpar, cpar, calib)
 
-    print(lists)
-
-
+    # Deep check: for every cam pair and every target, check the candidate list matches ground truth
     for cam in range(cpar.num_cams - 1):
         for subcam in range(cam + 1, cpar.num_cams):
             for part in range(frm.num_targets[cam]):
-                if (subcam - cam) % 2 == 0:
-                    correct_pnr = corrected[cam][lists[cam][subcam][part].p1].pnr
+                # Compute the expected ground truth candidate for this cam/part/subcam
+                # The synthetic grid is 4x4, so pnr = cpt_ix = cpt_horz*4 + cpt_vert
+                # For odd cameras, the index is reversed
+                if (subcam % 2) == 0:
+                    expected_pnr = part
                 else:
-                    correct_pnr = 15 - corrected[cam][lists[cam][subcam][part].p1].pnr
-                found = False
-                for cand in range(len(lists[cam][subcam][part].p2)):
-                    if corrected[subcam][lists[cam][subcam][part].p2[cand]].pnr == correct_pnr:
-                        found = True
+                    expected_pnr = 15 - part
+                # Find the index in corrected[subcam] with pnr == expected_pnr
+                expected_idx = None
+                for idx, c2d in enumerate(corrected[subcam]):
+                    if c2d.pnr == expected_pnr:
+                        expected_idx = idx
                         break
-                assert found
+                assert expected_idx is not None, f"Expected pnr {expected_pnr} not found in cam {subcam}"
+                # Now check that this index is present in the candidate list
+                candidate_indices = lists[cam][subcam][part].p2
+                assert expected_idx in candidate_indices, (
+                    f"For cam {cam}, subcam {subcam}, part {part}: expected candidate idx {expected_idx} (pnr {expected_pnr}) not in candidates {candidate_indices}"
+                )
+                # There should be exactly one candidate (the ground truth)
+                assert len(candidate_indices) == 1, (
+                    f"For cam {cam}, subcam {subcam}, part {part}: expected 1 candidate, got {len(candidate_indices)}: {candidate_indices}"
+                )
 
 def test_four_camera_matching(testing_fodder_dir):
     cpar = read_control_par(str(testing_fodder_dir / "parameters" / "ptv.par"))
@@ -245,13 +258,125 @@ def test_correspondences(testing_fodder_dir):
     calib = read_all_calibration(cpar, testing_fodder_dir)
     frm = generate_test_set(calib, cpar, vpar)
     corrected = correct_frame(frm, calib, cpar, 0.0001)
-    from pyoptv.correspondences import NTupel
+
     con, match_counts = correspondences(frm, corrected, vpar, cpar, calib)
     assert match_counts[0] == 16
     assert match_counts[1] == 0
     assert match_counts[2] == 0
     assert match_counts[3] == 16
 
+    def test_quicksort_con_with_correspond():
+        # Create Correspond objects with varying corr values
+        c1 = Correspond(p1=0, n=0)
+        c1.corr[0] = 0.5
+        c1.n = 1
+        c2 = Correspond(p1=1, n=0)
+        c2.corr[0] = 0.8
+        c2.n = 1
+        c3 = Correspond(p1=2, n=0)
+        c3.corr[0] = 0.3
+        c3.n = 1
 
-if __name__ == "__main__":
-    pytest.main([__file__])
+        # Set .corr attribute for sorting (simulate as in NTupel)
+        c1.corr = 0.5
+        c2.corr = 0.8
+        c3.corr = 0.3
+
+        con_list = [c1, c2, c3]
+        quicksort_con(con_list)
+        # Should be sorted descending by .corr
+        assert con_list[0].corr == 0.8
+        assert con_list[1].corr == 0.5
+        assert con_list[2].corr == 0.3
+
+    def test_quicksort_con_empty():
+        con_list = []
+        quicksort_con(con_list)  # Should not raise
+        assert con_list == []
+
+    def test_quicksort_con_single_element():
+        c = Correspond(p1=0, n=0)
+        c.corr = 1.23
+        con_list = [c]
+        quicksort_con(con_list)
+        assert con_list[0].corr == 1.23
+
+
+def test_minimal_pairwise_matching():
+    from pyoptv.parameters import ControlPar, VolumePar
+    from pyoptv.calibration import Calibration
+    from pyoptv.tracking_frame_buf import Frame, Target
+    from pyoptv.correspondences import match_pairs
+    import numpy as np
+
+    # Minimal control and volume parameters
+    cpar = ControlPar(2)
+    cpar.set_image_size((1000, 1000))
+    cpar.set_pixel_size((1.0, 1.0))  # 1mm per pixel
+    cpar.mm.n1 = 1.0
+    cpar.mm.n2[0] = 1.0
+    cpar.mm.n3 = 1.0
+
+    vpar = VolumePar()
+    vpar.X_lay = [-100, 100]
+    vpar.Zmin_lay = [-100, 100]
+    vpar.Zmax_lay = [-100, 100]
+    vpar.cnx = 0.0
+    vpar.cny = 0.0
+    vpar.cn = 0.0
+    vpar.csumg = 0.0
+    vpar.corrmin = 0.0
+    vpar.eps0 = 1.0  # small positive value for epipolar band
+
+    # Two simple calibrations: identity (no rotation/translation)
+    cal1 = Calibration()
+    cal2 = Calibration()
+    for cal in [cal1, cal2]:
+        cal.ext_par = np.zeros(6)
+        cal.int_par = np.zeros(7)
+        cal.added_par = np.zeros(5)
+        cal.glass_par = np.zeros(4)
+        cal.principal_point = (500, 500)
+        cal.cc = np.array([0.0, 0.0, 0.0])
+        cal.ang = np.array([0.0, 0.0, 0.0])
+        cal.k1 = 0.0
+        cal.k2 = 0.0
+        cal.k3 = 0.0
+        cal.p1 = 0.0
+        cal.p2 = 0.0
+        cal.f = 1000.0
+        cal.xh = 1000
+        cal.yh = 1000
+        cal.mmpx = 1.0
+        cal.mmpy = 1.0
+
+    # Two targets in world space
+    world_targets = [np.array([10.0, 20.0, 30.0]), np.array([-10.0, -20.0, 30.0])]
+
+    # Project to both cameras (no distortion, identity)
+    frames = []
+    for cal in [cal1, cal2]:
+        frame = Frame(1)
+        for i, X in enumerate(world_targets):
+            # Simple pinhole: x = f*X/Z + cx, y = f*Y/Z + cy
+            x = cal.f * X[0] / X[2] + cal.principal_point[0]
+            y = cal.f * X[1] / X[2] + cal.principal_point[1]
+            t = Target()
+            t.pnr = i
+            t.x = x
+            t.y = y
+            frame.targets.append(t)
+        frames.append(frame)
+
+    # Run pairwise matching (cam1 vs cam2)
+    pairs = match_pairs(frames[0].targets, frames[1].targets, cal1, cal2, cpar, vpar)
+
+    # There should be two pairs, each matching the same pnr
+    assert len(pairs) == 2, f"Expected 2 pairs, got {len(pairs)}: {pairs}"
+    pnrs_0 = [p[0] for p in pairs]
+    pnrs_1 = [p[1] for p in pairs]
+    assert set(pnrs_0) == {0, 1}, f"Unexpected pnr0: {pnrs_0}"
+    assert set(pnrs_1) == {0, 1}, f"Unexpected pnr1: {pnrs_1}"
+    # Each pair should match the same pnr
+    for p0, p1 in pairs:
+        assert p0 == p1, f"Pair mismatch: {p0} != {p1}"

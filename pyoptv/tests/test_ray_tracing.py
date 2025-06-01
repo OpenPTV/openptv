@@ -1,48 +1,44 @@
-from pyoptv.calibration import Calibration
-import pytest
 import numpy as np
+import pytest
+from pyoptv.calibration import Calibration, Exterior, Interior, Glass, ap_52
 from pyoptv.ray_tracing import ray_tracing
+from pyoptv.parameters import MMNP as mm_np
+
+EPS = 1e-6
 
 def test_ray_tracing():
+    # input
     x = 100.0
     y = 100.0
-    cal = create_calibration()
-    mm = create_multimed()
-    X, a = ray_tracing(x, y, cal, mm)
 
-    # Expected values from C test
-    expected_X = np.array([110.406944, 88.325788, 0.988076])
-    expected_a = np.array([0.387960, 0.310405, -0.867834])
+    test_Ex = Exterior(
+        x0=0.0, y0=0.0, z0=100.0,
+        omega=0.0, phi=0.0, kappa=0.0,
+        dm=np.array([[1.0, 0.2, -0.3],
+                     [0.2, 1.0, 0.0],
+                     [-0.3, 0.0, 1.0]])
+    )
+    test_I = Interior(xh=0.0, yh=0.0, cc=100.0)
+    test_G = Glass(0.0001, 0.00001, 1.0)
+    test_addp = ap_52(0., 0., 0., 0., 0., 1., 0.)
+    test_cal = Calibration(test_Ex, test_I, test_G, test_addp)
 
-    assert np.allclose(X, expected_X, atol=1e-5)
-    assert np.allclose(a, expected_a, atol=1e-5)
 
-def create_calibration():
-    cal = Calibration()
-    cal.int_par.cc = 100.0  # Camera constant from C test
-    cal.ext_par.dm = np.array([[1.0, 0.2, -0.3], 
-                                [0.2, 1.0, 0.0],
-                                [-0.3, 0.0, 1.0]])
-    cal.ext_par.x0 = 0.0
-    cal.ext_par.y0 = 0.0
-    cal.ext_par.z0 = 100.0
-    cal.glass_par.vec_x = 0.0001
-    cal.glass_par.vec_y = 0.00001
-    cal.glass_par.vec_z = 1.0
+    test_mm = mm_np(
+    	nlay=3, 
+    	n1=1.0, 
+    	n2= [1.49, 0.0, 0.0], 
+    	d = [5.0, 0.0, 0.0],
+    	n3 = 1.33
+    )
 
-    
-    return cal
+    X, a = ray_tracing(x, y, test_cal, test_mm)
 
-def create_multimed():
-    from pyoptv.parameters import MMNP
-    # Create a mock MMNP object with the same structure as in the C test
-    mm = MMNP()
-    mm.d = [5.0, 0.0, 0.0]  # Thickness of layers
-    mm.n1 = 1.0  # Refractive index of the first medium
-    mm.n2 = [1.49, 0.0, 0.0]  # Refractive index of the second medium
-    mm.n3 = 1.33  # Refractive index of the third medium
+    assert np.allclose(X, [110.406944, 88.325788, 0.988076], atol=EPS), \
+        f"Expected [110.406944, 88.325788, 0.988076] but found {X}"
 
-    return mm
+    assert np.allclose(a, [0.387960, 0.310405, -0.867834], atol=EPS), \
+        f"Expected [0.387960, 0.310405, -0.867834] but found {a}"
 
 if __name__ == "__main__":
     pytest.main([__file__])
