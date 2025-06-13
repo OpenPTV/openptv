@@ -218,7 +218,7 @@ int find_candidate (coord_2d *crd, target *pix, int num,
       if (qn < vpar->cn || qnx < vpar->cnx || qny < vpar->cny ||
           qsumg <= vpar->csumg) continue;
       if (count >= MAXCAND){ 
-          printf("More candidates than (maxcand): %d\n", count); 
+          printf("More candidates than (%d): %d\n", MAXCAND, count); 
           return count; 
       }
             
