@@ -8,7 +8,7 @@
 #include "calibration.h"
 #include "epi.h"
 
-#define nmax 202400
+#define nmax 20240
 
 
 typedef struct
