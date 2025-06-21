@@ -29,3 +29,8 @@ if(WIN32)
 endif(WIN32)
 
 install(TARGETS optv DESTINATION lib)
+
+# Set Debug as the default build type if not specified
+if(NOT CMAKE_BUILD_TYPE)
+  set(CMAKE_BUILD_TYPE Debug CACHE STRING "Choose the type of build." FORCE)
+endif()

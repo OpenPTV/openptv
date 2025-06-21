@@ -117,38 +117,26 @@ START_TEST(test_track3d_no_add)
 
     empty_res_dir();
     
-    // int range = run->seq_par->last - run->seq_par->first;
-    // double npart, nlinks;
+    int range = run->seq_par->last - run->seq_par->first;
+    double npart, nlinks;
     
     /* average of all steps */
-    // npart = (double)run->npart / range;
-    // nlinks = (double)run->nlinks / range;
+    npart = (double)run->npart / range;
+    nlinks = (double)run->nlinks / range;
 
     printf("npart: %d\n", run->npart);
     printf("nlinks: %d\n", run->nlinks);
     
-    // ck_assert_msg(fabs(npart - 0.8)<EPS,
-    //               "Was expecting npart == 208/210 but found %f \n", npart);
-    // ck_assert_msg(fabs(nlinks - 0.8)<EPS,
-    //               "Was expecting nlinks == 198/210 but found %f \n", nlinks);
+    ck_assert_msg(fabs(npart - 0.8)<EPS,
+                  "Was expecting npart == 208/210 but found %f \n", npart);
+    ck_assert_msg(fabs(nlinks - 0.8)<EPS,
+                  "Was expecting nlinks == 198/210 but found %f \n", nlinks);
     
 
-
-
     // ...existing code...
 }
 END_TEST
 
-START_TEST(test_track3d_with_add)
-{
-    // ...existing code...
-
-    // Replace trackcorr_c_loop with track3d_loop
-    // track3d_loop(run, step);
-
-    // ...existing code...
-}
-END_TEST
 
 START_TEST(track3d_test_cavity)
 {
@@ -163,23 +151,73 @@ END_TEST
 
 START_TEST(track3d_test_burgers)
 {
-    // ...existing code...
+    tracking_run *run;
+    Calibration *calib[4];
+    control_par *cpar;
+    int status, step;
+    struct stat st = {0};
 
-    // Replace trackcorr_c_loop with track3d_loop
-    // track3d_loop(run, step);
 
-    // ...existing code...
-}
-END_TEST
+    printf("----------------------------\n");
+    printf("Test Burgers vortex case with track3d \n");
 
-START_TEST(test_track3d_new_particle)
-{
-    // ...existing code...
 
-    // Replace trackcorr_c_loop with track3d_loop
-    // track3d_loop(run, step);
+    fail_unless((status = chdir("testing_fodder/burgers")) == 0);
 
-    // ...existing code...
+    if (stat("res", &st) == -1) {
+        mkdir("res", 0700);
+    }
+    copy_res_dir("res_orig/", "res/");
+
+    if (stat("img", &st) == -1) {
+        mkdir("img", 0700);
+    }
+    copy_res_dir("img_orig/", "img/");
+
+    fail_if((cpar = read_control_par("parameters/ptv.par"))== 0);
+    read_all_calibration(calib, cpar->num_cams);
+
+    run = tr_new_legacy("parameters/sequence.par",
+        "parameters/track.par", "parameters/criteria.par",
+        "parameters/ptv.par", calib);
+
+    printf("num cams in run is %d\n", run->cpar->num_cams);
+    printf("add particle is %d\n", run->tpar->add);
+
+    track_forward_start(run);
+    for (step = run->seq_par->first; step < run->seq_par->last; step++) {
+        track3d_loop(run, step);
+    }
+    trackcorr_c_finish(run, run->seq_par->last);
+    printf("total num parts is %d, num links is %d \n", run->npart, run->nlinks);
+
+    // ck_assert_msg(run->npart == 19,
+    //               "Was expecting npart == 19 but found %d \n", run->npart);
+    // ck_assert_msg(run->nlinks == 17,
+    //               "Was expecting nlinks == 17 found %ld \n", run->nlinks);
+
+
+    // run = tr_new_legacy("parameters/sequence.par",
+    //     "parameters/track.par", "parameters/criteria.par",
+    //     "parameters/ptv.par", calib);
+
+    // run->tpar->add = 1;
+    // printf("changed add particle to %d\n", run->tpar->add);
+
+    // track_forward_start(run);
+    // for (step = run->seq_par->first; step < run->seq_par->last; step++) {
+    //     track3d_loop(run, step);
+    // }
+    // trackcorr_c_finish(run, run->seq_par->last);
+    // printf("total num parts is %d, num links is %d \n", run->npart, run->nlinks);
+
+    // // ck_assert_msg(run->npart == 20,
+    // //               "Was expecting npart == 20 but found %d \n", run->npart);
+    // // ck_assert_msg(run->nlinks ==20,
+    // //               "Was expecting nlinks == 20 but found %d \n", run->nlinks);
+
+    empty_res_dir();
+
 }
 END_TEST
 
@@ -198,7 +236,7 @@ Suite *track3d_suite(void)
 
     // tcase_add_test(tc_core, test_track3d_with_add);
     // tcase_add_test(tc_core, track3d_test_cavity);
-    // tcase_add_test(tc_core, track3d_test_burgers);
+    tcase_add_test(tc_core, track3d_test_burgers);
     // tcase_add_test(tc_core, test_track3d_new_particle);
     // ...add other test cases as needed...
 
