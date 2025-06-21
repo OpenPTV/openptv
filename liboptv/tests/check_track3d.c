@@ -45,10 +45,12 @@ int copy_res_dir(char *src, char *dest) {
         if ((dp = readdir(dirp)) != NULL) {
             if (dp->d_name[0] == '.') continue;
             strncpy(file_name, src, 255);
-            strncat(file_name, dp->d_name, 255);
+            file_name[255] = '\0'; // Ensure null termination
+            strncat(file_name, dp->d_name, 255 - strlen(file_name) - 1); // Adjust size for remaining space
             in_f = fopen(file_name, "r");
             strncpy(file_name, dest, 255);
-            strncat(file_name, dp->d_name, 255);
+            file_name[255] = '\0'; // Ensure null termination
+            strncat(file_name, dp->d_name, 255 - strlen(file_name) - 1); // Adjust size for remaining space
             out_f = fopen(file_name, "w");
             while (!feof(in_f)) {
                 result = fread(buf, 1, sizeof(buf), in_f);
