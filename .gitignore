@@ -30,3 +30,4 @@ py_bind/wheelhouse/*
 build_artifacts
 # conda smithy ci-skeleton end
 *.whl
+py_bind/optv/optv/*.h
