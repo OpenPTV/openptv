@@ -118,7 +118,7 @@ cdef class Tracker:
         if self.step >= self.run_info.seq_par.last:
             return False
 
-        track3d_loop(self.run_info)
+        track3d_loop(self.run_info, self.step)
         self.step += 1
         return True 
 
@@ -129,7 +129,7 @@ cdef class Tracker:
         track_forward_start(self.run_info)
         for step in range(
                 self.run_info.seq_par.first, self.run_info.seq_par.last):
-            track3d_loop(self.run_info)
+            track3d_loop(self.run_info, step)
         trackcorr_c_finish(self.run_info, self.run_info.seq_par.last)
 
     def full_backward(self):

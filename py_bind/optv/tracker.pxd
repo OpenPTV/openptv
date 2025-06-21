@@ -26,7 +26,7 @@ cdef extern from "optv/track.h":
     double trackback_c(tracking_run *run_info)
 
 cdef extern from "optv/track3d.h":
-    void track3d_loop(tracking_run *run_info)
+    void track3d_loop(tracking_run *run_info, int step)
 
 cdef class Tracker:
     cdef tracking_run *run_info
