@@ -81,7 +81,7 @@ class TestTracker(unittest.TestCase):
         while self.tracker.step_forward_3d():
             # print(f"step is {self.tracker.current_step()}\n")
             # print(self.tracker.current_step() > last_step)
-            self.assertTrue(self.tracker.current_step() > last_step)
+            self.assertGreater(self.tracker.current_step(), last_step)
             with open("testing_fodder/track/res/linkage.%d" % last_step) as f:
                 lines = f.readlines()
                 # print(last_step,lines[0])
