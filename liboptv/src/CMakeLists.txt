@@ -1,4 +1,3 @@
-
 # Turn on more warnings
 if(MSVC)
   # Force to always compile with W4
@@ -14,8 +13,7 @@ endif()
 
 include_directories("../include/")
 
-add_library (optv SHARED tracking_frame_buf.c calibration.c parameters.c lsqadj.c ray_tracing.c trafo.c vec_utils.c image_processing.c multimed.c imgcoord.c epi.c orientation.c sortgrid.c segmentation.c correspondences.c track.c tracking_run.c)
-
+add_library (optv SHARED tracking_frame_buf.c calibration.c parameters.c lsqadj.c ray_tracing.c trafo.c vec_utils.c image_processing.c multimed.c imgcoord.c epi.c orientation.c sortgrid.c segmentation.c correspondences.c track.c tracking_run.c track3d.c)
 
 
 if(UNIX)
@@ -31,3 +29,8 @@ if(WIN32)
 endif(WIN32)
 
 install(TARGETS optv DESTINATION lib)
+
+# Set Debug as the default build type if not specified
+if(NOT CMAKE_BUILD_TYPE)
+  set(CMAKE_BUILD_TYPE Debug CACHE STRING "Choose the type of build." FORCE)
+endif()

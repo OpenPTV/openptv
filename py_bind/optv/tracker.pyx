@@ -14,7 +14,8 @@ from optv.tracking_framebuf cimport fb_free
 # External C functions from tracking_run.h should be declared in tracker.pxd
 from optv.tracker cimport (
     tr_new, track_forward_start, trackcorr_c_loop,
-    trackcorr_c_finish, trackback_c, TR_BUFSPACE, MAX_TARGETS
+    trackcorr_c_finish, trackback_c, TR_BUFSPACE, MAX_TARGETS,
+    track3d_loop
 )
 
 def _encode_if_needed(s):
@@ -92,7 +93,7 @@ cdef class Tracker:
         
         trackcorr_c_loop(self.run_info, self.step)
         self.step += 1
-        return True
+        return True        
     
     def finalize(self):
         """
@@ -109,7 +110,28 @@ cdef class Tracker:
                 self.run_info.seq_par.first, self.run_info.seq_par.last):
             trackcorr_c_loop(self.run_info, step)
         trackcorr_c_finish(self.run_info, self.run_info.seq_par.last)
-    
+
+    def step_forward_3d(self):
+        """
+        Perform one tracking step for the current frame of iteration.
+        """
+        if self.step >= self.run_info.seq_par.last:
+            return False
+
+        track3d_loop(self.run_info, self.step)
+        self.step += 1
+        return True 
+
+    def full_forward_3d(self):
+        """
+        Do a full tracking run from restart to finalize.
+        """
+        track_forward_start(self.run_info)
+        for step in range(
+                self.run_info.seq_par.first, self.run_info.seq_par.last):
+            track3d_loop(self.run_info, step)
+        trackcorr_c_finish(self.run_info, self.run_info.seq_par.last)
+
     def full_backward(self):
         """
         Does a full backward run on existing tracking results. so make sure

@@ -80,6 +80,36 @@ class TestTracker(unittest.TestCase):
             last_step += 1
         self.tracker.finalize()
 
+    def test_forward_3d(self):
+        """Manually running a full forward tracking run."""
+        # path = 'testing_fodder/burgers/res'
+        # try:
+        #     os.mkdir(path)
+        # except OSError:
+        #     print("Creation of the directory %s failed" % path)
+        # else:
+        #     print("Successfully created the directory %s " % path)
+
+        shutil.copytree(
+           "testing_fodder/burgers/res_orig/", "testing_fodder/burgers/res/")
+        shutil.copytree(
+           "testing_fodder/burgers/img_orig/", "testing_fodder/burgers/img/")
+
+        self.tracker.restart()
+        last_step = 10001
+        while self.tracker.step_forward_3d():
+            self.assertTrue(self.tracker.current_step() > last_step)
+            with open("testing_fodder/burgers/res/rt_is.%d" % last_step) as f:
+                lines = f.readlines()
+                # print(last_step,lines[0])
+                # print(lines)
+                if last_step == 10003:
+                    self.assertTrue(lines[0] == "4\n")
+                else:
+                    self.assertTrue(lines[0] == "5\n")
+            last_step += 1
+        self.tracker.finalize()        
+
     def test_full_forward(self):
         """Automatic full forward tracking run."""
         # os.mkdir('testing_fodder/burgers/res')
@@ -88,6 +118,17 @@ class TestTracker(unittest.TestCase):
         shutil.copytree(
            "testing_fodder/burgers/img_orig/", "testing_fodder/burgers/img/")
         self.tracker.full_forward()
+        # if it passes without error, we assume it's ok. The actual test is in
+        # the C code.
+
+    def test_full_forward_3d(self):
+        """Automatic full forward tracking run."""
+        # os.mkdir('testing_fodder/burgers/res')
+        shutil.copytree(
+           "testing_fodder/burgers/res_orig/", "testing_fodder/burgers/res/")
+        shutil.copytree(
+           "testing_fodder/burgers/img_orig/", "testing_fodder/burgers/img/")
+        self.tracker.full_forward_3d()
         # if it passes without error, we assume it's ok. The actual test is in
         # the C code.
 

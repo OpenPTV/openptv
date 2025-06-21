@@ -55,12 +55,14 @@ add_dependencies(check_epi optv testing_data)
 add_executable(check_segmentation EXCLUDE_FROM_ALL check_segmentation.c)
 add_dependencies(check_segmentation optv testing_data)
 
-add_executable(check_track EXCLUDE_FROM_ALL check_track.c)
-add_dependencies(check_track optv testing_data)
-
 add_executable(check_correspondences EXCLUDE_FROM_ALL check_correspondences.c)
 add_dependencies(check_correspondences optv testing_data)
 
+add_executable(check_track EXCLUDE_FROM_ALL check_track.c)
+add_dependencies(check_track optv testing_data)
+
+add_executable(check_track3d EXCLUDE_FROM_ALL ../tests/check_track3d.c)
+add_dependencies(check_track3d optv testing_data)
 
 set(LIBS ${LIBS} ${CHECK_LIBRARIES} optv)
 
@@ -121,8 +123,11 @@ add_test(check_correspondences ${CMAKE_CURRENT_BINARY_DIR}/check_correspondences
 target_link_libraries(check_track ${LIBS})
 add_test(check_track ${CMAKE_CURRENT_BINARY_DIR}/check_track)
 
+target_link_libraries(check_track3d ${LIBS})
+add_test(check_track3d ${CMAKE_CURRENT_BINARY_DIR}/check_track3d)
+
 add_custom_target(verify COMMAND ${CMAKE_CTEST_COMMAND})
 add_dependencies(verify check_fb check_calibration check_parameters check_lsqadj
 check_ray_tracing check_trafo check_vec_utils check_image_proc check_multimed
 check_imgcoord check_orientation check_epi check_sortgrid check_segmentation
-check_correspondences check_track)
+check_correspondences check_track check_track3d)
