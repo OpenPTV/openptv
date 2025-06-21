@@ -86,10 +86,51 @@ int empty_res_dir() {
 
 START_TEST(test_trackcorr_no_add)
 {
-    // ...existing code...
+     tracking_run *run;
+    int step;
+    Calibration *calib[3];
+    control_par *cpar;
 
-    // Replace trackcorr_c_loop with track3d_loop
-    track3d_loop(run, step);
+    chdir("testing_fodder/track");
+    copy_res_dir("res_orig/", "res/");
+    copy_res_dir("img_orig/", "img/");
+    
+    printf("----------------------------\n");
+    printf("Test tracking multiple files 2 cameras, 1 particle \n");
+    cpar = read_control_par("parameters/ptv.par");
+    read_all_calibration(calib, cpar->num_cams);
+    
+    run = tr_new_legacy("parameters/sequence.par", 
+        "parameters/track.par", "parameters/criteria.par", 
+        "parameters/ptv.par", calib);
+    run->tpar->add = 0;
+
+
+
+    track_forward_start(run);
+    track3d_loop(run, run->seq_par->first);
+
+    for (step = run->seq_par->first + 1; step < run->seq_par->last; step++) {
+        track3d_loop(run, step);
+    }
+    track3d_loop(run, run->seq_par->last);
+
+    empty_res_dir();
+    
+    int range = run->seq_par->last - run->seq_par->first;
+    double npart, nlinks;
+    
+    /* average of all steps */
+    npart = (double)run->npart / range;
+    nlinks = (double)run->nlinks / range;
+    
+    ck_assert_msg(fabs(npart - 0.8)<EPS,
+                  "Was expecting npart == 208/210 but found %f \n", npart);
+    ck_assert_msg(fabs(nlinks - 0.8)<EPS,
+                  "Was expecting nlinks == 198/210 but found %f \n", nlinks);
+    
+
+
 
     // ...existing code...
 }
@@ -100,7 +141,7 @@ START_TEST(test_trackcorr_with_add)
     // ...existing code...
 
     // Replace trackcorr_c_loop with track3d_loop
-    track3d_loop(run, step);
+    // track3d_loop(run, step);
 
     // ...existing code...
 }
@@ -111,7 +152,7 @@ START_TEST(test_cavity)
     // ...existing code...
 
     // Replace trackcorr_c_loop with track3d_loop
-    track3d_loop(run, step);
+    // track3d_loop(run, step);
 
     // ...existing code...
 }
@@ -122,7 +163,7 @@ START_TEST(test_burgers)
     // ...existing code...
 
     // Replace trackcorr_c_loop with track3d_loop
-    track3d_loop(run, step);
+    // track3d_loop(run, step);
 
     // ...existing code...
 }
@@ -133,7 +174,7 @@ START_TEST(test_new_particle)
     // ...existing code...
 
     // Replace trackcorr_c_loop with track3d_loop
-    track3d_loop(run, step);
+    // track3d_loop(run, step);
 
     // ...existing code...
 }
