@@ -14,6 +14,7 @@
 #include "calibration.h"
 #include <sys/types.h>
 #include <sys/stat.h>
+#include <limits.h>
 
 #define EPS 1E-5
 
@@ -90,8 +91,18 @@ START_TEST(test_track3d_no_add)
     int step;
     Calibration *calib[3];
     control_par *cpar;
+    char cwd[PATH_MAX];
+
+
+    if (getcwd(cwd, sizeof(cwd)) != NULL) {
+        printf("Current working directory: %s\n", cwd);
+    } else {
+        perror("getcwd() error");
+    }  
+    
 
     chdir("testing_fodder/track");
+    // chdir("testing_fodder/track");
     copy_res_dir("res_orig/", "res/");
     copy_res_dir("img_orig/", "img/");
 
@@ -140,12 +151,58 @@ END_TEST
 
 START_TEST(track3d_test_cavity)
 {
-    // ...existing code...
+    tracking_run *run;
+    Calibration *calib[4];
+    control_par *cpar;
+    int step;
+    struct stat st = {0};
+    char cwd[PATH_MAX];
+    
+    
+    printf("----------------------------\n");
+    printf("Test cavity case \n");
 
-    // Replace trackcorr_c_loop with track3d_loop
-    // track3d_loop(run, step);
+    if (getcwd(cwd, sizeof(cwd)) != NULL) {
+        printf("Current working directory: %s\n", cwd);
+    } else {
+        perror("getcwd() error");
+    }  
+    
+    chdir("testing_fodder/test_cavity");  // after another test
+    if (stat("res", &st) == -1) {
+        mkdir("res", 0700);
+    }
+    copy_res_dir("res_orig/", "res/");
+    
+    if (stat("img", &st) == -1) {
+        mkdir("img", 0700);
+    }
+    copy_res_dir("img_orig/", "img/");
 
-    // ...existing code...
+    fail_if((cpar = read_control_par("parameters/ptv.par"))== 0);
+    read_all_calibration(calib, cpar->num_cams);
+
+    run = tr_new_legacy("parameters/sequence.par", 
+        "parameters/track.par", "parameters/criteria.par", 
+        "parameters/ptv.par", calib);
+
+    printf("num cams in run is %d\n",run->cpar->num_cams);
+    printf("add particle is %d\n",run->tpar->add);
+
+    track_forward_start(run);    
+    for (step = run->seq_par->first; step < run->seq_par->last; step++) {
+        track3d_loop(run, step);
+    }
+    trackcorr_c_finish(run, run->seq_par->last);
+    printf("total num parts is %d, num links is %d \n", run->npart, run->nlinks);
+
+    ck_assert_msg(run->npart == 672+699+711,
+                  "Was expecting npart == 2082 but found %d \n", run->npart);
+    ck_assert_msg(run->nlinks >= 132+176+144,
+                  "Was expecting nlinks >= 452 found %ld \n", run->nlinks);
+
+    
+    empty_res_dir();
 }
 END_TEST
 
@@ -156,13 +213,24 @@ START_TEST(track3d_test_burgers)
     control_par *cpar;
     int status, step;
     struct stat st = {0};
+    char cwd[PATH_MAX];
+
 
 
     printf("----------------------------\n");
     printf("Test Burgers vortex case with track3d \n");
 
 
-    fail_unless((status = chdir("testing_fodder/burgers")) == 0);
+    if (getcwd(cwd, sizeof(cwd)) != NULL) {
+        printf("Current working directory: %s\n", cwd);
+    } else {
+        perror("getcwd() error");
+    }
+
+
+    chdir("testing_fodder/burgers");
+
+    // chdir("testing_fodder/burgers");
 
     if (stat("res", &st) == -1) {
         mkdir("res", 0700);
@@ -191,10 +259,10 @@ START_TEST(track3d_test_burgers)
     trackcorr_c_finish(run, run->seq_par->last);
     printf("total num parts is %d, num links is %d \n", run->npart, run->nlinks);
 
-    // ck_assert_msg(run->npart == 19,
-    //               "Was expecting npart == 19 but found %d \n", run->npart);
-    // ck_assert_msg(run->nlinks == 17,
-    //               "Was expecting nlinks == 17 found %ld \n", run->nlinks);
+    ck_assert_msg(run->npart == 19,
+                  "Was expecting npart == 19 but found %d \n", run->npart);
+    ck_assert_msg(run->nlinks == 18,
+                  "Was expecting nlinks == 18 found %ld \n", run->nlinks);
 
 
     // run = tr_new_legacy("parameters/sequence.par",
@@ -230,16 +298,16 @@ Suite *track3d_suite(void)
     s = suite_create("Track3D");
 
     /* Core test case */
-    tc_core = tcase_create("Core");
-
+    tc_core = tcase_create("core test");
     tcase_add_test(tc_core, test_track3d_no_add);
+    suite_add_tcase(s, tc_core);
 
-    // tcase_add_test(tc_core, test_track3d_with_add);
-    // tcase_add_test(tc_core, track3d_test_cavity);
+    tc_core = tcase_create("test_cavity");
+    tcase_add_test(tc_core, track3d_test_cavity);
+    suite_add_tcase(s, tc_core);
+
+    tc_core = tcase_create("burgers test");
     tcase_add_test(tc_core, track3d_test_burgers);
-    // tcase_add_test(tc_core, test_track3d_new_particle);
-    // ...add other test cases as needed...
-
     suite_add_tcase(s, tc_core);
 
     return s;
@@ -254,7 +322,7 @@ int main(void)
     s = track3d_suite();
     sr = srunner_create(s);
 
-    srunner_set_fork_status(sr, CK_NOFORK);
+    // srunner_set_fork_status(sr, CK_NOFORK);
 
     srunner_run_all(sr, CK_VERBOSE);
     number_failed = srunner_ntests_failed(sr);

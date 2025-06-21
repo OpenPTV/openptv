@@ -842,8 +842,8 @@ START_TEST(test_new_particle)
 }
 END_TEST
 
-Suite* fb_suite(void) {
-    Suite *s = suite_create ("ttools");
+Suite* track_suite(void) {
+    Suite *s = suite_create ("track");
     TCase *tc = tcase_create ("predict test");
     tcase_add_test(tc, test_predict);
     suite_add_tcase (s, tc);
@@ -914,7 +914,7 @@ Suite* fb_suite(void) {
 
 int main(void) {
     int number_failed;
-    Suite *s = fb_suite ();
+    Suite *s = track_suite ();
     SRunner *sr = srunner_create (s);
     // srunner_run_all (sr, CK_ENV);
     srunner_run_all (sr, CK_VERBOSE);
