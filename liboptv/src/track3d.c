@@ -42,15 +42,15 @@ failure) if (!fp) return;
 #define _USE_MATH_DEFINES
 #include <math.h>
 
-// track3d_loop is the main tracking subroutine for 3D candidate search, designed to be interchangeable with trackcorr_c_loop
+
 void track3d_loop(tracking_run *run_info, int step) {
     // Shortcuts into the tracking_run struct
     framebuf_base *fb = run_info->fb;
     track_par *tpar = run_info->tpar;
 
-    frame *prev = fb->buf[-1];
-    frame *curr = fb->buf[0];
-    frame *next = fb->buf[1];
+    frame *prev = fb->buf[0];
+    frame *curr = fb->buf[1];  // current frame
+    frame *next = fb->buf[2];
 
     // frame *prev = fb_get_frame(fb, 0);
     // frame *curr = fb_get_frame(fb, 1);
@@ -62,7 +62,8 @@ void track3d_loop(tracking_run *run_info, int step) {
     int linkdecis[MAX_CANDS];
     vec3d predicted, vel;
     int nvel;
-    
+    int count1 = 0;  // Count of links established in level 1
+
     double dx = tpar->dvxmax;
     double dy = tpar->dvymax;
     double dz = tpar->dvzmax;
@@ -78,7 +79,7 @@ void track3d_loop(tracking_run *run_info, int step) {
             predicted[d] = 2 * curr_path_inf->x[d] - prev_path_inf->x[d];
         int num_cands = find_candidates_in_3d(next, predicted, dx, dy, dz, cand_indices, MAX_CANDS);
         for (k = 0; k < num_cands; k++) {
-            float acc = 0.0f;
+            float acc = 0.0;
             for (d = 0; d < 3; d++) {
                 float diff = curr_path_inf->x[d] - 2 * next->path_info[cand_indices[k]].x[d] + prev_path_inf->x[d];
                 acc += diff * diff;
@@ -92,6 +93,7 @@ void track3d_loop(tracking_run *run_info, int step) {
         if (num_cands > 0 && next->path_info[linkdecis[0]].prev < 0) {
             curr_path_inf->next = linkdecis[0];
             next->path_info[linkdecis[0]].prev = i;
+            count1++;
         } else {
             curr_path_inf->next = -1;
         }
@@ -121,7 +123,7 @@ void track3d_loop(tracking_run *run_info, int step) {
             predicted[d] = curr_path_inf->x[d] + vel[d];
         int num_cands = find_candidates_in_3d(next, predicted, dx, dy, dz, cand_indices, MAX_CANDS);
         for (k = 0; k < num_cands; k++) {
-            float acc = 0.0f;
+            float acc = 0.0;
             for (d = 0; d < 3; d++) {
                 float diff = curr_path_inf->x[d] - 2 * next->path_info[cand_indices[k]].x[d] + predicted[d];
                 acc += diff * diff;
@@ -135,6 +137,7 @@ void track3d_loop(tracking_run *run_info, int step) {
         if (num_cands > 0 && next->path_info[linkdecis[0]].prev < 0) {
             curr_path_inf->next = linkdecis[0];
             next->path_info[linkdecis[0]].prev = i;
+            count1++;
         } else {
             curr_path_inf->next = -1;
         }
@@ -148,7 +151,7 @@ void track3d_loop(tracking_run *run_info, int step) {
             predicted[d] = curr_path_inf->x[d];
         int num_cands = find_candidates_in_3d(next, predicted, dx, dy, dz, cand_indices, MAX_CANDS);
         for (k = 0; k < num_cands; k++) {
-            float acc = 0.0f;
+            float acc = 0.0;
             for (d = 0; d < 3; d++) {
                 float diff = curr_path_inf->x[d] - 2 * next->path_info[cand_indices[k]].x[d] + predicted[d];
                 acc += diff * diff;
@@ -162,9 +165,25 @@ void track3d_loop(tracking_run *run_info, int step) {
         if (num_cands > 0 && next->path_info[linkdecis[0]].prev < 0) {
             curr_path_inf->next = linkdecis[0];
             next->path_info[linkdecis[0]].prev = i;
+            count1++;
         } else {
             curr_path_inf->next = -1;
         }
+    }
+    /* end of creation of links with decision check */
+
+    printf("track3d step: %d, curr: %d, next: %d, links: %d\n",
+            step, fb->buf[1]->num_parts, fb->buf[2]->num_parts,
+            count1);
+
+    /* for the average of particles and links */      // NOLINT  // NOLINT
+    run_info->npart = run_info->npart + fb->buf[1]->num_parts;
+    run_info->nlinks = run_info->nlinks + count1;
+
+    fb_next(fb);
+    fb_write_frame_from_start(fb, step);
+    if (step < run_info->seq_par->last - 2) {
+        fb_read_frame_at_end(fb, step + 3, 0);
     }
 }
 
