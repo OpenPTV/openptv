@@ -76,6 +76,8 @@ def mk_ext(name, files):
         extra_link_args.extend(['-Wl,-rpath,$ORIGIN'])
     else:
         extra_compile_args.append('/W4')
+        extra_compile_args.append('/std:c11')
+        extra_compile_args.append('/D_CRT_SECURE_NO_WARNINGS')
 
     include_dirs = [
         numpy.get_include(),
@@ -96,7 +98,6 @@ def mk_ext(name, files):
         include_dirs=include_dirs,
         extra_compile_args=extra_compile_args,
         extra_link_args=extra_link_args,
-        define_macros=[("NPY_NO_DEPRECATED_API", "NPY_1_7_API_VERSION")]
     )
 
 

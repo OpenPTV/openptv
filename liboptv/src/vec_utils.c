@@ -95,17 +95,17 @@ void vec_scalar_mul(vec3d vec, double scalar, vec3d output) {
    double, the norm of the difference, i.e. ||vec1 - vec2||
 */
 double vec_diff_norm(vec3d vec1, vec3d vec2) {
-    return norm(vec1[0] - vec2[0], vec1[1] - vec2[1], vec1[2] - vec2[2]);
+    return vec_norm3d(vec1[0] - vec2[0], vec1[1] - vec2[1], vec1[2] - vec2[2]);
 }
 
 /* vec_norm() calculates the norm of a vector.
-   
+
    Arguments:
    vec3d vec - the vector to norm.
 */
 double vec_norm(vec3d vec) {
     /* Just plug into the macro */
-    return norm(vec[0], vec[1], vec[2]);
+    return vec_norm3d(vec[0], vec[1], vec[2]);
 }
 
 /*  vec_dot() gives the dot product of two vectors. 

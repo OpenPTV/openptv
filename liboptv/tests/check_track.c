@@ -767,7 +767,7 @@ START_TEST(test_trackback)
     trackcorr_c_finish(run, run->seq_par->last);
     run->tpar->dvxmin = run->tpar->dvymin = run->tpar->dvzmin = -50;
     run->tpar->dvxmax = run->tpar->dvymax = run->tpar->dvzmax = 50;
-    run->lmax = norm((run->tpar->dvxmin - run->tpar->dvxmax), \
+    run->lmax = vec_norm3d((run->tpar->dvxmin - run->tpar->dvxmax), \
                      (run->tpar->dvymin - run->tpar->dvymax), \
                      (run->tpar->dvzmin - run->tpar->dvzmax));
     

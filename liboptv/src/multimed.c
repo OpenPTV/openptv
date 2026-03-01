@@ -82,7 +82,7 @@ double multimed_r_nlay (Calibration *cal, mm_np *mm, vec3d pos) {
     for (i = 1; i < mm->nlay; i++)
         zout += mm->d[i];
     
-    r = norm((X - cal->ext_par.x0), (Y - cal->ext_par.y0), 0);
+    r = vec_norm3d((X - cal->ext_par.x0), (Y - cal->ext_par.y0), 0);
     rq = r;
   
     do
@@ -276,18 +276,18 @@ void init_mmlut (volume_par *vpar, control_par *cpar, Calibration *cal) {
           if( xyz_t[2] < Zmin_t ) Zmin_t = xyz_t[2];
           if( xyz_t[2] > Zmax_t ) Zmax_t = xyz_t[2];
 
-          R = norm((xyz_t[0] - cal_t.ext_par.x0), (xyz_t[1] - cal_t.ext_par.y0), 0);
+          R = vec_norm3d((xyz_t[0] - cal_t.ext_par.x0), (xyz_t[1] - cal_t.ext_par.y0), 0);
           if (R > Rmax)
               Rmax = R;
-           
+
           move_along_ray(Zmax, pos, a, xyz);
           trans_Cam_Point(cal->ext_par, *(cpar->mm), cal->glass_par, xyz,\
               &(cal_t.ext_par), xyz_t, (double *)cross_p, (double *)cross_c);
-  
+
           if( xyz_t[2] < Zmin_t ) Zmin_t = xyz_t[2];
           if( xyz_t[2] > Zmax_t ) Zmax_t = xyz_t[2];
 
-          R = norm((xyz_t[0] - cal_t.ext_par.x0), (xyz_t[1] - cal_t.ext_par.y0), 0);
+          R = vec_norm3d((xyz_t[0] - cal_t.ext_par.x0), (xyz_t[1] - cal_t.ext_par.y0), 0);
           if (R > Rmax)
               Rmax = R;
       }
@@ -352,7 +352,7 @@ double get_mmf_from_mmlut (Calibration *cal, vec3d pos){
     iz = (int) sz;
     sz -= iz;
     
-    R = norm(temp[0], temp[1], 0);
+    R = vec_norm3d(temp[0], temp[1], 0);
     
     sr = R/rw;
     ir = (int) sr;

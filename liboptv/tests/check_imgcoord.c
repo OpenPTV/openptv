@@ -151,7 +151,7 @@ START_TEST(test_distorted_centered_cam)
     double r; /* radial distortion prediction */
     
     img_coord(pos, &cal, &mm, &x, &y);
-    r = norm(10./6., 5./6., 0);
+    r = vec_norm3d(10./6., 5./6., 0);
     fail_unless(x == 10./6.*(1 - 0.01*r*r));
     fail_unless(x == 2*y);
 }
