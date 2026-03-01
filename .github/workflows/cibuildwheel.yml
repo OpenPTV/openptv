@@ -99,9 +99,16 @@ jobs:
     name: Upload to PyPI
     needs: [build_wheels, build_sdist]
     runs-on: ubuntu-latest
-    if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/')
+    if: |
+      always() &&
+      github.event_name == 'push' &&
+      startsWith(github.ref, 'refs/tags/') &&
+      needs.build_sdist.result == 'success' &&
+      (needs.build_wheels.result == 'success' || needs.build_wheels.result == 'failure')
     permissions:
-      id-token: write  # IMPORTANT: this permission is mandatory for trusted publishing
+      id-token: write      # mandatory for OIDC trusted publishing
+      attestations: write  # needed by pypa/gh-action-pypi-publish >= v1.12 for Sigstore attestations
+      contents: read       # needed to read repo contents for attestation metadata
 
     steps:
       - uses: actions/download-artifact@v4
