@@ -314,8 +314,9 @@ def full_calibration(Calibration cal,
     orip[0].p2flag = (1 if 'p2' in flags else 0)
     orip[0].scxflag = (1 if 'scale' in flags else 0)
     orip[0].sheflag = (1 if 'shear' in flags else 0)
-    orip[0].interfflag = 0 # This also solves for the glass, I'm skipping it.
+    orip[0].interfflag = (1 if 'shear' in flags else 0) # 0 # This also solves for the glass, I'm skipping it.
     
+
     err_est = np.empty((NPAR + 1) * sizeof(double))
     residuals = orient(cal._calibration, cparam._control_par, len(ref_pts), 
         ref_coord, img_pts._tarr, orip, <double *>err_est.data)
