@@ -367,6 +367,70 @@ START_TEST(test_convergence_measure)
 END_TEST
 
 
+static void rotate_y(vec3d v, double deg) {
+    double a = deg * M_PI / 180., x = v[0], z = v[2];
+    v[0] = cos(a) * x + sin(a) * z;
+    v[2] = -sin(a) * x + cos(a) * z;
+}
+
+/* The glass tilt directions in orient() (interfflag) must be perpendicular
+   to a tilted glass normal. Glass at 20 deg about Y, start 1 deg further
+   about Y: the 3DPTV basis could not represent that direction and the fit
+   stopped ~0.02 deg short. */
+START_TEST(test_orient_tilted_glass)
+{
+    Calibration *cal;
+    control_par *cpar;
+    orient_par *opar;
+    vec3d fix[64], true_g, g;
+    target pix[64];
+    double sigmabeta[20], *resi, xp, yp, cos_err, err_deg;
+    int i, ix, iy, iz, pt_id = 0;
+
+    for (ix = 0; ix < 4; ix++)
+        for (iy = 0; iy < 4; iy++)
+            for (iz = 0; iz < 4; iz++)
+                vec_set(fix[pt_id++], (ix * 10) - 60, iy * 5, iz * 5);
+
+    fail_if((cal = read_calibration("testing_fodder/cal/sym_cam1.tif.ori",
+        "testing_fodder/cal/cam1.tif.addpar", NULL)) == NULL);
+    fail_if((cpar = read_control_par("testing_fodder/parameters/ptv.par")) == NULL);
+    fail_if((opar = read_orient_par("testing_fodder/parameters/orient.par")) == NULL);
+
+    vec_set(true_g, cal->glass_par.vec_x, cal->glass_par.vec_y, cal->glass_par.vec_z);
+    rotate_y(true_g, 20.);
+    cal->glass_par.vec_x = true_g[0];
+    cal->glass_par.vec_y = true_g[1];
+    cal->glass_par.vec_z = true_g[2];
+
+    for (i = 0; i < 64; i++) {
+        img_coord(fix[i], cal, cpar->mm, &xp, &yp);
+        metric_to_pixel(&(pix[i].x), &(pix[i].y), xp, yp, cpar);
+        pix[i].pnr = i;
+    }
+
+    vec_copy(g, true_g);
+    rotate_y(g, 1.);
+    cal->glass_par.vec_x = g[0];
+    cal->glass_par.vec_y = g[1];
+    cal->glass_par.vec_z = g[2];
+
+    opar->interfflag = 1;
+    fail_if((resi = orient(cal, cpar, 64, fix, pix, opar, sigmabeta)) == NULL);
+    free(resi);
+
+    vec_set(g, cal->glass_par.vec_x, cal->glass_par.vec_y, cal->glass_par.vec_z);
+    cos_err = vec_dot(g, true_g) / vec_norm(g) / vec_norm(true_g);
+    err_deg = acos(cos_err < 1. ? cos_err : 1.) * 180. / M_PI;
+    ck_assert_msg(err_deg < 0.005, "glass direction still %f deg off\n", err_deg);
+
+    free(cal);
+    free(opar);
+    free_control_par(cpar);
+}
+END_TEST
+
+
 Suite* orientation_suite(void) {
     Suite *s = suite_create ("Orientation");
 
@@ -381,6 +445,7 @@ Suite* orientation_suite(void) {
 
     tc = tcase_create ("Orientation");
     tcase_add_test(tc, test_orient);
+    tcase_add_test(tc, test_orient_tilted_glass);
     suite_add_tcase (s, tc);
 
     return s;
