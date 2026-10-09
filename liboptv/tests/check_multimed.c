@@ -180,6 +180,10 @@ START_TEST(test_volumedimension)
     cpar->mm->nlay = 1;
     cpar->num_cams = 2;
 
+    /* volumedimension() only widens the given extremes, so they must start
+       empty; left uninitialized the result depended on stack leftovers. */
+    xmax = ymax = -1e20;
+    xmin = ymin = 1e20;
     volumedimension (&xmax, &xmin, &ymax, &ymin, &zmax, &zmin, vpar, cpar, cal);
     
     ck_assert_msg( fabs(xmax - 73.02053752) < EPS && 
