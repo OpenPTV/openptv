@@ -345,6 +345,66 @@ START_TEST(dist_flat_round_trip)
 }
 END_TEST
 
+/* Reference: the Tcl/Tk 3DPTV distort_brown_affin (identical in liboptv until
+   2016), with both decentering terms evaluated at the undistorted point. */
+static void ref_distort(double x, double y, ap_52 ap, double *x1, double *y1) {
+    double r2 = x*x + y*y;
+    double rad = ap.k1*r2 + ap.k2*r2*r2 + ap.k3*r2*r2*r2;
+    double xd = x + x*rad + ap.p1*(r2 + 2*x*x) + 2*ap.p2*x*y;
+    double yd = y + y*rad + ap.p2*(r2 + 2*y*y) + 2*ap.p1*x*y;
+    *x1 = ap.scx*xd - sin(ap.she)*yd;
+    *y1 = cos(ap.she)*yd;
+}
+
+START_TEST(affine_matches_3dptv)
+{
+    ap_52 ap = {1e-3, 1e-5, 0.0, 2e-4, -3e-4, 1.02, 0.01};
+    double x = 3.0, y = -2.0, xp, yp, xr, yr;
+
+    distort_brown_affin(x, y, ap, &xp, &yp);
+    ref_distort(x, y, ap, &xr, &yr);
+    ck_assert_msg(fabs(xp - xr) < 1e-12 && fabs(yp - yr) < 1e-12,
+        "Expected %f, %f, but got %f %f\n", xr, yr, xp, yp);
+}
+END_TEST
+
+START_TEST(scx_scales_x_only)
+{
+    ap_52 ap1 = {1e-3, 1e-5, 0.0, 2e-4, -3e-4, 1.0, 0.01};
+    ap_52 ap2 = {1e-3, 1e-5, 0.0, 2e-4, -3e-4, 1.05, 0.01};
+    double x1, y1, x2, y2;
+
+    distort_brown_affin(3.0, -2.0, ap1, &x1, &y1);
+    distort_brown_affin(3.0, -2.0, ap2, &x2, &y2);
+    ck_assert_msg(fabs(y2 - y1) < 1e-15, "scx changed y: %f -> %f\n", y1, y2);
+    ck_assert_msg(fabs(x2 - x1) > 1e-6, "scx did not change x\n");
+}
+END_TEST
+
+START_TEST(affine_round_trip)
+{
+    /* scx != 1 together with she != 0: every older round-trip test kept
+       scx = 1, where an inverse of a different affine model still passes. */
+    ap_52 ap = {1e-3, 1e-5, 0.0, 2e-4, -3e-4, 1.02, 0.01};
+    Calibration cal = {
+        .int_par = {0.1, -0.05, 60.},
+        .added_par = {1e-3, 1e-5, 0.0, 2e-4, -3e-4, 1.02, 0.01}
+    };
+    double x = 3.0, y = -2.0, xp, yp, x1, y1;
+
+    distort_brown_affin(x, y, ap, &xp, &yp);
+    correct_brown_affin(xp, yp, ap, &x1, &y1);
+    /* correct_brown_affin stops at a relative change of 1e-8 */
+    ck_assert_msg(fabs(x1 - x) < 1e-7 && fabs(y1 - y) < 1e-7,
+        "correct_brown_affin: expected %f, %f, but got %f %f\n", x, y, x1, y1);
+
+    flat_to_dist(x, y, &cal, &xp, &yp);
+    dist_to_flat(xp, yp, &cal, &x1, &y1, 1e-12);
+    ck_assert_msg(fabs(x1 - x) < 1e-9 && fabs(y1 - y) < 1e-9,
+        "dist_to_flat: expected %f, %f, but got %f %f\n", x, y, x1, y1);
+}
+END_TEST
+
 Suite* fb_suite(void) {
     Suite *s = suite_create ("trafo");
     TCase *tc = tcase_create ("trafo_test");
@@ -357,6 +417,9 @@ Suite* fb_suite(void) {
     tcase_add_test(tc, dummy_distortion_round_trip);
     tcase_add_test(tc, radial_distortion_round_trip);
     tcase_add_test(tc, dist_flat_round_trip);
+    tcase_add_test(tc, affine_matches_3dptv);
+    tcase_add_test(tc, scx_scales_x_only);
+    tcase_add_test(tc, affine_round_trip);
     suite_add_tcase (s, tc);   
     return s;
 }
