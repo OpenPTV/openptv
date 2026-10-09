@@ -326,6 +326,19 @@ void init_mmlut (volume_par *vpar, control_par *cpar, Calibration *cal) {
         } /* nr */
       } /* nz */
     
+      /* R = 0 row: multimed_r_nlay returns its placeholder 1.0 at r == 0
+         (the factor multiplies r there, so any value is exact for that
+         point), but bilinear interpolation across the first radial cell
+         would pull every point within rw of the axis toward 1.0. The factor
+         is even in r, f = a + b r^2 + O(r^4), so f(0) = (4 f(rw) - f(2 rw))/3. */
+      if (nr >= 3) {
+        for (j = 0; j < nz; j++)
+          data[j] = (4.0*data[nz + j] - data[2*nz + j]) / 3.0;
+      } else if (nr == 2) {
+        for (j = 0; j < nz; j++)
+          data[j] = data[nz + j];
+      }
+
       free (Ri);
       free (Zi);
       cal->mmlut.data = data;
