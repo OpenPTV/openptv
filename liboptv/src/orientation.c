@@ -306,15 +306,19 @@ double* orient (Calibration* cal_in, control_par *cpar, int nfix, vec3d fix[],
         cal->glass_par.vec_x, cal->glass_par.vec_y, cal->glass_par.vec_z);
     nGl = vec_norm(glass_dir);
 
-    e1_x = 2*cal->glass_par.vec_z - 3*cal->glass_par.vec_x;
+    /* e1, e2 span the plane perpendicular to the glass normal g, along which
+       the glass is tilted (interfflag): e1 = (1,2,3) x g, e2 = e1 x g.
+       The 3DPTV original had x for y in e1_x, y for x in e1_z, e2_x and e2_z;
+       harmless for g along Z only. */
+    e1_x = 2*cal->glass_par.vec_z - 3*cal->glass_par.vec_y;
     e1_y = 3*cal->glass_par.vec_x - 1*cal->glass_par.vec_z;
-    e1_z = 1*cal->glass_par.vec_y - 2*cal->glass_par.vec_y;
+    e1_z = 1*cal->glass_par.vec_y - 2*cal->glass_par.vec_x;
     vec_set(tmp_vec, e1_x, e1_y, e1_z);
     unit_vector(tmp_vec, e1);
 
-    e2_x = e1_y*cal->glass_par.vec_z - e1_z*cal->glass_par.vec_x;
+    e2_x = e1_y*cal->glass_par.vec_z - e1_z*cal->glass_par.vec_y;
     e2_y = e1_z*cal->glass_par.vec_x - e1_x*cal->glass_par.vec_z;
-    e2_z = e1_x*cal->glass_par.vec_y - e1_y*cal->glass_par.vec_y;
+    e2_z = e1_x*cal->glass_par.vec_y - e1_y*cal->glass_par.vec_x;
     vec_set(tmp_vec, e2_x, e2_y, e2_z);
     unit_vector(tmp_vec, e2);
 
@@ -334,10 +338,6 @@ double* orient (Calibration* cal_in, control_par *cpar, int nfix, vec3d fix[],
     ident[8] = cal->added_par.scx;
     ident[9] = cal->added_par.she;
 
-    safety_x = cal->glass_par.vec_x;
-    safety_y = cal->glass_par.vec_y;
-    safety_z = cal->glass_par.vec_z;
-    
     /* main loop, program runs through it, until none of the beta values
       comes over a threshold and no more points are thrown out
       because of their residuals */
@@ -346,6 +346,14 @@ double* orient (Calibration* cal_in, control_par *cpar, int nfix, vec3d fix[],
     stopflag = 0;
     while ((stopflag == 0) && (itnum < NUM_ITER)) {
       itnum++;
+
+      /* The glass vector the numeric derivatives restore to. Captured each
+         iteration: captured once before the loop, every restore wiped the
+         previous iteration's glass update (interfflag) and the glass never
+         moved. */
+      safety_x = cal->glass_par.vec_x;
+      safety_y = cal->glass_par.vec_y;
+      safety_z = cal->glass_par.vec_z;
 
       for (i = 0, n = 0; i < nfix; i++) {
         /* check for correct correspondence

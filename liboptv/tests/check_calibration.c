@@ -92,6 +92,43 @@ START_TEST(test_write_ori)
 }
 END_TEST
 
+/* Small distortion coefficients survive a write/read: "%.8f" wrote
+   k3 ~ 1e-9 as zero. */
+START_TEST(test_write_addpar_precision)
+{
+    Calibration correct_cal, *cal;
+    char ori_file[] = "testing_fodder/test_prec.ori";
+    char add_file[] = "testing_fodder/test_prec.addpar";
+    double want[7] = {-1.5432109876e-4, 1.2345678901e-6, 1.2345678901e-9,
+        3.2109876543e-5, -7.6543210987e-6, 1.0001234567, -1.2345678901e-4};
+    double got[7];
+    int i;
+
+    correct_cal = test_cal();
+    correct_cal.added_par.k1 = want[0];
+    correct_cal.added_par.k2 = want[1];
+    correct_cal.added_par.k3 = want[2];
+    correct_cal.added_par.p1 = want[3];
+    correct_cal.added_par.p2 = want[4];
+    correct_cal.added_par.scx = want[5];
+    correct_cal.added_par.she = want[6];
+
+    write_calibration(&correct_cal, ori_file, add_file);
+    fail_if((cal = read_calibration(ori_file, add_file, NULL)) == NULL);
+    got[0] = cal->added_par.k1;  got[1] = cal->added_par.k2;
+    got[2] = cal->added_par.k3;  got[3] = cal->added_par.p1;
+    got[4] = cal->added_par.p2;  got[5] = cal->added_par.scx;
+    got[6] = cal->added_par.she;
+    for (i = 0; i < 7; i++)
+        ck_assert_msg(fabs(got[i] - want[i]) <= 1e-9 * fabs(want[i]),
+            "addpar[%d]: wrote %.12e, read %.12e\n", i, want[i], got[i]);
+
+    remove(ori_file);
+    remove(add_file);
+    free(cal);
+}
+END_TEST
+
 START_TEST(test_rotation_angles)
 {
     Exterior ex;
@@ -130,6 +167,7 @@ Suite* ptv_suite(void) {
 
     tc = tcase_create ("Write orientation file");
     tcase_add_test(tc, test_write_ori);
+    tcase_add_test(tc, test_write_addpar_precision);
     suite_add_tcase (s, tc);
 
     tc = tcase_create ("Basic rotations");
