@@ -361,10 +361,15 @@ double get_mmf_from_mmlut (Calibration *cal, vec3d pos){
     nz = cal->mmlut.nz;
     nr = cal->mmlut.nr;
     
-    /* check whether point is inside camera's object volume */
-    if (ir > nr)
+    /* check whether point is inside camera's object volume: all four
+       bilinear corners (ir..ir+1, iz..iz+1) must be table entries. The old
+       test (ir > nr, iz > nz) accepted the top row and the row above it,
+       where the "z+1" corners wrap into the next radial row, and at one
+       corner read one element past the end. Returning 0 makes the caller
+       fall back to the iterative solve. */
+    if (ir < 0 || ir + 1 > nr - 1)
         return (0);
-    if (iz < 0  ||  iz > nz)
+    if (iz < 0 || iz + 1 > nz - 1)
         return (0);
   
     /* bilinear interpolation in r/z box */
@@ -379,7 +384,7 @@ double get_mmf_from_mmlut (Calibration *cal, vec3d pos){
     /* 2. check wther point is inside camera's object volume */
     /* important for epipolar line computation */
     for (i = 0; i < 4; i++)
-        if (v4[i] < 0  ||  v4[i] > nr*nz)
+        if (v4[i] < 0  ||  v4[i] >= nr*nz)
             return (0);
     
     /* interpolate */

@@ -238,6 +238,61 @@ START_TEST(test_get_mmf_mmLUT)
 END_TEST
 
  
+/* Every point the LUT answers for must get (to interpolation accuracy) the
+   value the iterative solve gives. The old bounds test accepted the table's
+   top row and the row above it, where the bilinear "z+1" corners wrap into
+   the next radial row. */
+START_TEST(test_mmlut_matches_iterative)
+{
+    Calibration *cal, cal_ref;
+    volume_par *vpar;
+    control_par *cpar;
+    Exterior ext_t;
+    vec3d xyz, pos_t, any = {0., 0., 0.};
+    double cross_p[3], cross_c[3], lut, exact, worst = 0, R, Z;
+    int answered = 0;
+
+    cal = read_calibration("testing_fodder/cal/cam2.tif.ori",
+        "testing_fodder/cal/cam2.tif.addpar", NULL);
+    fail_if(cal == NULL);
+    vpar = read_volume_par("testing_fodder/parameters/criteria.par");
+    fail_if(vpar == NULL);
+    cpar = read_control_par("testing_fodder/parameters/ptv.par");
+    fail_if(cpar == NULL);
+    init_mmlut(vpar, cpar, cal);
+
+    /* Reference: the same camera in the glass frame init_mmlut tabulates,
+       without a LUT, so multimed_r_nlay iterates. */
+    trans_Cam_Point(cal->ext_par, *(cpar->mm), cal->glass_par, any,
+        &ext_t, pos_t, cross_p, cross_c);
+    cal_ref = *cal;
+    cal_ref.ext_par.x0 = ext_t.x0;
+    cal_ref.ext_par.y0 = ext_t.y0;
+    cal_ref.ext_par.z0 = ext_t.z0;
+    cal_ref.mmlut.data = NULL;
+
+    /* Start at R = rw: the R = 0 row holds multimed_r_nlay's r == 0 special
+       value 1.0, not the r -> 0 limit, so the first radial cell is off for a
+       different reason, outside the scope of this test. */
+    for (R = cal->mmlut.rw; R < cal->mmlut.nr * cal->mmlut.rw;
+         R += cal->mmlut.rw / 3.)
+        for (Z = -cal->mmlut.rw; Z < (cal->mmlut.nz + 2) * cal->mmlut.rw;
+             Z += cal->mmlut.rw / 3.)
+        {
+            vec_set(xyz, cal->mmlut.origin[0] + R, cal->mmlut.origin[1],
+                cal->mmlut.origin[2] + Z);
+            lut = get_mmf_from_mmlut(cal, xyz);
+            if (lut <= 0) continue;
+            answered++;
+            exact = multimed_r_nlay(&cal_ref, cpar->mm, xyz);
+            if (fabs(lut - exact) > worst) worst = fabs(lut - exact);
+        }
+    ck_assert_msg(answered > 0, "LUT answered for no point\n");
+    ck_assert_msg(worst < 1e-4,
+        "LUT differs from the iterative solve by up to %g\n", worst);
+}
+END_TEST
+
 START_TEST(test_multimed_nlay)
 {
     double xmax, xmin, ymax, ymin, zmax, zmin;
@@ -390,6 +445,7 @@ Suite* fb_suite(void) {
 
     tc = tcase_create ("Test get_mmf_mmLUT");
     tcase_add_test(tc, test_get_mmf_mmLUT);
+    tcase_add_test(tc, test_mmlut_matches_iterative);
     suite_add_tcase (s, tc);    
 
     tc = tcase_create ("Test test_volumedimension");
