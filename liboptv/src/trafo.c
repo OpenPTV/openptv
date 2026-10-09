@@ -185,13 +185,12 @@ void distort_brown_affin (double x, double y, ap_52 ap, double *x1, double *y1) 
     double x_dist = x * radial_factor + ap.p1 * (r2 + 2*x*x) + 2*ap.p2*x*y;
     double y_dist = y * radial_factor + ap.p2 * (r2 + 2*y*y) + 2*ap.p1*x*y;
     
-    // Apply affine transformation more stably
-    double sin_she = sin(ap.she);
-    double cos_she = cos(ap.she);
-    
-    // Scale first, then shear to maintain better numerical precision
-    *x1 = ap.scx * (x_dist - sin_she * y_dist);
-    *y1 = ap.scx * cos_she * y_dist;  // Apply same scale to maintain aspect ratio
+    /* Affine step of the original 3DPTV model (El-Hakim 1986, Gruen & Beyer
+       1986): scx is an x-only scale factor (pixel-clock vs. frame-grabber
+       mismatch), she a shear. scx must not touch y - on both axes it would
+       duplicate the principal distance cc. */
+    *x1 = ap.scx * x_dist - sin(ap.she) * y_dist;
+    *y1 = cos(ap.she) * y_dist;
 }
 
 /*  correct distorted to flat-image coordinates, see correct_brown_affine_exact(),
@@ -204,10 +203,10 @@ void correct_brown_affin (double x, double y, ap_52 ap, double *x1, double *y1) 
     const double cos_she = cos(ap.she);
     const double inv_scx = 1.0/ap.scx;
     
-    // Initial guess: inverse affine transformation
-    double xq = x * inv_scx;
-    double yq = y * inv_scx / cos_she;  // Corrected for scale
-    xq += yq * sin_she;  // Apply shear correction
+    /* Initial guess: inverse of the affine step, x' = scx*x - sin*y,
+       y' = cos*y */
+    double yq = y / cos_she;
+    double xq = (x + yq * sin_she) * inv_scx;
     
     const int MAX_ITER = 20;
     const double DAMPING = 0.7;  // Adjusted damping factor
@@ -222,9 +221,9 @@ void correct_brown_affin (double x, double y, ap_52 ap, double *x1, double *y1) 
         double xt, yt;
         distort_brown_affin(xq, yq, ap, &xt, &yt);
         
-        // Calculate error
-        double dx = (x - xt) * inv_scx;
-        double dy = (y - yt) * inv_scx;
+        /* Error, mapped back through the inverse affine step */
+        double dy = (y - yt) / cos_she;
+        double dx = (x - xt + dy * sin_she) * inv_scx;
         
         // Update estimate with damping
         xq += dx * DAMPING;
@@ -271,9 +270,11 @@ void correct_brown_affine_exact(double x, double y, ap_52 ap,
     const double cos_she = cos(ap.she);
     const double inv_scx = 1.0/ap.scx;
     
-    // Initial guess: inverse affine transformation
-    double xq = (x + y*sin_she)*inv_scx;
-    double yq = y/cos_she;
+    /* Exact inverse of the affine step in distort_brown_affin() */
+    const double ya = y / cos_she;
+    const double xa = (x + ya * sin_she) * inv_scx;
+    double xq = xa;
+    double yq = ya;
     
     const int MAX_ITER = 50;  // Increased for large shear angles
     const double DAMPING = 0.5;  // More conservative damping
@@ -291,8 +292,8 @@ void correct_brown_affine_exact(double x, double y, ap_52 ap,
         double dy = yq * radial_factor + ap.p2 * (r2 + 2*yq*yq) + 2*ap.p1*xq*yq;
         
         // Calculate new estimates
-        double xq_new = (x + y*sin_she)*inv_scx - dx;
-        double yq_new = y/cos_she - dy;
+        double xq_new = xa - dx;
+        double yq_new = ya - dy;
         
         // Apply damping
         double dx_change = xq_new - xq;
