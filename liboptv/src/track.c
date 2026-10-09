@@ -1068,7 +1068,7 @@ double trackback_c (tracking_run *run_info)
     double angle, acc, dl;
     vec3d diff_pos, X[6];     /* 6 reference points used in the algorithm */
     vec2d n[4], v2[4];     // replaces xn,yn, x2[4], y2[4],
-    double rr, Ymin = 0, Ymax = 0;
+    double rr, Ymin, Ymax;
     double npart = 0, nlinks = 0;
     foundpix *w;
 
@@ -1088,6 +1088,13 @@ double trackback_c (tracking_run *run_info)
     tpar = run_info->tpar;
     vpar = run_info->vpar;
     cpar = run_info->cpar;
+
+    /* Y limits of the observed volume, filled by volumedimension() in
+       tr_new(), as trackcorr_c_loop uses them. Left at 0 here (3DPTV filled
+       them with volumedimension()), the add-particle volume check
+       0 < y < 0 never passed and backward tracking never added. */
+    Ymin = run_info->ymin;
+    Ymax = run_info->ymax;
 
     fb = run_info->fb;
 
