@@ -49,8 +49,10 @@ int write_ori (Exterior Ex, Interior interior, Glass glass, ap_52 ap,
         printf("Can't open ascii file: %s\n", add_file);
         goto finalize;
   }
-  fprintf (fp, "%.8f %.8f %.8f %.8f %.8f %.8f %.8f", ap.k1, ap.k2, ap.k3, ap.p1, ap.p2,
-    ap.scx, ap.she);
+  /* Exponent notation: "%.8f" zeroed k3 ~ 1e-9 and cut k2 ~ 1e-6 to three
+     digits. read_ori's fscanf("%lf") reads both forms. */
+  fprintf (fp, "%.10e %.10e %.10e %.10e %.10e %.10e %.10e", ap.k1, ap.k2, ap.k3,
+    ap.p1, ap.p2, ap.scx, ap.she);
   success = 1;
   
 finalize:
