@@ -62,7 +62,10 @@ START_TEST(test_init_mmLUT)
     init_mmlut (vpar, cpar, cal);
     
     /* Data[0] Is the radial shift of a point directly on the glass vector */
-    fail_unless(cal->mmlut.data[0] == 1);
+    /* data[0] is on the glass-normal axis: the r -> 0 limit of the factor,
+       not multimed_r_nlay's r == 0 placeholder 1.0 */
+    fail_unless(fabs(cal->mmlut.data[0] - cal->mmlut.data[cal->mmlut.nz]) < 1e-4
+        && cal->mmlut.data[0] > 1);
     
     /* Radial shift grows with radius */
     fail_unless(cal->mmlut.data[0] < cal->mmlut.data[correct_mmlut[0].nz]);
@@ -180,6 +183,10 @@ START_TEST(test_volumedimension)
     cpar->mm->nlay = 1;
     cpar->num_cams = 2;
 
+    /* volumedimension() only widens the given extremes, so they must start
+       empty; left uninitialized the result depended on stack leftovers. */
+    xmax = ymax = -1e20;
+    xmin = ymin = 1e20;
     volumedimension (&xmax, &xmin, &ymax, &ymin, &zmax, &zmin, vpar, cpar, cal);
     
     ck_assert_msg( fabs(xmax - 73.02053752) < EPS && 
@@ -232,12 +239,79 @@ START_TEST(test_get_mmf_mmLUT)
     
     vec3d pos = {1.0, 1.0, 1.0}; 
     mmf = get_mmf_from_mmlut (cal, pos);
-    ck_assert_msg(fabs(mmf - 1.00382) < EPS,
-        "\n Expected mmf  1.00363015 but found %10.8f\n", mmf);
+    /* (1,1,1) lies in the first radial cell (R = 1.41 < rw = 2). The old
+       value 1.00382 was pulled toward the 1.0 placeholder of the R = 0 row;
+       1.005406 is the radial shift solved to convergence (tol 1e-9) at the
+       same point of the table's frame. */
+    ck_assert_msg(fabs(mmf - 1.005406) < 1e-5,
+        "\n Expected mmf 1.005406 but found %10.8f\n", mmf);
 }
 END_TEST
 
  
+/* Every point the LUT answers for must get (to interpolation accuracy) the
+   value the iterative solve gives. The old bounds test accepted the table's
+   top row and the row above it, where the bilinear "z+1" corners wrap into
+   the next radial row. */
+START_TEST(test_mmlut_matches_iterative)
+{
+    Calibration *cal, cal_ref;
+    volume_par *vpar;
+    control_par *cpar;
+    Exterior ext_t;
+    vec3d xyz, pos_t, any = {0., 0., 0.};
+    double cross_p[3], cross_c[3], lut, exact, worst = 0, worst_axis = 0, R, Z;
+    int answered = 0;
+
+    cal = read_calibration("testing_fodder/cal/cam2.tif.ori",
+        "testing_fodder/cal/cam2.tif.addpar", NULL);
+    fail_if(cal == NULL);
+    vpar = read_volume_par("testing_fodder/parameters/criteria.par");
+    fail_if(vpar == NULL);
+    cpar = read_control_par("testing_fodder/parameters/ptv.par");
+    fail_if(cpar == NULL);
+    init_mmlut(vpar, cpar, cal);
+
+    /* Reference: the same camera in the glass frame init_mmlut tabulates,
+       without a LUT, so multimed_r_nlay iterates. */
+    trans_Cam_Point(cal->ext_par, *(cpar->mm), cal->glass_par, any,
+        &ext_t, pos_t, cross_p, cross_c);
+    cal_ref = *cal;
+    cal_ref.ext_par.x0 = ext_t.x0;
+    cal_ref.ext_par.y0 = ext_t.y0;
+    cal_ref.ext_par.z0 = ext_t.z0;
+    cal_ref.mmlut.data = NULL;
+
+    /* From just off the axis: at r == 0 itself multimed_r_nlay returns a
+       placeholder (any factor is exact there, it multiplies r = 0). Close to
+       the axis its fixed 0.001 mm stop is a ~1e-4 relative error, so the
+       first cell is held to 5e-4. */
+    for (R = cal->mmlut.rw / 6.; R < cal->mmlut.nr * cal->mmlut.rw;
+         R += cal->mmlut.rw / 3.)
+        for (Z = -cal->mmlut.rw; Z < (cal->mmlut.nz + 2) * cal->mmlut.rw;
+             Z += cal->mmlut.rw / 3.)
+        {
+            vec_set(xyz, cal->mmlut.origin[0] + R, cal->mmlut.origin[1],
+                cal->mmlut.origin[2] + Z);
+            lut = get_mmf_from_mmlut(cal, xyz);
+            if (lut <= 0) continue;
+            answered++;
+            exact = multimed_r_nlay(&cal_ref, cpar->mm, xyz);
+            if (R < cal->mmlut.rw) {
+                if (fabs(lut - exact) > worst_axis) worst_axis = fabs(lut - exact);
+            } else if (fabs(lut - exact) > worst) {
+                worst = fabs(lut - exact);
+            }
+        }
+    ck_assert_msg(answered > 0, "LUT answered for no point\n");
+    ck_assert_msg(worst < 1e-4,
+        "LUT differs from the iterative solve by up to %g\n", worst);
+    ck_assert_msg(worst_axis < 5e-4,
+        "LUT differs from the iterative solve near the axis by up to %g\n",
+        worst_axis);
+}
+END_TEST
+
 START_TEST(test_multimed_nlay)
 {
     double xmax, xmin, ymax, ymin, zmax, zmin;
@@ -271,15 +345,18 @@ START_TEST(test_multimed_nlay)
      
     vec3d pos = {1.23, 1.23, 1.23};
     double correct_Xq,correct_Yq, Xq, Yq;
-    correct_Xq = 0.74811917; 
-    correct_Yq = 0.75977975;   
+    /* Was 0.74811917, 0.75977975: computed from a first-cell mmf pulled
+       toward the R = 0 placeholder. These use the converged mmf; the LUT's
+       interpolation error, scaled by the camera distance, is ~3e-4. */
+    correct_Xq = 0.67565088;
+    correct_Yq = 0.68906505;   
      
     multimed_nlay(cal, cpar->mm, pos, &Xq, &Yq);
         
     for (i=0; i < cpar->num_cams; i++){
        ck_assert_msg( 
-         fabs(Xq - correct_Xq) < EPS &&
-         fabs(Yq - correct_Yq) < EPS,
+         fabs(Xq - correct_Xq) < 5e-4 &&
+         fabs(Yq - correct_Yq) < 5e-4,
          "\n Expected different correct_Xq, Yq values \n  \
          but found %10.8f %10.8f \n", Xq, Yq);
     }
@@ -390,6 +467,7 @@ Suite* fb_suite(void) {
 
     tc = tcase_create ("Test get_mmf_mmLUT");
     tcase_add_test(tc, test_get_mmf_mmLUT);
+    tcase_add_test(tc, test_mmlut_matches_iterative);
     suite_add_tcase (s, tc);    
 
     tc = tcase_create ("Test test_volumedimension");
